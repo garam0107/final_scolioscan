@@ -32,7 +32,7 @@ import styles from '@/src/features/home/home.styles';
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
-
+const router = useRouter();
 const banner1 = require('../../../assets/images/BannerImage1.png');
 const banner2 = require('../../../assets/images/BannerImage2.png');
 const example_home = require('../../../assets/images/example_home.png');
@@ -78,7 +78,7 @@ const measurementItems: MeasurementItem[] = [
     title: '2D 이미지 측정',
     subtitle: '카메라를 통한 간편 측정',
     icon: <HomeMeasurement2DIcon />,
-    onPress: () => Alert.alert('준비중', '2D 측정 기능은 다음 화면에서 연결할게요.'),
+    onPress: () => router.push('/measure/2d'),
   },
   {
     id: 'spine',
