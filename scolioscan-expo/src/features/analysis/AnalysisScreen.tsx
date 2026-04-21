@@ -1,23 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  DimensionValue,
   Easing,
   Image,
-  Pressable,
   Linking,
+  Pressable,
   ScrollView,
   Text,
   View,
   useWindowDimensions,
-  DimensionValue
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { SvgProps } from 'react-native-svg';
 
 import BottomTabBar from '@/src/components/BottomTabBar';
-import { analysisAPI } from '@/src/api/analysis';
+import { curvatureAPI } from '@/src/api/curvature';
+import { rotationAPI } from '@/src/api/rotation';
 import type { AnalysisResponse } from '@/src/types/analysis';
+import type { CurvatureResponse } from '@/src/types/curvature';
+import type { RotationResponse } from '@/src/types/rotation';
 import styles from './analysis.styles';
 import { createAnalysisPose, VERTEBRA_COUNT, getSeverityLabel } from './analysisPose';
 import Grade1Image from '../../../assets/images/grade1.svg';
@@ -29,6 +32,7 @@ const spineImage = require('../../../assets/images/spine.png');
 
 type AnalysisScreenProps = {
   analysisId?: string;
+  sourceType?: string;
 };
 
 type InfoCardCopy = {
@@ -36,6 +40,43 @@ type InfoCardCopy = {
   body: string;
   ImageComponent: React.ComponentType<SvgProps>;
 };
+
+function getMeasurementDate(
+  record:
+    | Pick<CurvatureResponse, 'measured_at' | 'created_at'>
+    | Pick<RotationResponse, 'measured_at' | 'created_at'>,
+) {
+  return record.measured_at || record.created_at;
+}
+
+function toAnalysisFromCurvature(record: CurvatureResponse): AnalysisResponse {
+  return {
+    id: String(record.id),
+    user_uuid: record.user_id,
+    analysis_type: 1,
+    main_thoracic: record.secondary_thoracic_cobb,
+    second_thoracic: record.main_thoracic_cobb,
+    lumbar: record.lumbar_cobb,
+    score: record.score ?? null,
+    image_url: record.image_path ?? null,
+    created_at: getMeasurementDate(record),
+  };
+}
+
+function toAnalysisFromRotation(record: RotationResponse): AnalysisResponse {
+  return {
+    id: String(record.id),
+    user_uuid: record.user_id,
+    analysis_type: 3,
+    main_thoracic: record.upper_thoracic_atr,
+    second_thoracic: record.thoracic_atr,
+    lumbar: record.lumbar_atr,
+    score: null,
+    image_url: null,
+    created_at: getMeasurementDate(record),
+  };
+}
+
 // 분기별 척추측만증 표시 함수
 function getInfoCardCopy(severityLabel: string):  InfoCardCopy {
   switch (severityLabel) {
@@ -105,15 +146,18 @@ function getSeverityBadgeConfig(value: number): SeverityBadgeConfig {
     barColor: '#22BCB7',
   };
 }
-function getSeverityBarWidth(value: number) : DimensionValue {
+
+function getSeverityBarWidth(value: number): DimensionValue {
   const clamped = Math.max(0, Math.min(45, value));
   return `${(clamped / 50) * 100}%` as const;
 }
 
-
+function formatDegree(value: number) {
+  return `${Math.abs(value).toFixed(1)}°`;
+}
 
 function CountUpNumber({ value, active }: { value: number; active: boolean }) {
-  const target = Math.max(0, Math.round(Math.abs(value)));
+  const target = Math.max(0, Math.abs(value));
   const [displayValue, setDisplayValue] = useState(target);
 
   useEffect(() => {
@@ -129,7 +173,7 @@ function CountUpNumber({ value, active }: { value: number; active: boolean }) {
     const tick = () => {
       const progress = Math.min(1, (Date.now() - startTime) / duration);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayValue(Math.round(target * eased));
+      setDisplayValue(target * eased);
 
       if (progress < 1) {
         rafId = requestAnimationFrame(tick);
@@ -144,10 +188,11 @@ function CountUpNumber({ value, active }: { value: number; active: boolean }) {
     };
   }, [active, target]);
 
-  return <Text style={styles.metricValue}>{displayValue}°</Text>;
+  return <Text style={styles.metricValue}>{formatDegree(displayValue)}</Text>;
 }
 
 function MetricBlock({
+  metricKey,
   label,
   value,
   side,
@@ -155,6 +200,7 @@ function MetricBlock({
   xOffset,
   active,
 }: {
+  metricKey: 'upper' | 'main' | 'lumbar';
   label: string;
   value: number;
   side: 'left' | 'right';
@@ -162,6 +208,7 @@ function MetricBlock({
   xOffset: number;
   active: boolean;
 }) {
+
   return (
     <View
       style={[
@@ -175,9 +222,16 @@ function MetricBlock({
     >
       <View style={side === 'left' ? styles.metricLeft : styles.metricRight}>
         <Text style={styles.metricLabel}>{label}</Text>
-        <View style={styles.valueRow}>
-          <CountUpNumber value={value} active={active} />
-        </View>
+        <View
+  style={[
+    styles.valueRow,
+    metricKey === 'main' && { transform: [{ translateX: 8 }] },
+    metricKey === 'lumbar' && { transform: [{ translateX: 20 }] },
+  ]}
+>
+  <CountUpNumber value={value} active={active} />
+</View>
+
       </View>
     </View>
   );
@@ -253,7 +307,7 @@ function SpineRig({
   );
 }
 
-export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
+export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
@@ -267,12 +321,11 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const cardWidth = Math.min(width - 24, 440);
   const stageWidth = cardWidth - 20;
   const stageHeight = 318;
-  const summaryName = '000';
-  const upperValue = pose.metrics.find((m) => m.key === 'upper')?.value ?? 0;
+  const summaryName = '회원님';
+  const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
   const severityLabel = getSeverityLabel(upperValue);
   const infoCardCopy = getInfoCardCopy(severityLabel);
   const InfoCardImageComponent = infoCardCopy.ImageComponent;
-
 
   useEffect(() => {
     let mounted = true;
@@ -285,13 +338,35 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
         let targetAnalysis: AnalysisResponse | null = null;
 
         if (analysisId) {
-          const response = await analysisAPI.getAnalysis(analysisId);
-          targetAnalysis = response.data;
+          if (sourceType === 'rotation') {
+            const response = await rotationAPI.getAnalysis(analysisId);
+            targetAnalysis = toAnalysisFromRotation(response.data);
+          } else {
+            const response = await curvatureAPI.getAnalysis(analysisId);
+            targetAnalysis = toAnalysisFromCurvature(response.data);
+          }
         } else {
-          const response = await analysisAPI.getAnalyses({ limit: 1 });
-          targetAnalysis = [...(response.data ?? [])].sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-          )[0] ?? null;
+          const [curvatureResult, rotationResult] = await Promise.allSettled([
+            curvatureAPI.getAnalyses({ limit: 1 }),
+            rotationAPI.getAnalyses({ limit: 1 }),
+          ]);
+
+          const latestCurvature =
+            curvatureResult.status === 'fulfilled' ? curvatureResult.value.data[0] ?? null : null;
+          const latestRotation =
+            rotationResult.status === 'fulfilled' ? rotationResult.value.data[0] ?? null : null;
+
+          if (latestCurvature && latestRotation) {
+            targetAnalysis =
+              new Date(getMeasurementDate(latestCurvature)).getTime() >=
+              new Date(getMeasurementDate(latestRotation)).getTime()
+                ? toAnalysisFromCurvature(latestCurvature)
+                : toAnalysisFromRotation(latestRotation);
+          } else if (latestCurvature) {
+            targetAnalysis = toAnalysisFromCurvature(latestCurvature);
+          } else if (latestRotation) {
+            targetAnalysis = toAnalysisFromRotation(latestRotation);
+          }
         }
 
         if (!mounted) return;
@@ -307,19 +382,19 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
       } catch {
         if (!mounted) return;
         setAnalysis(null);
-        setError('최근 분석 결과를 불러오지 못했어요.');
+        setError('최신 분석 결과를 불러오지 못했어요.');
         progress.setValue(0);
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
-    loadLatest();
+    void loadLatest();
 
     return () => {
       mounted = false;
     };
-  }, [analysisId, progress, reloadKey]);
+  }, [analysisId, progress, reloadKey, sourceType]);
 
   return (
     <View style={styles.screen}>
@@ -330,13 +405,13 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
           showsVerticalScrollIndicator
           contentContainerStyle={[
             styles.content,
-            { paddingTop: 8, paddingBottom : insets.bottom + 90},
+            { paddingTop: 8, paddingBottom: insets.bottom + 90 },
           ]}
         >
           <View style={styles.summaryTextBlock}>
-            <Text style={styles.summaryNameLine}>{summaryName}님은</Text>
+            <Text style={styles.summaryNameLine}>{summaryName}</Text>
             <Text style={styles.summaryDiagnosisLine}>
-              <Text style={styles.summarySeverityBold}>{severityLabel} 척추측만증</Text>입니다
+              <Text style={styles.summarySeverityBold}>{severityLabel} 척추측만증</Text>입니다.
             </Text>
           </View>
 
@@ -348,24 +423,26 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
             <View style={styles.textLayer}>
               {pose.metrics.map((metric) => (
                 <MetricBlock
-                  key={metric.key}
-                  label={metric.label}
-                  value={metric.value}
-                  side={metric.side}
-                  top={metric.topRatio * stageHeight}
-                  xOffset={metric.xOffset}
-                  active={Boolean(analysis)}
-                />
+  key={metric.key}
+  metricKey={metric.key}
+  label={metric.label}
+  value={metric.value}
+  side={metric.side}
+  top={metric.topRatio * stageHeight}
+  xOffset={metric.xOffset}
+  active={Boolean(analysis)}
+/>
+
               ))}
 
               {!analysis && !loading ? (
-                <Text style={styles.emptyText}>최근 측정 결과가 없어요. 측정을 진행해 주세요.</Text>
+                <Text style={styles.emptyText}>최근 측정 결과가 없어요. 먼저 측정을 진행해 주세요.</Text>
               ) : null}
 
               {error ? (
                 <>
                   <Text style={styles.errorText}>{error}</Text>
-                  <Pressable style={styles.retryButton} onPress={() => setReloadKey((v) => v + 1)}>
+                  <Pressable style={styles.retryButton} onPress={() => setReloadKey((value) => value + 1)}>
                     <Text style={styles.retryText}>다시 시도</Text>
                   </Pressable>
                 </>
@@ -377,7 +454,6 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
             <View style={styles.infoCardText}>
               <Text style={styles.infoCardTitle}>{infoCardCopy.title}</Text>
               <Text style={styles.infoCardBody}>{infoCardCopy.body}</Text>
-              {/* 링크 수정 */}
               <Pressable onPress={() => Linking.openURL('https://naver.com')}>
                 <Text style={styles.infoCardLink}>더 알아보기</Text>
               </Pressable>
@@ -387,69 +463,65 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
               <InfoCardImageComponent preserveAspectRatio="xMidYMid meet" />
             </View>
           </View>
+
           <View style={styles.severityCard}>
-  <Text style={styles.severityCardTitle}>심각도 분석</Text>
+            <Text style={styles.severityCardTitle}>심각도 분석</Text>
 
-  <View style={styles.severityCardInner}>
-    {pose.metrics.map((metric, index) => {
-      const severity = getSeverityBadgeConfig(metric.value);
+            <View style={styles.severityCardInner}>
+              {pose.metrics.map((metric, index) => {
+                const severity = getSeverityBadgeConfig(metric.value);
 
-      return (
-        <View
-          key={metric.key}
-          style={[
-            styles.severityRow,
-            index === pose.metrics.length - 1 && styles.severityRowLast,
-          ]}
-        >
-          <View style={styles.severityHeader}>
-            <Text style={styles.severityLabel}>{metric.label}</Text>
+                return (
+                  <View
+                    key={metric.key}
+                    style={[
+                      styles.severityRow,
+                      index === pose.metrics.length - 1 && styles.severityRowLast,
+                    ]}
+                  >
+                    <View style={styles.severityHeader}>
+                      <Text style={styles.severityLabel}>{metric.label}</Text>
 
-            <View style={styles.severityRight}>
-              <Text style={styles.severityValue}>{Math.round(metric.value)}°</Text>
+                      <View style={styles.severityRight}>
+                        <Text style={styles.severityValue}>{formatDegree(metric.value)}</Text>
 
-              <View
-                style={[
-                  styles.severityBadge,
-                  { backgroundColor: severity.badgeBackground },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.severityBadgeText,
-                    { color: severity.badgeTextColor },
-                  ]}
-                >
-                  {severity.label}
-                </Text>
-              </View>
+                        <View
+                          style={[
+                            styles.severityBadge,
+                            { backgroundColor: severity.badgeBackground },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.severityBadgeText,
+                              { color: severity.badgeTextColor },
+                            ]}
+                          >
+                            {severity.label}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.severityTrack}>
+                      <View
+                        style={[
+                          styles.severityFill,
+                          {
+                            width: getSeverityBarWidth(metric.value),
+                            backgroundColor: severity.barColor,
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
             </View>
-          </View>
-
-          <View style={styles.severityTrack}>
-            <View
-              style={[
-                styles.severityFill,
-                {
-                  width: getSeverityBarWidth(metric.value),
-                  backgroundColor: severity.barColor,
-                },
-              ]}
-            />
-          </View>
-        </View>
-      );
-    })}
-  </View>
-
-  {/* 척추 지배만곡 유형 카드 들어갈 예정 */}
+             {/* 척추 지배만곡 유형 카드 들어갈 예정 */}
   {/* 곡선 패턴 카드 들어갈 예정 */}
   {/* 의사 소견 카드 들어갈 예정 */}
-</View>
-
-
-
-
+          </View>
         </ScrollView>
       </SafeAreaView>
       <BottomTabBar />

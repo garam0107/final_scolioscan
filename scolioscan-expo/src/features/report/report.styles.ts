@@ -318,9 +318,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listArea: {
-    height: 420,
-    minHeight: 260,
+    maxHeight: 420,
     marginBottom: 4,
+  },
+  listAreaEmpty: {
+    minHeight: 120,
   },
   listScrollContent: {
     paddingBottom: 16,
@@ -395,7 +397,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   emptyBox: {
-    minHeight: 150,
+    minHeight: 120,
     alignItems: 'center',
     justifyContent: 'center',
   },

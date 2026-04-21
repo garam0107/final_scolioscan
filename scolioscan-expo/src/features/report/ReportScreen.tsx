@@ -6,23 +6,67 @@ import {
   LayoutChangeEvent,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
-  StyleSheet
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, G, LinearGradient, Line, Path, Polygon, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  G,
+  LinearGradient,
+  Line,
+  Path,
+  Polygon,
+  Rect,
+  Stop,
+  Text as SvgText,
+} from 'react-native-svg';
+
 import BottomTabBar from '@/src/components/BottomTabBar';
-import { analysisAPI } from '@/src/api/analysis';
-import type { AnalysisResponse } from '@/src/types/analysis';
+import { curvatureAPI } from '@/src/api/curvature';
+import { rotationAPI } from '@/src/api/rotation';
+import type { CurvatureResponse } from '@/src/types/curvature';
+import type { RotationResponse } from '@/src/types/rotation';
 import styles from '@/src/features/report/report.styles';
 import MyRectangle from '../../../assets/icons/my_rectangle.svg';
 import KoreanRectangle from '../../../assets/icons/korean_rectangle.svg';
 import TwoDCamera from '../../../assets/icons/2D_camera.svg';
 
 type FilterKey = 'all' | '2d' | 'scoliometer' | '3d';
+type MeasurementSource = 'curvature' | 'rotation';
+type TrendAngleKey = 'proximal' | 'main' | 'lumbar';
+
+type ReportMetric = {
+  label: string;
+  value: number | null;
+};
+
+type ReportListItem = {
+  id: string;
+  source: MeasurementSource;
+  createdAt: string;
+  category: Exclude<FilterKey, 'all'>;
+  badgeLabel: string;
+  metrics: [ReportMetric, ReportMetric, ReportMetric];
+  navigationId?: string;
+};
+
+type TrendPoint = {
+  label: string;
+  dateLabel: string;
+  value: number | null;
+  x: number;
+  y: number | null;
+};
+
+type TrendPlotPoint = Omit<TrendPoint, 'y'> & {
+  y: number;
+};
+
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: '2d', label: '2D' },
@@ -30,11 +74,51 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: '3d', label: '3D' },
 ];
 
-const ANALYSIS_LABELS: Record<number, string> = {
-  1: '2D 카메라 촬영',
-  2: '3D 카메라 촬영',
-  3: '척추측만계 측정',
-};
+const CURVATURE_METRIC_LABELS = [
+  '상부 흉추 만곡',
+  '주 흉추만곡',
+  '요추만곡',
+] as const;
+
+const ROTATION_METRIC_LABELS = [
+  '상부 흉추 만곡',
+  '주 흉추만곡',
+  '요추만곡',
+] as const;
+
+const TREND_ANGLE_OPTIONS: {
+  key: TrendAngleKey;
+  label: string;
+  displayLabel: string;
+  field: keyof Pick<
+    CurvatureResponse,
+    'secondary_thoracic_cobb' | 'main_thoracic_cobb' | 'lumbar_cobb'
+  >;
+}[] = [
+  {
+    key: 'proximal',
+    label: '상부 흉추',
+    displayLabel: '상부 흉추만곡',
+    field: 'secondary_thoracic_cobb',
+  },
+  {
+    key: 'main',
+    label: '주 흉추',
+    displayLabel: '주 흉추만곡',
+    field: 'main_thoracic_cobb',
+  },
+  {
+    key: 'lumbar',
+    label: '요추',
+    displayLabel: '요추만곡',
+    field: 'lumbar_cobb',
+  },
+];
+
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+const CHART_WIDTH = 320;
+const CHART_HEIGHT = 148;
+const CHART_PADDING = { top: 10, right: 14, bottom: 12, left: 14 };
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -49,13 +133,62 @@ function formatDate(value: string) {
 
 function formatDegree(value?: number | null) {
   if (value === null || value === undefined) return '-';
-  return `${Math.round(Math.abs(value))}°`;
+  return `${Math.abs(value).toFixed(1)}°`;
 }
-function getAnalysisCategory(analysis: AnalysisResponse): FilterKey {
-  if (analysis.analysis_type === 1) return '2d';
-  if (analysis.analysis_type === 2) return '3d';
-  if (analysis.analysis_type === 3) return 'scoliometer';
-  return 'all';
+
+function getMeasurementDate(
+  record: Pick<CurvatureResponse, 'measured_at' | 'created_at'> | Pick<RotationResponse, 'measured_at' | 'created_at'>,
+) {
+  return record.measured_at || record.created_at;
+}
+
+function toCurvatureListItem(record: CurvatureResponse): ReportListItem {
+  const createdAt = getMeasurementDate(record);
+
+  return {
+    id: `curvature-${record.id}`,
+    source: 'curvature',
+    createdAt,
+    category: '2d',
+    badgeLabel: '2D 카메라촬영',
+    navigationId: String(record.id),
+    metrics: [
+      { label: CURVATURE_METRIC_LABELS[0], value: record.secondary_thoracic_cobb },
+      { label: CURVATURE_METRIC_LABELS[1], value: record.main_thoracic_cobb },
+      { label: CURVATURE_METRIC_LABELS[2], value: record.lumbar_cobb },
+    ],
+  };
+}
+
+function toRotationListItem(record: RotationResponse): ReportListItem {
+  const createdAt = getMeasurementDate(record);
+
+  return {
+    id: `rotation-${record.id}`,
+    source: 'rotation',
+    createdAt,
+    category: 'scoliometer',
+    navigationId: String(record.id),
+    badgeLabel: '척추측만계 측정',
+    metrics: [
+      { label: ROTATION_METRIC_LABELS[0], value: record.upper_thoracic_atr },
+      { label: ROTATION_METRIC_LABELS[1], value: record.thoracic_atr },
+      { label: ROTATION_METRIC_LABELS[2], value: record.lumbar_atr },
+    ],
+  };
+}
+
+function getDateKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function getTrendValue(record: CurvatureResponse | undefined, key: TrendAngleKey) {
+  const option = TREND_ANGLE_OPTIONS.find((item) => item.key === key) ?? TREND_ANGLE_OPTIONS[1];
+  return Math.abs(Number(record?.[option.field]) || 0);
+}
+
+function isTrendPlotPoint(point: TrendPoint): point is TrendPlotPoint {
+  return point.y !== null;
 }
 
 function TriangleChart({
@@ -65,7 +198,6 @@ function TriangleChart({
   myMeasurementLabel,
   avgLabel,
   chartDescriptionText,
-  emptyState = false,
 }: {
   myValues: [number, number, number];
   avgValues: [number, number, number];
@@ -73,7 +205,6 @@ function TriangleChart({
   myMeasurementLabel: string;
   avgLabel: string;
   chartDescriptionText: string;
-  emptyState?: boolean;
 }) {
   const size = 320;
   const padding = 25;
@@ -85,8 +216,9 @@ function TriangleChart({
   const gridAngles = [15, 30, 45];
 
   const getPoint = (index: number, value: number) => {
-    const angle = ((index * 120) - 90) * (Math.PI / 180);
+    const angle = (index * 120 - 90) * (Math.PI / 180);
     const radius = (Math.min(value, maxAngle) / maxAngle) * maxRadius;
+
     return {
       x: centerX + radius * Math.cos(angle),
       y: centerY + radius * Math.sin(angle),
@@ -94,15 +226,19 @@ function TriangleChart({
   };
 
   const createPath = (values: [number, number, number]) => {
-    const points = values.map((val, idx) => getPoint(idx, val));
-    return points
-      .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
-      .join(' ') + ' Z';
+    const points = values.map((value, index) => getPoint(index, value));
+
+    return (
+      points
+        .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+        .join(' ') + ' Z'
+    );
   };
 
   const getLabelPosition = (index: number) => {
-    const angle = ((index * 120) - 90) * (Math.PI / 180);
+    const angle = (index * 120 - 90) * (Math.PI / 180);
     const labelRadius = index === 0 ? maxRadius + 6 : maxRadius + 24;
+
     return {
       x: centerX + labelRadius * Math.cos(angle),
       y: centerY + labelRadius * Math.sin(angle),
@@ -110,8 +246,9 @@ function TriangleChart({
   };
 
   const getGridLabelPosition = (gridValue: number) => {
-    const angle = ((2 * 120) - 90) * (Math.PI / 180);
+    const angle = (2 * 120 - 90) * (Math.PI / 180);
     const radius = (gridValue / maxAngle) * maxRadius;
+
     return {
       x: centerX + radius * Math.cos(angle) - 14,
       y: centerY + radius * Math.sin(angle) + 5,
@@ -140,6 +277,7 @@ function TriangleChart({
 
         {[0, 1, 2].map((index) => {
           const point = getPoint(index, maxAngle);
+
           return (
             <Line
               key={index}
@@ -155,16 +293,9 @@ function TriangleChart({
 
         {gridAngles.map((value) => {
           const position = getGridLabelPosition(value);
+
           return (
-            <SvgText
-              key={value}
-              x={position.x}
-              y={position.y}
-              textAnchor="middle"
-              // dominantBaseline="middle"
-              fontSize="10"
-              fill="#9CA3AF"
-            >
+            <SvgText key={value} x={position.x} y={position.y} textAnchor="middle" fontSize="10" fill="#9CA3AF">
               {value}°
             </SvgText>
           );
@@ -201,7 +332,6 @@ function TriangleChart({
                 x={point.x + textOffset.x}
                 y={point.y + textOffset.y}
                 textAnchor={textOffset.anchor}
-                // dominantBaseline="middle"
                 fontSize="11"
                 fontWeight="700"
                 fill="#2C9696"
@@ -216,13 +346,13 @@ function TriangleChart({
           const position = getLabelPosition(index);
           const xOffset = index === 0 ? 0 : index === 1 ? -25 : 25;
           const yOffset = index === 0 ? 0 : 10;
+
           return (
             <SvgText
               key={label}
               x={position.x + xOffset}
               y={position.y + yOffset}
               textAnchor="middle"
-              // dominantBaseline="middle"
               fontSize="12"
               fill="#6B7280"
             >
@@ -252,34 +382,33 @@ function ReportItem({
   item,
   onPress,
 }: {
-  item: AnalysisResponse;
-  onPress: (analysisId: string) => void;
+  item: ReportListItem;
+  onPress: (item: ReportListItem) => void;
 }) {
-  const isThreeD = item.analysis_type === 2;
+  const isDisabled = !item.navigationId;
+
   return (
-    <Pressable style={styles.itemCard} onPress={() => onPress(item.id)}>
+    <Pressable
+      style={styles.itemCard}
+      disabled={isDisabled}
+      onPress={() => onPress(item)}
+    >
       <View style={styles.itemLeft}>
-        <Text style={styles.itemDate}>{formatDate(item.created_at)}</Text>
-        <View style={isThreeD ? styles.ThreeitemBadge : styles.itemBadge}>
-          <Text style={isThreeD ? styles.ThreeitemBadgeText : styles.itemBadgeText}>
-            {ANALYSIS_LABELS[item.analysis_type] ?? '측정 결과'}
+        <Text style={styles.itemDate}>{formatDate(item.createdAt)}</Text>
+        <View style={item.source === 'rotation' ? styles.ThreeitemBadge : styles.itemBadge}>
+          <Text style={item.source === 'rotation' ? styles.ThreeitemBadgeText : styles.itemBadgeText}>
+            {item.badgeLabel}
           </Text>
         </View>
       </View>
 
       <View style={styles.itemRight}>
-        <Text style={styles.metricLine}>
-          <Text style={styles.metricLabel}>상부 흉추만곡 </Text>
-          <Text style={styles.metricValue}>{formatDegree(item.second_thoracic)}</Text>
-        </Text>
-        <Text style={styles.metricLine}>
-          <Text style={styles.metricLabel}>주 흉추만곡 </Text>
-          <Text style={styles.metricValue}>{formatDegree(item.main_thoracic)}</Text>
-        </Text>
-        <Text style={styles.metricLine}>
-          <Text style={styles.metricLabel}>요추만곡 </Text>
-          <Text style={styles.metricValue}>{formatDegree(item.lumbar)}</Text>
-        </Text>
+        {item.metrics.map((metric) => (
+          <Text key={metric.label} style={styles.metricLine}>
+            <Text style={styles.metricLabel}>{metric.label} </Text>
+            <Text style={styles.metricValue}>{formatDegree(metric.value)}</Text>
+          </Text>
+        ))}
       </View>
     </Pressable>
   );
@@ -300,62 +429,24 @@ function SummaryCard({
   );
 }
 
-// 최근 7일 변화량 그래프
-type TrendAngleKey = 'proximal' | 'main' | 'lumbar';
-type TrendPoint = {
-  label: string;
-  dateLabel: string;
-  value: number | null;
-  x: number;
-  y: number | null;
-};
-
-type TrendPlotPoint = Omit<TrendPoint, 'y'> & {
-  y: number;
-};
-
-function isTrendPlotPoint(point: TrendPoint): point is TrendPlotPoint {
-  return point.y !== null;
-}
-
-const TREND_ANGLE_OPTIONS: { key: TrendAngleKey; label: string; displayLabel: string; field: keyof Pick<AnalysisResponse, 'main_thoracic' | 'second_thoracic' | 'lumbar'> }[] = [
-  { key: 'proximal', label: '상부 흉추', displayLabel: '상부 흉추만곡', field: 'main_thoracic' },
-  { key: 'main', label: '주 흉추', displayLabel: '주 흉추만곡', field: 'second_thoracic' },
-  { key: 'lumbar', label: '요추', displayLabel: '요추만곡', field: 'lumbar' },
-];
-
-const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-const CHART_WIDTH = 320;
-const CHART_HEIGHT = 148;
-const CHART_PADDING = { top: 10, right: 14, bottom: 12, left: 14 };
-const ACTUAL_WEEKDAY_LABELS = WEEKDAY_LABELS;
-
-function getTrendValue(analysis: AnalysisResponse | undefined, key: TrendAngleKey) {
-  const option = TREND_ANGLE_OPTIONS.find((item) => item.key === key) ?? TREND_ANGLE_OPTIONS[1];
-  return Math.abs(Number(analysis?.[option.field]) || 0);
-}
-
-function getDateKey(date: Date) {
-  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-}
-
 function TrendValueChart({
-  analyses,
+  records,
 }: {
-  analyses: AnalysisResponse[];
+  records: CurvatureResponse[];
 }) {
   const [selectedAngle, setSelectedAngle] = useState<TrendAngleKey>('main');
 
-  const sortedAnalyses = useMemo(
+  const sortedRecords = useMemo(
     () =>
-      [...analyses].sort(
-        (left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime(),
+      [...records].sort(
+        (left, right) =>
+          new Date(getMeasurementDate(left)).getTime() - new Date(getMeasurementDate(right)).getTime(),
       ),
-    [analyses],
+    [records],
   );
 
   const chartData = useMemo(() => {
-    if (!sortedAnalyses.length) return [];
+    if (!sortedRecords.length) return [];
 
     const endDate = new Date();
     const startDate = new Date(endDate);
@@ -364,23 +455,25 @@ function TrendValueChart({
     endDate.setHours(23, 59, 59, 999);
 
     const valuesByDay = new Map<string, number>();
-    sortedAnalyses.forEach((analysis) => {
-      const analysisDate = new Date(analysis.created_at);
-      if (analysisDate < startDate || analysisDate > endDate) return;
-      valuesByDay.set(getDateKey(analysisDate), getTrendValue(analysis, selectedAngle));
+
+    sortedRecords.forEach((record) => {
+      const measurementDate = new Date(getMeasurementDate(record));
+      if (measurementDate < startDate || measurementDate > endDate) return;
+
+      valuesByDay.set(getDateKey(measurementDate), getTrendValue(record, selectedAngle));
     });
 
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + index);
-      const value = valuesByDay.get(getDateKey(date));
+
       return {
-        label: ACTUAL_WEEKDAY_LABELS[date.getDay()],
+        label: WEEKDAY_LABELS[date.getDay()],
         dateLabel: `${date.getMonth() + 1}/${date.getDate()}`,
-        value: value ?? null,
+        value: valuesByDay.get(getDateKey(date)) ?? null,
       };
     });
-  }, [selectedAngle, sortedAnalyses]);
+  }, [selectedAngle, sortedRecords]);
 
   const values = useMemo(
     () => chartData.map((item) => item.value).filter((value): value is number => typeof value === 'number'),
@@ -399,11 +492,13 @@ function TrendValueChart({
   }, [values]);
 
   const recentChange = useMemo(() => {
-    if (sortedAnalyses.length < 2) return 0;
-    const last = getTrendValue(sortedAnalyses[sortedAnalyses.length - 1], selectedAngle);
-    const prev = getTrendValue(sortedAnalyses[sortedAnalyses.length - 2], selectedAngle);
-    return Number((last - prev).toFixed(1));
-  }, [selectedAngle, sortedAnalyses]);
+    if (sortedRecords.length < 2) return 0;
+
+    const last = getTrendValue(sortedRecords[sortedRecords.length - 1], selectedAngle);
+    const previous = getTrendValue(sortedRecords[sortedRecords.length - 2], selectedAngle);
+
+    return Number((last - previous).toFixed(1));
+  }, [selectedAngle, sortedRecords]);
 
   const maxValue = Math.max(40, ...values, 0);
   const plotWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
@@ -413,7 +508,9 @@ function TrendValueChart({
 
   const points: TrendPoint[] = chartData.map((item, index) => {
     const x = CHART_PADDING.left + stepX * index;
-    const y = item.value === null ? null : CHART_PADDING.top + plotHeight - (item.value / maxValue) * plotHeight;
+    const y =
+      item.value === null ? null : CHART_PADDING.top + plotHeight - (item.value / maxValue) * plotHeight;
+
     return { ...item, x, y };
   });
 
@@ -450,6 +547,7 @@ function TrendValueChart({
     }
 
     const path = [`M ${segment[0].x} ${segment[0].y}`];
+
     for (let index = 0; index < segment.length - 1; index += 1) {
       const current = segment[index];
       const next = segment[index + 1];
@@ -471,32 +569,9 @@ function TrendValueChart({
     const linePath = buildSmoothLinePath(segment);
     const first = segment[0];
     const last = segment[segment.length - 1];
+
     return `${linePath} L ${last.x} ${baselineY} L ${first.x} ${baselineY} Z`;
   };
-
-  // 일주일 치 데이터 로그 확인용
-  // useEffect(() => {
-  //   const now = new Date();
-  //   console.log('[변화량 차트] 현재 시스템 날짜:', now.toISOString());
-  //   console.log(
-  //     '[변화량 차트] 오늘 날짜:',
-  //     `${now.getMonth() + 1}월 ${now.getDate()}일`,
-  //     ACTUAL_WEEKDAY_LABELS[now.getDay()],
-  //   );
-  //   console.log('[변화량 차트] 선택한 각도:', activeLabel);
-  //   console.log(
-  //     '[변화량 차트] 원본 측정일 목록:',
-  //     sortedAnalyses.map((analysis) => analysis.created_at),
-  //   );
-  //   console.log(
-  //     '[변화량 차트] 최근 7일 데이터:',
-  //     chartData.map((point) => ({
-  //       label: point.label,
-  //       날짜: point.dateLabel,
-  //       값: point.value,
-  //     })),
-  //   );
-  // }, [activeLabel, chartData, sortedAnalyses]);
 
   return (
     <View style={styles.trendCard}>
@@ -507,7 +582,8 @@ function TrendValueChart({
             <Text style={styles.trendValue}>{progression.toFixed(1)}°</Text>
             <View style={styles.trendBadge}>
               <Text style={styles.trendBadgeText}>
-                최근 변화 {recentChange >= 0 ? '+' : ''}{recentChange.toFixed(1)}°
+                최근 변화량{recentChange >= 0 ? '+' : ''}
+                {recentChange.toFixed(1)}°
               </Text>
             </View>
           </View>
@@ -517,6 +593,7 @@ function TrendValueChart({
         <View style={styles.trendSelector}>
           {TREND_ANGLE_OPTIONS.map((option) => {
             const active = selectedAngle === option.key;
+
             return (
               <Pressable
                 key={option.key}
@@ -537,30 +614,29 @@ function TrendValueChart({
           <Svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
             <Defs>
               <LinearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor="#5AA6FF" stopOpacity={0.30} />
+                <Stop offset="0%" stopColor="#5AA6FF" stopOpacity={0.3} />
                 <Stop offset="55%" stopColor="#5AA6FF" stopOpacity={0.14} />
-                <Stop offset="100%" stopColor="#5AA6FF" stopOpacity={0.00} />
+                <Stop offset="100%" stopColor="#5AA6FF" stopOpacity={0} />
               </LinearGradient>
             </Defs>
 
             {segments.map((segment, index) => (
               <G key={`segment-${index}`}>
-                {segment.length > 1 ? (
-                  <Path d={buildAreaPath(segment)} fill="url(#trendFill)" />
-                ) : null}
-                <Path d={buildSmoothLinePath(segment)} fill="none" stroke="#2E96FF" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+                {segment.length > 1 ? <Path d={buildAreaPath(segment)} fill="url(#trendFill)" /> : null}
+                <Path
+                  d={buildSmoothLinePath(segment)}
+                  fill="none"
+                  stroke="#2E96FF"
+                  strokeWidth={1}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </G>
             ))}
 
             {points.map((point) => (
               <G key={point.dateLabel}>
-                <SvgText
-                  x={point.x}
-                  y={CHART_HEIGHT - 2}
-                  textAnchor="middle"
-                  fontSize="10"
-                  fill="#A7B4C7"
-                >
+                <SvgText x={point.x} y={CHART_HEIGHT - 2} textAnchor="middle" fontSize="10" fill="#A7B4C7">
                   {point.label}
                 </SvgText>
               </G>
@@ -569,16 +645,17 @@ function TrendValueChart({
         </View>
       ) : (
         <View style={styles.trendEmptyState}>
-          <Text style={styles.trendEmptyText}>최근 분석 데이터가 없습니다.</Text>
+          <Text style={styles.trendEmptyText}>최근 7일측정 데이터가 없습니다.</Text>
         </View>
       )}
     </View>
   );
 }
-// 최근 7일 변화량 그래프
+
 export default function ReportScreen() {
   const router = useRouter();
-  const [analyses, setAnalyses] = useState<AnalysisResponse[]>([]);
+  const [curvatures, setCurvatures] = useState<CurvatureResponse[]>([]);
+  const [rotations, setRotations] = useState<RotationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [tabsWidth, setTabsWidth] = useState(0);
@@ -589,16 +666,34 @@ export default function ReportScreen() {
 
     const load = async () => {
       try {
-        const response = await analysisAPI.getAnalyses({ limit: 100 });
-        if (active) {
-          const sorted = [...response.data].sort(
-            (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
+        const [curvatureResult, rotationResult] = await Promise.allSettled([
+          curvatureAPI.getAnalyses({ limit: 100 }),
+          rotationAPI.getAnalyses({ limit: 100 }),
+        ]);
+
+        if (!active) return;
+
+        if (curvatureResult.status === 'fulfilled') {
+          const sortedCurvatures = [...curvatureResult.value.data].sort(
+            (left, right) =>
+              new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),
           );
-          setAnalyses(sorted);
+          setCurvatures(sortedCurvatures);
+        } else {
+          console.error('Failed to load curvatures:', curvatureResult.reason);
+          setCurvatures([]);
         }
-      } catch (error) {
-        console.error('Failed to load analyses:', error);
-        if (active) setAnalyses([]);
+
+        if (rotationResult.status === 'fulfilled') {
+          const sortedRotations = [...rotationResult.value.data].sort(
+            (left, right) =>
+              new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),
+          );
+          setRotations(sortedRotations);
+        } else {
+          console.error('Failed to load rotations:', rotationResult.reason);
+          setRotations([]);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -613,6 +708,7 @@ export default function ReportScreen() {
 
   useEffect(() => {
     const targetIndex = FILTERS.findIndex((item) => item.key === selectedFilter);
+
     Animated.timing(animatedTab, {
       toValue: targetIndex < 0 ? 0 : targetIndex,
       duration: 220,
@@ -621,33 +717,42 @@ export default function ReportScreen() {
     }).start();
   }, [animatedTab, selectedFilter]);
 
-  const filteredAnalyses = useMemo(() => {
-    if (selectedFilter === 'all') return analyses;
-    return analyses.filter((item) => getAnalysisCategory(item) === selectedFilter);
-  }, [analyses, selectedFilter]);
+  const listItems = useMemo(() => {
+    const merged = [
+      ...curvatures.map(toCurvatureListItem),
+      ...rotations.map(toRotationListItem),
+    ];
 
-  const latest2D = useMemo(
-    () => analyses.find((item) => item.analysis_type === 1) ?? analyses[0],
-    [analyses],
-  );
+    return merged.sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+  }, [curvatures, rotations]);
+
+  const filteredItems = useMemo(() => {
+    if (selectedFilter === 'all') return listItems;
+    return listItems.filter((item) => item.category === selectedFilter);
+  }, [listItems, selectedFilter]);
+
+  const latestCurvature = useMemo(() => curvatures[0] ?? null, [curvatures]);
 
   const myValues: [number, number, number] = [
-    Math.abs(latest2D?.second_thoracic ?? 0),
-    Math.abs(latest2D?.main_thoracic ?? 0),
-    Math.abs(latest2D?.lumbar ?? 0),
+    Math.abs(latestCurvature?.secondary_thoracic_cobb ?? 0),
+    Math.abs(latestCurvature?.main_thoracic_cobb ?? 0),
+    Math.abs(latestCurvature?.lumbar_cobb ?? 0),
   ];
 
   const avgValues: [number, number, number] = [18, 18, 18];
   const summaryCards = [
-    { label: '상부 흉추만곡', value: formatDegree(latest2D?.second_thoracic) },
-    { label: '주 흉추만곡', value: formatDegree(latest2D?.main_thoracic) },
-    { label: '요추만곡', value: formatDegree(latest2D?.lumbar) },
+    { label: CURVATURE_METRIC_LABELS[0], value: formatDegree(latestCurvature?.secondary_thoracic_cobb) },
+    { label: CURVATURE_METRIC_LABELS[1], value: formatDegree(latestCurvature?.main_thoracic_cobb) },
+    { label: CURVATURE_METRIC_LABELS[2], value: formatDegree(latestCurvature?.lumbar_cobb) },
   ];
+
   const tabWidth = tabsWidth > 0 ? tabsWidth / FILTERS.length : 0;
   const translateX = tabWidth
     ? animatedTab.interpolate({
-        inputRange: [0, 1, 2, 3],
-        outputRange: [0, tabWidth, tabWidth * 2, tabWidth * 3],
+        inputRange: FILTERS.map((_, index) => index),
+        outputRange: FILTERS.map((_, index) => tabWidth * index),
       })
     : 0;
 
@@ -655,13 +760,22 @@ export default function ReportScreen() {
     setTabsWidth(event.nativeEvent.layout.width);
   };
 
-  const handleAnalysisPress = (analysisId: string) => {
-    router.push(`/analysis/${analysisId}`);
+  const handleAnalysisPress = (item: ReportListItem) => {
+    if (!item.navigationId) return;
+    router.push({
+      pathname: '/analysis/[id]',
+      params: {
+        id: item.navigationId,
+        source: item.source,
+      },
+    });
   };
 
   const handleGoHome = () => {
     router.replace('/home');
   };
+
+  const hasCurvatureData = curvatures.length > 0;
 
   return (
     <View style={styles.screen}>
@@ -677,118 +791,130 @@ export default function ReportScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-        <Text style={styles.pageTitle}>척추 균형 분석</Text>
-        <View style={styles.chartCard}>
-          <TriangleChart
-            myValues={myValues}
-            avgValues={avgValues}
-            labels={['상부 흉추만곡', '주 흉추만곡', '요추만곡']}
-            myMeasurementLabel="나의 측정값"
-            avgLabel="한국인 평균 측정값"
-            chartDescriptionText="중심선이 가까울수록 정상이에요."
-            emptyState={analyses.length === 0}
-          />
-          {analyses.length === 0 ? (
-            <View style={styles.emptyOverlay}>
-              {/* 흐린 배경 오버레이 표시 */}
-              <BlurView intensity={110} tint="light" style={styles.blurView} pointerEvents="none" />
-              <View style={styles.grayOverlay} pointerEvents="none" />
-              <View style={styles.emptyContent}>
-                <View style={styles.emptyStateCard}>
-                 <View style={styles.emptyStateHeader}>
-  <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%">
-    <Defs>
-      <LinearGradient id="emptyHeaderGradient" x1="0" y1="0" x2="0" y2="1">
-        <Stop offset="18%" stopColor="#D6FFFE" />
-        <Stop offset="100%" stopColor="#FFFFFF" />
-      </LinearGradient>
-    </Defs>
-    <Rect width="100%" height="100%" fill="url(#emptyHeaderGradient)" />
-  </Svg>
-  <TwoDCamera width={110} height={110} />
-</View>
+          <Text style={styles.pageTitle}>척추 균형 분석</Text>
 
-                  <View style={styles.emptyStateBody}>
-                    <Text style={styles.emptyStateTitle}>먼저 측정을 해야해요</Text>
-                    <Text style={styles.emptyStateMessage}>
-                      분석을 위해선 먼저 측정을 해야해요{'\n'}
-                      아래 버튼을 눌러서 진행해주세요
-                    </Text>
-                    <Pressable style={styles.emptyStateButton} onPress={handleGoHome}>
-                      <Text style={styles.emptyStateButtonText}>홈으로 돌아가기</Text>
-                    </Pressable>
+          <View style={styles.chartCard}>
+             <TriangleChart
+              myValues={myValues}
+              avgValues={avgValues}
+              labels={['상부 흉추 각도', '주 흉추 각도', '요추 각도']}
+              myMeasurementLabel="내 측정값"
+              avgLabel="한국인 평균 측정값"
+              chartDescriptionText="중심에 가까울수록 정상 범위에 가깝습니다."
+            />
+
+            {!hasCurvatureData ? (
+              <View style={styles.emptyOverlay}>
+                <BlurView intensity={110} tint="light" style={styles.blurView} pointerEvents="none" />
+                <View style={styles.grayOverlay} pointerEvents="none" />
+                <View style={styles.emptyContent}>
+                  <View style={styles.emptyStateCard}>
+                    <View style={styles.emptyStateHeader}>
+                      <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%">
+                        <Defs>
+                          <LinearGradient id="emptyHeaderGradient" x1="0" y1="0" x2="0" y2="1">
+                            <Stop offset="18%" stopColor="#D6FFFE" />
+                            <Stop offset="100%" stopColor="#FFFFFF" />
+                          </LinearGradient>
+                        </Defs>
+                        <Rect width="100%" height="100%" fill="url(#emptyHeaderGradient)" />
+                      </Svg>
+                      <TwoDCamera width={110} height={110} />
+                    </View>
+
+                    <View style={styles.emptyStateBody}>
+                      <Text style={styles.emptyStateTitle}>먼저 측정을 해야해요</Text>
+                      <Text style={styles.emptyStateMessage}>
+                        분석을 위해선 먼저 측정을 해야해요
+                        {'\n'}
+                        아래 버튼을 눌러서 진행해주세요
+                      </Text>
+                      <Pressable style={styles.emptyStateButton} onPress={handleGoHome}>
+                        <Text style={styles.emptyStateButtonText}>홈으로 돌아가기</Text>
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          ) : null}
-        </View>
-
-        <View style={styles.summaryRow}>
-          {summaryCards.map((card) => (
-            <SummaryCard key={card.label} label={card.label} value={card.value} />
-          ))}
-        </View>
-        {/* 최근 7일 변화량 */}
-        <TrendValueChart analyses={analyses.filter((item) => item.analysis_type === 1)} />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>측정 목록</Text>
-          <View style={styles.tabsWrap} onLayout={handleTabsLayout}>
-            <View style={styles.tabs}>
-            {FILTERS.map((filter) => {
-              const tabIndex = FILTERS.findIndex((item) => item.key === filter.key);
-              const color = animatedTab.interpolate({
-                inputRange: [tabIndex - 1, tabIndex, tabIndex + 1],
-                outputRange: ['#111827', '#5E9F9E', '#111827'],
-                extrapolate: 'clamp',
-              });
-              return (
-                <Pressable
-                  key={filter.key}
-                  onPress={() => setSelectedFilter(filter.key)}
-                  style={styles.tabButton}
-                >
-                  <Animated.Text style={[styles.tabText, { color }]}>{filter.label}</Animated.Text>
-                </Pressable>
-              );
-            })}
-            </View>
-            <View style={styles.tabDivider} />
-            {tabWidth > 0 ? (
-              <Animated.View
-                style={[
-                  styles.tabIndicator,
-                  {
-                    width: tabWidth,
-                    transform: [{ translateX: translateX as any }],
-                  },
-                ]}
-              />
             ) : null}
           </View>
 
-            <View style={styles.listArea}>
+          <View style={styles.summaryRow}>
+            {summaryCards.map((card) => (
+              <SummaryCard key={card.label} label={card.label} value={card.value} />
+            ))}
+          </View>
+
+          <TrendValueChart records={curvatures} />
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>측정 목록</Text>
+
+            <View style={styles.tabsWrap} onLayout={handleTabsLayout}>
+              <View style={styles.tabs}>
+                {FILTERS.map((filter) => {
+                  const tabIndex = FILTERS.findIndex((item) => item.key === filter.key);
+                  const color = animatedTab.interpolate({
+                    inputRange: [tabIndex - 1, tabIndex, tabIndex + 1],
+                    outputRange: ['#111827', '#5E9F9E', '#111827'],
+                    extrapolate: 'clamp',
+                  });
+
+                  return (
+                    <Pressable
+                      key={filter.key}
+                      onPress={() => setSelectedFilter(filter.key)}
+                      style={styles.tabButton}
+                    >
+                      <Animated.Text style={[styles.tabText, { color }]}>{filter.label}</Animated.Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <View style={styles.tabDivider} />
+
+              {tabWidth > 0 ? (
+                <Animated.View
+                  style={[
+                    styles.tabIndicator,
+                    {
+                      width: tabWidth,
+                      transform: [{ translateX: translateX as never }],
+                    },
+                  ]}
+                />
+              ) : null}
+            </View>
+
+            <View
+              style={[
+                styles.listArea,
+                !loading && filteredItems.length === 0 ? styles.listAreaEmpty : null,
+              ]}
+            >
               {loading ? (
                 <View style={styles.loadingBox}>
                   <ActivityIndicator color="#69B7BC" />
                 </View>
-              ) : filteredAnalyses.length > 0 ? (
+              ) : filteredItems.length > 0 ? (
                 <ScrollView
                   nestedScrollEnabled
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.listScrollContent}
                 >
                   <View style={styles.list}>
-                    {filteredAnalyses.map((item) => (
+                    {filteredItems.map((item) => (
                       <ReportItem key={item.id} item={item} onPress={handleAnalysisPress} />
                     ))}
                   </View>
                 </ScrollView>
               ) : (
                 <View style={styles.emptyBox}>
-                  <Text style={styles.emptyTitle}>아직 측정한 기록이 없어요</Text>
-                  <Text style={styles.emptyText}>측정 후 진행하고 기록을 확인해보세요</Text>
+                  <Text style={styles.emptyTitle}>
+                    아직 측정 기록이 없어요
+                  </Text>
+                  <Text style={styles.emptyText}>측정을 진행한 뒤 이곳에서 기록을 확인할 수 있어요</Text>
                 </View>
               )}
             </View>
@@ -799,4 +925,3 @@ export default function ReportScreen() {
     </View>
   );
 }
-
