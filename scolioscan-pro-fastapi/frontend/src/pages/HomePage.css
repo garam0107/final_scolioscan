@@ -1,0 +1,188 @@
+.home-page {
+  background-color: var(--background-color);
+}
+
+.home-content {
+  padding: 20px;
+  padding-bottom: 100px;
+}
+
+/* 광고 슬라이드 */
+.ad-slider {
+  position: relative;
+  margin-bottom: 30px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.ad-slides {
+  display: flex;
+  transition: transform 0.3s ease-out;
+}
+
+.ad-card {
+  min-width: 100%;
+  height: 180px;
+  padding: 30px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.ad-card h3 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.ad-card p {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.ad-indicators {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.ad-indicators .indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ad-indicators .indicator.active {
+  background-color: white;
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* 측정 방법 섹션 */
+.measurement-section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.measurement-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.measurement-card {
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.measurement-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 188, 183, 0.2);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.card-text {
+  flex: 1;
+  text-align: left;
+}
+
+.card-icon {
+  font-size: 48px;
+  flex-shrink: 0;
+}
+
+.measurement-card h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.measurement-card p {
+  font-size: 14px;
+  color: #666;
+}
+
+/* 병원 섹션 */
+.hospital-section {
+  margin-bottom: 30px;
+}
+
+.hospital-slider {
+  position: relative;
+  overflow: hidden;
+}
+
+.hospital-slides {
+  display: flex;
+  gap: 16px;
+  transition: transform 0.3s ease-out;
+}
+
+.hospital-card {
+  min-width: calc(50% - 8px);
+  padding: 20px;
+  text-align: center;
+}
+
+.hospital-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.hospital-card h4 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.hospital-address {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.hospital-specialty {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .home-content {
+    padding: 15px;
+  }
+
+  .ad-card {
+    height: 150px;
+    padding: 20px;
+  }
+
+  .ad-card h3 {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,107 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-color);
+  padding: 40px 20px;
+}
+
+.register-container {
+  background-color: white;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.register-header h1 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.register-header p {
+  font-size: 14px;
+  color: #999;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ssn-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ssn-input {
+  flex: 0 0 120px;
+}
+
+.ssn-input-short {
+  flex: 0 0 50px;
+}
+
+.ssn-separator {
+  font-size: 20px;
+  color: #999;
+}
+
+.ssn-mask {
+  font-size: 20px;
+  color: #999;
+  letter-spacing: 2px;
+}
+
+.address-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.address-input-group .input {
+  flex: 1;
+}
+
+.address-btn {
+  flex: 0 0 120px;
+  padding: 12px 16px;
+  white-space: nowrap;
+}
+
+.register-btn {
+  margin-top: 10px;
+  height: 50px;
+  font-size: 16px;
+}
+
+.register-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .register-container {
+    padding: 30px 20px;
+  }
+
+  .address-input-group {
+    flex-direction: column;
+  }
+
+  .address-btn {
+    flex: 1;
+    width: 100%;
+  }
+}

@@ -1,0 +1,44 @@
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+
+export default function IndexPage() {
+  const router = useRouter();
+  const { loading, isAuthenticated } = useAuth();
+    useEffect(() => {
+    if (loading) return;
+
+    router.replace(isAuthenticated ? '/home' : '/intro');
+  }, [loading, isAuthenticated, router]);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.center}>
+        <Text style={styles.brand}>ScolioScan</Text>
+        <ActivityIndicator color="#5F9F9D" style={styles.spinner} />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#22BCB7',
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brand: {
+    color: '#F5F7FB',
+    fontFamily: 'MuseoModerno_700Bold',
+    fontSize: 28,
+    marginBottom: 16,
+  },
+  spinner: {
+    marginTop: 8,
+  },
+});
