@@ -1,7 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { Alert, Pressable, SafeAreaView, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
+
 import { CameraGuidelineOverlay } from './components/CameraGuidelineOverlay';
 import { styles } from './measure2d.styles';
 
@@ -10,6 +13,8 @@ export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [capturing, setCapturing] = useState(false);
+  const [showGuideText, setShowGuideText] = useState(true);
+  const [stageLayout, setStageLayout] = useState({ width: 0, height: 0 });
 
   if (!permission) {
     return <View style={styles.screen} />;
@@ -34,9 +39,12 @@ export default function Measure2DScreen() {
         skipProcessing: true,
       });
 
-      if (!photo?.uri) return;
+      if (!photo?.uri) {
+        return;
+      }
+
       Alert.alert('촬영 완료', photo.uri);
-    } catch (error) {
+    } catch {
       Alert.alert('촬영 실패', '사진을 저장하지 못했어요.');
     } finally {
       setCapturing(false);
@@ -45,16 +53,28 @@ export default function Measure2DScreen() {
 
   return (
     <View style={styles.screen}>
-      <CameraView ref={cameraRef} style={styles.camera} facing="back" />
-      <CameraGuidelineOverlay />
+      <View
+        style={styles.cameraStage}
+        onLayout={(event) => {
+          const { width, height } = event.nativeEvent.layout;
+          setStageLayout({ width, height });
+        }}
+      >
+        <CameraView ref={cameraRef} style={styles.camera} facing="back" />
+        {stageLayout.width > 0 && stageLayout.height > 0 ? (
+          <CameraGuidelineOverlay width={stageLayout.width} height={stageLayout.height} />
+        ) : null}
+      </View>
 
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.topBar}>
-          <Text style={styles.topText}>가이드라인에 맞추면 자동으로 촬영됩니다</Text>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Text style={styles.closeText}>×</Text>
-          </Pressable>
-        </View>
+      <SafeAreaView style={styles.safeArea} pointerEvents="box-none">
+        {showGuideText ? (
+  <View style={styles.topBar}>
+    <Text style={styles.topText}>가이드라인에 맞추면 자동으로 촬영됩니다</Text>
+    <Pressable onPress={() => setShowGuideText(false)} hitSlop={12}>
+      <Text style={styles.closeText}>×</Text>
+    </Pressable>
+  </View>
+) : null}
 
         <View style={styles.bottomBar}>
           <Pressable

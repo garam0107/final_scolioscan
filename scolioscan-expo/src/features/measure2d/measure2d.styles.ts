@@ -5,16 +5,20 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
+  cameraStage: {
+    flex: 1,
+  },
   camera: {
     ...StyleSheet.absoluteFillObject,
   },
   safeArea: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 2,
   },
   topBar: {
     minHeight: 56,
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 50,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
