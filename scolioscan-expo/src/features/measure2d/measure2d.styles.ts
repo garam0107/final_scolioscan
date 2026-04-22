@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
   topBar: {
     minHeight: 56,
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 30,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -34,6 +34,31 @@ export const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '300',
     lineHeight: 34,
+  },
+  guideCard: {
+    alignSelf: 'center',
+    marginHorizontal: 20,
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(12, 14, 18, 0.62)',
+  },
+  guideCardText: {
+    color: '#fff',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  guideMetaRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guideMetaText: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 12,
   },
   bottomBar: {
     flex: 1,
