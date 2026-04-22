@@ -12,7 +12,7 @@ import os
 import logging
 
 import numpy as np
-from PIL import Image
+from PIL import Image,ImageOps,ExifTags
 import tensorflow as tf
 from tensorflow.keras.models import model_from_json
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -241,8 +241,24 @@ async def detect_landmarks(file: UploadFile = File(...)):
     """Extract 33 MediaPipe pose landmarks from image. Used for real-time pose guidance."""
     try:
         contents = await file.read()
-        img = Image.open(io.BytesIO(contents)).convert("RGB")
+
+        # 원본 이미지/EXIF 메타를 읽어 현재 사진의 방향 정보 확인
+        raw_img = Image.open(io.BytesIO(contents))
+        raw_exif = raw_img.getexif()
+        orientation = raw_exif.get(ExifTags.Base.Orientation, 1)
+
+        logger.info(
+            "[landmarks] raw_size=%s orientation=%s content_type=%s",
+            raw_img.size,
+            orientation,
+            file.content_type,
+        )
+        # EXIF 회전을 실제 픽셀에 반영해 앱 화면 기준과 좌표계 일치
+        img = ImageOps.exif_transpose(raw_img).convert("RGB")
+        logger.info("[landmarks] rgb_size=%s mode=%s", img.size, img.mode)
+        # MediaPipe 입력용 numpy 배열(H, W, C)로 변환
         img_np = np.array(img)
+        logger.info("[landmarks] np_shape=%s", img_np.shape)
 
         results = _pose.process(img_np)
         if not results.pose_landmarks:

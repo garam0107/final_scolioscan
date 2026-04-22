@@ -21,6 +21,6 @@ export async function detectLandmarks(imageUri: string): Promise<LandmarksApiRes
   }
 
   const payload = (await response.json()) as LandmarksApiResponse;
-  console.log('[measure2d] /ais/landmarks response:', payload);
+  // console.log('[measure2d] /ais/landmarks response:', payload);
   return payload;
 }

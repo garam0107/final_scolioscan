@@ -5,7 +5,11 @@ export type NormalizedRect = {
   bottom: number;
 };
 
-// 화면에 실제로 보이는 가이드라인의 픽셀 좌표를 담는 타입.
+export type NormalizedPoint = {
+  x: number;
+  y: number;
+};
+
 export type GuidelineDisplayGeometry = {
   guideX: number;
   guideY: number;
@@ -13,19 +17,30 @@ export type GuidelineDisplayGeometry = {
   guideHeight: number;
 };
 
-// 표시용 좌표(display)와 판정용 좌표(rect)를 한 번에 묶어서 전달한다.
+export type GuideReferencePoints = {
+  leftShoulder: NormalizedPoint;
+  rightShoulder: NormalizedPoint;
+  leftHip: NormalizedPoint;
+  rightHip: NormalizedPoint;
+};
+
 export type GuidelineGeometry = {
   display: GuidelineDisplayGeometry;
   rect: NormalizedRect;
+  referencePoints: GuideReferencePoints;
 };
 
-// SVG 원본 크기. 화면 스케일 계산의 기준점이다.
 const BASE_W = 237;
 const BASE_H = 588;
-// 가이드라인 마네킹이 프리뷰 폭에서 차지할 비율.
 const GUIDE_WIDTH_RATIO = 0.62;
 
-// 픽셀 좌표를 0~1 범위의 정규화 rect로 바꿔서 landmark 좌표와 비교할 수 있게 한다.
+const LEFT_SHOULDER_X_RATIO = 0.24;
+const RIGHT_SHOULDER_X_RATIO = 0.76;
+const SHOULDER_Y_RATIO = 0.37;
+const LEFT_HIP_X_RATIO = 0.33;
+const RIGHT_HIP_X_RATIO = 0.67;
+const HIP_Y_RATIO = 0.72;
+
 export function buildGuideRect(
   guideX: number,
   guideY: number,
@@ -42,7 +57,30 @@ export function buildGuideRect(
   };
 }
 
-// stage 크기를 기준으로 실제 표시 위치와 판정용 rect를 함께 만든다.
+export function createGuideReferencePoints(rect: NormalizedRect): GuideReferencePoints {
+  const width = rect.right - rect.left;
+  const height = rect.bottom - rect.top;
+
+  return {
+    leftShoulder: {
+      x: rect.left + width * LEFT_SHOULDER_X_RATIO,
+      y: rect.top + height * SHOULDER_Y_RATIO,
+    },
+    rightShoulder: {
+      x: rect.left + width * RIGHT_SHOULDER_X_RATIO,
+      y: rect.top + height * SHOULDER_Y_RATIO,
+    },
+    leftHip: {
+      x: rect.left + width * LEFT_HIP_X_RATIO,
+      y: rect.top + height * HIP_Y_RATIO,
+    },
+    rightHip: {
+      x: rect.left + width * RIGHT_HIP_X_RATIO,
+      y: rect.top + height * HIP_Y_RATIO,
+    },
+  };
+}
+
 export function createGuidelineGeometry(
   previewWidth: number,
   previewHeight: number,
@@ -51,6 +89,7 @@ export function createGuidelineGeometry(
   const guideHeight = guideWidth * (BASE_H / BASE_W);
   const guideX = (previewWidth - guideWidth) / 2;
   const guideY = previewHeight - guideHeight;
+  const rect = buildGuideRect(guideX, guideY, guideWidth, guideHeight, previewWidth, previewHeight);
 
   return {
     display: {
@@ -59,6 +98,7 @@ export function createGuidelineGeometry(
       guideWidth,
       guideHeight,
     },
-    rect: buildGuideRect(guideX, guideY, guideWidth, guideHeight, previewWidth, previewHeight),
+    rect,
+    referencePoints: createGuideReferencePoints(rect),
   };
 }
