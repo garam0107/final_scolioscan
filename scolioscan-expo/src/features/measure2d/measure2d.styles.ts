@@ -17,7 +17,7 @@ export const styles = StyleSheet.create({
   },
   topBar: {
     minHeight: 56,
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
     paddingTop: 30,
     flexDirection: 'row',
     alignItems: 'center',
@@ -27,13 +27,13 @@ export const styles = StyleSheet.create({
   topText: {
     color: '#fff',
     fontSize: 15,
-    fontWeight: '500',
+
   },
   closeText: {
     color: '#fff',
-    fontSize: 30,
-    fontWeight: '300',
-    lineHeight: 34,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
   },
   guideCard: {
     alignSelf: 'center',

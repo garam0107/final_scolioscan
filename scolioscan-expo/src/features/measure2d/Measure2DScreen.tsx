@@ -68,14 +68,14 @@ export default function Measure2DScreen() {
       <SafeAreaView style={styles.safeArea} pointerEvents="box-none">
         {showGuideText ? (
           <View style={styles.topBar}>
-            <Text style={styles.topText}>가이드라인에 맞춘 뒤 수동 촬영으로 확인해 주세요.</Text>
             <Pressable onPress={() => setShowGuideText(false)} hitSlop={12}>
-              <Text style={styles.closeText}>✕</Text>
+              <Text style={styles.topText}>X</Text>
             </Pressable>
+              <Text style={styles.closeText}>가이드에 맞추면 자동으로 촬영이 진행됩니다.</Text>        
           </View>
         ) : null}
 
-        <View style={styles.guideCard}>
+        {/* <View style={styles.guideCard}>
           <Text style={styles.guideCardText}>{guideMessage}</Text>
           <View style={styles.guideMetaRow}>
             <Text style={styles.guideMetaText}>{isAligned ? '정렬 완료' : '대기 중'}</Text>
@@ -84,7 +84,7 @@ export default function Measure2DScreen() {
               {loading ? '분석 중...' : '촬영 버튼을 눌러 주세요.'}
             </Text>
           </View>
-        </View>
+        </View> */}
 
         <View style={styles.bottomBar}>
           <Pressable
