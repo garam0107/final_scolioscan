@@ -1,5 +1,5 @@
-import type { GuideReferencePoints } from './guidelineGeometry';
 import type { LandmarkEvaluation, LandmarkPoint } from '../types';
+import type { GuideReferencePoints } from './guidelineGeometry';
 
 // MediaPipe Pose landmark 인덱스
 const NOSE = 0;
@@ -12,22 +12,30 @@ const RIGHT_SHOULDER = 12;
 const LEFT_HIP = 23;
 const RIGHT_HIP = 24;
 
+// 기본 가시성 임계치
 const MIN_VISIBILITY = 0.6;
 
-// 가이드 기준점 허용 오차(0~1 normalized 좌표)
+// 가이드 4점(어깨/골반) 허용 오차
 const SHOULDER_X_TOLERANCE = 0.075;
 const SHOULDER_Y_TOLERANCE = 0.09;
 const HIP_X_TOLERANCE = 0.085;
 const HIP_Y_TOLERANCE = 0.1;
 
-// 전/후면 판정 임계값
+// 후면/전면 판정 임계치
 const BEHIND_SHOULDER_DELTA = 0.02;
-const FRONT_FACE_SCORE_THRESHOLD = 0.45;
-const BACK_FACE_SCORE_THRESHOLD = 0.25;
+const FACE_VISIBLE_FRONT_THRESHOLD = 0.55;
+const FACE_VISIBLE_BACK_THRESHOLD = 0.3;
 
-// 거리 판정 임계값
+// 거리 판정 임계치 (감지 스케일 / 가이드 스케일)
 const DIST_TOO_CLOSE = 1.22;
 const DIST_TOO_FAR = 0.8;
+
+const REASON_BODY_NOT_VISIBLE = '어깨와 골반이 가이드 안에 보이도록 서주세요.';
+const REASON_BACK_VIEW = '뒷모습이 보이게 서주세요.';
+const REASON_CLOSER = '조금 더 가까이 와주세요.';
+const REASON_FARTHER = '조금 더 멀리 떨어져주세요.';
+const REASON_SHOULDER_ALIGN = '어깨 위치를 가이드라인에 맞춰주세요.';
+const REASON_HIP_ALIGN = '골반 위치를 가이드라인에 맞춰주세요.';
 
 type NamedDetectedPoints = {
   nose: LandmarkPoint | null;
@@ -41,11 +49,14 @@ type NamedDetectedPoints = {
   rightHip: LandmarkPoint | null;
 };
 
+type DirectionLabel = '후면' | '전면' | '판정불가';
+type DistanceLabel = '가까움' | '적정' | '멀음' | '판정불가';
+
 function pointAt(landmarks: LandmarkPoint[], index: number): LandmarkPoint | null {
   return landmarks[index] ?? null;
 }
 
-function isVisible(point: LandmarkPoint | null, threshold = MIN_VISIBILITY) {
+function isVisible(point: LandmarkPoint | null, threshold = MIN_VISIBILITY): boolean {
   return Boolean(point && point.visibility >= threshold);
 }
 
@@ -54,7 +65,7 @@ function axisWithinTolerance(
   guide: { x: number; y: number },
   toleranceX: number,
   toleranceY: number,
-) {
+): boolean {
   if (!detected) return false;
   return Math.abs(detected.x - guide.x) <= toleranceX && Math.abs(detected.y - guide.y) <= toleranceY;
 }
@@ -73,6 +84,95 @@ function midpointGuide(a: { x: number; y: number }, b: { x: number; y: number })
   };
 }
 
+function visibilityScore(points: Array<LandmarkPoint | null>) {
+  const visible = points.filter((point): point is LandmarkPoint => Boolean(point));
+  if (!visible.length) return 0;
+  const total = visible.reduce((acc, point) => acc + point.visibility, 0);
+  return total / visible.length;
+}
+
+function buildDetectedPoints(landmarks: LandmarkPoint[]): NamedDetectedPoints {
+  return {
+    nose: pointAt(landmarks, NOSE),
+    leftEye: pointAt(landmarks, LEFT_EYE),
+    rightEye: pointAt(landmarks, RIGHT_EYE),
+    leftEar: pointAt(landmarks, LEFT_EAR),
+    rightEar: pointAt(landmarks, RIGHT_EAR),
+    leftShoulder: pointAt(landmarks, LEFT_SHOULDER),
+    rightShoulder: pointAt(landmarks, RIGHT_SHOULDER),
+    leftHip: pointAt(landmarks, LEFT_HIP),
+    rightHip: pointAt(landmarks, RIGHT_HIP),
+  };
+}
+
+/**
+ * 후면/전면 판정
+ * - shoulderOrderBack: 기존 앱 규칙(양쪽 어깨 x 순서) 유지
+ * - faceScore: 얼굴 랜드마크 visibility 평균값
+ * - 두 값을 함께 사용해 전면/후면/판정불가로 분류
+ */
+function computeDirection(detected: NamedDetectedPoints) {
+  const shoulderOrderBack = (() => {
+    if (!detected.leftShoulder || !detected.rightShoulder) return false;
+    return detected.rightShoulder.x - detected.leftShoulder.x > BEHIND_SHOULDER_DELTA;
+  })();
+
+  const faceScore = visibilityScore([
+    detected.nose,
+    detected.leftEye,
+    detected.rightEye,
+    detected.leftEar,
+    detected.rightEar,
+  ]);
+
+  let direction: DirectionLabel = '판정불가';
+  if (shoulderOrderBack && faceScore <= FACE_VISIBLE_BACK_THRESHOLD) {
+    direction = '후면';
+  } else if (!shoulderOrderBack && faceScore >= FACE_VISIBLE_FRONT_THRESHOLD) {
+    direction = '전면';
+  } else if (shoulderOrderBack && faceScore < FACE_VISIBLE_FRONT_THRESHOLD) {
+    direction = '후면';
+  }
+
+  return {
+    direction,
+    shoulderOrderBack,
+    faceScore,
+  };
+}
+
+/**
+ * 거리 판정
+ * - 감지된 어깨너비/몸통높이를 가이드 기준값과 비율로 비교
+ * - 비율이 크면 가까움, 작으면 멂
+ */
+function computeDistanceState(detected: NamedDetectedPoints, guidePoints: GuideReferencePoints) {
+  if (!detected.leftShoulder || !detected.rightShoulder || !detected.leftHip || !detected.rightHip) {
+    return { distanceState: '판정불가' as DistanceLabel, scale: 0 };
+  }
+
+  const detectedShoulderWidth = Math.abs(detected.rightShoulder.x - detected.leftShoulder.x);
+  const guideShoulderWidth = Math.abs(guidePoints.rightShoulder.x - guidePoints.leftShoulder.x);
+
+  const detectedTorsoHeight =
+    midpoint(detected.leftHip, detected.rightHip).y - midpoint(detected.leftShoulder, detected.rightShoulder).y;
+  const guideTorsoHeight =
+    midpointGuide(guidePoints.leftHip, guidePoints.rightHip).y -
+    midpointGuide(guidePoints.leftShoulder, guidePoints.rightShoulder).y;
+
+  if (guideShoulderWidth <= 0 || guideTorsoHeight <= 0) {
+    return { distanceState: '판정불가' as DistanceLabel, scale: 0 };
+  }
+
+  const shoulderRatio = detectedShoulderWidth / guideShoulderWidth;
+  const torsoRatio = detectedTorsoHeight / guideTorsoHeight;
+  const scale = (shoulderRatio + torsoRatio) / 2;
+
+  if (scale > DIST_TOO_CLOSE) return { distanceState: '가까움' as DistanceLabel, scale };
+  if (scale < DIST_TOO_FAR) return { distanceState: '멀음' as DistanceLabel, scale };
+  return { distanceState: '적정' as DistanceLabel, scale };
+}
+
 function toFixedPoint(point: LandmarkPoint | null) {
   if (!point) return null;
   return {
@@ -88,101 +188,7 @@ function toFixedGuide(point: { x: number; y: number }) {
     y: Number(point.y.toFixed(4)),
   };
 }
-// 얼굴/몸통 그룹의 평균 visibility를 점수로 계산
-function visibilityScore(points: (LandmarkPoint | null)[]) {
-  const visible = points.filter((p): p is LandmarkPoint => Boolean(p));
-  if (!visible.length) return 0;
-  const sum = visible.reduce((acc, p) => acc + p.visibility, 0);
-  return sum / visible.length;
-}
-// 필요한 랜드마크만 꺼내서 이후 계산에서 재사용
-function buildDetectedPoints(landmarks: LandmarkPoint[]): NamedDetectedPoints {
-  return {
-    nose: pointAt(landmarks, NOSE),
-    leftEye: pointAt(landmarks, LEFT_EYE),
-    rightEye: pointAt(landmarks, RIGHT_EYE),
-    leftEar: pointAt(landmarks, LEFT_EAR),
-    rightEar: pointAt(landmarks, RIGHT_EAR),
-    leftShoulder: pointAt(landmarks, LEFT_SHOULDER),
-    rightShoulder: pointAt(landmarks, RIGHT_SHOULDER),
-    leftHip: pointAt(landmarks, LEFT_HIP),
-    rightHip: pointAt(landmarks, RIGHT_HIP),
-  };
-}
-// 전/후면 판정:
-// 1) 어깨 x 순서(안드로이드 기존 로직과 동일한 축) + 2) 얼굴/몸통 visibility 점수를 함께 사용
-// 단일 지표 오탐을 줄이기 위해 확정/추정/판정불가를 분리한다.
-function computeDirection(detected: NamedDetectedPoints) {
-  const shoulderOrderBack = (() => {
-    if (!detected.leftShoulder || !detected.rightShoulder) return false;
-    return detected.rightShoulder.x - detected.leftShoulder.x > BEHIND_SHOULDER_DELTA;
-  })();
 
-  const faceScore = visibilityScore([
-    detected.nose,
-    detected.leftEye,
-    detected.rightEye,
-    detected.leftEar,
-    detected.rightEar,
-  ]);
-  const torsoScore = visibilityScore([
-    detected.leftShoulder,
-    detected.rightShoulder,
-    detected.leftHip,
-    detected.rightHip,
-  ]);
-
-  const direction = (() => {
-    if (shoulderOrderBack && faceScore <= BACK_FACE_SCORE_THRESHOLD) return '후면';
-    if (!shoulderOrderBack && faceScore >= FRONT_FACE_SCORE_THRESHOLD) return '전면';
-    if (shoulderOrderBack && torsoScore >= 0.7) return '후면(추정)';
-    if (!shoulderOrderBack && torsoScore >= 0.7) return '전면(추정)';
-    return '판정불가';
-  })();
-
-  return {
-    direction,
-    shoulderOrderBack,
-    faceScore,
-    torsoScore,
-  };
-}
-// 거리 판정:
-// 감지된 신체 크기(어깨폭/상체높이)와 가이드 기준 크기를 비율로 비교해
-// 가까움/적정/멀음을 판단한다.
-function computeDistanceState(
-  detected: NamedDetectedPoints,
-  guidePoints: GuideReferencePoints,
-) {
-  if (!detected.leftShoulder || !detected.rightShoulder || !detected.leftHip || !detected.rightHip) {
-    return { distanceState: '판정불가', scale: 0 };
-  }
-
-  const detectedShoulderWidth = Math.abs(detected.rightShoulder.x - detected.leftShoulder.x);
-  const guideShoulderWidth = Math.abs(guidePoints.rightShoulder.x - guidePoints.leftShoulder.x);
-
-  const detectedTorsoHeight =
-    midpoint(detected.leftHip, detected.rightHip).y - midpoint(detected.leftShoulder, detected.rightShoulder).y;
-  const guideTorsoHeight =
-    midpointGuide(guidePoints.leftHip, guidePoints.rightHip).y -
-    midpointGuide(guidePoints.leftShoulder, guidePoints.rightShoulder).y;
-
-  if (guideShoulderWidth <= 0 || guideTorsoHeight <= 0) {
-    return { distanceState: '판정불가', scale: 0 };
-  }
-
-  const shoulderRatio = detectedShoulderWidth / guideShoulderWidth;
-  const torsoRatio = detectedTorsoHeight / guideTorsoHeight;
-  const scale = (shoulderRatio + torsoRatio) / 2;
-
-  if (scale > DIST_TOO_CLOSE) return { distanceState: '가까움', scale };
-  if (scale < DIST_TOO_FAR) return { distanceState: '멀음', scale };
-  return { distanceState: '적정', scale };
-}
-// 디버깅 로그:
-// - 원본 랜드마크
-// - 가이드 기준점
-// - 최종 판정 요약(가이드정렬/전후면/거리)을 한 번에 출력
 function logGuideComparison(
   detected: NamedDetectedPoints,
   guide: GuideReferencePoints,
@@ -190,39 +196,40 @@ function logGuideComparison(
   distanceResult: ReturnType<typeof computeDistanceState>,
   aligned: boolean,
 ) {
-  console.log('[측정2D] 랜드마크 좌표(11,12,23,24)', {
-    '11_왼어깨': toFixedPoint(detected.leftShoulder),
-    '12_오른어깨': toFixedPoint(detected.rightShoulder),
-    '23_왼골반': toFixedPoint(detected.leftHip),
-    '24_오른골반': toFixedPoint(detected.rightHip),
-    '0_코': toFixedPoint(detected.nose),
-    '7_왼귀': toFixedPoint(detected.leftEar),
-    '8_오른귀': toFixedPoint(detected.rightEar),
+  console.log('[measure2d] 감지 랜드마크 (11,12,23,24)', {
+    p11_leftShoulder: toFixedPoint(detected.leftShoulder),
+    p12_rightShoulder: toFixedPoint(detected.rightShoulder),
+    p23_leftHip: toFixedPoint(detected.leftHip),
+    p24_rightHip: toFixedPoint(detected.rightHip),
   });
 
-  console.log('[측정2D] 가이드 기준점 좌표', {
-    왼어깨: toFixedGuide(guide.leftShoulder),
-    오른어깨: toFixedGuide(guide.rightShoulder),
-    왼골반: toFixedGuide(guide.leftHip),
-    오른골반: toFixedGuide(guide.rightHip),
+  console.log('[measure2d] 가이드 기준 좌표', {
+    leftShoulder: toFixedGuide(guide.leftShoulder),
+    rightShoulder: toFixedGuide(guide.rightShoulder),
+    leftHip: toFixedGuide(guide.leftHip),
+    rightHip: toFixedGuide(guide.rightHip),
   });
 
-  console.log('[측정2D] 자세 판정 결과', {
-    가이드정렬: aligned ? '일치' : '불일치',
-    전후면판정: directionResult.direction,
-    거리판정: distanceResult.distanceState,
-    얼굴가시성점수: Number(directionResult.faceScore.toFixed(3)),
-    몸통가시성점수: Number(directionResult.torsoScore.toFixed(3)),
-    어깨순서후면규칙: directionResult.shoulderOrderBack,
-    거리스케일: Number(distanceResult.scale.toFixed(3)),
+  console.log('[measure2d] 자세 판정 요약', {
+    guideAligned: aligned ? '일치' : '불일치',
+    direction: directionResult.direction,
+    distance: distanceResult.distanceState,
+    shoulderOrderBack: directionResult.shoulderOrderBack,
+    faceVisibilityScore: Number(directionResult.faceScore.toFixed(3)),
+    distanceScale: Number(distanceResult.scale.toFixed(3)),
   });
 }
 
+/**
+ * 최종 판정 순서
+ * 1) 어깨/골반 가시성 체크
+ * 2) 전면/후면, 거리 판정
+ * 3) 가이드 4점(좌/우 어깨, 좌/우 골반) 오차 판정
+ */
 export function evaluateLandmarks(
   landmarks: LandmarkPoint[],
   guidePoints: GuideReferencePoints,
 ): LandmarkEvaluation {
-  // reasons는 UI에 노출되는 사용자 안내 메시지 우선순위로 사용
   const reasons: string[] = [];
   const detected = buildDetectedPoints(landmarks);
 
@@ -236,17 +243,16 @@ export function evaluateLandmarks(
     return {
       aligned: false,
       score: 0,
-      reasons: ['어깨와 골반이 가이드 안에 보이도록 서 주세요.'],
+      reasons: [REASON_BODY_NOT_VISIBLE],
     };
   }
 
-  // 사용자가 원하는 예외 케이스를 우선 순위로 처리한다.
-  if (directionResult.direction.startsWith('전면')) {
-    reasons.push('뒷모습이 보이게 서주세요.');
+  if (directionResult.direction === '전면') {
+    reasons.push(REASON_BACK_VIEW);
   } else if (distanceResult.distanceState === '멀음') {
-    reasons.push('조금 더 가까이 와주세요.');
+    reasons.push(REASON_CLOSER);
   } else if (distanceResult.distanceState === '가까움') {
-    reasons.push('조금 더 멀리 떨어져주세요.');
+    reasons.push(REASON_FARTHER);
   }
 
   const leftShoulderMatched = axisWithinTolerance(
@@ -273,20 +279,19 @@ export function evaluateLandmarks(
     HIP_X_TOLERANCE,
     HIP_Y_TOLERANCE,
   );
-  // 기존 정책 유지: 가이드 정렬은 어깨/골반 4점 허용오차 만족 여부로 결정
-  if (!leftShoulderMatched || !rightShoulderMatched) {
-    reasons.push('어깨 위치를 가이드라인 어깨 기준점에 맞춰 주세요.');
-  }
 
+  if (!leftShoulderMatched || !rightShoulderMatched) {
+    reasons.push(REASON_SHOULDER_ALIGN);
+  }
   if (!leftHipMatched || !rightHipMatched) {
-    reasons.push('골반 위치를 가이드라인 골반 기준점에 맞춰 주세요.');
+    reasons.push(REASON_HIP_ALIGN);
   }
 
   const aligned = reasons.length === 0;
   const matchedCount = [leftShoulderMatched, rightShoulderMatched, leftHipMatched, rightHipMatched].filter(
     Boolean,
   ).length;
-  // 최종 결과와 함께 전후면/거리 판단도 로그로 남겨 QA 시 즉시 확인 가능
+
   logGuideComparison(detected, guidePoints, directionResult, distanceResult, aligned);
 
   return {

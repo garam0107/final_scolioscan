@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -25,7 +26,6 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from 'react-native-svg';
-
 import BottomTabBar from '@/src/components/BottomTabBar';
 import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
@@ -674,6 +674,7 @@ export default function ReportScreen() {
         if (!active) return;
 
         if (curvatureResult.status === 'fulfilled') {
+          console.log('[curvature] request url', curvatureResult.value.config?.baseURL, curvatureResult.value.config?.url);
           const sortedCurvatures = [...curvatureResult.value.data].sort(
             (left, right) =>
               new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),

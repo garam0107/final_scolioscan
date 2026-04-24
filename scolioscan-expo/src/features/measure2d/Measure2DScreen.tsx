@@ -1,15 +1,17 @@
+import axios from 'axios';
 import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { curvatureAPI } from '@/src/api/curvature';
+import type { CurvatureResponse } from '@/src/types/curvature';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import { createGuidelineGeometry } from './domain/guidelineGeometry';
 import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
 import { CameraGuidelineOverlay } from './components/CameraGuidelineOverlay';
 import { useMeasure2D } from './hooks/useMeasure2D';
 import { styles } from './measure2d.styles';
-
+import { getAccessToken } from '@/src/lib/tokenStorage';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
 export default function Measure2DScreen() {
@@ -52,25 +54,59 @@ export default function Measure2DScreen() {
     const nextEvaluation = result.evaluation;
     const firstReason = nextEvaluation.reasons[0] ?? '';
 
-    if (nextEvaluation.aligned) {
+    // if (nextEvaluation.aligned) {
       showToast('좋아요. 이 자세로 촬영할게요!', 'success');
-      return;
-    }
+      console.log('2D카메라 촬영', result);
+      const fd = new FormData();
+      fd.append('image', {
+        uri: result.photo.uri,
+        name: 'upload.jpg',
+        type: 'image/jpeg',
+      } as any);
 
-    if (firstReason.includes('조금 더 가까이 와주세요')) {
-      showToast('조금 더 가까이 와주세요.', 'warning');
-      return;
-    }
+      const token = getAccessToken(); // tokenStorage에서
+      const res = await fetch('http://192.168.0.3:8001/api/curvature/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token ?? ''}`,
+        },
+        body: fd,
+      });
+      console.log('curvature fetch status', res.status, await res.text());
 
-    if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
-      showToast('조금 더 멀리 떨어져주세요.', 'warning');
-      return;
-    }
+// axios 에러로 post api/curvature만 fetch로 변경
+//       try {
+//         await curvatureAPI.postAnalysis(result.photo.uri);
+//       } catch (error: unknown) {
+//   if (axios.isAxiosError(error)) {
+//     console.error('[curvature] axios message', error.message);
+//     console.error('[curvature] axios code', error.code);
+//     console.error('[curvature] axios url', error.config?.baseURL, error.config?.url);
+//     console.error('[curvature] axios status', error.response?.status);
+//     console.error('[curvature] axios data', error.response?.data);
+//   } else {
+//     console.error('[curvature] non-axios error', error);
+//   }
+// }
 
-    if (firstReason.includes('뒷모습이 보이게 서주세요')) {
-      showToast('뒷모습이 보이게 서주세요.', 'warning');
-      return;
-    }
+    //   return;
+    // }
+
+
+    // if (firstReason.includes('조금 더 가까이 와주세요')) {
+    //   showToast('조금 더 가까이 와주세요.', 'warning');
+    //   return;
+    // }
+
+    // if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
+    //   showToast('조금 더 멀리 떨어져주세요.', 'warning');
+    //   return;
+    // }
+
+    // if (firstReason.includes('뒷모습이 보이게 서주세요')) {
+    //   showToast('뒷모습이 보이게 서주세요.', 'warning');
+    //   return;
+    // }
 
     showToast(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'info');
   };

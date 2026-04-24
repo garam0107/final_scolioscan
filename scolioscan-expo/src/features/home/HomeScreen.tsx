@@ -32,7 +32,7 @@ import styles from '@/src/features/home/home.styles';
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
-const router = useRouter();
+// const router = useRouter();
 const banner1 = require('../../../assets/images/BannerImage1.png');
 const banner2 = require('../../../assets/images/BannerImage2.png');
 const example_home = require('../../../assets/images/example_home.png');
@@ -72,32 +72,7 @@ type MeasurementItem = {
   subtitleBackgroundColor?: string;
 };
 
-const measurementItems: MeasurementItem[] = [
-  {
-    id: '2d',
-    title: '2D 이미지 측정',
-    subtitle: '카메라를 통한 간편 측정',
-    icon: <HomeMeasurement2DIcon />,
-    onPress: () => router.push('/measure/2d'),
-  },
-  {
-    id: 'spine',
-    title: '척추측만계 측정',
-    subtitle: '기기를 통한 정확한 측정',
-    icon: <HomeSpineIcon />,
-    onPress: () => Alert.alert('준비중', '척추측만계 기능은 다음 화면에서 연결할게요.'),
-  },
-  {
-    id: '3d',
-    title: '3D 동영상 측정',
-    subtitle: '영상을 통한 정밀 측정',
-    icon: <HomeMeasurement3DIcon />,
-    pro: true,
-    subtitleColor: '#6A8DFF',
-    subtitleBackgroundColor: '#EAF1FF',
-    onPress: () => Alert.alert('준비중', '3D 측정 기능은 다음 화면에서 연결할게요.'),
-  },
-];
+
 
 function MeasurementRow({
   title,
@@ -169,6 +144,35 @@ export default function HomeScreen() {
   const [isProModalVisible, setIsProModalVisible] = useState(false);
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
+
+
+
+  const measurementItems: MeasurementItem[] = [
+  {
+    id: '2d',
+    title: '2D 이미지 측정',
+    subtitle: '카메라를 통한 간편 측정',
+    icon: <HomeMeasurement2DIcon />,
+    onPress: () => router.push('/measure/2d'),
+  },
+  {
+    id: 'spine',
+    title: '척추측만계 측정',
+    subtitle: '기기를 통한 정확한 측정',
+    icon: <HomeSpineIcon />,
+    onPress: () => Alert.alert('준비중', '척추측만계 기능은 다음 화면에서 연결할게요.'),
+  },
+  {
+    id: '3d',
+    title: '3D 동영상 측정',
+    subtitle: '영상을 통한 정밀 측정',
+    icon: <HomeMeasurement3DIcon />,
+    pro: true,
+    subtitleColor: '#6A8DFF',
+    subtitleBackgroundColor: '#EAF1FF',
+    onPress: () => Alert.alert('준비중', '3D 측정 기능은 다음 화면에서 연결할게요.'),
+  },
+];
 
   const loadAlarmCount = useCallback(async () => {
     try {
