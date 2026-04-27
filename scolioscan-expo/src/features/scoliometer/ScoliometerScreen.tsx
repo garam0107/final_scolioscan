@@ -206,6 +206,7 @@ export default function ScoliometerScreen() {
           <>
             {/* 평면 모드: 반투명 원 2개와 두 원이 겹친 영역을 SVG로 직접 그린다. */}
             <Svg
+              pointerEvents="none"
               style={[
                 styles.flatSvg,
                 {
@@ -251,10 +252,10 @@ export default function ScoliometerScreen() {
                 <Path d={overlap.path} fill="#FFFFFF" fillOpacity={1} />
               ) : null}
             </Svg>
-            <View style={[styles.angleWrap, { top: angleTop }]}>
+            <View pointerEvents="none" style={[styles.angleWrap, { top: angleTop }]}>
               <Text style={[styles.angleText, styles.angleTextDark]}>{angleLabel}</Text>
             </View>
-            <View style={styles.flatGuideTextWrap}>
+            <View pointerEvents="none" style={styles.flatGuideTextWrap}>
               <Text style={styles.flatGuideText}>{guideText}</Text>
             </View>
           </>
