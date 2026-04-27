@@ -314,6 +314,7 @@ export default function ScoliometerScreen() {
           </Pressable>
           <Pressable style={styles.measureButton}>
             {/* 측정 횟수에 따라 숫자가 바뀌도록 변경 필요 */}
+            {/* 버튼 눌렀을 때 측정 되는 API 연결 필요 */}
             <Text style={styles.measureButtonText}>측정 0/5</Text>
           </Pressable>
         </View>
