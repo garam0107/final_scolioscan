@@ -84,7 +84,7 @@ export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     PretendardVariable: pretendardFont,
   });
-  const hideTopSeparator = segments[0] === 'intro';
+  const hideTopSeparator = segments[0] === 'intro' || segments[0] === 'measure';
 
   if (!fontsLoaded || !museoLoaded) {
     return null;
@@ -105,6 +105,7 @@ export default function RootLayout() {
             <Stack.Screen name="notifications" />
             <Stack.Screen name="analysis/index" />
             <Stack.Screen name="analysis/[id]" />
+            <Stack.Screen name="measure/scoliometer" />
             <Stack.Screen name="more" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="profile/edit" />

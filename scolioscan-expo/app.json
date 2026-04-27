@@ -3,13 +3,16 @@
     "name": "scolioscan-expo",
     "slug": "scolioscan-expo",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "scolioscanexpo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMotionUsageDescription": "척추측만계 측정을 위해 기기의 움직임 센서를 사용합니다."
+      }
     },
     "android": {
       "adaptiveIcon": {

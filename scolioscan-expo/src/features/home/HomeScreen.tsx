@@ -160,7 +160,7 @@ export default function HomeScreen() {
     title: '척추측만계 측정',
     subtitle: '기기를 통한 정확한 측정',
     icon: <HomeSpineIcon />,
-    onPress: () => Alert.alert('준비중', '척추측만계 기능은 다음 화면에서 연결할게요.'),
+    onPress: () => router.push('/measure/scoliometer'),
   },
   {
     id: '3d',

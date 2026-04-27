@@ -1,0 +1,104 @@
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  content: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    paddingHorizontal: 60,
+  },
+  backButton: {
+    width: 60,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonText: {
+    color: '#36595E',
+    fontSize: 40,
+  },
+angleWrap: {
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  alignItems: 'center',
+  zIndex: 100,
+  elevation: 100,
+}
+,
+angleText: {
+  color: '#FFFFFF',
+  fontSize: 36,
+  fontWeight: '700',
+  letterSpacing: 0,
+  textShadowColor: 'rgba(0, 0, 0, 0.18)',
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 3,
+},
+  angleTextDark: {
+    color: '#3F6268',
+  },
+  surface: {
+    position: 'absolute',
+    backgroundColor: '#FFFFFF',
+    zIndex: 5,
+  },
+  bottomBubble: {
+    position: 'absolute',
+    left: '50%',
+    bottom: -26,
+    width: 46,
+    height: 46,
+    marginLeft: -26,
+    borderRadius: 26,
+    backgroundColor: '#7AA6FF',
+    zIndex: 8,
+  },
+  flatSvg: {
+    position: 'absolute',
+    zIndex: 10,
+  },
+  calibrateButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 0,
+    zIndex: 20,
+    minWidth: 112,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4F8F8D',
+  },
+  calibrateButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  unsupported: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    backgroundColor: '#9EDAD6',
+  },
+  unsupportedText: {
+    color: '#315A60',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+});
+
+export default styles;
