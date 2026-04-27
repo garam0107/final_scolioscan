@@ -162,6 +162,9 @@ export default function ScoliometerScreen() {
   // 가로 모드 숫자 위치다. 흰색 경계에 묻히면 0.24 값을 키워 조금 더 위로 올린다.
   const landscapeAngleTop = horizonY - Math.min(height * 0.24, 96);
   const angleTop = isFlat ? height * 0.43 : landscapeAngleTop;
+
+  // 측정 횟수에 따라 변하도록 text 변경 필요
+  const guideText = '측정을 진행해주세요';
   
   useEffect(() => {
     void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
@@ -251,6 +254,9 @@ export default function ScoliometerScreen() {
             <View style={[styles.angleWrap, { top: angleTop }]}>
               <Text style={[styles.angleText, styles.angleTextDark]}>{angleLabel}</Text>
             </View>
+            <View style={styles.flatGuideTextWrap}>
+              <Text style={styles.flatGuideText}>{guideText}</Text>
+            </View>
           </>
         ) : (
           <>
@@ -272,6 +278,17 @@ export default function ScoliometerScreen() {
               ]}
             />
             <View style={styles.bottomBubble} />
+            <View
+              style={[
+                styles.landscapeGuideTextWrap,
+                {
+                  top: horizonY + 16,
+                  transform: [{ rotateZ: `${surfaceAngle}deg` }],
+                },
+              ]}
+            >
+              <Text style={styles.landscapeGuideText}>{guideText}</Text>
+            </View>
           </>
         )}
 
@@ -296,6 +313,7 @@ export default function ScoliometerScreen() {
             <Text style={styles.zeroButtonText}>0° 보정</Text>
           </Pressable>
           <Pressable style={styles.measureButton}>
+            {/* 측정 횟수에 따라 숫자가 바뀌도록 변경 필요 */}
             <Text style={styles.measureButtonText}>측정 0/5</Text>
           </Pressable>
         </View>
