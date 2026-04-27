@@ -1,9 +1,15 @@
 import api from '@/src/api/client';
-import type { LoginRequest, LoginResponse, PasswordResetRequest } from '@/src/types/auth';
+import type {
+  LoginRequest,
+  LoginResponse,
+  PasswordResetRequest,
+  RegisterRequest,
+} from '@/src/types/auth';
 
 export const authAPI = {
   login: (credentials: LoginRequest) => api.post<LoginResponse>('/auth/login', credentials),
-  register: (data: Record<string, unknown>) => api.post('/auth/register', data),
+  register: (data: RegisterRequest) => api.post('/auth/register', data),
+  checkEmail: (email: string) => api.get<{ exists: boolean }>(`/auth/check-email/${encodeURIComponent(email)}`),
   passwordReset: (data: PasswordResetRequest) => api.post('/auth/password-reset', data),
 };
 

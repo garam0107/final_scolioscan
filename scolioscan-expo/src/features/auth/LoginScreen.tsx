@@ -165,7 +165,6 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [findIdModalOpen, setFindIdModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
-  const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [socialModalOpen, setSocialModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
@@ -350,7 +349,7 @@ export default function LoginScreen() {
 
             <View style={styles.signupPrompt}>
               <Text style={styles.signupPromptText}>아직 계정이 없으신가요?</Text>
-              <Pressable onPress={() => setRegisterModalOpen(true)} hitSlop={8}>
+              <Pressable onPress={() => router.push('/register')} hitSlop={8}>
                 <Text style={styles.signupLink}>회원가입</Text>
               </Pressable>
             </View>
@@ -388,13 +387,6 @@ export default function LoginScreen() {
         title="비밀번호 찾기"
         message="현재는 화면만 맞춘 상태입니다. 다음 단계에서 실제 비밀번호 재설정 흐름을 연결하겠습니다."
         onClose={() => setPasswordModalOpen(false)}
-      />
-
-      <SimpleModal
-        visible={registerModalOpen}
-        title="회원가입"
-        message="현재는 화면만 맞춘 상태입니다. 다음 단계에서 회원가입 폼을 연결하겠습니다."
-        onClose={() => setRegisterModalOpen(false)}
       />
 
       <SimpleModal

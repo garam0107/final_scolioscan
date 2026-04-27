@@ -35,6 +35,9 @@ type AnalysisScreenProps = {
   sourceType?: string;
 };
 
+// 2D, 3D 토글
+type ViewMode = '2d' | '3d';
+
 type InfoCardCopy = {
   title: string;
   body: string;
@@ -423,15 +426,15 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             <View style={styles.textLayer}>
               {pose.metrics.map((metric) => (
                 <MetricBlock
-  key={metric.key}
-  metricKey={metric.key}
-  label={metric.label}
-  value={metric.value}
-  side={metric.side}
-  top={metric.topRatio * stageHeight}
-  xOffset={metric.xOffset}
-  active={Boolean(analysis)}
-/>
+                  key={metric.key}
+                  metricKey={metric.key}
+                  label={metric.label}
+                  value={metric.value}
+                  side={metric.side}
+                  top={metric.topRatio * stageHeight}
+                  xOffset={metric.xOffset}
+                  active={Boolean(analysis)}
+                />
 
               ))}
 

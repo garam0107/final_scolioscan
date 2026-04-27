@@ -90,7 +90,8 @@ export default function ToastAlert({
       style={[
         styles.wrapper,
         {
-          top: insets.top + 220,
+          // 토스트 위치 조절
+          top: insets.top + 280,
           opacity,
           transform: [{ translateY }],
         },

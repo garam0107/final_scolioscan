@@ -16,3 +16,14 @@ export interface PasswordResetRequest {
   name: string;
 }
 
+export interface RegisterRequest {
+  user_id: string;
+  user_pw: string;
+  name: string;
+  phone: string;
+  birthday: string;
+  sex: boolean;
+  address: string;
+  detail_address?: string | null;
+}
+

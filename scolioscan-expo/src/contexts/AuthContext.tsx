@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authAPI } from '@/src/api/auth';
 import { userAPI } from '@/src/api/user';
 import { clearAccessToken, loadAccessToken, saveAccessToken, setAccessToken } from '@/src/lib/tokenStorage';
-import type { LoginRequest } from '@/src/types/auth';
+import type { LoginRequest, RegisterRequest } from '@/src/types/auth';
 import type { UserResponse } from '@/src/types/user';
 
 type AuthContextValue = {
@@ -11,6 +11,8 @@ type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
+  checkEmail: (email: string) => Promise<boolean>;
+  register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
 };
@@ -36,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshSession = async () => {
+  const refreshSession = useCallback(async () => {
     setLoading(true);
     try {
       const storedToken = await loadAccessToken();
@@ -58,13 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void refreshSession();
-  }, []);
+  }, [refreshSession]);
 
-  const login = async (credentials: LoginRequest) => {
+  const login = useCallback(async (credentials: LoginRequest) => {
     try {
       const response = await authAPI.login(credentials);
       const token = response.data.access_token;
@@ -81,14 +83,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       throw new Error(normalizeApiError(error));
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const checkEmail = useCallback(async (email: string) => {
+    try {
+      const response = await authAPI.checkEmail(email);
+      return response.data.exists;
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, []);
+
+  const register = useCallback(async (data: RegisterRequest) => {
+    try {
+      await authAPI.register(data);
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
     await clearAccessToken();
     setAccessToken(null);
     setAccessTokenState(null);
     setUser(null);
-  };
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -97,10 +116,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       isAuthenticated: Boolean(user && accessToken),
       login,
+      checkEmail,
+      register,
       logout,
       refreshSession,
     }),
-    [user, accessToken, loading]
+    [user, accessToken, loading, login, checkEmail, register, logout, refreshSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -113,4 +134,3 @@ export function useAuth() {
   }
   return context;
 }
-
