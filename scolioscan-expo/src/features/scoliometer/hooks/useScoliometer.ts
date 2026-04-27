@@ -39,8 +39,11 @@ const DEVICE_MOTION_INTERVAL = 40;
 const GYROSCOPE_INTERVAL = 40;
 const FILTER_ALPHA = 0.16;
 const EPSILON = 0.0001;
+// 정규화된 z축 값이 이 기준보다 크면 휴대폰이 바닥과 평행한 평면 상태로 본다.
 const FLAT_ENTER_THRESHOLD = 0.88;
+// 평면 상태에서 가로 상태로 너무 자주 깜빡이지 않게 나갈 때는 더 낮은 기준을 쓴다.
 const FLAT_EXIT_THRESHOLD = 0.76;
+// 실제 측정 각도보다 화면의 흰색 경계가 너무 많이 기울지 않도록 제한한다.
 const SURFACE_ANGLE_LIMIT = 34;
 
 const INITIAL_STATE: ScoliometerState = {
@@ -95,6 +98,7 @@ function toGravityVector(event: DeviceMotionMeasurement): Vector3 | null {
     return null;
   }
 
+  // DeviceMotion 값은 기기마다 약 9.8 단위로 들어오므로 -1~1 범위로 정규화해서 판별한다.
   return {
     x: sample.x / magnitude,
     y: sample.y / magnitude,
@@ -109,6 +113,7 @@ function getGyroscopeMagnitude(event: GyroscopeMeasurement) {
 function resolveMode(gravity: Vector3, currentMode: ScoliometerMode): ScoliometerMode {
   const absZ = Math.abs(gravity.z);
 
+  // 평면과 가로만 사용한다. 세로로 세운 경우도 별도 모드 없이 가로 화면으로 유지한다.
   if (currentMode === 'flat') {
     return absZ >= FLAT_EXIT_THRESHOLD ? 'flat' : 'landscape';
   }
@@ -117,6 +122,7 @@ function resolveMode(gravity: Vector3, currentMode: ScoliometerMode): Scoliomete
 }
 
 function getLandscapeAngle(gravity: Vector3) {
+  // 가로 측정의 핵심 각도다. 실기기에서 좌우 방향이 반대면 이 값의 부호를 바꾸면 된다.
   return toDegrees(Math.atan2(gravity.y, Math.abs(gravity.x) + EPSILON));
 }
 
@@ -154,6 +160,7 @@ export function useScoliometer() {
     }
 
     if (modeRef.current === 'flat') {
+      // 평면 보정은 현재 x/y 기울기를 기준점으로 저장한다.
       calibrationRef.current = {
         ...calibrationRef.current,
         flat: {
@@ -164,6 +171,7 @@ export function useScoliometer() {
       return;
     }
 
+    // 가로 보정은 현재 가로 각도를 0도로 저장한다.
     calibrationRef.current = {
       ...calibrationRef.current,
       landscape: getLandscapeAngle(gravity),
@@ -236,6 +244,7 @@ export function useScoliometer() {
 
         const mode = modeRef.current;
         const flatOffset = calibrationRef.current.flat;
+        // 평면은 절대 기울기 크기, 가로는 좌우 signed angle을 표시한다.
         const angle = mode === 'flat'
           ? getFlatSignedAngle(gravity, flatOffset)
           : getLandscapeAngle(gravity) - calibrationRef.current.landscape;
@@ -244,6 +253,7 @@ export function useScoliometer() {
           mode,
           angle: clamp(angle, -89.9, 89.9),
           surfaceAngle: clamp(angle * 1.15, -SURFACE_ANGLE_LIMIT, SURFACE_ANGLE_LIMIT),
+          // 평면 모드에서 두 원이 벌어지는 방향과 거리를 정한다. 숫자를 키우면 더 민감하게 벌어진다.
           bubbleX: clamp((gravity.x - flatOffset.x) * 160, -100, 100),
           bubbleY: clamp(-(gravity.y - flatOffset.y) * 160, -100, 100),
           bubbleScale: 1,
