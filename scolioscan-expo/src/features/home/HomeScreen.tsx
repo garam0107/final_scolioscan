@@ -27,9 +27,10 @@ import {
   HomeSpineIcon,
 } from '@/src/features/home/homeIcons';
 import styles from '@/src/features/home/home.styles';
-
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
-
+import TwoIcon from '../../../assets/home/2d.svg'
+import ThreeIcon from '../../../assets/home/3dcamera.svg'
+import ScolioIcon from '../../../assets/home/scoliometer.svg'
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 // const router = useRouter();
 const banner1 = require('../../../assets/images/BannerImage1.png');
@@ -145,26 +146,27 @@ export default function HomeScreen() {
 
 
 
+  // icon 배경이랑 하단에 그림자가 피그마랑 다르게 보여서 추후 수정 예정
   const measurementItems: MeasurementItem[] = [
   {
     id: '2d',
     title: '2D 이미지 측정',
     subtitle: '카메라를 통한 간편 측정',
-    icon: <HomeMeasurement2DIcon />,
+    icon: <TwoIcon />,
     onPress: () => router.push('/measure/2d'),
   },
   {
     id: 'spine',
     title: '척추측만계 측정',
     subtitle: '기기를 통한 정확한 측정',
-    icon: <HomeSpineIcon />,
+    icon: <ScolioIcon />,
     onPress: () => router.push('/measure/scoliometer'),
   },
   {
     id: '3d',
     title: '3D 동영상 측정',
     subtitle: '영상을 통한 정밀 측정',
-    icon: <HomeMeasurement3DIcon />,
+    icon: <ThreeIcon />,
     pro: true,
     subtitleColor: '#6A8DFF',
     subtitleBackgroundColor: '#EAF1FF',
