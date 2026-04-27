@@ -32,7 +32,9 @@ type TabItem = {
   OnIcon: React.ComponentType<SvgProps>;
   OffIcon: React.ComponentType<SvgProps>;
 };
-
+type BottomTabBarProps = {
+  onHeightChange?: (height: number) => void;
+};
 function TabIcon({
   active,
   OnIcon,
@@ -46,7 +48,7 @@ function TabIcon({
   return <Icon width={80} height={60} />;
 }
 
-export default function BottomTabBar() {
+export default function BottomTabBar({ onHeightChange }: BottomTabBarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -63,21 +65,21 @@ export default function BottomTabBar() {
       {
         key: 'analysis',
         active: pathname === '/analysis' || pathname.startsWith('/analysis/'),
-        onPress: () => router.push('/analysis'),
+        onPress: () => router.navigate('/analysis'),
         OnIcon: NewSelectOnAnalysis,
         OffIcon: NewSelectOffAnalysis,
       },
       {
         key: 'report',
         active: pathname === '/report',
-        onPress: () => router.push('/report'),
+        onPress: () => router.navigate('/report'),
         OnIcon: NewSelectOnReport,
         OffIcon: NewSelectOffReport,
       },
       {
         key: 'more',
         active: pathname === '/more' || pathname === '/settings' || pathname.startsWith('/profile'),
-        onPress: () => router.push('/more'),
+        onPress: () => router.navigate('/more'),
         OnIcon: NewSelcetOnSetting,
         OffIcon: NewSelcetOffSetting,
       },
@@ -86,33 +88,44 @@ export default function BottomTabBar() {
   );
 
   return (
-    <View style={styles.wrap}>
+  <View style={[styles.container, { paddingBottom: insets.bottom + 10 }]}>
+    <View
+      onLayout={(event) => {
+        onHeightChange?.(event.nativeEvent.layout.height);
+      }}
+      style={styles.wrap}
+    >
       {tabs.map((tab) => (
         <Pressable key={tab.key} onPress={tab.onPress} style={styles.tab}>
           <TabIcon active={tab.active} OnIcon={tab.OnIcon} OffIcon={tab.OffIcon} />
         </Pressable>
       ))}
     </View>
-  );
+  </View>
+);
+ 
+
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 10,
+    backgroundColor: 'transparent',
+  },
 
   wrap: {
-  height: 60,
-  marginHorizontal: 10,
-  marginBottom: 10,
-  backgroundColor: '#FFFFFF',
-  borderRadius: 50,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  shadowColor: '#000000',
-  shadowOpacity: 0.06,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 12,
-},
+    height: 60,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: 'white',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 12,
+  },
 
   tab: {
     alignItems: 'center',
@@ -120,3 +133,4 @@ const styles = StyleSheet.create({
     minWidth: 64,
   },
 });
+

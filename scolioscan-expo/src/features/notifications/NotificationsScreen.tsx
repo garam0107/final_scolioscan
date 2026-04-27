@@ -61,8 +61,14 @@ export default function NotificationsScreen() {
   );
 
   const handleBack = () => {
+  if (router.canGoBack()) {
     router.back();
-  };
+    return;
+  }
+
+  router.replace('/home');
+};
+
   // 모두 읽음 누르면 페이지에서 표시 안되도록 하는 함수
   const handleMarkAllAsRead = async () => {
   if (alarms.length === 0) {

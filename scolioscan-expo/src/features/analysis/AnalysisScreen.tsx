@@ -317,7 +317,8 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const progress = useRef(new Animated.Value(0)).current;
 
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
-
+  const CONTENT_BOTTOM_GAP = 20;
+  const [bottomTabHeight, setBottomTabHeight] = useState(0);
   const cardWidth = Math.min(width - 24, 440);
   const stageWidth = cardWidth - 20;
   const stageHeight = 318;
@@ -398,14 +399,15 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
 
   return (
     <View style={styles.screen}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+      <SafeAreaView edges={['top', 'left', 'right', ]} style={{ flex: 1 }}>
         <StatusBar style="dark" backgroundColor="#F4F6F7" translucent={false} />
 
         <ScrollView
+          style={{ flex: 1 }}
           showsVerticalScrollIndicator
           contentContainerStyle={[
             styles.content,
-            { paddingTop: 8, paddingBottom: insets.bottom + 90 },
+            { paddingTop: 8, paddingBottom: 10 },
           ]}
         >
           <View style={styles.summaryTextBlock}>
@@ -522,9 +524,10 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   {/* 곡선 패턴 카드 들어갈 예정 */}
   {/* 의사 소견 카드 들어갈 예정 */}
           </View>
+          <View style={{ height: bottomTabHeight + CONTENT_BOTTOM_GAP }} />
         </ScrollView>
       </SafeAreaView>
-      <BottomTabBar />
+    <BottomTabBar onHeightChange={setBottomTabHeight} />
     </View>
   );
 }

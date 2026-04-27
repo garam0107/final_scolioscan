@@ -780,7 +780,7 @@ export default function ReportScreen() {
 
   return (
     <View style={styles.screen}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+      <SafeAreaView edges={['top', 'left', 'right' , ]} style={{ flex: 1 }}>
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={[

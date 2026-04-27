@@ -219,7 +219,7 @@ export default function HomeScreen() {
 
   if (loading || !museoLoaded || (!pretendardLoaded && !pretendardError)) {
     return (
-      <SafeAreaView style={styles.loadingScreen} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.loadingScreen} edges={['top', 'left', 'right',]}>
         <View style={styles.loadingBox}>
           <Text style={styles.loadingText}>화면을 불러오는 중입니다...</Text>
         </View>
@@ -228,7 +228,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right' , ]}>
       <View style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.brand}>ScolioScan</Text>
@@ -249,7 +249,7 @@ export default function HomeScreen() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom:  insets.bottom + 20 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom:  20 }]}
         >
           <Text style={styles.headline}>3분만에 끝나는 척추검진</Text>
 
