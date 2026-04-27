@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-import BottomTabBar from '@/src/components/BottomTabBar';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 
 export default function PlaceholderScreen({
@@ -25,7 +24,6 @@ export default function PlaceholderScreen({
           style={{ marginTop: 22 }}
         />
       </View>
-      <BottomTabBar />
     </SafeAreaView>
   );
 }

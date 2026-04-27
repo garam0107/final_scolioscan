@@ -97,16 +97,13 @@ export default function RootLayout() {
         <View style={styles.root}>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
+            <Stack.Screen name="(tabs)" />
             <Stack.Screen name="intro" />
             <Stack.Screen name="login" />
             <Stack.Screen name="register" />
-            <Stack.Screen name="home" />
-            <Stack.Screen name="report" />
             <Stack.Screen name="notifications" />
-            <Stack.Screen name="analysis/index" />
-            <Stack.Screen name="analysis/[id]" />
+            <Stack.Screen name="measure/2d" />
             <Stack.Screen name="measure/scoliometer" />
-            <Stack.Screen name="more" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="profile/edit" />
           </Stack>

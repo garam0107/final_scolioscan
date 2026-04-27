@@ -15,11 +15,10 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { alarmAPI } from '@/src/api/alarm';
-import BottomTabBar from '@/src/components/BottomTabBar';
 import { useAuth } from '@/src/contexts/AuthContext';
 import {
   HomeMeasurement2DIcon,
@@ -134,7 +133,6 @@ function ExerciseCard({ title, subtitle, image, onPress }: ExerciseCardProps) {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { loading, isAuthenticated, user } = useAuth();
   const [museoLoaded] = useMuseoFonts({ MuseoModerno_700Bold });
@@ -361,8 +359,6 @@ export default function HomeScreen() {
             </View>
           </View>
         </Modal>
-
-        <BottomTabBar />
       </View>
     </SafeAreaView>
   );

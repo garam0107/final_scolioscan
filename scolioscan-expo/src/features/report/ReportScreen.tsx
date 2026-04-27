@@ -26,7 +26,6 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from 'react-native-svg';
-import BottomTabBar from '@/src/components/BottomTabBar';
 import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
 import type { CurvatureResponse } from '@/src/types/curvature';
@@ -922,7 +921,6 @@ export default function ReportScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-      <BottomTabBar />
     </View>
   );
 }

@@ -11,11 +11,11 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { SvgProps } from 'react-native-svg';
 
-import BottomTabBar from '@/src/components/BottomTabBar';
 import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
 import type { AnalysisResponse } from '@/src/types/analysis';
@@ -309,7 +309,7 @@ function SpineRig({
 
 export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+  const bottomTabBarHeight = useBottomTabBarHeight();
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -317,8 +317,6 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const progress = useRef(new Animated.Value(0)).current;
 
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
-  const CONTENT_BOTTOM_GAP = 20;
-  const [bottomTabHeight, setBottomTabHeight] = useState(0);
   const cardWidth = Math.min(width - 24, 440);
   const stageWidth = cardWidth - 20;
   const stageHeight = 318;
@@ -407,7 +405,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
           showsVerticalScrollIndicator
           contentContainerStyle={[
             styles.content,
-            { paddingTop: 8, paddingBottom: 10 },
+            { paddingTop: 8, paddingBottom: bottomTabBarHeight  },
           ]}
         >
           <View style={styles.summaryTextBlock}>
@@ -524,10 +522,8 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   {/* 곡선 패턴 카드 들어갈 예정 */}
   {/* 의사 소견 카드 들어갈 예정 */}
           </View>
-          <View style={{ height: bottomTabHeight + CONTENT_BOTTOM_GAP }} />
         </ScrollView>
       </SafeAreaView>
-    <BottomTabBar onHeightChange={setBottomTabHeight} />
     </View>
   );
 }

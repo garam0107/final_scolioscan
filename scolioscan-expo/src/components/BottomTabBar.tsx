@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-import { usePathname, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SvgProps } from 'react-native-svg';
 
@@ -27,14 +26,33 @@ type TabKey = 'home' | 'analysis' | 'report' | 'more';
 
 type TabItem = {
   key: TabKey;
-  onPress: () => void;
-  active: boolean;
   OnIcon: React.ComponentType<SvgProps>;
   OffIcon: React.ComponentType<SvgProps>;
 };
-type BottomTabBarProps = {
-  onHeightChange?: (height: number) => void;
+
+const TAB_ITEMS: Record<TabKey, TabItem> = {
+  home: {
+    key: 'home',
+    OnIcon: NewSelectOnHome,
+    OffIcon: NewSelectOffHome,
+  },
+  analysis: {
+    key: 'analysis',
+    OnIcon: NewSelectOnAnalysis,
+    OffIcon: NewSelectOffAnalysis,
+  },
+  report: {
+    key: 'report',
+    OnIcon: NewSelectOnReport,
+    OffIcon: NewSelectOffReport,
+  },
+  more: {
+    key: 'more',
+    OnIcon: NewSelcetOnSetting,
+    OffIcon: NewSelcetOffSetting,
+  },
 };
+
 function TabIcon({
   active,
   OnIcon,
@@ -48,58 +66,35 @@ function TabIcon({
   return <Icon width={80} height={60} />;
 }
 
-export default function BottomTabBar({ onHeightChange }: BottomTabBarProps) {
-  const pathname = usePathname();
-  const router = useRouter();
+export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-
-  const tabs = useMemo<TabItem[]>(
-    () => [
-      {
-        key: 'home',
-        active: pathname === '/home' || pathname === '/',
-        onPress: () => router.replace('/home'),
-        OnIcon: NewSelectOnHome,
-        OffIcon: NewSelectOffHome,
-      },
-      {
-        key: 'analysis',
-        active: pathname === '/analysis' || pathname.startsWith('/analysis/'),
-        onPress: () => router.navigate('/analysis'),
-        OnIcon: NewSelectOnAnalysis,
-        OffIcon: NewSelectOffAnalysis,
-      },
-      {
-        key: 'report',
-        active: pathname === '/report',
-        onPress: () => router.navigate('/report'),
-        OnIcon: NewSelectOnReport,
-        OffIcon: NewSelectOffReport,
-      },
-      {
-        key: 'more',
-        active: pathname === '/more' || pathname === '/settings' || pathname.startsWith('/profile'),
-        onPress: () => router.navigate('/more'),
-        OnIcon: NewSelcetOnSetting,
-        OffIcon: NewSelcetOffSetting,
-      },
-    ],
-    [pathname, router],
-  );
 
   return (
   <View style={[styles.container, { paddingBottom: insets.bottom + 10 }]}>
-    <View
-      onLayout={(event) => {
-        onHeightChange?.(event.nativeEvent.layout.height);
-      }}
-      style={styles.wrap}
-    >
-      {tabs.map((tab) => (
-        <Pressable key={tab.key} onPress={tab.onPress} style={styles.tab}>
-          <TabIcon active={tab.active} OnIcon={tab.OnIcon} OffIcon={tab.OffIcon} />
+    <View style={styles.wrap}>
+      {state.routes.map((route, index) => {
+        const tab = TAB_ITEMS[route.name as TabKey];
+        if (!tab) return null;
+
+        const active = state.index === index;
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!active && !event.defaultPrevented) {
+            navigation.navigate(route.name, route.params);
+          }
+        };
+
+        return (
+        <Pressable key={route.key} onPress={onPress} style={styles.tab}>
+          <TabIcon active={active} OnIcon={tab.OnIcon} OffIcon={tab.OffIcon} />
         </Pressable>
-      ))}
+        );
+      })}
     </View>
   </View>
 );
@@ -110,7 +105,7 @@ export default function BottomTabBar({ onHeightChange }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F7F8FB',
   },
 
   wrap: {

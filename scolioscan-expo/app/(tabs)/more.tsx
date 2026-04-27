@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-import BottomTabBar from '@/src/components/BottomTabBar';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { useAuth } from '@/src/contexts/AuthContext';
 
@@ -48,7 +47,6 @@ export default function MorePage() {
           />
         </View>
       </View>
-      <BottomTabBar />
     </SafeAreaView>
   );
 }
