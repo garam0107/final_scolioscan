@@ -12,6 +12,7 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
   checkEmail: (email: string) => Promise<boolean>;
+  checkPhone: (phone: string) => Promise<boolean>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -94,6 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const checkPhone = useCallback(async (phone: string) => {
+    try{
+      const response = await authAPI.checkPhone(phone);
+      return response.data.exists;
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, []);
+
   const register = useCallback(async (data: RegisterRequest) => {
     try {
       await authAPI.register(data);
@@ -117,11 +127,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: Boolean(user && accessToken),
       login,
       checkEmail,
+      checkPhone,
       register,
       logout,
       refreshSession,
     }),
-    [user, accessToken, loading, login, checkEmail, register, logout, refreshSession]
+    [user, accessToken, loading, login, checkEmail,checkPhone, register, logout, refreshSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

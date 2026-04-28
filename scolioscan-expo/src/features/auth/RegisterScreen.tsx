@@ -36,13 +36,14 @@ type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'me
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { checkEmail, register } = useAuth();
+  const { checkEmail, checkPhone, register } = useAuth();
   const draft = useAuthStore((state) => state.registerDraft);
   const resetRegisterDraft = useAuthStore((state) => state.resetRegisterDraft);
   const [step, setStep] = useState<RegisterStep>('carrier');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
   const [doneModalVisible, setDoneModalVisible] = useState(false);
@@ -135,6 +136,27 @@ export default function RegisterScreen() {
     }
   };
 
+  const handlePhoneCheck = async (normalizePhoneNumber: string) =>{
+    if (checkingPhone || loading){
+      return;
+    }
+    setCheckingPhone(true);
+    try {
+      const exists = await checkPhone(normalizePhoneNumber);
+      if (exists) {
+        showToast('이미 가입된 휴대폰 번호입니다.')
+        return;
+      }
+      setStep('message');
+
+    } catch (error){
+      const message = error instanceof Error ? error.message : '휴대폰 번호 중복 확인에 실패했습니다.';
+      showToast(message);
+    }finally{
+      setCheckingPhone(false);
+    }
+  };
+
   const goNext = () => {
 
     if (step === 'carrier') {
@@ -147,8 +169,9 @@ export default function RegisterScreen() {
         showToast('휴대전화 번호를 올바르게 입력해주세요.');
         return;
       }
+      const normalizePhoneNumber = draft.phone.trim();
+      void handlePhoneCheck(normalizePhoneNumber);
 
-      setStep('message');
       return;
     }
 
@@ -246,6 +269,7 @@ export default function RegisterScreen() {
   const primaryDisabled =
     loading ||
     checkingEmail ||
+    checkingPhone ||
     (step === 'email' && (!draft.email.trim() || !isValidEmail(draft.email.trim()))) ||
     (step === 'password' && (!passwordHasLength || !passwordHasMix)) ||
     (step === 'name' && !draft.name.trim()) ||
