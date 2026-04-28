@@ -27,3 +27,15 @@ export interface RegisterRequest {
   detail_address?: string | null;
 }
 
+export interface MessageCodeRequest {
+  phoneNumber : string;
+}
+
+export interface MessagCodeResponse {
+  phoneNumber : string;
+  code : string;
+  recipientNumber : string;
+  messageText : string;
+  expiresAt : string;
+  expiresInseconds : string;
+}

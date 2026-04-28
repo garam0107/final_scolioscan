@@ -36,7 +36,7 @@ type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'me
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { checkEmail, checkPhone, register } = useAuth();
+  const { checkEmail, checkPhone, register, messageCode } = useAuth();
   const draft = useAuthStore((state) => state.registerDraft);
   const resetRegisterDraft = useAuthStore((state) => state.resetRegisterDraft);
   const [step, setStep] = useState<RegisterStep>('carrier');
@@ -277,10 +277,14 @@ export default function RegisterScreen() {
     (step === 'carrier' && (!draft.carrier || !isValidPhoneNumber(draft.phone))) ||
     (step === 'gender' && draft.gender === null);
   // 문자 인증 함수
+  
+  
   const handleMessagePress = async () => {
+    const messageCodeResponse = await messageCode(draft.phone);
+
     const opened = await openSmsComposer({
-      phoneNumber: '010-4379-6248',
-      message: '000000',
+      phoneNumber: messageCodeResponse.recipientNumber,
+      message: messageCodeResponse.code,
     });
 
     if (!opened) {

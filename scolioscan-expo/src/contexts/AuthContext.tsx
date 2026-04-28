@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { authAPI } from '@/src/api/auth';
 import { userAPI } from '@/src/api/user';
 import { clearAccessToken, loadAccessToken, saveAccessToken, setAccessToken } from '@/src/lib/tokenStorage';
-import type { LoginRequest, RegisterRequest } from '@/src/types/auth';
+import type { LoginRequest, RegisterRequest, MessagCodeResponse } from '@/src/types/auth';
 import type { UserResponse } from '@/src/types/user';
 
 type AuthContextValue = {
@@ -13,6 +13,7 @@ type AuthContextValue = {
   login: (credentials: LoginRequest) => Promise<void>;
   checkEmail: (email: string) => Promise<boolean>;
   checkPhone: (phone: string) => Promise<boolean>;
+  messageCode : (phone :string) => Promise<MessagCodeResponse>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -104,6 +105,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+
+  const messageCode = useCallback(async (phone : string) => {
+    try {
+    const response = await authAPI.messageCode({ phoneNumber: phone });
+    return response.data;
+  } catch (error) {
+    throw new Error(normalizeApiError(error));
+  }
+  }, []);
   const register = useCallback(async (data: RegisterRequest) => {
     try {
       await authAPI.register(data);
@@ -128,11 +138,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       checkEmail,
       checkPhone,
+      messageCode,
       register,
       logout,
       refreshSession,
     }),
-    [user, accessToken, loading, login, checkEmail,checkPhone, register, logout, refreshSession]
+    [user, accessToken, loading, login, checkEmail,checkPhone,messageCode, register, logout, refreshSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
