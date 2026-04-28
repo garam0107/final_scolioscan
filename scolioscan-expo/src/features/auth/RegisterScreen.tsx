@@ -19,6 +19,7 @@ import RegisterCarrierStep from './RegisterCarrierStep';
 import RegisterEmailStep from './RegisterEmailStep';
 import RegisterGenderStep from './RegisterGenderStep';
 import RegisterNameStep from './RegisterNameStep';
+import RegisterMessageStep from './RegisterMessageStep';
 import RegisterPasswordStep from './RegisterPasswordStep';
 import { styles } from './register.styles';
 import {
@@ -31,7 +32,7 @@ import {
   normalizeRegisterMessage,
 } from './registerValidation';
 
-type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'gender';
+type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'message' | 'gender';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -92,6 +93,13 @@ export default function RegisterScreen() {
       return {
         title: draft.carrier ? '휴대전화 번호를\n입력해주세요' : '이용하고 계신\n통신사를 알려주세요',
         buttonText: '계속하기',
+      };
+    }
+
+    if (step === 'message') {
+      return {
+        title: '인증을 위해 메시지 어플을\n실행할게요',
+        buttonText: '동의 및 휴대전화 번호 확인',
       };
     }
 
@@ -187,6 +195,11 @@ export default function RegisterScreen() {
         return;
       }
 
+      setStep('message');
+      return;
+    }
+
+    if (step === 'message') {
       setStep('gender');
     }
   };
@@ -272,7 +285,12 @@ export default function RegisterScreen() {
       return;
     }
 
-    setStep('carrier');
+    if (step === 'message') {
+      setStep('carrier');
+      return;
+    }
+
+    setStep('message');
   };
 
   return (
@@ -291,7 +309,7 @@ export default function RegisterScreen() {
       >
         <View style={styles.screen}>
           <View style={styles.header}>
-            <Pressable onPress={handleBack} hitSlop={12} style={styles.backButton}>
+            <Pressable onPress={handleBack} hitSlop={12}>
               <Ionicons name="chevron-back" size={28} color="#4B5563" />
             </Pressable>
           </View>
@@ -320,6 +338,10 @@ export default function RegisterScreen() {
 
             {step === 'carrier' ? (
               <RegisterCarrierStep />
+            ) : null}
+
+            {step === 'message' ? (
+              <RegisterMessageStep />
             ) : null}
 
             {step === 'gender' ? (
