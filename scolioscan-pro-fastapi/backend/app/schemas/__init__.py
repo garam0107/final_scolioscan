@@ -4,6 +4,8 @@ from .subscribe import SubscribeResponse, SubscribeCreate, SubscribeTypeResponse
 from .contact import ContactCreate
 from .rotation import RotationMeasurementCreate, RotationMeasurementResponse, SeverityZone, compute_zone
 from .curvature import CurvatureMeasurementResponse, Severity, BackType
+# OCTOMO API 관련
+from .octomo import OctomoIssueCodeRequest, OctomoIssueCodeResponse, OctomoVerifyRequest, OctomoVerifyResponse
 
 __all__ = [
     "UserCreate",
@@ -25,4 +27,9 @@ __all__ = [
     "CurvatureMeasurementResponse",
     "Severity",
     "BackType",
+    # OCTOMO API 관련
+    "OctomoIssueCodeRequest",
+    "OctomoIssueCodeResponse",
+    "OctomoVerifyRequest",
+    "OctomoVerifyResponse",
 ]

@@ -1,10 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+import httpx
 from ..database import get_db
 from ..models import User
-from ..schemas import UserCreate, UserLogin, PasswordReset
+from ..schemas import (
+    OctomoIssueCodeRequest,
+    OctomoIssueCodeResponse,
+    OctomoVerifyRequest,
+    OctomoVerifyResponse,
+    UserCreate,
+    UserLogin,
+    PasswordReset,
+)
 from ..utils import create_access_token, verify_password, get_password_hash, send_password_reset_email, generate_random_password
+# OCTOMO 관련 import
+from ..config import settings
+from ..services.octomo_verification import issue_verification_code, verify_verification_code_with_octomo
 
 router = APIRouter()
 
@@ -72,6 +83,52 @@ async def check_email(email: str, db: Session = Depends(get_db)):
     """이메일 중복 확인"""
     existing_user = db.query(User).filter(User.user_id == email).first()
     return {"exists": existing_user is not None}
+
+
+# OCTOMO 인증 관련 API
+@router.post("/issue-code", response_model=OctomoIssueCodeResponse)
+async def issue_phone_verification_code(payload: OctomoIssueCodeRequest):
+    """휴대폰 인증코드를 발급합니다."""
+    try:
+        challenge = await issue_verification_code(payload.phoneNumber)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+    return OctomoIssueCodeResponse(
+        phoneNumber=challenge.phone_number,
+        code=challenge.code,
+        recipientNumber=settings.OCTOMO_RECIPIENT_NUMBER,
+        messageText=challenge.code,
+        expiresAt=challenge.expires_at,
+        expiresInSeconds=settings.OCTOMO_VERIFICATION_TTL_SECONDS,
+    )
+
+
+@router.post("/verify", response_model=OctomoVerifyResponse)
+async def verify_phone_verification(payload: OctomoVerifyRequest):
+    """OCTOMO를 통해 인증 여부를 확인합니다."""
+    try:
+        verified = await verify_verification_code_with_octomo(payload.phoneNumber)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+    except httpx.HTTPError as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="OCTOMO API 호출에 실패했습니다.",
+        ) from error
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
+
+    return OctomoVerifyResponse(verified=verified)
 
 
 @router.post("/password-reset")

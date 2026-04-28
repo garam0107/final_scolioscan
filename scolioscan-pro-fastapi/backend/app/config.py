@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     # Daum Address API
     DAUM_ADDRESS_API_KEY: str = "your-daum-api-key"
 
+    # OCTOMO SMS 인증 설정
+    OCTOMO_API_BASE_URL: str = "https://api.octoverse.kr/octomo/v1/public"
+    OCTOMO_API_KEY: str = "92fb4f5856f9fd9b3c7e19729fd76292977f151842b3241b6db5475f44bf4fc8"
+    OCTOMO_API_KEY_HEADER: str = "Authorization"
+    OCTOMO_API_KEY_PREFIX: str = "Octomo "
+    OCTOMO_HTTP_TIMEOUT_SECONDS: float = 10.0
+    OCTOMO_VERIFICATION_TTL_SECONDS: int = 300
+    OCTOMO_RECIPIENT_NUMBER: str = "1666-3538"
+
     # File Upload Settings
     UPLOAD_DIR: str = "./uploads"  # Relative path works both in Docker and on regular servers
 
