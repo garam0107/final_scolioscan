@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -12,48 +12,50 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useAuthStore } from '@/src/store/authStore';
 import ToastAlert from '@/src/components/ui/ToastAlert';
-import AuthField from './AuthField';
+import RegisterBirthdayStep from './RegisterBirthdayStep';
+import RegisterEmailStep from './RegisterEmailStep';
+import RegisterGenderStep from './RegisterGenderStep';
+import RegisterNameStep from './RegisterNameStep';
+import RegisterPasswordStep from './RegisterPasswordStep';
 import { styles } from './register.styles';
+import {
+  formatBirthdayIso,
+  hasPasswordLength,
+  hasPasswordMix,
+  isValidBirthday,
+  isValidEmail,
+  normalizeRegisterMessage,
+} from './registerValidation';
 
-type RegisterStep = 'email' | 'password' | 'name' | 'gender';
-
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function hasPasswordLength(password: string) {
-  return password.trim().length >= 8;
-}
-
-function hasPasswordMix(password: string) {
-  return /[A-Za-z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
-}
-
-function normalizeRegisterMessage(message: string) {
-  if (message.includes('Email already registered')) {
-    return '이미 가입된 이메일입니다.';
-  }
-
-  return message;
-}
+type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'gender';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { checkEmail, register } = useAuth();
+  const draft = useAuthStore((state) => state.registerDraft);
+  const resetRegisterDraft = useAuthStore((state) => state.resetRegisterDraft);
   const [step, setStep] = useState<RegisterStep>('email');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [gender, setGender] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
   const [doneModalVisible, setDoneModalVisible] = useState(false);
-  const passwordHasLength = hasPasswordLength(password);
-  const passwordHasMix = hasPasswordMix(password);
+  const passwordHasLength = hasPasswordLength(draft.password);
+  const passwordHasMix = hasPasswordMix(draft.password);
+  const birthdayReady = isValidBirthday(draft.birthYear, draft.birthMonth, draft.birthDay);
+
+  useEffect(() => {
+    // 회원가입 화면에 들어올 때마다 임시 입력값을 초기화합니다.
+    resetRegisterDraft();
+
+    return () => {
+      // 화면을 떠날 때도 다시 비워서 다음 진입 시 이전 값이 남지 않게 합니다.
+      resetRegisterDraft();
+    };
+  }, [resetRegisterDraft]);
 
   const stepMeta = useMemo(() => {
     if (step === 'email') {
@@ -73,6 +75,13 @@ export default function RegisterScreen() {
     if (step === 'name') {
       return {
         title: '이름을\n입력해주세요',
+        buttonText: '계속하기',
+      };
+    }
+
+    if (step === 'birthday') {
+      return {
+        title: '생년월일을\n입력해주세요',
         buttonText: '계속하기',
       };
     }
@@ -113,7 +122,7 @@ export default function RegisterScreen() {
 
   const goNext = () => {
     if (step === 'email') {
-      const trimmedEmail = email.trim();
+      const trimmedEmail = draft.email.trim();
       if (!trimmedEmail) {
         showToast('이메일을 입력해주세요.');
         return;
@@ -139,8 +148,18 @@ export default function RegisterScreen() {
     }
 
     if (step === 'name') {
-      if (!name.trim()) {
+      if (!draft.name.trim()) {
         showToast('이름을 입력해주세요.');
+        return;
+      }
+
+      setStep('birthday');
+      return;
+    }
+
+    if (step === 'birthday') {
+      if (!birthdayReady) {
+        showToast('생년월일을 올바르게 입력해주세요.');
         return;
       }
 
@@ -149,7 +168,7 @@ export default function RegisterScreen() {
   };
 
   const handleStart = async () => {
-    if (gender === null) {
+    if (draft.gender === null) {
       showToast('성별을 선택해주세요.');
       return;
     }
@@ -162,18 +181,19 @@ export default function RegisterScreen() {
 
     try {
       await register({
-        user_id: email.trim(),
-        user_pw: password,
-        name: name.trim(),
-        sex: gender,
+        user_id: draft.email.trim(),
+        user_pw: draft.password,
+        name: draft.name.trim(),
+        sex: draft.gender,
         // 현재 화면에는 아직 없는 필수 항목이라 임시값을 넣었습니다.
         // 다음 단계에서 전화번호, 생년월일, 주소 입력이 붙으면 이 부분만 바꾸면 됩니다.
-        phone: '',
-        birthday: new Date().toISOString(),
-        address: '',
-        detail_address: null,
+        phone: draft.phone,
+        birthday: formatBirthdayIso(draft.birthYear, draft.birthMonth, draft.birthDay),
+        address: draft.address,
+        detail_address: draft.detailAddress || null,
       });
 
+      resetRegisterDraft();
       setDoneModalVisible(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : '회원가입에 실패했습니다.';
@@ -186,10 +206,11 @@ export default function RegisterScreen() {
   const primaryDisabled =
     loading ||
     checkingEmail ||
-    (step === 'email' && (!email.trim() || !isValidEmail(email.trim()))) ||
+    (step === 'email' && (!draft.email.trim() || !isValidEmail(draft.email.trim()))) ||
     (step === 'password' && (!passwordHasLength || !passwordHasMix)) ||
-    (step === 'name' && !name.trim()) ||
-    (step === 'gender' && gender === null);
+    (step === 'name' && !draft.name.trim()) ||
+    (step === 'birthday' && !birthdayReady) ||
+    (step === 'gender' && draft.gender === null);
 
   const handlePrimaryPress = () => {
     if (step === 'gender') {
@@ -216,7 +237,12 @@ export default function RegisterScreen() {
       return;
     }
 
-    setStep('name');
+    if (step === 'birthday') {
+      setStep('name');
+      return;
+    }
+
+    setStep('birthday');
   };
 
   return (
@@ -230,7 +256,7 @@ export default function RegisterScreen() {
       />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardWrap}
       >
         <View style={styles.screen}>
@@ -244,132 +270,26 @@ export default function RegisterScreen() {
             <Text style={styles.title}>{stepMeta.title}</Text>
 
             {step === 'email' ? (
-              <AuthField
-                autoCapitalize="none"
-                autoComplete="email"
-                autoCorrect={false}
-                label="이메일"
-                placeholder=""
-                returnKeyType="next"
-                textContentType="emailAddress"
-                value={email}
-                variant="email"
-                onChangeText={setEmail}
-                onClear={() => setEmail('')}
-                onSubmitEditing={() => void goNext()}
-              />
+              <RegisterEmailStep onSubmit={() => void goNext()} />
             ) : null}
 
             {step === 'password' ? (
-              <>
-                <AuthField
-                  autoCapitalize="none"
-                  autoComplete="password"
-                  autoCorrect={false}
-                  label="비밀번호"
-                  placeholder="비밀번호를 입력해주세요"
-                  returnKeyType="next"
-                  secureTextEntry={!passwordVisible}
-                  textContentType="password"
-                  value={password}
-                  variant="password"
-                  onChangeText={setPassword}
-                  onToggleSecure={() => setPasswordVisible((current) => !current)}
-                />
-                <View style={styles.passwordRules}>
-                  <View style={styles.passwordRuleRow}>
-                    <Ionicons
-                      name={passwordHasMix ? 'checkmark' : 'checkmark'}
-                      size={16}
-                      color={passwordHasMix ? '#5F9F9D' : '#C3CAD6'}
-                      style={styles.passwordRuleIcon}
-                    />
-                    <Text
-                      style={[
-                        styles.passwordRuleText,
-                        passwordHasMix ? styles.passwordRuleTextActive : null,
-                      ]}
-                    >
-                      영문, 숫자, 특수문자 포함
-                    </Text>
-                  </View>
-                  <View style={styles.passwordRuleRow}>
-                    <Ionicons
-                      name={passwordHasLength ? 'checkmark' : 'checkmark'}
-                      size={16}
-                      color={passwordHasLength ? '#5F9F9D' : '#C3CAD6'}
-                      style={styles.passwordRuleIcon}
-                    />
-                    <Text
-                      style={[
-                        styles.passwordRuleText,
-                        passwordHasLength ? styles.passwordRuleTextActive : null,
-                      ]}
-                    >
-                      최소 8자 이상
-                    </Text>
-                  </View>
-                </View>
-              </>
-            ) : null}
-
-            {step === 'name' ? (
-              <AuthField
-                autoCapitalize="words"
-                autoComplete="name"
-                autoCorrect={false}
-                label="이름"
-                placeholder="이름을 입력해주세요"
-                returnKeyType="next"
-                textContentType="name"
-                value={name}
-                maxLength={8}
-                variant="text"
-                onChangeText={setName}
-                onClear={() => setName('')}
-                onSubmitEditing={() => void goNext()}
+              <RegisterPasswordStep
+                passwordVisible={passwordVisible}
+                onTogglePasswordVisible={() => setPasswordVisible((current) => !current)}
               />
             ) : null}
 
+            {step === 'name' ? (
+              <RegisterNameStep onSubmit={() => void goNext()} />
+            ) : null}
+
+            {step === 'birthday' ? (
+              <RegisterBirthdayStep />
+            ) : null}
+
             {step === 'gender' ? (
-              <View style={styles.genderWrap}>
-                <View style={styles.genderRow}>
-                  <Pressable
-                    onPress={() => setGender(true)}
-                    style={({ pressed }) => [
-                      styles.genderButton,
-                      gender === true ? styles.genderButtonActive : null,
-                      pressed ? styles.pressed : null,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.genderText,
-                        gender === true ? styles.genderTextActive : null,
-                      ]}
-                    >
-                      남성
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => setGender(false)}
-                    style={({ pressed }) => [
-                      styles.genderButton,
-                      gender === false ? styles.genderButtonActive : null,
-                      pressed ? styles.pressed : null,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.genderText,
-                        gender === false ? styles.genderTextActive : null,
-                      ]}
-                    >
-                      여성
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
+              <RegisterGenderStep />
             ) : null}
           </View>
 

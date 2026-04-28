@@ -63,6 +63,39 @@ export const styles = StyleSheet.create({
   passwordRuleTextActive: {
     color: '#2C9696',
   },
+  birthdayWrap: {
+    marginTop: 20,
+  },
+  birthdayRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  birthdayYearBox: {
+    flex: 1.2,
+  },
+  birthdayMonthBox: {
+    flex: 1,
+  },
+  birthdayDayBox: {
+    flex: 1,
+  },
+  birthdayInputBox: {
+    backgroundColor: '#F7F7F8',
+    borderColor: '#DADADC',
+    borderRadius: 6,
+    borderWidth: 1,
+    flex: 1,
+    height: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  birthdayInput: {
+    color: '#292929',
+    fontFamily: 'PretendardVariable',
+    fontSize: 15,
+    fontWeight: '500',
+    paddingVertical: 0,
+  },
   genderWrap: {
     marginTop: 8,
   },
