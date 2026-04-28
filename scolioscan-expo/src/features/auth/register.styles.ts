@@ -17,7 +17,7 @@ export const styles = StyleSheet.create({
     height: 56,
     justifyContent: 'center',
   },
-  backButton: {
+  ㅍ: {
     alignItems: 'center',
     height: 44,
     justifyContent: 'center',
@@ -95,6 +95,68 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     paddingVertical: 0,
+  },
+  carrierWrap: {
+    marginTop: 8,
+  },
+  carrierGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap : 10
+  },
+  carrierButton: {
+    alignItems: 'center',
+    backgroundColor: '#F3F4F7',
+    borderColor: '#E1E5EC',
+    borderRadius: 6,
+    borderWidth: 1,
+    height: 52,
+    justifyContent: 'center',
+    width: '31.5%',
+  },
+  carrierButtonActive: {
+    backgroundColor: '#EAF6F5',
+    borderColor: '#69A9A7',
+  },
+  carrierButtonText: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 15,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  carrierButtonTextActive: {
+    color: '#4F9A97',
+  },
+  phoneWrap: {
+    marginTop: 18,
+  },
+  phoneFieldBox: {
+    alignItems: 'center',
+    backgroundColor: '#F7F7F8',
+    borderColor: '#DADADC',
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    minHeight: 56,
+    paddingHorizontal: 18,
+  },
+  phoneInput: {
+    color: '#292929',
+    flex: 1,
+    fontFamily: 'PretendardVariable',
+    fontSize: 15,
+    fontWeight: '500',
+    minHeight: 56,
+    paddingVertical: 0,
+    width: '100%',
+  },
+  phoneHelperText: {
+    color: '#8D95A3',
+    fontFamily: 'PretendardVariable',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
   },
   genderWrap: {
     marginTop: 8,

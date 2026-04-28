@@ -14,6 +14,29 @@ function isDigits(value: string) {
   return /^\d+$/.test(value);
 }
 
+export function normalizePhoneNumber(phone: string) {
+  return phone.replace(/\D/g, '');
+}
+
+export function formatPhoneNumber(phone: string) {
+  const digits = normalizePhoneNumber(phone).slice(0, 11);
+
+  if (digits.length <= 3) {
+    return digits;
+  }
+
+  if (digits.length <= 7) {
+    return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  }
+
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
+export function isValidPhoneNumber(phone: string) {
+  const normalizedPhone = normalizePhoneNumber(phone);
+  return /^01[016789]\d{7,8}$/.test(normalizedPhone);
+}
+
 export function isValidBirthday(year: string, month: string, day: string) {
   if (!year || !month || !day) {
     return false;

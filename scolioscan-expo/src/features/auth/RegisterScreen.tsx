@@ -15,6 +15,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useAuthStore } from '@/src/store/authStore';
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import RegisterBirthdayStep from './RegisterBirthdayStep';
+import RegisterCarrierStep from './RegisterCarrierStep';
 import RegisterEmailStep from './RegisterEmailStep';
 import RegisterGenderStep from './RegisterGenderStep';
 import RegisterNameStep from './RegisterNameStep';
@@ -26,10 +27,11 @@ import {
   hasPasswordMix,
   isValidBirthday,
   isValidEmail,
+  isValidPhoneNumber,
   normalizeRegisterMessage,
 } from './registerValidation';
 
-type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'gender';
+type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'gender';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -86,11 +88,18 @@ export default function RegisterScreen() {
       };
     }
 
+    if (step === 'carrier') {
+      return {
+        title: draft.carrier ? '휴대전화 번호를\n입력해주세요' : '이용하고 계신\n통신사를 알려주세요',
+        buttonText: '계속하기',
+      };
+    }
+
     return {
       title: '마지막으로\n성별을 알려주세요',
       buttonText: '시작하기',
     };
-  }, [step]);
+  }, [draft.carrier, step]);
 
   const showToast = (message: string) => {
     setToastKey((current) => current + 1);
@@ -163,6 +172,21 @@ export default function RegisterScreen() {
         return;
       }
 
+      setStep('carrier');
+      return;
+    }
+
+    if (step === 'carrier') {
+      if (!draft.carrier) {
+        showToast('통신사를 선택해주세요.');
+        return;
+      }
+
+      if (!isValidPhoneNumber(draft.phone)) {
+        showToast('휴대전화 번호를 올바르게 입력해주세요.');
+        return;
+      }
+
       setStep('gender');
     }
   };
@@ -210,6 +234,7 @@ export default function RegisterScreen() {
     (step === 'password' && (!passwordHasLength || !passwordHasMix)) ||
     (step === 'name' && !draft.name.trim()) ||
     (step === 'birthday' && !birthdayReady) ||
+    (step === 'carrier' && (!draft.carrier || !isValidPhoneNumber(draft.phone))) ||
     (step === 'gender' && draft.gender === null);
 
   const handlePrimaryPress = () => {
@@ -242,7 +267,12 @@ export default function RegisterScreen() {
       return;
     }
 
-    setStep('birthday');
+    if (step === 'carrier') {
+      setStep('birthday');
+      return;
+    }
+
+    setStep('carrier');
   };
 
   return (
@@ -286,6 +316,10 @@ export default function RegisterScreen() {
 
             {step === 'birthday' ? (
               <RegisterBirthdayStep />
+            ) : null}
+
+            {step === 'carrier' ? (
+              <RegisterCarrierStep />
             ) : null}
 
             {step === 'gender' ? (

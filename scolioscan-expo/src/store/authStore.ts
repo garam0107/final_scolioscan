@@ -7,6 +7,7 @@ type RegisterDraft = {
   birthYear: string;
   birthMonth: string;
   birthDay: string;
+  carrier: string | null;
   gender: boolean | null;
   phone: string;
   address: string;
@@ -26,6 +27,7 @@ const initialRegisterDraft: RegisterDraft = {
   birthYear: '',
   birthMonth: '',
   birthDay: '',
+  carrier: null,
   gender: null,
   phone: '',
   address: '',
