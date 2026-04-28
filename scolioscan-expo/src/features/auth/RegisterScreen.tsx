@@ -31,7 +31,7 @@ import {
   isValidPhoneNumber,
   normalizeRegisterMessage,
 } from './registerValidation';
-
+import { openSmsComposer } from './register/openSmsComposer';
 type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'message' | 'gender';
 
 export default function RegisterScreen() {
@@ -249,10 +249,31 @@ export default function RegisterScreen() {
     (step === 'birthday' && !birthdayReady) ||
     (step === 'carrier' && (!draft.carrier || !isValidPhoneNumber(draft.phone))) ||
     (step === 'gender' && draft.gender === null);
+  // 문자 인증 함수
+  const handleMessagePress = async () => {
+    const opened = await openSmsComposer({
+      phoneNumber: '010-4379-6248',
+      message: '000000',
+    });
+
+    if (!opened) {
+      showToast('메시지 앱을 열 수 없습니다.');
+      return;
+    }
+
+};
+
+
+
 
   const handlePrimaryPress = () => {
     if (step === 'gender') {
       void handleStart();
+      return;
+    }
+
+    if (step === 'message'){
+      void handleMessagePress();
       return;
     }
 
