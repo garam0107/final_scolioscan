@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
+  AppState,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -45,11 +46,65 @@ export default function RegisterScreen() {
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [checkingPhone, setCheckingPhone] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  // 인증코드 발급하고 문자앱을 한 번 열었는지
+  const [smsRequested, setSmsRequested] = useState(false);
+  // /verify 호출 중인지
+  const [verifyingPhone, setVerifyingPhone] = useState(false);
   const [toastKey, setToastKey] = useState(0);
   const [doneModalVisible, setDoneModalVisible] = useState(false);
   const passwordHasLength = hasPasswordLength(draft.password);
   const passwordHasMix = hasPasswordMix(draft.password);
   const birthdayReady = isValidBirthday(draft.birthYear, draft.birthMonth, draft.birthDay);
+
+//handleMessagePress: /issue-code + 문자앱 열기
+// AppState active: 자동 /verify
+// true: setStep('email')
+// false: 토스트 표시, message 유지
+// 나중에 인증 확인 버튼 방식으로 바꿀 때는 AppState effect를 빼고 버튼으로 handleVerifyPhone을 호출
+
+
+// OCTOMO API 호출 후 인증 완료 확인 함수
+  const handleVerifyPhone = useCallback(async () => {
+  if (verifyingPhone || loading || step !== 'message' || !smsRequested) {
+    return;
+  }
+
+  setVerifyingPhone(true);
+
+  try {
+    const response = await octomoApi(draft.phone);
+
+    if (response.verified) {
+      showToast('휴대전화 번호 인증이 완료되었습니다.');
+      setSmsRequested(false);
+      setStep('email');
+      return;
+    }
+
+    showToast('휴대전화 번호 인증이 아직 완료되지 않았습니다.');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '휴대전화 번호 인증 확인에 실패했습니다.';
+    showToast(normalizeRegisterMessage(message));
+  } finally {
+    setVerifyingPhone(false);
+  }
+}, [draft.phone, loading, octomoApi, smsRequested, step, verifyingPhone]);
+
+
+  useEffect(() => {
+  const subscription = AppState.addEventListener('change', (nextAppState) => {
+        if (nextAppState === 'active') {
+      setTimeout(() => {
+        void handleVerifyPhone();
+      }, 1500);
+    }
+  });
+
+  return () => {
+    subscription.remove();
+  };
+}, [handleVerifyPhone]);
+
 
   useEffect(() => {
     // 회원가입 화면에 들어올 때마다 임시 입력값을 초기화합니다.
@@ -272,6 +327,7 @@ export default function RegisterScreen() {
     loading ||
     checkingEmail ||
     checkingPhone ||
+    verifyingPhone ||
     (step === 'email' && (!draft.email.trim() || !isValidEmail(draft.email.trim()))) ||
     (step === 'password' && (!passwordHasLength || !passwordHasMix)) ||
     (step === 'name' && !draft.name.trim()) ||
@@ -280,11 +336,12 @@ export default function RegisterScreen() {
     (step === 'gender' && draft.gender === null);
   // 문자 인증 함수
   const handleMessagePress = async () => {
+  try {
     const messageCodeResponse = await messageCode(draft.phone);
 
     const opened = await openSmsComposer({
       phoneNumber: messageCodeResponse.recipientNumber,
-      message: messageCodeResponse.code,
+      message: messageCodeResponse.messageText,
     });
 
     if (!opened) {
@@ -292,8 +349,15 @@ export default function RegisterScreen() {
       return;
     }
 
-  };
-  // OCTOMO API 호출 후 인증 완료 확인 함수
+    setSmsRequested(true);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '인증 메시지 생성에 실패했습니다.';
+    showToast(normalizeRegisterMessage(message));
+  }
+};
+
+  
+
 
   const handlePrimaryPress = () => {
     if (step === 'gender') {
