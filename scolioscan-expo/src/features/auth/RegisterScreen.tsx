@@ -39,7 +39,7 @@ export default function RegisterScreen() {
   const { checkEmail, register } = useAuth();
   const draft = useAuthStore((state) => state.registerDraft);
   const resetRegisterDraft = useAuthStore((state) => state.resetRegisterDraft);
-  const [step, setStep] = useState<RegisterStep>('email');
+  const [step, setStep] = useState<RegisterStep>('carrier');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
@@ -61,6 +61,19 @@ export default function RegisterScreen() {
   }, [resetRegisterDraft]);
 
   const stepMeta = useMemo(() => {
+    if (step === 'carrier') {
+      return {
+        title: draft.carrier ? '휴대전화 번호를\n입력해주세요' : '이용하고 계신\n통신사를 알려주세요',
+        buttonText: '계속하기',
+      };
+    }
+
+    if (step === 'message') {
+      return {
+        title: '인증을 위해 메시지 어플을\n실행할게요',
+        buttonText: '동의 및 휴대전화 번호 확인',
+      };
+    }
     if (step === 'email') {
       return {
         title: '이메일을\n입력해주세요',
@@ -88,21 +101,6 @@ export default function RegisterScreen() {
         buttonText: '계속하기',
       };
     }
-
-    if (step === 'carrier') {
-      return {
-        title: draft.carrier ? '휴대전화 번호를\n입력해주세요' : '이용하고 계신\n통신사를 알려주세요',
-        buttonText: '계속하기',
-      };
-    }
-
-    if (step === 'message') {
-      return {
-        title: '인증을 위해 메시지 어플을\n실행할게요',
-        buttonText: '동의 및 휴대전화 번호 확인',
-      };
-    }
-
     return {
       title: '마지막으로\n성별을 알려주세요',
       buttonText: '시작하기',
@@ -138,6 +136,26 @@ export default function RegisterScreen() {
   };
 
   const goNext = () => {
+
+    if (step === 'carrier') {
+      if (!draft.carrier) {
+        showToast('통신사를 선택해주세요.');
+        return;
+      }
+
+      if (!isValidPhoneNumber(draft.phone)) {
+        showToast('휴대전화 번호를 올바르게 입력해주세요.');
+        return;
+      }
+
+      setStep('message');
+      return;
+    }
+
+    if (step === 'message') {
+      setStep('email');
+    }
+
     if (step === 'email') {
       const trimmedEmail = draft.email.trim();
       if (!trimmedEmail) {
@@ -180,28 +198,13 @@ export default function RegisterScreen() {
         return;
       }
 
-      setStep('carrier');
-      return;
-    }
-
-    if (step === 'carrier') {
-      if (!draft.carrier) {
-        showToast('통신사를 선택해주세요.');
-        return;
-      }
-
-      if (!isValidPhoneNumber(draft.phone)) {
-        showToast('휴대전화 번호를 올바르게 입력해주세요.');
-        return;
-      }
-
-      setStep('message');
-      return;
-    }
-
-    if (step === 'message') {
       setStep('gender');
+      return;
     }
+
+   
+
+    
   };
 
   const handleStart = async () => {
@@ -261,10 +264,7 @@ export default function RegisterScreen() {
       return;
     }
 
-};
-
-
-
+  };
 
   const handlePrimaryPress = () => {
     if (step === 'gender') {
@@ -281,8 +281,19 @@ export default function RegisterScreen() {
   };
 
   const handleBack = () => {
-    if (step === 'email') {
+    if (step === 'carrier') {
       router.back();
+      return;
+    }
+
+    if (step === 'message') {
+      setStep('carrier');
+      return;
+    }
+
+
+    if (step === 'email') {
+      setStep('message')
       return;
     }
 
@@ -301,17 +312,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (step === 'carrier') {
-      setStep('birthday');
-      return;
-    }
-
-    if (step === 'message') {
-      setStep('carrier');
-      return;
-    }
-
-    setStep('message');
+    setStep('birthday');
   };
 
   return (
