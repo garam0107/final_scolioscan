@@ -84,6 +84,11 @@ async def check_email(email: str, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.user_id == email).first()
     return {"exists": existing_user is not None}
 
+@router.get("/check-phone/{phone}")
+async def check_phone(phone: str, db: Session = Depends(get_db)):
+    """휴대폰 번호 중복 확인"""
+    existing_user_phone = db.query(User).filter(User.phone == phone).first()
+    return {"exists" : existing_user_phone is not None}
 
 # OCTOMO 인증 관련 API
 @router.post("/issue-code", response_model=OctomoIssueCodeResponse)
