@@ -6,11 +6,11 @@ import {
   Modal,
   Platform,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAuthStore } from '@/src/store/authStore';
 import ToastAlert from '@/src/components/ui/ToastAlert';
@@ -36,7 +36,7 @@ type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'me
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { checkEmail, checkPhone, register, messageCode } = useAuth();
+  const { checkEmail, checkPhone, register, messageCode,octomoApi } = useAuth();
   const draft = useAuthStore((state) => state.registerDraft);
   const resetRegisterDraft = useAuthStore((state) => state.resetRegisterDraft);
   const [step, setStep] = useState<RegisterStep>('carrier');
@@ -175,9 +175,11 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (step === 'message') {
-      setStep('email');
-    }
+    // if (step === 'message') {
+    //   const OctomoApiResponse = octomoApi(draft.phone);
+    //   console.log("OCTOMO API 리스폰스 : ", OctomoApiResponse);
+    //   setStep('email');
+    // }
 
     if (step === 'email') {
       const trimmedEmail = draft.email.trim();
@@ -277,8 +279,6 @@ export default function RegisterScreen() {
     (step === 'carrier' && (!draft.carrier || !isValidPhoneNumber(draft.phone))) ||
     (step === 'gender' && draft.gender === null);
   // 문자 인증 함수
-  
-  
   const handleMessagePress = async () => {
     const messageCodeResponse = await messageCode(draft.phone);
 
@@ -293,6 +293,7 @@ export default function RegisterScreen() {
     }
 
   };
+  // OCTOMO API 호출 후 인증 완료 확인 함수
 
   const handlePrimaryPress = () => {
     if (step === 'gender') {

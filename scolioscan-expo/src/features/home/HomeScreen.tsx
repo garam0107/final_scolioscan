@@ -28,9 +28,9 @@ import {
 } from '@/src/features/home/homeIcons';
 import styles from '@/src/features/home/home.styles';
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
-import TwoIcon from '../../../assets/home/2d.svg'
-import ThreeIcon from '../../../assets/home/3dcamera.svg'
-import ScolioIcon from '../../../assets/home/scoliometer.svg'
+import TwoIcon from '../../../assets/home/test.svg'
+import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
+import ScolioIcon from '../../../assets/home/home_scolio.svg'
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 // const router = useRouter();
 const banner1 = require('../../../assets/images/BannerImage1.png');

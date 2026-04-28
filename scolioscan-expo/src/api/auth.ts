@@ -4,7 +4,8 @@ import type {
   LoginResponse,
   PasswordResetRequest,
   RegisterRequest,
-  MessageCodeRequest
+  MessageCodeRequest,
+  OctomoApiRequest
 } from '@/src/types/auth';
 
 export const authAPI = {
@@ -14,5 +15,6 @@ export const authAPI = {
   checkPhone: (phone :string) => api.get<{exists: boolean}>(`/auth/check-phone/${encodeURIComponent(phone)}`),
   passwordReset: (data: PasswordResetRequest) => api.post('/auth/password-reset', data),
   messageCode : (data : MessageCodeRequest) => api.post('/auth/issue-code', data),
+  octomoApi : (data : OctomoApiRequest) => api.post('/auth/verify', data),
 };
 

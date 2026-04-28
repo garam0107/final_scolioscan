@@ -39,3 +39,11 @@ export interface MessagCodeResponse {
   expiresAt : string;
   expiresInseconds : string;
 }
+
+export interface OctomoApiRequest {
+  phoneNumber : string;
+}
+
+export interface OctomoApiResponse {
+  verified : boolean;
+}
