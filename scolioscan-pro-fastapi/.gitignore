@@ -63,7 +63,7 @@ docker-compose.override.yml
 .pytest_cache/
 .coverage
 htmlcov/
-
+agents.md/
 # Misc
 .cache/
 tmp/
