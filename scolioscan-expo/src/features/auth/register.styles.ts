@@ -222,6 +222,17 @@ export const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
+  completeWrap: {
+    flex: 1,
+    paddingTop: 24,
+  },
+  completeTitle: {
+    color: '#404552',
+    fontFamily: 'PretendardVariable',
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 34,
+  },
   genderWrap: {
     marginTop: 8,
   },

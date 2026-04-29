@@ -4,10 +4,8 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   AppState,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -17,6 +15,7 @@ import { useAuthStore } from '@/src/store/authStore';
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import RegisterBirthdayStep from './RegisterBirthdayStep';
 import RegisterCarrierStep from './RegisterCarrierStep';
+import RegisterCompleteStep from './RegisterCompleteStep';
 import RegisterEmailStep from './RegisterEmailStep';
 import RegisterGenderStep from './RegisterGenderStep';
 import RegisterNameStep from './RegisterNameStep';
@@ -51,7 +50,6 @@ export default function RegisterScreen() {
   // /verify 호출 중인지
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   const [toastKey, setToastKey] = useState(0);
-  const [doneModalVisible, setDoneModalVisible] = useState(false);
   const passwordHasLength = hasPasswordLength(draft.password);
   const passwordHasMix = hasPasswordMix(draft.password);
   const birthdayReady = isValidBirthday(draft.birthYear, draft.birthMonth, draft.birthDay);
@@ -155,6 +153,12 @@ export default function RegisterScreen() {
       return {
         title: '생년월일을\n입력해주세요',
         buttonText: '계속하기',
+      };
+    }
+    if (step === 'complete') {
+      return {
+        title: '',
+        buttonText: '로그인 하러가기',
       };
     }
     return {
@@ -364,6 +368,11 @@ export default function RegisterScreen() {
 
 
   const handlePrimaryPress = () => {
+    if (step === 'complete') {
+      router.replace('/login');
+      return;
+    }
+
     if (step === 'gender') {
       void handleStart();
       return;
@@ -434,7 +443,7 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.content}>
-            <Text style={styles.title}>{stepMeta.title}</Text>
+            {step === 'complete' ? null : <Text style={styles.title}>{stepMeta.title}</Text>}
 
             {step === 'email' ? (
               <RegisterEmailStep onSubmit={() => void goNext()} />
@@ -467,6 +476,9 @@ export default function RegisterScreen() {
               <RegisterGenderStep />
             ) : null}
 
+            {step === 'complete' ? (
+              <RegisterCompleteStep />
+            ) : null}
 
           </View>
 
@@ -485,25 +497,6 @@ export default function RegisterScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
-
-      <Modal transparent animationType="fade" visible={doneModalVisible} onRequestClose={() => setDoneModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setDoneModalVisible(false)} />
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>회원가입 완료</Text>
-            <Text style={styles.modalMessage}>가입이 완료되었습니다. 로그인 화면으로 이동합니다.</Text>
-            <Pressable
-              onPress={() => {
-                setDoneModalVisible(false);
-                router.replace('/login');
-              }}
-              style={styles.modalButton}
-            >
-              <Text style={styles.modalButtonText}>확인</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
