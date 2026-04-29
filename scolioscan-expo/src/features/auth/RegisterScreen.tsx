@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   AppState,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -49,6 +50,8 @@ export default function RegisterScreen() {
   const [smsRequested, setSmsRequested] = useState(false);
   // /verify 호출 중인지
   const [verifyingPhone, setVerifyingPhone] = useState(false);
+  // 키보드 창 닫히고 버튼 위치 조정
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [toastKey, setToastKey] = useState(0);
   const passwordHasLength = hasPasswordLength(draft.password);
   const passwordHasMix = hasPasswordMix(draft.password);
@@ -102,6 +105,23 @@ export default function RegisterScreen() {
 //     subscription.remove();
 //   };
 // }, [handleVerifyPhone]);
+
+
+  // footer 버튼 위치 조정
+  useEffect(() => {
+  const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
+    setKeyboardHeight(event.endCoordinates.height);
+  });
+
+  const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+    setKeyboardHeight(0);
+  });
+
+  return () => {
+    showSubscription.remove();
+    hideSubscription.remove();
+  };
+}, []);
 
 
   useEffect(() => {
@@ -432,7 +452,7 @@ export default function RegisterScreen() {
       />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardWrap}
       >
         <View style={styles.screen}>
@@ -482,7 +502,14 @@ export default function RegisterScreen() {
 
           </View>
 
-          <View style={styles.footer}>
+            <View
+              style={[
+                styles.footer,
+                Platform.OS === 'android' && keyboardHeight > 0
+                  ? { paddingBottom: keyboardHeight + 16 }
+                  : null,
+              ]}
+            >
             <Pressable
               disabled={primaryDisabled}
               onPress={handlePrimaryPress}
