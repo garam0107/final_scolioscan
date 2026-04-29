@@ -22,7 +22,9 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.garam0107.scolioscanexpo",
+      "usesCleartextTraffic": true
     },
     "web": {
       "output": "static",
@@ -47,6 +49,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e19dda78-f8f0-43c8-9530-f4675d08c87a"
+      }
     }
   }
 }
