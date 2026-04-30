@@ -1,13 +1,14 @@
 import { StyleSheet } from 'react-native';
+import { Colors } from '@/src/constants/theme';
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: '#F6F7F9',
+    backgroundColor: Colors.gray[25],
     flex: 1,
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 56,
   },
   profileCard: {
     alignItems: 'center',
@@ -48,9 +49,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
     profileEmail: {
-    color: '#99A2AE',
-    fontSize: 10,
-    marginTop: 3,
+    color: Colors.gray[400],
+    fontSize: 14,
+    fontWeight : 400,
+    lineHeight : 20,
   },
   accountManagePill: {
     alignItems: 'center',
@@ -63,9 +65,10 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   accountManageText: {
-    color: '#9AA3AE',
-    fontSize: 11,
-    fontWeight: '600',
+    color: Colors.gray[500],
+    fontSize: 10,
+    fontWeight: '400',
+    lineHeight : 14,
   },
   subscriptionTitle: {
     color: '#222832',
@@ -106,23 +109,25 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   subscriptionText: {
-    color: '#2F3741',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  linkText: {
-    color: '#5E9F9E',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  section: {
-    marginTop: 18,
-  },
-  sectionTitle: {
-    color: '#222832',
+    color: '#000000',
     fontSize: 14,
     fontWeight: '400',
-    marginBottom: 12,
+    lineHeight : 20,
+  },
+  linkText: {
+    color: Colors.primary[500],
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight : 16,
+  },
+  section: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '400',
+    marginBottom: 16,
     lineHeight : 20,
   },
   sectionBody: {
@@ -150,12 +155,13 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   rowTitle: {
-    color: '#25272D',
-    fontSize: 13,
+    color: Colors.gray[900],
+    fontSize: 16,
     fontWeight: '500',
+    lineHeight : 22
   },
   rowDescription: {
-    color: '#657085',
+    color: Colors.gray[500],
     fontSize: 12,
     lineHeight: 16,
     marginTop: 4,

@@ -1,3 +1,4 @@
+import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
@@ -8,7 +9,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     flexDirection: 'row',
-    height: 52,
+    height: 80,
     paddingHorizontal: 16,
   },
   backButton: {
@@ -32,9 +33,9 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   sectionTitle: {
-    color: '#5D6672',
-    fontSize: 12,
-    fontWeight: '800',
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '400',
     marginBottom: 12,
   },
   accountSection: {
@@ -53,9 +54,9 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   fieldLabel: {
-    color: '#363F4A',
-    fontSize: 12,
-    fontWeight: '800',
+    color: Colors.gray[800],
+    fontSize: 15,
+    fontWeight: '500',
     marginBottom: 8,
   },
   inputWrap: {
