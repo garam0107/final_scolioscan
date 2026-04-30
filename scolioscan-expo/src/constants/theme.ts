@@ -20,6 +20,48 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
   },
+  primary: {
+    black: '#000000',
+    white: '#FFFFFF',
+    500: '#2C9696',
+  },
+  gray: {
+    900: '#25272D',
+    800: '#2B2F36',
+    700: '#3B4049',
+    600: '#515968',
+    500: '#657085',
+    400: '#7E89A0',
+    300: '#97A2B9',
+    200: '#B6BECE',
+    100: '#D4D9E2',
+    90: '#E3E7ED',
+    75: '#EDEFF3',
+    50: '#F3F4F7',
+    25: '#F9FAFB',
+  },
+  mint: {
+    600: '#20797E',
+    500: '#2C9696',
+    400: '#22BCB7',
+    300: '#7AD7D4',
+    50: '#D7F9F9',
+    25: '#EDFDFC',
+  },
+  blue: {
+    600: '#007AF5',
+    500: '#2E96FF',
+    400: '#52A8FF',
+    300: '#80BFFF',
+    50: '#CFE7FF',
+    25: '#EBF5FF',
+  },
+  red: {
+    400: '#FF4747',
+    50: '#FFDBDB',
+    25: '#FFF3F3',
+  },
+
 };
 
 export const Fonts = Platform.select({
