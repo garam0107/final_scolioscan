@@ -124,7 +124,7 @@ export default function SettingsScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 20 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={styles.profileCard} onPress={() => router.push('/profile/edit')}>
+        <Pressable style={styles.profileCard} onPress={() => router.push('/settings/account')}>
           <View style={styles.avatar}>
             <ProfileIcon/>
           </View>
