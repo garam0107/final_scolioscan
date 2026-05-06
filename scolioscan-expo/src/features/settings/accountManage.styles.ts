@@ -65,9 +65,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   actionLinkText: {
-    color: '#7E8794',
-    fontSize: 12,
+    color: Colors.gray[500],
+    fontSize: 14,
     fontWeight: '500',
+    lineHeight : 20
   },
   actionDivider: {
     backgroundColor: '#D8DDE5',
