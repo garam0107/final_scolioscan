@@ -111,12 +111,13 @@ const styles = StyleSheet.create({
   measurementGrid: {
     flexDirection: 'row',
     gap: 8,
+    height : 180
   },
   pressed: {
     opacity: 0.92,
   },
   measurementCard: {
-    height: 180,
+    height: '100%',
     padding: 12,
     alignItems: 'center',
     justifyContent: 'flex-end',
@@ -373,6 +374,118 @@ const styles = StyleSheet.create({
   },
   weeklyResultValueActive: {
     color: '#20797E',
+  },
+  trendCard: {
+    marginTop: 8,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  trendHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  trendSummary: {
+    gap: 6,
+  },
+  trendCaption: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400',
+    color: Colors.gray[900],
+  },
+  trendValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  trendAverageValue: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 28,
+    lineHeight: 38,
+    fontWeight: '700',
+    color: Colors.gray[900],
+  },
+  trendChangeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    backgroundColor: Colors.mint[25],
+  },
+  trendChangeText: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '500',
+    color: Colors.mint[600],
+  },
+  trendLegend: {
+    gap: 4,
+    paddingTop: 2,
+  },
+  trendLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+  },
+  trendLegendLine: {
+    width: 30,
+    height: 1,
+    borderStyle: 'dashed',
+    borderTopWidth: 1,
+  },
+  trendLegendDanger: {
+    borderTopColor: '#FF4B3C',
+  },
+  trendLegendWarning: {
+    borderTopColor: '#FABE00',
+  },
+  trendLegendNormal: {
+    borderTopColor: Colors.mint[500],
+  },
+  trendLegendText: {
+    minWidth: 22,
+    fontFamily: 'PretendardVariable',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '400',
+    textAlign: 'right',
+  },
+  trendLegendDangerText: {
+    color: '#FF4B3C',
+  },
+  trendLegendWarningText: {
+    color: '#FABE00',
+  },
+  trendLegendNormalText: {
+    color: Colors.mint[500],
+  },
+  trendChartWrap: {
+    width: '100%',
+    height: 120,
+    overflow: 'hidden',
+  },
+  trendXAxis: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  trendXAxisText: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400',
+    color: Colors.gray[300],
   },
   contentSlot: {
     height: 20,

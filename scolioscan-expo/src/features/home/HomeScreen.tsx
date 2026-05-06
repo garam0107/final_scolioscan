@@ -15,13 +15,21 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, {
+  Defs,
+  Line,
+  LinearGradient as SvgLinearGradient,
+  Path,
+  Rect,
+  Stop,
+} from 'react-native-svg';
 import CrownIcon from '../../../assets/home/crown.svg';
 import { alarmAPI } from '@/src/api/alarm';
 import { curvatureAPI } from '@/src/api/curvature';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
 import styles from '@/src/features/home/home.styles';
+import type { CurvatureResponse } from '@/src/types/curvature';
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
 import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
@@ -45,10 +53,12 @@ type MeasurementCardProps = MeasurementItem & {
 };
 
 type WeeklyResultItem = {
-  id: string;
+  id: WeeklyResultId;
   label: string;
   value: number;
 };
+
+type WeeklyResultId = 'upper-thoracic' | 'main-thoracic' | 'lumbar';
 
 type WeeklyResultValues = {
   upperThoracic: number;
@@ -62,12 +72,74 @@ const INITIAL_WEEKLY_RESULT_VALUES: WeeklyResultValues = {
   lumbar: 0,
 };
 
+const TREND_CHART_HEIGHT = 120;
+const TREND_CHART_MAX_VALUE = 40;
+
 function formatAngleValue(value: number) {
   if (!Number.isFinite(value)) {
     return 0;
   }
 
   return Math.round(value * 10) / 10;
+}
+
+function formatChangeAngle(value: number, showPlus = false) {
+  const angle = formatAngleValue(Math.abs(value));
+  const sign = showPlus && angle > 0 ? '+' : '';
+
+  return `${sign}${angle}°`;
+}
+
+function getSelectedCurvatureValue(record: CurvatureResponse, selectedId: WeeklyResultId) {
+  if (selectedId === 'upper-thoracic') {
+    return record.secondary_thoracic_cobb;
+  }
+
+  if (selectedId === 'main-thoracic') {
+    return record.main_thoracic_cobb;
+  }
+
+  return record.lumbar_cobb;
+}
+
+function buildTrendPath(values: number[], chartWidth: number) {
+  if (values.length === 0 || chartWidth <= 0) {
+    return '';
+  }
+
+  if (values.length === 1) {
+    const y = TREND_CHART_HEIGHT - (Math.min(values[0], TREND_CHART_MAX_VALUE) / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+    return `M 0 ${y} L ${chartWidth} ${y}`;
+  }
+
+  const points = values.map((value, index) => {
+    const x = (chartWidth / (values.length - 1)) * index;
+    const safeValue = Math.max(0, Math.min(value, TREND_CHART_MAX_VALUE));
+    const y = TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+
+    return { x, y };
+  });
+  const path = [`M ${points[0].x} ${points[0].y}`];
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const current = points[index];
+    const next = points[index + 1];
+    const previous = points[index - 1] ?? current;
+    const afterNext = points[index + 2] ?? next;
+
+    const cp1x = current.x + (next.x - previous.x) / 6;
+    const cp1y = current.y + (next.y - previous.y) / 6;
+    const cp2x = next.x - (afterNext.x - current.x) / 6;
+    const cp2y = next.y - (afterNext.y - current.y) / 6;
+
+    path.push(`C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next.x} ${next.y}`);
+  }
+
+  return path.join(' ');
+}
+
+function getThresholdY(value: number) {
+  return TREND_CHART_HEIGHT - (value / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
 }
 
 function MeasurementCard({
@@ -111,11 +183,13 @@ export default function HomeScreen() {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [alarmCount, setAlarmCount] = useState(user?.alarm_count ?? 0);
   const [isProModalVisible, setIsProModalVisible] = useState(false);
-  const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState('upper-thoracic');
+  const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState<WeeklyResultId>('upper-thoracic');
   const [weeklyResultValues, setWeeklyResultValues] = useState<WeeklyResultValues>(INITIAL_WEEKLY_RESULT_VALUES);
+  const [curvatureTrendRecords, setCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
   const measurementCardWidth = (width - 40 - 8) / 2;
+  const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || '회원';
 
 
@@ -144,6 +218,32 @@ export default function HomeScreen() {
     { id: 'main-thoracic', label: '주 흉추만곡', value: weeklyResultValues.mainThoracic },
     { id: 'lumbar', label: '요추만곡', value: weeklyResultValues.lumbar },
   ];
+  const trendRecords = useMemo(
+    () => [...curvatureTrendRecords].reverse(),
+    [curvatureTrendRecords],
+  );
+  const trendValues = useMemo(
+    () => trendRecords.map((record) => formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId))),
+    [selectedWeeklyResultId, trendRecords],
+  );
+  const trendPath = useMemo(
+    () => buildTrendPath(trendValues, trendChartWidth),
+    [trendChartWidth, trendValues],
+  );
+  const latestTrendValue = trendValues[trendValues.length - 1] ?? 0;
+  const previousTrendValue = trendValues[trendValues.length - 2] ?? latestTrendValue;
+  const recentChange = latestTrendValue - previousTrendValue;
+  const averageChange = useMemo(() => {
+    if (trendValues.length < 2) {
+      return 0;
+    }
+
+    const totalChange = trendValues.slice(1).reduce((sum, value, index) => {
+      return sum + Math.abs(value - trendValues[index]);
+    }, 0);
+
+    return totalChange / (trendValues.length - 1);
+  }, [trendValues]);
 
   const loadAlarmCount = useCallback(async () => {
     try {
@@ -157,8 +257,9 @@ export default function HomeScreen() {
 
   const loadLatestCurvature = useCallback(async () => {
     try {
-      const response = await curvatureAPI.getAnalyses({ limit: 1 });
+      const response = await curvatureAPI.getAnalyses({ limit: 30 });
       const latestCurvature = response.data[0];
+      setCurvatureTrendRecords(response.data);
 
       if (!latestCurvature) {
         setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
@@ -173,6 +274,7 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Failed to load latest curvature:', error);
       setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
+      setCurvatureTrendRecords([]);
     }
   }, []);
 
@@ -242,7 +344,7 @@ export default function HomeScreen() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom:  20 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom:  10 }]}
         >
           <View style={styles.greetingBlock}>
             <Text style={styles.greetingTitle}>{displayName}님 안녕하세요.</Text>
@@ -298,6 +400,73 @@ export default function HomeScreen() {
                   </Pressable>
                 );
               })}
+            </View>
+
+            <View style={styles.trendCard}>
+              <View style={styles.trendHeader}>
+                <View style={styles.trendSummary}>
+                  <Text style={styles.trendCaption}>평균 변화량</Text>
+                  <View style={styles.trendValueRow}>
+                    <Text style={styles.trendAverageValue}>{formatChangeAngle(averageChange)}</Text>
+                    <View style={styles.trendChangeBadge}>
+                      <Text style={styles.trendChangeText}>최근 변화 {formatChangeAngle(recentChange, true)}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.trendLegend}>
+                  <View style={styles.trendLegendRow}>
+                    <View style={[styles.trendLegendLine, styles.trendLegendDanger]} />
+                    <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>위험</Text>
+                  </View>
+                  <View style={styles.trendLegendRow}>
+                    <View style={[styles.trendLegendLine, styles.trendLegendWarning]} />
+                    <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>보통</Text>
+                  </View>
+                  <View style={styles.trendLegendRow}>
+                    <View style={[styles.trendLegendLine, styles.trendLegendNormal]} />
+                    <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>정상</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.trendChartWrap}>
+                <Svg width={trendChartWidth} height={TREND_CHART_HEIGHT}>
+                  <Defs>
+                    <SvgLinearGradient id="trendAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <Stop offset="0%" stopColor="#2E96FF" stopOpacity={0.16} />
+                      <Stop offset="100%" stopColor="#2E96FF" stopOpacity={0} />
+                    </SvgLinearGradient>
+                  </Defs>
+                  <Line x1="0" y1={getThresholdY(40)} x2={trendChartWidth} y2={getThresholdY(40)} stroke="#FF4B3C" strokeWidth={1} strokeDasharray="6 6" />
+                  <Line x1="0" y1={getThresholdY(25)} x2={trendChartWidth} y2={getThresholdY(25)} stroke="#FABE00" strokeWidth={1} strokeDasharray="6 6" />
+                  <Line x1="0" y1={getThresholdY(10)} x2={trendChartWidth} y2={getThresholdY(10)} stroke="#2C9696" strokeWidth={1} strokeDasharray="6 6" />
+                  {trendPath ? (
+                    <>
+                      <Path
+                        d={`${trendPath} L ${trendChartWidth} ${TREND_CHART_HEIGHT} L 0 ${TREND_CHART_HEIGHT} Z`}
+                        fill="url(#trendAreaGradient)"
+                      />
+                      <Path
+                        d={trendPath}
+                        fill="none"
+                        stroke="#2E96FF"
+                        strokeWidth={1.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  ) : null}
+                </Svg>
+              </View>
+
+              <View style={styles.trendXAxis}>
+                <Text style={styles.trendXAxisText}>한 달 전</Text>
+                <Text style={styles.trendXAxisText}>3주 전</Text>
+                <Text style={styles.trendXAxisText}>2주 전</Text>
+                <Text style={styles.trendXAxisText}>1주 전</Text>
+                <Text style={styles.trendXAxisText}>오늘</Text>
+              </View>
             </View>
           </View>
 
