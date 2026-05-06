@@ -506,7 +506,7 @@ export default function RegisterScreen() {
               style={[
                 styles.footer,
                 Platform.OS === 'android' && keyboardHeight > 0
-                  ? { paddingBottom: keyboardHeight + 16 }
+                  ? { paddingBottom: 0}
                   : null,
               ]}
             >

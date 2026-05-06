@@ -26,6 +26,7 @@ class PasswordReset(BaseModel):
 
 
 class PasswordChange(BaseModel):
+    current_password: str = Field(..., min_length=6, max_length=128, description="현재 비밀번호")
     new_password: str = Field(..., min_length=6, max_length=128, description="새 비밀번호 (6-128자)")
     confirm_password: str = Field(..., min_length=6, max_length=128, description="새 비밀번호 확인")
 

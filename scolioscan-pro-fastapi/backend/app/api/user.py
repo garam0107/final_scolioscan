@@ -7,7 +7,7 @@ from pathlib import Path
 from ..database import get_db
 from ..models import User
 from ..schemas import UserResponse, UserUpdate, PasswordChange
-from ..utils import get_current_user, get_password_hash
+from ..utils import get_current_user, get_password_hash, verify_password
 
 router = APIRouter()
 
@@ -66,13 +66,26 @@ async def change_password(
     db: Session = Depends(get_db)
 ):
     """비밀번호 변경"""
+      # 현재 비밀번호 확인
+    if not verify_password(password_data.current_password, current_user.user_pw):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="현재 비밀번호가 일치하지 않습니다"
+        )
+
+
     # 새 비밀번호와 확인 비밀번호 일치 확인
     if password_data.new_password != password_data.confirm_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="새 비밀번호가 일치하지 않습니다"
         )
-
+        # 현재 비밀번호와 새 비밀번호가 같은지 확인
+    if verify_password(password_data.new_password, current_user.user_pw):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="새 비밀번호는 현재 비밀번호와 달라야 합니다"
+        )
     # 비밀번호 변경
     current_user.user_pw = get_password_hash(password_data.new_password)
     db.commit()
