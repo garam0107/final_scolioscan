@@ -76,7 +76,7 @@ export default function PasswordMessageScreen() {
         <View style={styles.footer}>
           <PrimaryButton
             title="동의 및 휴대전화 번호 확인"
-            onPress={() => undefined}
+            onPress={() => handleMessagePress()}
             height={48}
             backgroundColor="#5F9F9D"
             borderRadius={6}

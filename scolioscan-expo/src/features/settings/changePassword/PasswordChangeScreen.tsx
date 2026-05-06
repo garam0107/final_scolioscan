@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import ToastAlert from '@/src/components/ui/ToastAlert';
+import { useAuth } from '@/src/contexts/AuthContext';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { formatPhoneNumber, isValidPhoneNumber, normalizePhoneNumber } from '@/src/features/auth/registerValidation';
 import styles from '@/src/features/settings/changePassword/passwordChange.styles';
@@ -11,11 +13,47 @@ import styles from '@/src/features/settings/changePassword/passwordChange.styles
 export default function PasswordChangeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [phone, setPhone] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastKey, setToastKey] = useState(0);
   const canContinue = useMemo(() => isValidPhoneNumber(phone), [phone]);
+
+  function showToast(message: string) {
+    setToastKey((current) => current + 1);
+    setToastMessage(message);
+  }
+
+  function handleContinue() {
+    const normalizedInputPhone = normalizePhoneNumber(phone);
+    const normalizedUserPhone = normalizePhoneNumber(user?.phone || '');
+
+    if (!normalizedUserPhone) {
+      showToast('현재 사용자 휴대전화 번호를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!canContinue) {
+      showToast('휴대전화 번호를 올바르게 입력해주세요.');
+      return;
+    }
+
+    if (normalizedInputPhone !== normalizedUserPhone) {
+      showToast('입력한 휴대전화 번호가 현재 사용자 번호와 일치하지 않습니다.');
+      return;
+    }
+
+    router.push('/settings/password-message');
+  }
 
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={styles.screen}>
+      <ToastAlert
+        visible={Boolean(toastMessage)}
+        message={toastMessage}
+        onDismiss={() => setToastMessage('')}
+        toastKey={toastKey}
+      />
       <KeyboardAvoidingView
         style={styles.screen}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -57,7 +95,7 @@ export default function PasswordChangeScreen() {
         <View style={styles.footer}>
           <PrimaryButton
             title="계속하기"
-            onPress={() => router.push('/settings/password-message')}
+            onPress={handleContinue}
             height={48}
             backgroundColor="#5F9F9D"
             borderRadius={6}
