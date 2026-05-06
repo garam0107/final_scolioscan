@@ -341,47 +341,6 @@ const styles = StyleSheet.create({
   bottomTabLabelActive: {
     color: '#5E9F9E',
   },
-    // 횡으로 스크롤 되는 운동 영상 표시(수정 예정)
-  exerciseSection: {
-  marginTop: 18,
-},
-
-exerciseSectionTitle: {
-  fontSize: 22,
-  fontWeight: '700',
-  color: '#2B2F36',
-  marginBottom: 14,
-},
-
-exerciseScrollContent: {
-  paddingRight: 16,
-},
-
-exerciseCard: {
-  width: 150,
-  marginRight: 14,
-},
-
-exerciseThumbnail: {
-  width: '100%',
-  height: 140,
-  borderRadius: 14,
-  backgroundColor: '#E5E7EB',
-  marginBottom: 10,
-},
-
-exerciseTitle: {
-  fontSize: 17,
-  fontWeight: '600',
-  color: '#2B2F36',
-  marginBottom: 4,
-},
-
-exerciseSubtitle: {
-  fontSize: 14,
-  fontWeight: '500',
-  color: '#6A8DFF',
-},
 });
 
 export default styles;

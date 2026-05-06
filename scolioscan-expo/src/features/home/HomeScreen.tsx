@@ -120,15 +120,15 @@ type ExerciseCardProps = {
   onPress?: () => void;
 };
 
-function ExerciseCard({ title, subtitle, image, onPress }: ExerciseCardProps) {
-  return (
-    <Pressable onPress={onPress} style={styles.exerciseCard}>
-      <Image source={image} style={styles.exerciseThumbnail} resizeMode="cover" />
-      <Text style={styles.exerciseTitle}>{title}</Text>
-      <Text style={styles.exerciseSubtitle}>{subtitle}</Text>
-    </Pressable>
-  );
-}
+// function ExerciseCard({ title, subtitle, image, onPress }: ExerciseCardProps) {
+//   return (
+//     <Pressable onPress={onPress} style={styles.exerciseCard}>
+//       <Image source={image} style={styles.exerciseThumbnail} resizeMode="cover" />
+//       <Text style={styles.exerciseTitle}>{title}</Text>
+//       <Text style={styles.exerciseSubtitle}>{subtitle}</Text>
+//     </Pressable>
+//   );
+// }
 
 
 
@@ -265,23 +265,6 @@ export default function HomeScreen() {
             ))}
           </View>
          
-          {/* <View style={styles.sectionBlock}>
-            <Text style={styles.sectionTitle}>척추측만증이란?</Text>
-            <View style={styles.infoRow}>
-              <InfoCard
-                title="척추측만증이란?"
-                subtitle="척추측만증 알아보기"
-                image={intro1}
-                onPress={() => Alert.alert('안내', '척추측만증 소개 화면은 다음 단계에서 연결할게요.')}
-              />
-              <InfoCard
-                title="스콜리오스캔 사용법"
-                subtitle="사용법 알아보기"
-                image={intro3}
-                onPress={() => Alert.alert('안내', '스콜리오스캔 사용법 화면은 다음 단계에서 연결할게요.')}
-              />
-            </View>
-          </View> */}
 
           <View style={styles.bannerWrap}>
             <ImageBackground
@@ -294,26 +277,7 @@ export default function HomeScreen() {
               </View>
             </ImageBackground>
           </View>
-          {/* 현재는 임의의 화면과 글을 넣었고 추후 글에 맞는 유튜브 링크로 이동하도록 변경 */}
-          <View style={styles.exerciseSection}>
-                <Text style={styles.exerciseSectionTitle}>허리 건강에 도움이 되는 운동 정보</Text>
-
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.exerciseScrollContent}
-                >
-                  {exerciseVideos.map((item) => (
-                    <ExerciseCard
-                      key={item.id}
-                      title={item.title}
-                      subtitle={item.subtitle}
-                      image={item.image}
-                      onPress={() => Alert.alert('운동 정보', `${item.title} 화면은 다음 단계에서 연결할게요.`)}
-                    />
-                  ))}
-                </ScrollView>
-          </View>
+                <Text style={styles.headline}>최근 1주일 측정 결과</Text>  
 
 
           <View style={styles.contentSlot} />
