@@ -1,6 +1,6 @@
 import type { LandmarksApiResponse } from '../types';
 
-const AIS_API_BASE_URL = process.env.EXPO_PUBLIC_AIS_API_BASE_URL || 'http://192.168.0.3:8002/ais';
+const AIS_API_BASE_URL = process.env.EXPO_PUBLIC_AIS_API_BASE_URL || 'http://localhost:8002/ais';
 
 export async function detectLandmarks(imageUri: string): Promise<LandmarksApiResponse> {
   const formData = new FormData();

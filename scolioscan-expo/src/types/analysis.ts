@@ -1,3 +1,12 @@
+export type BackType =
+  | 'Normal'
+  | 'Thoracic'
+  | 'Double Thoracic'
+  | 'Double major'
+  | 'Triple curve'
+  | 'Lumbar'
+  | 'Unknown';
+
 export interface AnalysisResponse {
   id: string;
   user_uuid: string;
@@ -8,4 +17,5 @@ export interface AnalysisResponse {
   score?: number | null;
   image_url?: string | null;
   created_at: string;
+  back_type?: BackType | null;
 }

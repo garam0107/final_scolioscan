@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  DimensionValue,
   Easing,
   Image,
   Linking,
@@ -23,9 +22,14 @@ import type { CurvatureResponse } from '@/src/types/curvature';
 import type { RotationResponse } from '@/src/types/rotation';
 import styles from './analysis.styles';
 import { createAnalysisPose, VERTEBRA_COUNT, getSeverityLabel } from './analysisPose';
+import {
+  classifyDominantCurve,
+  getDominantCurveInfo,
+  getRegionalSeverity,
+  getSeverityBarPercent,
+} from './severity';
 import Grade1Image from '../../../assets/images/grade1.svg';
 import Grade2Image from '../../../assets/images/grade2.svg';
-import Grade3Image from '../../../assets/images/grade3.svg';
 import Grade4Image from '../../../assets/images/grade4.svg';
 
 const spineImage = require('../../../assets/images/spine.png');
@@ -63,6 +67,7 @@ function toAnalysisFromCurvature(record: CurvatureResponse): AnalysisResponse {
     score: record.score ?? null,
     image_url: record.image_path ?? null,
     created_at: getMeasurementDate(record),
+    back_type: record.back_type ?? null,
   };
 }
 
@@ -80,8 +85,8 @@ function toAnalysisFromRotation(record: RotationResponse): AnalysisResponse {
   };
 }
 
-// 분기별 척추측만증 표시 함수
-function getInfoCardCopy(severityLabel: string):  InfoCardCopy {
+// 분기별 척추측만증 표시 함수 — 3단계 (정상/보통/위험)
+function getInfoCardCopy(severityLabel: '정상' | '보통' | '위험'): InfoCardCopy {
   switch (severityLabel) {
     case '정상':
       return {
@@ -89,74 +94,34 @@ function getInfoCardCopy(severityLabel: string):  InfoCardCopy {
         body: '50분마다 간단한 스트레칭을 하고, 수영, 요가, 필라테스 등을 도전해보세요.',
         ImageComponent: Grade1Image,
       };
-    case '경도':
+    case '보통':
       return {
-        title: '경도 척추측만증이란?',
-        body: "콥각도(cobb's angle)가 10도 이상으로 측정된 상태예요. 자세 습관을 관리하면서 변화를 확인해 주세요.",
+        title: '보통 척추측만증이란?',
+        body: "콥각도(cobb's angle)가 15도 이상으로 측정된 상태예요. 자세 습관을 관리하면서 변화를 확인해 주세요.",
         ImageComponent: Grade2Image,
       };
-    case '중등도':
+    case '위험':
       return {
-        title: '중등도 척추측만증이란?',
-        body: "콥각도(cobb's angle)가 20도 이상으로 흉추의 심한 변형과 요추 및 골반까지 신체적 불균형이 심해집니다.",
-        ImageComponent: Grade3Image,
-      };
-    case '고도':
-      return {
-        title: '고도 척추측만증이란?',
-        body: "콥각도(cobb's angle)가 45도 이상으로 높아진 상태예요. 전문적인 진료와 관리 방향을 함께 확인해 주세요.",
-        ImageComponent: Grade4Image,
-      };
-    default:
-      return {
-        title: '고도 척추측만증이란?',
-        body: "콥각도(cobb's angle)가 45도 이상으로 높아진 상태예요. 전문적인 진료와 관리 방향을 함께 확인해 주세요.",
+        title: '위험 척추측만증이란?',
+        body: "콥각도(cobb's angle)가 25도 이상으로 높아진 상태예요. 전문적인 진료와 관리 방향을 함께 확인해 주세요.",
         ImageComponent: Grade4Image,
       };
   }
-}
-// 심각도 분석 표시 함수
-type SeverityBadgeConfig = {
-  label: '정상' | '보통' | '위험';
-  badgeBackground: string;
-  badgeTextColor: string;
-  barColor: string;
-};
-
-function getSeverityBadgeConfig(value: number): SeverityBadgeConfig {
-  if (value > 40) {
-    return {
-      label: '위험',
-      badgeBackground: '#FFEDF0',
-      badgeTextColor: '#F97B7B',
-      barColor: '#F97B7B',
-    };
-  }
-
-  if (value >= 25 && value <= 40) {
-    return {
-      label: '보통',
-      badgeBackground: '#FEF8DF',
-      badgeTextColor: '#FABE00',
-      barColor: '#FAD342',
-    };
-  }
-
-  return {
-    label: '정상',
-    badgeBackground: '#D7F9F9',
-    badgeTextColor: '#22BCB7',
-    barColor: '#22BCB7',
-  };
-}
-
-function getSeverityBarWidth(value: number): DimensionValue {
-  const clamped = Math.max(0, Math.min(45, value));
-  return `${(clamped / 50) * 100}%` as const;
 }
 
 function formatDegree(value: number) {
   return `${Math.abs(value).toFixed(1)}°`;
+}
+
+function regionDisplayLabel(key: 'upper' | 'main' | 'lumbar'): string {
+  switch (key) {
+    case 'upper':
+      return '상부 흉추';
+    case 'main':
+      return '주 흉추';
+    case 'lumbar':
+      return '요추';
+  }
 }
 
 function CountUpNumber({ value, active }: { value: number; active: boolean }) {
@@ -325,9 +290,17 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const stageHeight = 318;
   const summaryName = '회원님';
   const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
+  const mainValue = pose.metrics.find((metric) => metric.key === 'main')?.value ?? 0;
+  const lumbarValue = pose.metrics.find((metric) => metric.key === 'lumbar')?.value ?? 0;
   const severityLabel = getSeverityLabel(upperValue);
   const infoCardCopy = getInfoCardCopy(severityLabel);
   const InfoCardImageComponent = infoCardCopy.ImageComponent;
+
+  // back_type 우선, 없으면 클라이언트 분류 — 인자 순서: (secondary, main, lumbar) = (upper, main, lumbar)
+  const dominantCurve = useMemo(() => {
+    if (analysis?.back_type) return getDominantCurveInfo(analysis.back_type);
+    return classifyDominantCurve(upperValue, mainValue, lumbarValue);
+  }, [analysis?.back_type, upperValue, mainValue, lumbarValue]);
 
   useEffect(() => {
     let mounted = true;
@@ -472,58 +445,82 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
 
             <View style={styles.severityCardInner}>
               {pose.metrics.map((metric, index) => {
-                const severity = getSeverityBadgeConfig(metric.value);
+                const severity = getRegionalSeverity(metric.value);
+                const isLast = index === pose.metrics.length - 1;
 
                 return (
-                  <View
-                    key={metric.key}
-                    style={[
-                      styles.severityRow,
-                      index === pose.metrics.length - 1 && styles.severityRowLast,
-                    ]}
-                  >
-                    <View style={styles.severityHeader}>
-                      <Text style={styles.severityLabel}>{metric.label}</Text>
+                  <View key={metric.key} style={styles.severityRow}>
+                    <Text style={styles.severityRegionLabel}>
+                      {regionDisplayLabel(metric.key)}
+                    </Text>
 
-                      <View style={styles.severityRight}>
-                        <Text style={styles.severityValue}>{formatDegree(metric.value)}</Text>
+                    <View style={styles.severityValueRow}>
+                      <Text style={styles.severityCurvatureLabel}>만곡도</Text>
+                      <Text style={styles.severityValue}>{formatDegree(metric.value)}</Text>
 
-                        <View
+                      <View
+                        style={[
+                          styles.severityBadge,
+                          { backgroundColor: severity.badgeBackground },
+                        ]}
+                      >
+                        <Text
                           style={[
-                            styles.severityBadge,
-                            { backgroundColor: severity.badgeBackground },
+                            styles.severityBadgeText,
+                            { color: severity.badgeTextColor },
                           ]}
                         >
-                          <Text
+                          {severity.label}
+                        </Text>
+                      </View>
+
+                      <View style={styles.severityBarWrap}>
+                        <View
+                          style={[
+                            styles.severityTrack,
+                            { backgroundColor: severity.trackColor },
+                          ]}
+                        >
+                          <View
                             style={[
-                              styles.severityBadgeText,
-                              { color: severity.badgeTextColor },
+                              styles.severityFill,
+                              {
+                                width: `${getSeverityBarPercent(metric.value)}%`,
+                                backgroundColor: severity.barColor,
+                              },
                             ]}
-                          >
-                            {severity.label}
-                          </Text>
+                          />
                         </View>
                       </View>
                     </View>
 
-                    <View style={styles.severityTrack}>
-                      <View
-                        style={[
-                          styles.severityFill,
-                          {
-                            width: getSeverityBarWidth(metric.value),
-                            backgroundColor: severity.barColor,
-                          },
-                        ]}
-                      />
-                    </View>
+                    {!isLast ? <View style={styles.severityDivider} /> : null}
                   </View>
                 );
               })}
             </View>
-             {/* 척추 지배만곡 유형 카드 들어갈 예정 */}
-  {/* 곡선 패턴 카드 들어갈 예정 */}
-  {/* 의사 소견 카드 들어갈 예정 */}
+          </View>
+
+          <View style={styles.dominantCurveCard}>
+            <View style={styles.dominantCurveText}>
+              <Text style={styles.dominantCurveTitle}>척추 지배만곡 유형</Text>
+
+              <Text style={styles.dominantCurveBody}>
+                {summaryName} 님의 척추 지배만곡 유형은{'\n'}
+                <Text style={styles.dominantCurveDiagnosis}>
+                  {dominantCurve.diagnosisName}
+                </Text>{' '}
+                {dominantCurve.key === 'Normal' ? '예요' : '이에요'}
+              </Text>
+
+              <Pressable onPress={() => Linking.openURL('https://naver.com')}>
+                <Text style={styles.dominantCurveLink}>더 알아보기</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.dominantCurveImageWrap}>
+              <Grade1Image preserveAspectRatio="xMidYMid meet" />
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>

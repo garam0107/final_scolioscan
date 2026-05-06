@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAuthStore } from '@/src/store/authStore';
 import ToastAlert from '@/src/components/ui/ToastAlert';
+import RegisterAgreementStep from './RegisterAgreementStep';
 import RegisterBirthdayStep from './RegisterBirthdayStep';
 import RegisterCarrierStep from './RegisterCarrierStep';
 import RegisterCompleteStep from './RegisterCompleteStep';
@@ -22,6 +23,13 @@ import RegisterGenderStep from './RegisterGenderStep';
 import RegisterNameStep from './RegisterNameStep';
 import RegisterMessageStep from './RegisterMessageStep';
 import RegisterPasswordStep from './RegisterPasswordStep';
+import {
+  AgreementKey,
+  AGREEMENTS,
+  initialAgreementState,
+  isAllAgreed,
+  isAllRequiredAgreed,
+} from './agreements';
 import { styles } from './register.styles';
 import {
   formatBirthdayIso,
@@ -33,14 +41,30 @@ import {
   normalizeRegisterMessage,
 } from './registerValidation';
 import { openSmsComposer } from './register/openSmsComposer';
-type RegisterStep = 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'message' | 'gender' | 'complete';
+type RegisterStep = 'agreement' | 'email' | 'password' | 'name' | 'birthday' | 'carrier' | 'message' | 'gender' | 'complete';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { checkEmail, checkPhone, register, messageCode,octomoApi } = useAuth();
   const draft = useAuthStore((state) => state.registerDraft);
   const resetRegisterDraft = useAuthStore((state) => state.resetRegisterDraft);
-  const [step, setStep] = useState<RegisterStep>('carrier');
+  const [step, setStep] = useState<RegisterStep>('agreement');
+  const [agreement, setAgreement] = useState(initialAgreementState);
+  const requiredAgreed = isAllRequiredAgreed(agreement);
+
+  const toggleAgreement = (key: AgreementKey) => {
+    setAgreement((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleAllAgreements = () => {
+    const next = !isAllAgreed(agreement);
+    setAgreement(
+      AGREEMENTS.reduce(
+        (acc, item) => ({ ...acc, [item.key]: next }),
+        {} as typeof agreement,
+      ),
+    );
+  };
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
@@ -135,6 +159,12 @@ export default function RegisterScreen() {
   }, [resetRegisterDraft]);
 
   const stepMeta = useMemo(() => {
+    if (step === 'agreement') {
+      return {
+        title: '',
+        buttonText: '계속하기',
+      };
+    }
     if (step === 'carrier') {
       return {
         title: draft.carrier ? '휴대전화 번호를\n입력해주세요' : '이용하고 계신\n통신사를 알려주세요',
@@ -237,6 +267,14 @@ export default function RegisterScreen() {
   };
 
   const goNext = () => {
+    if (step === 'agreement') {
+      if (!requiredAgreed) {
+        showToast('필수 약관에 모두 동의해주세요.');
+        return;
+      }
+      setStep('carrier');
+      return;
+    }
 
     if (step === 'carrier') {
       if (!draft.carrier) {
@@ -356,6 +394,7 @@ export default function RegisterScreen() {
     checkingEmail ||
     checkingPhone ||
     verifyingPhone ||
+    (step === 'agreement' && !requiredAgreed) ||
     (step === 'email' && (!draft.email.trim() || !isValidEmail(draft.email.trim()))) ||
     (step === 'password' && (!passwordHasLength || !passwordHasMix)) ||
     (step === 'name' && !draft.name.trim()) ||
@@ -407,8 +446,13 @@ export default function RegisterScreen() {
   };
 
   const handleBack = () => {
-    if (step === 'carrier') {
+    if (step === 'agreement') {
       router.back();
+      return;
+    }
+
+    if (step === 'carrier') {
+      setStep('agreement');
       return;
     }
 
@@ -463,7 +507,17 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.content}>
-            {step === 'complete' ? null : <Text style={styles.title}>{stepMeta.title}</Text>}
+            {step === 'complete' || step === 'agreement' ? null : (
+              <Text style={styles.title}>{stepMeta.title}</Text>
+            )}
+
+            {step === 'agreement' ? (
+              <RegisterAgreementStep
+                state={agreement}
+                onToggle={toggleAgreement}
+                onToggleAll={toggleAllAgreements}
+              />
+            ) : null}
 
             {step === 'email' ? (
               <RegisterEmailStep onSubmit={() => void goNext()} />

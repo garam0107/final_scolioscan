@@ -215,13 +215,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   // 심각도 분석 카드 스타일
-    severityCard: {
+  severityCard: {
     marginTop: 14,
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingTop: 18,
-    paddingBottom: 18,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 24,
     shadowColor: '#000000',
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -230,64 +230,63 @@ const styles = StyleSheet.create({
   },
 
   severityCardTitle: {
-    color: '#2B2F36',
-    fontSize: 18, // 피그마 값으로 바꾸기
-    fontWeight: '600', // 피그마 값으로 바꾸기
-    marginBottom: 16,
+    color: '#1E2D30',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 22,
   },
 
   severityCardInner: {
-    gap: 30,
+    gap: 18,
   },
 
   severityRow: {
+    gap: 10,
   },
 
-  severityRowLast: {
-  },
-
-  severityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-
-  severityLabel: {
+  severityRegionLabel: {
     color: '#2B2F36',
-    fontSize: 14, // 피그마 값으로 바꾸기
-    fontWeight: '500', // 피그마 값으로 바꾸기
+    fontSize: 14,
+    fontWeight: '600',
   },
 
-  severityRight: {
+  severityValueRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+  },
+
+  severityCurvatureLabel: {
+    color: '#8A949A',
+    fontSize: 12,
+    fontWeight: '500',
   },
 
   severityValue: {
-    color: '#2B2F36',
-    fontSize: 14, // 피그마 값으로 바꾸기
-    fontWeight: '500', // 피그마 값으로 바꾸기
-    marginRight: 10,
+    color: '#1E2D30',
+    fontSize: 16,
+    fontWeight: '700',
   },
 
   severityBadge: {
     borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    opacity : 100,
-    shadowRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
 
   severityBadgeText: {
-    fontSize: 12, // 피그마 값으로 바꾸기
-    // fontWeight: '700', // 피그마 값으로 바꾸기
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  severityBarWrap: {
+    flex: 1,
+    marginLeft: 4,
   },
 
   severityTrack: {
     width: '100%',
-    height: 14, // 피그마 바 height로 바꾸기
-    backgroundColor: '#D9DEE8',
+    height: 8,
     borderRadius: 999,
     overflow: 'hidden',
   },
@@ -297,17 +296,76 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 
+  severityDivider: {
+    marginTop: 18,
+    height: 1,
+    backgroundColor: '#EEF1F3',
+  },
 
+  // 척추 지배만곡 유형 카드 스타일
+  dominantCurveCard: {
+    marginTop: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingLeft: 20,
+    paddingRight: 0,
+    paddingTop: 22,
+    paddingBottom: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 200,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
 
+  dominantCurveText: {
+    flex: 1,
+    paddingRight: 8,
+  },
+
+  dominantCurveTitle: {
+    color: '#1E2D30',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 24,
+  },
+
+  dominantCurveBody: {
+    color: '#8A949A',
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+
+  dominantCurveDiagnosis: {
+    color: '#1E2D30',
+    fontWeight: '700',
+  },
+
+  dominantCurveLink: {
+    marginTop: 22,
+    color: '#A9B2BE',
+    fontSize: 11,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
+
+  dominantCurveImageWrap: {
+    width: 140,
+    height: 180,
+    flexShrink: 0,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
 
   spineBone: {
     position: 'absolute',
     overflow: 'visible',
   },
 });
-
-// 척추 지배만곡 유형 카드 스타일
-// 곡선 패탄 카드 스타일
-// 의사 소견 카드 스타일
 
 export default styles;
