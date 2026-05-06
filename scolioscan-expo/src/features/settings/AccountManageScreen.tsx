@@ -337,7 +337,9 @@ export default function AccountManageScreen() {
 
         <View style={styles.actionArea}>
           <View style={styles.actionLinkRow}>
-            <Text style={styles.actionLinkText}>비밀번호 변경</Text>
+            <Pressable onPress={() => router.push('/settings/password')}>
+              <Text style={styles.actionLinkText}>비밀번호 변경</Text>
+            </Pressable>
             <View style={styles.actionDivider} />
             <Text style={styles.actionLinkText}>회원 탈퇴</Text>
           </View>
