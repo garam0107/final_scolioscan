@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { LayoutChangeEvent, ScrollView as ScrollViewType } from 'react-native';
@@ -110,6 +110,7 @@ function Field({
 
 export default function AccountManageScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ toast?: string }>();
   const insets = useSafeAreaInsets();
   const { user, refreshSession } = useAuth();
 
@@ -138,6 +139,15 @@ export default function AccountManageScreen() {
     setPhone(user?.phone || '');
     setEmail(user?.user_id || '');
   }, [user]);
+
+  useEffect(() => {
+    if (params.toast !== 'passwordChanged') {
+      return;
+    }
+
+    showToast('비밀번호가 변경되었습니다.', 'success');
+    router.setParams({ toast: undefined });
+  }, [params.toast, router]);
 
   function handleFieldLayout(setter: (value: number) => void) {
     return (event: LayoutChangeEvent) => {
