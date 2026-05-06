@@ -1,13 +1,13 @@
 import { StyleSheet } from 'react-native';
-
+import { Colors } from '@/src/constants/theme';
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
+    backgroundColor: '#F9FAFB',
   },
   page: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
+    backgroundColor: '#F9FAFB',
   },
   loadingScreen: {
     flex: 1,
@@ -26,15 +26,15 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 56,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F7F8FB',
+    backgroundColor: '#F9FAFB',
     zIndex: 10,
   },
   brand: {
-    color: '#6ED2CE',
+    color: '#22BCB7',
     fontFamily: 'MuseoModerno_700Bold',
     fontSize: 28,
     letterSpacing: -0.3,
@@ -78,97 +78,116 @@ const styles = StyleSheet.create({
     borderColor: '#F7F8FB',
   },
   scrollContent: {
-    paddingHorizontal: 14,
-    paddingTop: 2,
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
-  headline: {
+  greetingBlock: {
+    gap: 4,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  greetingTitle: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  greetingSubtitle: {
     fontFamily: 'PretendardVariable',
     fontSize: 16,
-    fontWeight: '700',
-    color: '#2C2F38',
+    lineHeight: 22,
+    fontWeight: '500',
+    color: '#000000',
+  },
+  sectionHeading: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '600',
+    color: Colors.gray[800],
     marginBottom: 14,
   },
-  measurementGroupCard: {
-    backgroundColor: 'white',
-    borderRadius: 22,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#EDF1F7',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 2,
+  measurementGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    height : 180
   },
   pressed: {
     opacity: 0.92,
   },
-  measurementRow: {
-    minHeight: 120,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    flexDirection: 'row',
+  measurementCard: {
+    height: '100%',
+    padding: 12,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2,
   },
-  measurementRowDivider: {
-    height: 1,
-    marginHorizontal: 18,
-    backgroundColor: '#EDF1F7',
-  },
-  measurementRowContent: {
-    flex: 1,
-    gap: 10,
-    paddingRight: 12,
-  },
-  measurementTitleRow: {
-    flexDirection: 'row',
+  measurementCardContent: {
+    width: '100%',
+    minWidth: 0,
     alignItems: 'center',
-    gap: 10,
-    flexWrap: 'nowrap',
+    gap: 6,
+    minHeight: 66,
   },
   measurementTitle: {
     fontFamily: 'PretendardVariable',
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#21242C',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+    color: '#25272D',
+    textAlign: 'center',
   },
   proBadge: {
+    position: 'absolute',
+    left: 12,
+    top: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#F6E39A',
+    gap: 4,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 6,
+    height: 18,
+    borderRadius: 100,
+    backgroundColor: '#FFF4A3',
+    zIndex: 1,
   },
   proBadgeText: {
     fontFamily: 'PretendardVariable',
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#B98E0E',
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
+    color: '#DA981C',
   },
   measurementBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 9,
-    backgroundColor: '#EAF7FB',
+    maxWidth: '100%',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#EDFDFC',
+    overflow: 'hidden',
   },
   measurementBadgeText: {
     fontFamily: 'PretendardVariable',
     fontSize: 13,
-    fontWeight: '500',
-    color: 'black',
+    lineHeight: 18,
+    fontWeight: '400',
+    color: Colors.mint[600],
+    textAlign: 'center',
   },
   measurementIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 18,
-    backgroundColor: '#F6FAFF',
+    width: 70,
+    height: 70,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    marginBottom: 10,
   },
   proModalOverlay: {
     flex: 1,
@@ -280,15 +299,20 @@ const styles = StyleSheet.create({
   },
   bannerWrap: {
     width: '100%',
-    marginTop : 20,
+    marginTop : 16,
+  },
+  bannerPager: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  bannerSlide: {
+    overflow: 'hidden',
   },
   banner: {
     height: 112,
-    borderRadius: 14,
     overflow: 'hidden',
   },
   bannerImage: {
-    borderRadius: 14,
   },
   bannerBadge: {
     position: 'absolute',
@@ -305,8 +329,171 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#F5F7FA',
   },
+  weeklySection: {
+    marginTop: 20,
+  },
+  weeklyResultGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  weeklyResultCard: {
+    flex: 1,
+    minHeight: 86,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  weeklyResultCardActive: {
+    backgroundColor: '#EDFDFC',
+    borderColor: '#7AD7D4',
+  },
+  weeklyResultLabel: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400',
+    color: '#515968',
+    textAlign: 'center',
+  },
+  weeklyResultLabelActive: {
+    color: '#20797E',
+  },
+  weeklyResultValue: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: '700',
+    color: '#25272D',
+  },
+  weeklyResultValueActive: {
+    color: '#20797E',
+  },
+  trendCard: {
+    marginTop: 8,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  trendHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  trendSummary: {
+    gap: 6,
+  },
+  trendCaption: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400',
+    color: Colors.gray[900],
+  },
+  trendValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  trendAverageValue: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 28,
+    lineHeight: 38,
+    fontWeight: '700',
+    color: Colors.gray[900],
+  },
+  trendChangeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    backgroundColor: Colors.mint[25],
+  },
+  trendChangeText: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '500',
+    color: Colors.mint[600],
+  },
+  trendLegend: {
+    gap: 4,
+    paddingTop: 2,
+  },
+  trendLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+  },
+  trendLegendLine: {
+    width: 30,
+    height: 1,
+    borderStyle: 'dashed',
+    borderTopWidth: 1,
+  },
+  trendLegendDanger: {
+    borderTopColor: '#FF4B3C',
+  },
+  trendLegendWarning: {
+    borderTopColor: '#FABE00',
+  },
+  trendLegendNormal: {
+    borderTopColor: Colors.mint[500],
+  },
+  trendLegendText: {
+    minWidth: 22,
+    fontFamily: 'PretendardVariable',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '400',
+    textAlign: 'right',
+  },
+  trendLegendDangerText: {
+    color: '#FF4B3C',
+  },
+  trendLegendWarningText: {
+    color: '#FABE00',
+  },
+  trendLegendNormalText: {
+    color: Colors.mint[500],
+  },
+  trendChartWrap: {
+    width: '100%',
+    height: 120,
+    overflow: 'hidden',
+  },
+  trendXAxis: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  trendXAxisText: {
+    fontFamily: 'PretendardVariable',
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400',
+    color: Colors.gray[300],
+  },
   contentSlot: {
-    height: 4,
+    height: 20,
   },
   bottomBar: {
     position: 'absolute',
@@ -341,47 +528,6 @@ const styles = StyleSheet.create({
   bottomTabLabelActive: {
     color: '#5E9F9E',
   },
-    // 횡으로 스크롤 되는 운동 영상 표시(수정 예정)
-  exerciseSection: {
-  marginTop: 18,
-},
-
-exerciseSectionTitle: {
-  fontSize: 22,
-  fontWeight: '700',
-  color: '#2B2F36',
-  marginBottom: 14,
-},
-
-exerciseScrollContent: {
-  paddingRight: 16,
-},
-
-exerciseCard: {
-  width: 150,
-  marginRight: 14,
-},
-
-exerciseThumbnail: {
-  width: '100%',
-  height: 140,
-  borderRadius: 14,
-  backgroundColor: '#E5E7EB',
-  marginBottom: 10,
-},
-
-exerciseTitle: {
-  fontSize: 17,
-  fontWeight: '600',
-  color: '#2B2F36',
-  marginBottom: 4,
-},
-
-exerciseSubtitle: {
-  fontSize: 14,
-  fontWeight: '500',
-  color: '#6A8DFF',
-},
 });
 
 export default styles;

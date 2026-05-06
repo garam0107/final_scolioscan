@@ -2,12 +2,13 @@ import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fo
 import { useFonts as useExpoFonts } from 'expo-font';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
-  Image,
   ImageBackground,
   Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,50 +17,27 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
-
+import Svg, {
+  Defs,
+  Line,
+  LinearGradient as SvgLinearGradient,
+  Path,
+  Rect,
+  Stop,
+} from 'react-native-svg';
+import CrownIcon from '../../../assets/home/crown.svg';
 import { alarmAPI } from '@/src/api/alarm';
+import { curvatureAPI } from '@/src/api/curvature';
 import { useAuth } from '@/src/contexts/AuthContext';
-import {
-  HomeMeasurement2DIcon,
-  HomeMeasurement3DIcon,
-  HomeNotificationIcon,
-  HomeSpineIcon,
-} from '@/src/features/home/homeIcons';
+import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
 import styles from '@/src/features/home/home.styles';
+import type { CurvatureResponse } from '@/src/types/curvature';
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
 import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
-import ScolioIcon from '../../../assets/home/home_scolio.svg'
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
-// const router = useRouter();
 const banner1 = require('../../../assets/images/BannerImage1.png');
-const banner2 = require('../../../assets/images/BannerImage2.png');
-const example_home = require('../../../assets/images/example_home.png');
 
-
-// title하고 subtitle은 나중에 수정 예정 
-const exerciseVideos = [
-  {
-    id: 'core-balance',
-    title: '코어 강화 : 플랭크',
-    subtitle: '36~60초 유지, 3세트',
-    image: example_home,
-  },
-  {
-    id: 'cat-cow',
-    title: '스트레칭 : 고양이-소 자세',
-    subtitle: '10회 반복, 2세트',
-    image: example_home,
-  },
-   {
-    id: 'cat',
-    title: '스트레칭 : 고양이-소 자세',
-    subtitle: '10회 반복, 2세트',
-    image: example_home,
-  },
-  
-];
 
 type MeasurementItem = {
   id: string;
@@ -72,9 +50,101 @@ type MeasurementItem = {
   subtitleBackgroundColor?: string;
 };
 
+type MeasurementCardProps = MeasurementItem & {
+  cardWidth: number;
+};
 
+type WeeklyResultItem = {
+  id: WeeklyResultId;
+  label: string;
+  value: number;
+};
 
-function MeasurementRow({
+type WeeklyResultId = 'upper-thoracic' | 'main-thoracic' | 'lumbar';
+
+type WeeklyResultValues = {
+  upperThoracic: number;
+  mainThoracic: number;
+  lumbar: number;
+};
+
+const INITIAL_WEEKLY_RESULT_VALUES: WeeklyResultValues = {
+  upperThoracic: 0,
+  mainThoracic: 0,
+  lumbar: 0,
+};
+
+const TREND_CHART_HEIGHT = 120;
+const TREND_CHART_MAX_VALUE = 40;
+
+function formatAngleValue(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.round(value * 10) / 10;
+}
+
+function formatChangeAngle(value: number, showPlus = false) {
+  const angle = formatAngleValue(Math.abs(value));
+  const sign = showPlus && angle > 0 ? '+' : '';
+
+  return `${sign}${angle}°`;
+}
+
+function getSelectedCurvatureValue(record: CurvatureResponse, selectedId: WeeklyResultId) {
+  if (selectedId === 'upper-thoracic') {
+    return record.secondary_thoracic_cobb;
+  }
+
+  if (selectedId === 'main-thoracic') {
+    return record.main_thoracic_cobb;
+  }
+
+  return record.lumbar_cobb;
+}
+
+function buildTrendPath(values: number[], chartWidth: number) {
+  if (values.length === 0 || chartWidth <= 0) {
+    return '';
+  }
+
+  if (values.length === 1) {
+    const y = TREND_CHART_HEIGHT - (Math.min(values[0], TREND_CHART_MAX_VALUE) / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+    return `M 0 ${y} L ${chartWidth} ${y}`;
+  }
+
+  const points = values.map((value, index) => {
+    const x = (chartWidth / (values.length - 1)) * index;
+    const safeValue = Math.max(0, Math.min(value, TREND_CHART_MAX_VALUE));
+    const y = TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+
+    return { x, y };
+  });
+  const path = [`M ${points[0].x} ${points[0].y}`];
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const current = points[index];
+    const next = points[index + 1];
+    const previous = points[index - 1] ?? current;
+    const afterNext = points[index + 2] ?? next;
+
+    const cp1x = current.x + (next.x - previous.x) / 6;
+    const cp1y = current.y + (next.y - previous.y) / 6;
+    const cp2x = next.x - (afterNext.x - current.x) / 6;
+    const cp2y = next.y - (afterNext.y - current.y) / 6;
+
+    path.push(`C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next.x} ${next.y}`);
+  }
+
+  return path.join(' ');
+}
+
+function getThresholdY(value: number) {
+  return TREND_CHART_HEIGHT - (value / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+}
+
+function MeasurementCard({
   title,
   subtitle,
   icon,
@@ -82,97 +152,102 @@ function MeasurementRow({
   pro,
   subtitleColor,
   subtitleBackgroundColor,
-}: MeasurementItem) {
+  cardWidth,
+}: MeasurementCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.measurementRow, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.measurementCard, { width: cardWidth }, pressed && styles.pressed]}
     >
-      <View style={styles.measurementRowContent}>
-        <View style={styles.measurementTitleRow}>
-          <Text style={styles.measurementTitle}>{title}</Text>
-          {pro && (
-            <View style={styles.proBadge}>
-              <Text style={styles.proBadgeText}>👑 Pro</Text>
-            </View>
-          )}
+      {pro && (
+        <View style={styles.proBadge}>
+                 <CrownIcon width={10} height={10} />
+          <Text style={styles.proBadgeText}>Pro</Text>
         </View>
-        <View
-          style={[
-            styles.measurementBadge,
-            subtitleBackgroundColor ? { backgroundColor: subtitleBackgroundColor } : null,
-          ]}
-        >
-          <Text style={[styles.measurementBadgeText, subtitleColor ? { color: subtitleColor } : null]}>
-            {subtitle}
-          </Text>
+      )}
+      <View style={styles.measurementIconWrap}>{icon}</View>
+      <View style={styles.measurementCardContent}>
+        <Text style={styles.measurementTitle}>{title}</Text>
+        <View style={[styles.measurementBadge, subtitleBackgroundColor ? { backgroundColor: subtitleBackgroundColor } : null]}>
+          <Text style={[styles.measurementBadgeText, subtitleColor ? { color: subtitleColor } : null]}>{subtitle}</Text>
         </View>
       </View>
-      <View style={styles.measurementIconWrap}>{icon}</View>
     </Pressable>
   );
 }
-
-type ExerciseCardProps = {
-  title: string;
-  subtitle: string;
-  image: number;
-  onPress?: () => void;
-};
-
-function ExerciseCard({ title, subtitle, image, onPress }: ExerciseCardProps) {
-  return (
-    <Pressable onPress={onPress} style={styles.exerciseCard}>
-      <Image source={image} style={styles.exerciseThumbnail} resizeMode="cover" />
-      <Text style={styles.exerciseTitle}>{title}</Text>
-      <Text style={styles.exerciseSubtitle}>{subtitle}</Text>
-    </Pressable>
-  );
-}
-
-
 
 export default function HomeScreen() {
   const router = useRouter();
+  const bannerScrollRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const { loading, isAuthenticated, user } = useAuth();
   const [museoLoaded] = useMuseoFonts({ MuseoModerno_700Bold });
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
-  const [bannerIndex, setBannerIndex] = useState(0);
+  const [, setBannerIndex] = useState(0);
   const [alarmCount, setAlarmCount] = useState(user?.alarm_count ?? 0);
   const [isProModalVisible, setIsProModalVisible] = useState(false);
+  const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState<WeeklyResultId>('upper-thoracic');
+  const [weeklyResultValues, setWeeklyResultValues] = useState<WeeklyResultValues>(INITIAL_WEEKLY_RESULT_VALUES);
+  const [curvatureTrendRecords, setCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
+  const bannerWidth = width - 40;
+  const measurementCardWidth = (width - 40 - 8) / 2;
+  const trendChartWidth = width - 72;
+  const displayName = user?.name?.trim() || '회원';
 
 
 
-  // icon 배경이랑 하단에 그림자가 피그마랑 다르게 보여서 추후 수정 예정
   const measurementItems: MeasurementItem[] = [
   {
     id: '2d',
-    title: '2D 이미지 측정',
-    subtitle: '카메라를 통한 간편 측정',
-    icon: <TwoIcon />,
+    title: '2D 측정하기',
+    subtitle: '집에서 간편하게 측정',
+    icon: <TwoIcon width={70} height={70} />,
     onPress: () => router.push('/measure/2d'),
-  },
-  {
-    id: 'spine',
-    title: '척추측만계 측정',
-    subtitle: '기기를 통한 정확한 측정',
-    icon: <ScolioIcon />,
-    onPress: () => router.push('/measure/scoliometer'),
   },
   {
     id: '3d',
     title: '3D 동영상 측정',
     subtitle: '영상을 통한 정밀 측정',
-    icon: <ThreeIcon />,
+    icon: <ThreeIcon width={70} height={70} />,
     pro: true,
-    subtitleColor: '#6A8DFF',
-    subtitleBackgroundColor: '#EAF1FF',
+    subtitleColor: '#2E96FF',
+    subtitleBackgroundColor: '#EBF5FF',
     onPress: () => Alert.alert('준비중', '3D 측정 기능은 다음 화면에서 연결할게요.'),
   },
 ];
+  const weeklyResults: WeeklyResultItem[] = [
+    { id: 'upper-thoracic', label: '상부 흉추만곡', value: weeklyResultValues.upperThoracic },
+    { id: 'main-thoracic', label: '주 흉추만곡', value: weeklyResultValues.mainThoracic },
+    { id: 'lumbar', label: '요추만곡', value: weeklyResultValues.lumbar },
+  ];
+  const trendRecords = useMemo(
+    () => [...curvatureTrendRecords].reverse(),
+    [curvatureTrendRecords],
+  );
+  const trendValues = useMemo(
+    () => trendRecords.map((record) => formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId))),
+    [selectedWeeklyResultId, trendRecords],
+  );
+  const trendPath = useMemo(
+    () => buildTrendPath(trendValues, trendChartWidth),
+    [trendChartWidth, trendValues],
+  );
+  const latestTrendValue = trendValues[trendValues.length - 1] ?? 0;
+  const previousTrendValue = trendValues[trendValues.length - 2] ?? latestTrendValue;
+  const recentChange = latestTrendValue - previousTrendValue;
+  const averageChange = useMemo(() => {
+    if (trendValues.length < 2) {
+      return 0;
+    }
+
+    const totalChange = trendValues.slice(1).reduce((sum, value, index) => {
+      return sum + Math.abs(value - trendValues[index]);
+    }, 0);
+
+    return totalChange / (trendValues.length - 1);
+  }, [trendValues]);
 
   const loadAlarmCount = useCallback(async () => {
     try {
@@ -184,6 +259,29 @@ export default function HomeScreen() {
     }
   }, []);
 
+  const loadLatestCurvature = useCallback(async () => {
+    try {
+      const response = await curvatureAPI.getAnalyses({ limit: 30 });
+      const latestCurvature = response.data[0];
+      setCurvatureTrendRecords(response.data);
+
+      if (!latestCurvature) {
+        setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
+        return;
+      }
+
+      setWeeklyResultValues({
+        upperThoracic: formatAngleValue(latestCurvature.secondary_thoracic_cobb),
+        mainThoracic: formatAngleValue(latestCurvature.main_thoracic_cobb),
+        lumbar: formatAngleValue(latestCurvature.lumbar_cobb),
+      });
+    } catch (error) {
+      console.error('Failed to load latest curvature:', error);
+      setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
+      setCurvatureTrendRecords([]);
+    }
+  }, []);
+
   useEffect(() => {
     console.log('[Home] unread alarm count from user:', user?.alarm_count ?? 0);
     setAlarmCount(user?.alarm_count ?? 0);
@@ -192,7 +290,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadAlarmCount();
-    }, [loadAlarmCount]),
+      void loadLatestCurvature();
+    }, [loadAlarmCount, loadLatestCurvature]),
   );
 
   useEffect(() => {
@@ -207,15 +306,42 @@ export default function HomeScreen() {
     }
   }, [loading, isAuthenticated, router]);
 
+  const banners = useMemo(() => [banner1, banner1, banner1], []);
+
+  const handleBannerMomentumEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
+    if (nextIndex >= banners.length) {
+      bannerScrollRef.current?.scrollTo({ x: 0, animated: false });
+      setBannerIndex(0);
+      return;
+    }
+
+    setBannerIndex(Math.max(0, Math.min(nextIndex, banners.length - 1)));
+  }, [bannerWidth, banners.length]);
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setBannerIndex((value) => (value + 1) % 2);
+      setBannerIndex((value) => {
+        const isLastBanner = value === banners.length - 1;
+        const nextIndex = isLastBanner ? banners.length : value + 1;
+        bannerScrollRef.current?.scrollTo({
+          x: nextIndex * bannerWidth,
+          animated: true,
+        });
+
+        if (isLastBanner) {
+          setTimeout(() => {
+            bannerScrollRef.current?.scrollTo({ x: 0, animated: false });
+          }, 450);
+          return 0;
+        }
+
+        return nextIndex;
+      });
     }, 4000);
 
     return () => clearInterval(timer);
-  }, []);
-
-  const banners = useMemo(() => [banner1, banner2], []);
+  }, [bannerWidth, banners.length]);
 
   if (loading || !museoLoaded || (!pretendardLoaded && !pretendardError)) {
     return (
@@ -249,72 +375,148 @@ export default function HomeScreen() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom:  20 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom:  10 }]}
         >
-          <Text style={styles.headline}>3분만에 끝나는 척추검진</Text>
+          <View style={styles.greetingBlock}>
+            <Text style={styles.greetingTitle}>{displayName}님 안녕하세요.</Text>
+            <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
+          </View>
 
-          <View style={styles.measurementGroupCard}>
-            {measurementItems.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <MeasurementRow
-                  {...item}
-                  onPress={item.id === '3d' ? () => setIsProModalVisible(true) : item.onPress}
-                />
-                {index !== measurementItems.length - 1 ? <View style={styles.measurementRowDivider} /> : null}
-              </React.Fragment>
+          <View style={styles.measurementGrid}>
+            {measurementItems.map((item) => (
+              <MeasurementCard
+                key={item.id}
+                {...item}
+                cardWidth={measurementCardWidth}
+                onPress={item.id === '3d' ? () => setIsProModalVisible(true) : item.onPress}
+              />
             ))}
           </View>
          
-          {/* <View style={styles.sectionBlock}>
-            <Text style={styles.sectionTitle}>척추측만증이란?</Text>
-            <View style={styles.infoRow}>
-              <InfoCard
-                title="척추측만증이란?"
-                subtitle="척추측만증 알아보기"
-                image={intro1}
-                onPress={() => Alert.alert('안내', '척추측만증 소개 화면은 다음 단계에서 연결할게요.')}
-              />
-              <InfoCard
-                title="스콜리오스캔 사용법"
-                subtitle="사용법 알아보기"
-                image={intro3}
-                onPress={() => Alert.alert('안내', '스콜리오스캔 사용법 화면은 다음 단계에서 연결할게요.')}
-              />
-            </View>
-          </View> */}
 
           <View style={styles.bannerWrap}>
-            <ImageBackground
-              source={banners[bannerIndex]}
-              style={[styles.banner, { height: bannerHeight }]}
-              imageStyle={styles.bannerImage}
+            <ScrollView
+              ref={bannerScrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleBannerMomentumEnd}
+              scrollEventThrottle={16}
+              style={[styles.bannerPager, { width: bannerWidth, height: bannerHeight }]}
             >
-              <View style={styles.bannerBadge}>
-                <Text style={styles.bannerBadgeText}>{bannerIndex + 1} / 2</Text>
-              </View>
-            </ImageBackground>
-          </View>
-          {/* 현재는 임의의 화면과 글을 넣었고 추후 글에 맞는 유튜브 링크로 이동하도록 변경 */}
-          <View style={styles.exerciseSection}>
-                <Text style={styles.exerciseSectionTitle}>허리 건강에 도움이 되는 운동 정보</Text>
-
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.exerciseScrollContent}
+              {[...banners, banners[0]].map((banner, index) => (
+                <View
+                  key={`home-banner-${index}`}
+                  style={[styles.bannerSlide, { width: bannerWidth, height: bannerHeight }]}
                 >
-                  {exerciseVideos.map((item) => (
-                    <ExerciseCard
-                      key={item.id}
-                      title={item.title}
-                      subtitle={item.subtitle}
-                      image={item.image}
-                      onPress={() => Alert.alert('운동 정보', `${item.title} 화면은 다음 단계에서 연결할게요.`)}
-                    />
-                  ))}
-                </ScrollView>
+                  <ImageBackground
+                    source={banner}
+                    style={[styles.banner, { width: bannerWidth, height: bannerHeight }]}
+                    imageStyle={styles.bannerImage}
+                  >
+                    <View style={styles.bannerBadge}>
+                      <Text style={styles.bannerBadgeText}>{(index % banners.length) + 1} / {banners.length}</Text>
+                    </View>
+                  </ImageBackground>
+                </View>
+              ))}
+            </ScrollView>
           </View>
 
+          <View style={styles.weeklySection}>
+            <Text style={styles.sectionHeading}>최근 1주일 측정 결과</Text>
+            <View style={styles.weeklyResultGrid}>
+              {weeklyResults.map((item) => {
+                const isSelected = selectedWeeklyResultId === item.id;
+
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => setSelectedWeeklyResultId(item.id)}
+                    style={({ pressed }) => [
+                      styles.weeklyResultCard,
+                      isSelected ? styles.weeklyResultCardActive : null,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={[styles.weeklyResultLabel, isSelected ? styles.weeklyResultLabelActive : null]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.weeklyResultValue, isSelected ? styles.weeklyResultValueActive : null]}>
+                      {item.value}°
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.trendCard}>
+              <View style={styles.trendHeader}>
+                <View style={styles.trendSummary}>
+                  <Text style={styles.trendCaption}>평균 변화량</Text>
+                  <View style={styles.trendValueRow}>
+                    <Text style={styles.trendAverageValue}>{formatChangeAngle(averageChange)}</Text>
+                    <View style={styles.trendChangeBadge}>
+                      <Text style={styles.trendChangeText}>최근 변화 {formatChangeAngle(recentChange, true)}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.trendLegend}>
+                  <View style={styles.trendLegendRow}>
+                    <View style={[styles.trendLegendLine, styles.trendLegendDanger]} />
+                    <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>위험</Text>
+                  </View>
+                  <View style={styles.trendLegendRow}>
+                    <View style={[styles.trendLegendLine, styles.trendLegendWarning]} />
+                    <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>보통</Text>
+                  </View>
+                  <View style={styles.trendLegendRow}>
+                    <View style={[styles.trendLegendLine, styles.trendLegendNormal]} />
+                    <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>정상</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.trendChartWrap}>
+                <Svg width={trendChartWidth} height={TREND_CHART_HEIGHT}>
+                  <Defs>
+                    <SvgLinearGradient id="trendAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <Stop offset="0%" stopColor="#2E96FF" stopOpacity={0.16} />
+                      <Stop offset="100%" stopColor="#2E96FF" stopOpacity={0} />
+                    </SvgLinearGradient>
+                  </Defs>
+                  <Line x1="0" y1={getThresholdY(40)} x2={trendChartWidth} y2={getThresholdY(40)} stroke="#FF4B3C" strokeWidth={1} strokeDasharray="6 6" />
+                  <Line x1="0" y1={getThresholdY(25)} x2={trendChartWidth} y2={getThresholdY(25)} stroke="#FABE00" strokeWidth={1} strokeDasharray="6 6" />
+                  <Line x1="0" y1={getThresholdY(10)} x2={trendChartWidth} y2={getThresholdY(10)} stroke="#2C9696" strokeWidth={1} strokeDasharray="6 6" />
+                  {trendPath ? (
+                    <>
+                      <Path
+                        d={`${trendPath} L ${trendChartWidth} ${TREND_CHART_HEIGHT} L 0 ${TREND_CHART_HEIGHT} Z`}
+                        fill="url(#trendAreaGradient)"
+                      />
+                      <Path
+                        d={trendPath}
+                        fill="none"
+                        stroke="#2E96FF"
+                        strokeWidth={1.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </>
+                  ) : null}
+                </Svg>
+              </View>
+
+              <View style={styles.trendXAxis}>
+                <Text style={styles.trendXAxisText}>한 달 전</Text>
+                <Text style={styles.trendXAxisText}>3주 전</Text>
+                <Text style={styles.trendXAxisText}>2주 전</Text>
+                <Text style={styles.trendXAxisText}>1주 전</Text>
+                <Text style={styles.trendXAxisText}>오늘</Text>
+              </View>
+            </View>
+          </View>
 
           <View style={styles.contentSlot} />
         </ScrollView>
@@ -365,4 +567,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
