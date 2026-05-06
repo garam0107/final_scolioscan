@@ -5,7 +5,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Image,
   ImageBackground,
   Modal,
   Pressable,
@@ -17,49 +16,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
-
+import CrownIcon from '../../../assets/home/crown.svg';
 import { alarmAPI } from '@/src/api/alarm';
 import { useAuth } from '@/src/contexts/AuthContext';
-import {
-  HomeMeasurement2DIcon,
-  HomeMeasurement3DIcon,
-  HomeNotificationIcon,
-  HomeSpineIcon,
-} from '@/src/features/home/homeIcons';
+import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
 import styles from '@/src/features/home/home.styles';
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
 import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
-import ScolioIcon from '../../../assets/home/home_scolio.svg'
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
-// const router = useRouter();
 const banner1 = require('../../../assets/images/BannerImage1.png');
 const banner2 = require('../../../assets/images/BannerImage2.png');
-const example_home = require('../../../assets/images/example_home.png');
-
-
-// title하고 subtitle은 나중에 수정 예정 
-const exerciseVideos = [
-  {
-    id: 'core-balance',
-    title: '코어 강화 : 플랭크',
-    subtitle: '36~60초 유지, 3세트',
-    image: example_home,
-  },
-  {
-    id: 'cat-cow',
-    title: '스트레칭 : 고양이-소 자세',
-    subtitle: '10회 반복, 2세트',
-    image: example_home,
-  },
-   {
-    id: 'cat',
-    title: '스트레칭 : 고양이-소 자세',
-    subtitle: '10회 반복, 2세트',
-    image: example_home,
-  },
-  
-];
 
 type MeasurementItem = {
   id: string;
@@ -72,9 +39,17 @@ type MeasurementItem = {
   subtitleBackgroundColor?: string;
 };
 
+type MeasurementCardProps = MeasurementItem & {
+  cardWidth: number;
+};
 
+type WeeklyResultItem = {
+  id: string;
+  label: string;
+  value: number;
+};
 
-function MeasurementRow({
+function MeasurementCard({
   title,
   subtitle,
   icon,
@@ -82,55 +57,29 @@ function MeasurementRow({
   pro,
   subtitleColor,
   subtitleBackgroundColor,
-}: MeasurementItem) {
+  cardWidth,
+}: MeasurementCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.measurementRow, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.measurementCard, { width: cardWidth }, pressed && styles.pressed]}
     >
-      <View style={styles.measurementRowContent}>
-        <View style={styles.measurementTitleRow}>
-          <Text style={styles.measurementTitle}>{title}</Text>
-          {pro && (
-            <View style={styles.proBadge}>
-              <Text style={styles.proBadgeText}>👑 Pro</Text>
-            </View>
-          )}
+      {pro && (
+        <View style={styles.proBadge}>
+                 <CrownIcon width={10} height={10} />
+          <Text style={styles.proBadgeText}>Pro</Text>
         </View>
-        <View
-          style={[
-            styles.measurementBadge,
-            subtitleBackgroundColor ? { backgroundColor: subtitleBackgroundColor } : null,
-          ]}
-        >
-          <Text style={[styles.measurementBadgeText, subtitleColor ? { color: subtitleColor } : null]}>
-            {subtitle}
-          </Text>
+      )}
+      <View style={styles.measurementIconWrap}>{icon}</View>
+      <View style={styles.measurementCardContent}>
+        <Text style={styles.measurementTitle}>{title}</Text>
+        <View style={[styles.measurementBadge, subtitleBackgroundColor ? { backgroundColor: subtitleBackgroundColor } : null]}>
+          <Text style={[styles.measurementBadgeText, subtitleColor ? { color: subtitleColor } : null]}>{subtitle}</Text>
         </View>
       </View>
-      <View style={styles.measurementIconWrap}>{icon}</View>
     </Pressable>
   );
 }
-
-type ExerciseCardProps = {
-  title: string;
-  subtitle: string;
-  image: number;
-  onPress?: () => void;
-};
-
-// function ExerciseCard({ title, subtitle, image, onPress }: ExerciseCardProps) {
-//   return (
-//     <Pressable onPress={onPress} style={styles.exerciseCard}>
-//       <Image source={image} style={styles.exerciseThumbnail} resizeMode="cover" />
-//       <Text style={styles.exerciseTitle}>{title}</Text>
-//       <Text style={styles.exerciseSubtitle}>{subtitle}</Text>
-//     </Pressable>
-//   );
-// }
-
-
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -141,38 +90,38 @@ export default function HomeScreen() {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [alarmCount, setAlarmCount] = useState(user?.alarm_count ?? 0);
   const [isProModalVisible, setIsProModalVisible] = useState(false);
+  const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState('upper-thoracic');
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
+  const measurementCardWidth = (width - 40 - 8) / 2;
+  const displayName = user?.name?.trim() || '회원';
 
 
 
-  // icon 배경이랑 하단에 그림자가 피그마랑 다르게 보여서 추후 수정 예정
   const measurementItems: MeasurementItem[] = [
   {
     id: '2d',
-    title: '2D 이미지 측정',
-    subtitle: '카메라를 통한 간편 측정',
-    icon: <TwoIcon />,
+    title: '2D 측정하기',
+    subtitle: '집에서 간편하게 측정',
+    icon: <TwoIcon width={70} height={70} />,
     onPress: () => router.push('/measure/2d'),
-  },
-  {
-    id: 'spine',
-    title: '척추측만계 측정',
-    subtitle: '기기를 통한 정확한 측정',
-    icon: <ScolioIcon />,
-    onPress: () => router.push('/measure/scoliometer'),
   },
   {
     id: '3d',
     title: '3D 동영상 측정',
     subtitle: '영상을 통한 정밀 측정',
-    icon: <ThreeIcon />,
+    icon: <ThreeIcon width={70} height={70} />,
     pro: true,
-    subtitleColor: '#6A8DFF',
-    subtitleBackgroundColor: '#EAF1FF',
+    subtitleColor: '#2E96FF',
+    subtitleBackgroundColor: '#EBF5FF',
     onPress: () => Alert.alert('준비중', '3D 측정 기능은 다음 화면에서 연결할게요.'),
   },
 ];
+  const weeklyResults: WeeklyResultItem[] = [
+    { id: 'upper-thoracic', label: '상부 흉추만곡', value: 0 },
+    { id: 'main-thoracic', label: '주 흉추만곡', value: 0 },
+    { id: 'lumbar', label: '요추만곡', value: 0 },
+  ];
 
   const loadAlarmCount = useCallback(async () => {
     try {
@@ -251,17 +200,19 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, { paddingBottom:  20 }]}
         >
-          <Text style={styles.headline}>3분만에 끝나는 척추검진</Text>
+          <View style={styles.greetingBlock}>
+            <Text style={styles.greetingTitle}>{displayName}님 안녕하세요.</Text>
+            <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
+          </View>
 
-          <View style={styles.measurementGroupCard}>
-            {measurementItems.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <MeasurementRow
-                  {...item}
-                  onPress={item.id === '3d' ? () => setIsProModalVisible(true) : item.onPress}
-                />
-                {index !== measurementItems.length - 1 ? <View style={styles.measurementRowDivider} /> : null}
-              </React.Fragment>
+          <View style={styles.measurementGrid}>
+            {measurementItems.map((item) => (
+              <MeasurementCard
+                key={item.id}
+                {...item}
+                cardWidth={measurementCardWidth}
+                onPress={item.id === '3d' ? () => setIsProModalVisible(true) : item.onPress}
+              />
             ))}
           </View>
          
@@ -277,8 +228,34 @@ export default function HomeScreen() {
               </View>
             </ImageBackground>
           </View>
-                <Text style={styles.headline}>최근 1주일 측정 결과</Text>  
 
+          <View style={styles.weeklySection}>
+            <Text style={styles.sectionHeading}>최근 1주일 측정 결과</Text>
+            <View style={styles.weeklyResultGrid}>
+              {weeklyResults.map((item) => {
+                const isSelected = selectedWeeklyResultId === item.id;
+
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => setSelectedWeeklyResultId(item.id)}
+                    style={({ pressed }) => [
+                      styles.weeklyResultCard,
+                      isSelected ? styles.weeklyResultCardActive : null,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={[styles.weeklyResultLabel, isSelected ? styles.weeklyResultLabelActive : null]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.weeklyResultValue, isSelected ? styles.weeklyResultValueActive : null]}>
+                      {item.value}°
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
 
           <View style={styles.contentSlot} />
         </ScrollView>
