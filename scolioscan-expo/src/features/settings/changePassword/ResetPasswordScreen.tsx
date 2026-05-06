@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { KeyboardAvoidingView,ScrollView, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import type { LayoutChangeEvent, ScrollView as ScrollViewType } from 'react-native';
+
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -17,7 +19,7 @@ export default function ResetPasswordScreen() {
   const [currentPasswordVisible, setCurrentPasswordVisible] = useState(false);
   const [newPasswordVisible, setNewPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-
+  const scrollViewRef = useRef<ScrollViewType | null>(null);
   const passwordLengthReady = hasPasswordLength(newPassword);
   const passwordMixReady = hasPasswordMix(newPassword);
   const passwordConfirmed = confirmPassword.length > 0 && newPassword === confirmPassword;
@@ -28,6 +30,9 @@ export default function ResetPasswordScreen() {
     passwordLengthReady &&
     passwordMixReady &&
     passwordConfirmed;
+  async function handleChange() {
+
+  }
 
   function renderPasswordField(
     label: string,
@@ -68,10 +73,11 @@ export default function ResetPasswordScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={styles.screen}>
       <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={insets.top}
       >
+        <ScrollView style ={{flex:1}}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
@@ -79,7 +85,7 @@ export default function ResetPasswordScreen() {
           <Text style={styles.headerTitle}>비밀번호 변경</Text>
           <View style={styles.headerSide} />
         </View>
-
+        
         <View style={styles.content}>
           <View style={styles.guideBox}>
             <Text style={styles.guideText}>새로 사용할 비밀번호를 입력해주세요.</Text>
@@ -139,7 +145,7 @@ export default function ResetPasswordScreen() {
             )}
           </View>
         </View>
-
+        </ScrollView> 
         <View style={styles.footer}>
           <PrimaryButton
             title="비밀번호 변경하기"
@@ -152,6 +158,7 @@ export default function ResetPasswordScreen() {
           />
         </View>
       </KeyboardAvoidingView>
+   
     </SafeAreaView>
   );
 }
