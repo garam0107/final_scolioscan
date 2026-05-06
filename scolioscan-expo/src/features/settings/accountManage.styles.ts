@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
   },
   inputWrap: {
     alignItems: 'center',
-    backgroundColor: '#F0F2F6',
-    borderColor: '#E1E5EB',
+    backgroundColor: '#F3F4F7',
+    borderColor: '#D4D9E2',
     borderRadius: 6,
     borderWidth: 1,
     flexDirection: 'row',
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   input: {
-    color: '#7F8995',
+    color: '#2B2F36',
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
@@ -90,8 +90,16 @@ const styles = StyleSheet.create({
     height: 52,
     justifyContent: 'center',
   },
+  birthInput: {
+    color: '#2B2F36',
+    fontSize: 13,
+    fontWeight: '700',
+    padding: 0,
+    textAlign: 'center',
+    width: '100%',
+  },
   birthInputText: {
-    color: '#697481',
+    color: '#2B2F36',
     fontSize: 13,
     fontWeight: '700',
   },

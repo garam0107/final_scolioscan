@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 56,
+    paddingTop: 16,
   },
   profileCard: {
     alignItems: 'center',
