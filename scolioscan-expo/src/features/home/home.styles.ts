@@ -301,13 +301,18 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop : 16,
   },
-  banner: {
-    height: 112,
+  bannerPager: {
     borderRadius: 12,
     overflow: 'hidden',
   },
+  bannerSlide: {
+    overflow: 'hidden',
+  },
+  banner: {
+    height: 112,
+    overflow: 'hidden',
+  },
   bannerImage: {
-    borderRadius: 12,
   },
   bannerBadge: {
     position: 'absolute',

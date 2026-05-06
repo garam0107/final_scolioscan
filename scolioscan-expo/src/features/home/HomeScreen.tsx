@@ -2,11 +2,13 @@ import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fo
 import { useFonts as useExpoFonts } from 'expo-font';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   ImageBackground,
   Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,7 +37,7 @@ import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 const banner1 = require('../../../assets/images/BannerImage1.png');
-const banner2 = require('../../../assets/images/BannerImage2.png');
+
 
 type MeasurementItem = {
   id: string;
@@ -176,11 +178,12 @@ function MeasurementCard({
 
 export default function HomeScreen() {
   const router = useRouter();
+  const bannerScrollRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const { loading, isAuthenticated, user } = useAuth();
   const [museoLoaded] = useMuseoFonts({ MuseoModerno_700Bold });
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
-  const [bannerIndex, setBannerIndex] = useState(0);
+  const [, setBannerIndex] = useState(0);
   const [alarmCount, setAlarmCount] = useState(user?.alarm_count ?? 0);
   const [isProModalVisible, setIsProModalVisible] = useState(false);
   const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState<WeeklyResultId>('upper-thoracic');
@@ -188,6 +191,7 @@ export default function HomeScreen() {
   const [curvatureTrendRecords, setCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
+  const bannerWidth = width - 40;
   const measurementCardWidth = (width - 40 - 8) / 2;
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || '회원';
@@ -302,15 +306,42 @@ export default function HomeScreen() {
     }
   }, [loading, isAuthenticated, router]);
 
+  const banners = useMemo(() => [banner1, banner1, banner1], []);
+
+  const handleBannerMomentumEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
+    if (nextIndex >= banners.length) {
+      bannerScrollRef.current?.scrollTo({ x: 0, animated: false });
+      setBannerIndex(0);
+      return;
+    }
+
+    setBannerIndex(Math.max(0, Math.min(nextIndex, banners.length - 1)));
+  }, [bannerWidth, banners.length]);
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setBannerIndex((value) => (value + 1) % 2);
+      setBannerIndex((value) => {
+        const isLastBanner = value === banners.length - 1;
+        const nextIndex = isLastBanner ? banners.length : value + 1;
+        bannerScrollRef.current?.scrollTo({
+          x: nextIndex * bannerWidth,
+          animated: true,
+        });
+
+        if (isLastBanner) {
+          setTimeout(() => {
+            bannerScrollRef.current?.scrollTo({ x: 0, animated: false });
+          }, 450);
+          return 0;
+        }
+
+        return nextIndex;
+      });
     }, 4000);
 
     return () => clearInterval(timer);
-  }, []);
-
-  const banners = useMemo(() => [banner1, banner2], []);
+  }, [bannerWidth, banners.length]);
 
   if (loading || !museoLoaded || (!pretendardLoaded && !pretendardError)) {
     return (
@@ -364,15 +395,32 @@ export default function HomeScreen() {
          
 
           <View style={styles.bannerWrap}>
-            <ImageBackground
-              source={banners[bannerIndex]}
-              style={[styles.banner, { height: bannerHeight }]}
-              imageStyle={styles.bannerImage}
+            <ScrollView
+              ref={bannerScrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleBannerMomentumEnd}
+              scrollEventThrottle={16}
+              style={[styles.bannerPager, { width: bannerWidth, height: bannerHeight }]}
             >
-              <View style={styles.bannerBadge}>
-                <Text style={styles.bannerBadgeText}>{bannerIndex + 1} / 2</Text>
-              </View>
-            </ImageBackground>
+              {[...banners, banners[0]].map((banner, index) => (
+                <View
+                  key={`home-banner-${index}`}
+                  style={[styles.bannerSlide, { width: bannerWidth, height: bannerHeight }]}
+                >
+                  <ImageBackground
+                    source={banner}
+                    style={[styles.banner, { width: bannerWidth, height: bannerHeight }]}
+                    imageStyle={styles.bannerImage}
+                  >
+                    <View style={styles.bannerBadge}>
+                      <Text style={styles.bannerBadgeText}>{(index % banners.length) + 1} / {banners.length}</Text>
+                    </View>
+                  </ImageBackground>
+                </View>
+              ))}
+            </ScrollView>
           </View>
 
           <View style={styles.weeklySection}>
@@ -519,4 +567,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
