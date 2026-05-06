@@ -14,3 +14,12 @@ export interface UserResponse {
   created_at: string;
 }
 
+export interface PutUserRequest {
+  name: string;
+  phone: string;
+  address: string | null;
+  detail_address?: string | null;
+  birthday: string;
+  sex: boolean;
+}
+

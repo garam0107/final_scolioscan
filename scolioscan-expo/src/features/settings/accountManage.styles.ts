@@ -6,6 +6,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6F7F9',
     flex: 1,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   header: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -30,7 +33,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 0,
   },
   sectionTitle: {
     color: '#000000',
@@ -49,6 +52,38 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 14,
     elevation: 1,
+  },
+  actionArea: {
+    marginTop: 20,
+    paddingBottom: 12,
+    paddingHorizontal: 0,
+  },
+  actionLinkRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  actionLinkText: {
+    color: '#7E8794',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  actionDivider: {
+    backgroundColor: '#D8DDE5',
+    height: 11,
+    marginHorizontal: 14,
+    width: 1,
+  },
+  saveButton: {
+    alignSelf: 'stretch',
+    width: '100%',
+    height : 48
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   fieldGroup: {
     marginBottom: 22,
