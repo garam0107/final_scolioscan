@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
 import CrownIcon from '../../../assets/home/crown.svg';
 import { alarmAPI } from '@/src/api/alarm';
+import { curvatureAPI } from '@/src/api/curvature';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
 import styles from '@/src/features/home/home.styles';
@@ -48,6 +49,26 @@ type WeeklyResultItem = {
   label: string;
   value: number;
 };
+
+type WeeklyResultValues = {
+  upperThoracic: number;
+  mainThoracic: number;
+  lumbar: number;
+};
+
+const INITIAL_WEEKLY_RESULT_VALUES: WeeklyResultValues = {
+  upperThoracic: 0,
+  mainThoracic: 0,
+  lumbar: 0,
+};
+
+function formatAngleValue(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.round(value * 10) / 10;
+}
 
 function MeasurementCard({
   title,
@@ -91,6 +112,7 @@ export default function HomeScreen() {
   const [alarmCount, setAlarmCount] = useState(user?.alarm_count ?? 0);
   const [isProModalVisible, setIsProModalVisible] = useState(false);
   const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState('upper-thoracic');
+  const [weeklyResultValues, setWeeklyResultValues] = useState<WeeklyResultValues>(INITIAL_WEEKLY_RESULT_VALUES);
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
   const measurementCardWidth = (width - 40 - 8) / 2;
@@ -118,9 +140,9 @@ export default function HomeScreen() {
   },
 ];
   const weeklyResults: WeeklyResultItem[] = [
-    { id: 'upper-thoracic', label: '상부 흉추만곡', value: 0 },
-    { id: 'main-thoracic', label: '주 흉추만곡', value: 0 },
-    { id: 'lumbar', label: '요추만곡', value: 0 },
+    { id: 'upper-thoracic', label: '상부 흉추만곡', value: weeklyResultValues.upperThoracic },
+    { id: 'main-thoracic', label: '주 흉추만곡', value: weeklyResultValues.mainThoracic },
+    { id: 'lumbar', label: '요추만곡', value: weeklyResultValues.lumbar },
   ];
 
   const loadAlarmCount = useCallback(async () => {
@@ -133,6 +155,27 @@ export default function HomeScreen() {
     }
   }, []);
 
+  const loadLatestCurvature = useCallback(async () => {
+    try {
+      const response = await curvatureAPI.getAnalyses({ limit: 1 });
+      const latestCurvature = response.data[0];
+
+      if (!latestCurvature) {
+        setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
+        return;
+      }
+
+      setWeeklyResultValues({
+        upperThoracic: formatAngleValue(latestCurvature.secondary_thoracic_cobb),
+        mainThoracic: formatAngleValue(latestCurvature.main_thoracic_cobb),
+        lumbar: formatAngleValue(latestCurvature.lumbar_cobb),
+      });
+    } catch (error) {
+      console.error('Failed to load latest curvature:', error);
+      setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
+    }
+  }, []);
+
   useEffect(() => {
     console.log('[Home] unread alarm count from user:', user?.alarm_count ?? 0);
     setAlarmCount(user?.alarm_count ?? 0);
@@ -141,7 +184,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadAlarmCount();
-    }, [loadAlarmCount]),
+      void loadLatestCurvature();
+    }, [loadAlarmCount, loadLatestCurvature]),
   );
 
   useEffect(() => {
