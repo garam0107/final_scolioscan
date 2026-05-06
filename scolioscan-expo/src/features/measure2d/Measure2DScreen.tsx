@@ -65,7 +65,7 @@ export default function Measure2DScreen() {
       } as any);
 
       const token = getAccessToken(); // tokenStorage에서
-      const res = await fetch('http://192.168.0.3:8001/api/curvature/', {
+      const res = await fetch('http://localhost:8001/api/curvature/', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token ?? ''}`,

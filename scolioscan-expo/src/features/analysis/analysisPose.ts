@@ -52,12 +52,12 @@ function smoothLerp(a: number, b: number, t: number) {
   return a + (b - a) * ct;
 }
 
-// 상부 흉추만곡 각도에 따라 달라지는 텍스트 표시
-export function getSeverityLabel(upper: number) {
-  if (upper < 10) return '정상';
-  if (upper < 20) return '경도';
-  if (upper < 45) return '중등도';
-  return '고도';
+// 상부 흉추만곡 각도에 따라 달라지는 텍스트 표시 — severity.ts 임계값과 동일
+export function getSeverityLabel(upper: number): '정상' | '보통' | '위험' {
+  const value = Math.abs(upper);
+  if (value < 15) return '정상';
+  if (value < 25) return '보통';
+  return '위험';
 }
 
 
