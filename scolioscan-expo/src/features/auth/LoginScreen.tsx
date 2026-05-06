@@ -306,7 +306,7 @@ export default function LoginScreen() {
                 <View style={[styles.checkbox, rememberId && styles.checkboxChecked]}>
                   {rememberId ? <Ionicons name="checkmark" size={14} color="#FFFFFF" /> : null}
                 </View>
-                <Text style={styles.rememberText}>아이디 저장</Text>
+                <Text style={styles.rememberText}>이메일 저장</Text>
               </Pressable>
             </View>
 
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     color: '#4F5564',
     fontFamily: 'PretendardVariable',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     lineHeight: 22,
     textAlign: 'center',
   },
@@ -452,10 +452,11 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   fieldLabel: {
-    color: '#111827',
+    color: '#000000',
     fontFamily: 'PretendardVariable',
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight : 20,
     marginBottom: 10,
   },
   fieldBox: {
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
     borderColor: '#5F9F9D',
   },
   rememberText: {
-    color: '#1F2937',
+    color: '#000000',
     fontFamily: 'PretendardVariable',
     fontSize: 12,
   },

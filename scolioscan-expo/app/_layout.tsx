@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fonts/museomoderno';
-import { useFonts } from 'expo-font';
+// import { useFonts } from 'expo-font';
 import { Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
@@ -11,7 +11,7 @@ import 'react-native-reanimated';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 
-const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
+// const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
 
 const defaultFontFamily = 'PretendardVariable';
 // 상단바 아래 그라데이션
@@ -57,7 +57,7 @@ function applyDefaultFont(component: typeof Text | typeof TextInput) {
 
     return defaultRender.call(this, {
       ...props,
-      style: [{ fontFamily: defaultFontFamily }, props?.style],
+      style: [{defaultFontFamily}, props?.style],
     }, ref);
   };
 }
@@ -81,12 +81,12 @@ export default function RootLayout() {
   const [museoLoaded] = useMuseoFonts({
     MuseoModerno_700Bold,
   });
-  const [fontsLoaded] = useFonts({
-    PretendardVariable: pretendardFont,
-  });
+  // const [fontsLoaded] = useFonts({
+  //   PretendardVariable: pretendardFont,
+  // });
   const hideTopSeparator = segments[0] === 'intro' || segments[0] === 'measure';
 
-  if (!fontsLoaded || !museoLoaded) {
+  if (!museoLoaded) {
     return null;
   }
 
