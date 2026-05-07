@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: '#F6F7F9',
+    backgroundColor: Colors.gray[25],
     flex: 1,
   },
   keyboardAvoidingView: {
@@ -52,6 +52,126 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 14,
     elevation: 1,
+  },
+  sectionSpacing: {
+    marginTop: 20,
+  },
+  loginSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.03,
+    shadowRadius: 14,
+    elevation: 1,
+  },
+  loginMethodRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 14,
+    minHeight: 46,
+  },
+  loginMethodIcon: {
+    alignItems: 'center',
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
+  },
+  loginMethodContent: {
+    flex: 1,
+  },
+  loginMethodTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  loginMethodTitle: {
+    color: Colors.gray[800],
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  loginMethodEmail: {
+    color: Colors.gray[500],
+    fontSize: 11,
+    fontWeight: '400',
+    lineHeight: 15,
+    marginTop: 3,
+  },
+  infoBadge: {
+    alignItems: 'center',
+    backgroundColor: Colors.mint[25],
+    borderRadius: 999,
+    justifyContent: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  infoBadgeText: {
+    color: Colors.mint[600],
+    fontSize: 10,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  deviceSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.03,
+    shadowRadius: 14,
+    elevation: 1,
+  },
+  deviceRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 46,
+  },
+  deviceContent: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  deviceTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  deviceTitle: {
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  deviceMeta: {
+    color: Colors.gray[500],
+    fontSize: 10,
+    fontWeight: '400',
+    lineHeight: 14,
+    marginTop: 3,
+  },
+  activeBadge: {
+    alignItems: 'center',
+    backgroundColor: Colors.mint[25],
+    borderRadius: 999,
+    justifyContent: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  activeBadgeText: {
+    color: Colors.mint[600],
+    fontSize: 10,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  deviceLogoutText: {
+    color: Colors.gray[400],
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
   },
   actionArea: {
     marginTop: 20,
@@ -327,6 +447,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  fixedFooter: {
+    backgroundColor: Colors.gray[25],
+    // borderTopColor: Colors.gray[25],
+
+    paddingHorizontal: 16,
+  
   },
 });
 

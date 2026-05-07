@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Device from 'expo-device';
+import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { LayoutChangeEvent, ScrollView as ScrollViewType } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,6 +22,27 @@ import styles from '@/src/features/settings/accountManage.styles';
 
 type GenderValue = 'male' | 'female';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
+
+const DEVICE_MODEL_NAMES: Record<string, string> = {
+  'SM-G981N': 'Galaxy S20 5G',
+  'SM-G986N': 'Galaxy S20+ 5G',
+  'SM-G988N': 'Galaxy S20 Ultra 5G',
+  'SM-G991N': 'Galaxy S21 5G',
+  'SM-G996N': 'Galaxy S21+ 5G',
+  'SM-G998N': 'Galaxy S21 Ultra 5G',
+  'SM-S901N': 'Galaxy S22',
+  'SM-S906N': 'Galaxy S22+',
+  'SM-S908N': 'Galaxy S22 Ultra',
+  'SM-S911N': 'Galaxy S23',
+  'SM-S916N': 'Galaxy S23+',
+  'SM-S918N': 'Galaxy S23 Ultra',
+  'SM-S921N': 'Galaxy S24',
+  'SM-S926N': 'Galaxy S24+',
+  'SM-S928N': 'Galaxy S24 Ultra',
+  'SM-S931N': 'Galaxy S25',
+  'SM-S936N': 'Galaxy S25+',
+  'SM-S938N': 'Galaxy S25 Ultra',
+};
 
 function splitBirthday(birthday?: string) {
   if (!birthday) {
@@ -55,6 +78,80 @@ function normalizeApiError(error: unknown) {
   }
 
   return '요청 처리 중 오류가 발생했습니다.';
+}
+
+function getCurrentDeviceLabel() {
+  const modelName = Device.modelName?.trim();
+  const modelId = Device.modelId?.trim();
+  const deviceName = Device.deviceName?.trim();
+  const manufacturer = Device.manufacturer;
+  const mappedModelName = DEVICE_MODEL_NAMES[modelName || ''] || DEVICE_MODEL_NAMES[modelId || ''];
+
+  if (mappedModelName) {
+    return mappedModelName;
+  }
+
+  if (modelName && !/^SM-[A-Z0-9]+$/i.test(modelName)) {
+    return modelName;
+  }
+
+  if (deviceName && !/^SM-[A-Z0-9]+$/i.test(deviceName)) {
+    return deviceName;
+  }
+
+  if (manufacturer && modelName && !modelName.toLowerCase().includes(manufacturer.toLowerCase())) {
+    return `${manufacturer} ${modelName}`;
+  }
+
+  if (modelName) {
+    return modelName;
+  }
+
+  if (Platform.OS === 'ios') {
+    return 'iPhone';
+  }
+
+  if (Platform.OS === 'android') {
+    return 'Android 기기';
+  }
+
+  return '현재 기기';
+}
+
+function normalizeRegionName(regionName: string) {
+  const regionAliases: Record<string, string> = {
+    서울특별시: '서울',
+    부산광역시: '부산',
+    대구광역시: '대구',
+    인천광역시: '인천',
+    광주광역시: '광주',
+    대전광역시: '대전',
+    울산광역시: '울산',
+    세종특별자치시: '세종',
+    경기도: '경기',
+    강원도: '강원',
+    강원특별자치도: '강원',
+    충청북도: '충북',
+    충청남도: '충남',
+    전라북도: '전북',
+    전북특별자치도: '전북',
+    전라남도: '전남',
+    경상북도: '경북',
+    경상남도: '경남',
+    제주특별자치도: '제주',
+  };
+
+  return regionAliases[regionName] || regionName.replace(/특별자치시|특별자치도|특별시|광역시|도|시$/g, '');
+}
+
+function formatLocationAddress(address?: Location.LocationGeocodedAddress) {
+  if (!address) {
+    return '위치 확인 완료';
+  }
+
+  const regionName = address.city || address.region || address.country;
+
+  return regionName ? normalizeRegionName(regionName) : '위치 확인 완료';
 }
 
 function Field({
@@ -130,6 +227,8 @@ export default function AccountManageScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
   const [toastKey, setToastKey] = useState(0);
+  const [deviceName, setDeviceName] = useState(getCurrentDeviceLabel());
+  const [deviceMeta, setDeviceMeta] = useState('위치 확인 중');
   const scrollViewRef = useRef<ScrollViewType | null>(null);
   const [phoneFieldY, setPhoneFieldY] = useState(0);
 
@@ -153,6 +252,50 @@ export default function AccountManageScreen() {
     showToast('비밀번호가 변경되었습니다.', 'success');
     router.setParams({ toast: undefined });
   }, [params.toast, router]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDeviceLocation() {
+      setDeviceName(getCurrentDeviceLabel());
+
+      try {
+        const permission = await Location.requestForegroundPermissionsAsync();
+
+        if (permission.status !== 'granted') {
+          if (isMounted) {
+            setDeviceMeta('위치 권한 필요 · 로그인 중');
+          }
+          return;
+        }
+
+        const lastKnownLocation = await Location.getLastKnownPositionAsync({
+          maxAge: 1000 * 60 * 5,
+        });
+        const location =
+          lastKnownLocation ??
+          (await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }));
+
+        const [address] = await Location.reverseGeocodeAsync(location.coords);
+
+        if (isMounted) {
+          setDeviceMeta(`${formatLocationAddress(address)} · 방금 전`);
+        }
+      } catch {
+        if (isMounted) {
+          setDeviceMeta('위치 확인 실패 · 로그인 중');
+        }
+      }
+    }
+
+    void loadDeviceLocation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   function handleFieldLayout(setter: (value: number) => void) {
     return (event: LayoutChangeEvent) => {
@@ -258,6 +401,11 @@ export default function AccountManageScreen() {
     router.replace('/login');
   }
 
+  async function handleDeviceLogout() {
+    await logout();
+    router.replace('/login');
+  }
+
   return (
     <SafeAreaView edges={['top', 'left', 'right', ]} style={styles.screen}>
       <ToastAlert
@@ -355,7 +503,7 @@ export default function AccountManageScreen() {
 
       <ScrollView
         ref={scrollViewRef}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 0 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
@@ -462,6 +610,46 @@ export default function AccountManageScreen() {
           />
         </View>
 
+        <View style={styles.sectionSpacing}>
+          <Text style={styles.sectionTitle}>로그인 방법</Text>
+          <View style={styles.loginSection}>
+            <View style={styles.loginMethodRow}>
+              <View style={styles.loginMethodIcon}>
+                <Ionicons name="mail-outline" size={22} color="#25272D" />
+              </View>
+              <View style={styles.loginMethodContent}>
+                <View style={styles.loginMethodTitleRow}>
+                  <Text style={styles.loginMethodTitle}>이메일</Text>
+                  <View style={styles.infoBadge}>
+                    <Text style={styles.infoBadgeText}>기본</Text>
+                  </View>
+                </View>
+                <Text style={styles.loginMethodEmail}>{email || '-'}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.sectionSpacing}>
+          <Text style={styles.sectionTitle}>로그인 기기</Text>
+          <View style={styles.deviceSection}>
+            <View style={styles.deviceRow}>
+              <View style={styles.deviceContent}>
+                <View style={styles.deviceTitleRow}>
+                  <Text style={styles.deviceTitle}>{deviceName}</Text>
+                  <View style={styles.activeBadge}>
+                    <Text style={styles.activeBadgeText}>현재</Text>
+                  </View>
+                </View>
+                <Text style={styles.deviceMeta}>{deviceMeta}</Text>
+              </View>
+              <Pressable hitSlop={8} onPress={() => void handleDeviceLogout()}>
+                <Text style={styles.deviceLogoutText}>로그아웃</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.actionArea}>
           <View style={styles.actionLinkRow}>
             <Pressable onPress={() => router.push('/settings/password')}>
@@ -472,19 +660,21 @@ export default function AccountManageScreen() {
               <Text style={styles.actionLinkText}>회원 탈퇴</Text>
             </Pressable>
           </View>
-
-          <PrimaryButton
-            title={saving ? '저장 중...' : '저장'}
-            onPress={() => void handleSave()}
-            height={40}
-            backgroundColor="#3D9A9A"
-            borderRadius={4}
-            style={styles.saveButton}
-            textStyle={styles.saveButtonText}
-            disabled={!canSave}
-          />
         </View>
       </ScrollView>
+
+      <View style={[styles.fixedFooter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <PrimaryButton
+          title={saving ? '저장 중...' : '저장'}
+          onPress={() => void handleSave()}
+          height={40}
+          backgroundColor="#3D9A9A"
+          borderRadius={4}
+          style={styles.saveButton}
+          textStyle={styles.saveButtonText}
+          disabled={!canSave}
+        />
+      </View>
     </SafeAreaView>
   );
 }
