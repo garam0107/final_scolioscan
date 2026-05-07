@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
 import styles from '@/src/features/settings/settings.styles';
 import ProfileIcon from '../../../assets/images/basic_profile_image.svg'
 
 type ToggleKey = 'cellular' | 'nightMode' | 'importantAlarm' | 'otherAlarm' | 'marketing' | 'cloudBackup';
+type NightTimeTarget = 'start' | 'end';
 
 type SettingRowProps = {
   title: string;
@@ -28,6 +29,15 @@ const DEFAULT_TOGGLES: Record<ToggleKey, boolean> = {
   marketing: false,
   cloudBackup: true,
 };
+
+const NIGHT_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour);
+
+function formatHourLabel(hour: number) {
+  const period = hour < 12 ? '오전' : '오후';
+  const displayHour = hour % 12 || 12;
+
+  return `${period} ${displayHour}시`;
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -84,6 +94,9 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
   const [toggles, setToggles] = useState(DEFAULT_TOGGLES);
+  const [nightStartHour, setNightStartHour] = useState(22);
+  const [nightEndHour, setNightEndHour] = useState(6);
+  const [nightTimeTarget, setNightTimeTarget] = useState<NightTimeTarget | null>(null);
 
   const profile = useMemo(
     () => ({
@@ -116,6 +129,32 @@ export default function SettingsScreen() {
 
   const showComingSoon = (label: string) => {
     Alert.alert(label, '아직 연결 전인 설정이에요.');
+  };
+
+  const closeNightTimeDropdown = () => {
+    setNightTimeTarget(null);
+  };
+
+  const handleNightTimeSelect = (hour: number) => {
+    if (nightTimeTarget === 'start' && hour === nightEndHour) {
+      Alert.alert('시간 설정', '시작 시간과 종료 시간은 같을 수 없습니다.');
+      return;
+    }
+
+    if (nightTimeTarget === 'end' && hour === nightStartHour) {
+      Alert.alert('시간 설정', '종료 시간과 시작 시간은 같을 수 없습니다.');
+      return;
+    }
+
+    if (nightTimeTarget === 'start') {
+      setNightStartHour(hour);
+    }
+
+    if (nightTimeTarget === 'end') {
+      setNightEndHour(hour);
+    }
+
+    closeNightTimeDropdown();
   };
 
   return (
@@ -176,15 +215,24 @@ export default function SettingsScreen() {
             onToggle={handleToggle}
           />
           <View style={styles.timeRow}>
-            <Text style={styles.timeLabel}>시간</Text>
-            <View style={styles.timePills}>
-              <View style={styles.timePill}>
-                <Text style={styles.timePillText}>오전 10시</Text>
-              </View>
-              <Text style={styles.timeSeparator}>-</Text>
-              <View style={styles.timePill}>
-                <Text style={styles.timePillText}>오후 6시</Text>
-              </View>
+            <View style={styles.timeField}>
+              <Text style={styles.timeLabel}>시작</Text>
+              <Pressable
+                style={({ pressed }) => [styles.timePill, pressed && styles.timePillPressed]}
+                onPress={() => setNightTimeTarget('start')}
+              >
+                <Text numberOfLines={1} style={styles.timePillText}>{formatHourLabel(nightStartHour)}</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.timeSeparator}>~</Text>
+            <View style={styles.timeField}>
+              <Text style={styles.timeLabel}>종료</Text>
+              <Pressable
+                style={({ pressed }) => [styles.timePill, pressed && styles.timePillPressed]}
+                onPress={() => setNightTimeTarget('end')}
+              >
+                <Text numberOfLines={1} style={styles.timePillText}>{formatHourLabel(nightEndHour)}</Text>
+              </Pressable>
             </View>
           </View>
           <SettingRow
@@ -233,6 +281,52 @@ export default function SettingsScreen() {
           <SettingRow title="데이터 초기화" danger onPress={() => showComingSoon('데이터 초기화')} />
         </Section>
       </ScrollView>
+
+      <Modal
+        visible={nightTimeTarget !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={closeNightTimeDropdown}
+      >
+        <Pressable style={styles.timeDropdownOverlay} onPress={closeNightTimeDropdown}>
+          <Pressable style={styles.timeDropdownCard} onPress={(event) => event.stopPropagation()}>
+            <Text style={styles.timeDropdownTitle}>
+              {nightTimeTarget === 'start' ? '시작 시간 선택' : '종료 시간 선택'}
+            </Text>
+            <ScrollView style={styles.timeDropdownList} showsVerticalScrollIndicator={false}>
+              {NIGHT_TIME_OPTIONS.map((hour) => {
+                const selectedHour = nightTimeTarget === 'start' ? nightStartHour : nightEndHour;
+                const disabled =
+                  (nightTimeTarget === 'start' && hour === nightEndHour) ||
+                  (nightTimeTarget === 'end' && hour === nightStartHour);
+
+                return (
+                  <Pressable
+                    key={hour}
+                    disabled={disabled}
+                    style={[
+                      styles.timeDropdownOption,
+                      selectedHour === hour && styles.timeDropdownOptionSelected,
+                      disabled && styles.timeDropdownOptionDisabled,
+                    ]}
+                    onPress={() => handleNightTimeSelect(hour)}
+                  >
+                    <Text
+                      style={[
+                        styles.timeDropdownOptionText,
+                        selectedHour === hour && styles.timeDropdownOptionTextSelected,
+                        disabled && styles.timeDropdownOptionTextDisabled,
+                      ]}
+                    >
+                      {formatHourLabel(hour)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
