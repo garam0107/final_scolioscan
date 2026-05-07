@@ -176,7 +176,7 @@ export default function SettingsScreen() {
               <Text style={styles.subscriptionText}>구독 상태에 따라 변경</Text>
             </View>
           </View>
-          <Pressable onPress={() => showComingSoon('구독 관리')} hitSlop={10}>
+          <Pressable onPress={() => router.push('/settings/subscribe')} hitSlop={10}>
             <Text style={styles.linkText}>구독 관리</Text>
           </Pressable>
         </View>
