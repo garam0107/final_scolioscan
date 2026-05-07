@@ -30,7 +30,7 @@ export default function RegisterAgreementStep({ state, onToggle, onToggleAll }: 
   return (
     <View style={s.wrap}>
       <View style={s.titleBlock}>
-        <Text style={s.title}>ScolioScan에 오신{'\n'}것을 환영합니다!</Text>
+        <Text style={s.title}>ScolioScan에 오신 것을 환영합니다!</Text>
         <Text style={s.subtitle}>회원가입 전, ScolioScan 약관들을 동의해주세요</Text>
       </View>
 
