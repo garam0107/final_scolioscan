@@ -10,7 +10,7 @@ export default function ContactScreen() {
 			<ScrollView  style={styles.scrollView}>
 				<View style={styles.row}>
 					<Image
-						source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/8ifw3z4u_expires_30_days.png"}} 
+						source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/h483yrnc_expires_30_days.png"}} 
 						resizeMode = {"stretch"}
 						style={styles.image}
 					/>
@@ -34,7 +34,7 @@ export default function ContactScreen() {
 						<View style={styles.row2}>
 							<TouchableOpacity style={styles.buttonColumn} onPress={()=>alert('Pressed!')}>
 								<Image
-									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/kxcbayfb_expires_30_days.png"}} 
+									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/whm8gu9b_expires_30_days.png"}} 
 									resizeMode = {"stretch"}
 									style={styles.image2}
 								/>
@@ -44,7 +44,7 @@ export default function ContactScreen() {
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.buttonColumn2} onPress={()=>alert('Pressed!')}>
 								<Image
-									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/7m103exx_expires_30_days.png"}} 
+									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/ctlxr4df_expires_30_days.png"}} 
 									resizeMode = {"stretch"}
 									style={styles.image2}
 								/>
@@ -56,7 +56,7 @@ export default function ContactScreen() {
 						<View style={styles.row3}>
 							<TouchableOpacity style={styles.buttonColumn3} onPress={()=>alert('Pressed!')}>
 								<Image
-									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/mznxeslj_expires_30_days.png"}} 
+									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/ym0x3cjf_expires_30_days.png"}} 
 									resizeMode = {"stretch"}
 									style={styles.image2}
 								/>
@@ -66,7 +66,7 @@ export default function ContactScreen() {
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.buttonColumn2} onPress={()=>alert('Pressed!')}>
 								<Image
-									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/foajcx4c_expires_30_days.png"}} 
+									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/lmiypq5w_expires_30_days.png"}} 
 									resizeMode = {"stretch"}
 									style={styles.image2}
 								/>
@@ -97,14 +97,14 @@ export default function ContactScreen() {
 							style={styles.input2}
 						/>
 					</View>
-					<View style={styles.column3}>
+					<View >
 						<Text style={styles.text6}>
 							{"스크린샷 (선택)"}
 						</Text>
 						<View style={styles.row4}>
 							<TouchableOpacity style={styles.buttonColumn4} onPress={()=>alert('Pressed!')}>
 								<Image
-									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/ym7b3ff5_expires_30_days.png"}} 
+									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/u7hm65ee_expires_30_days.png"}} 
 									resizeMode = {"stretch"}
 									style={styles.image3}
 								/>
@@ -112,15 +112,13 @@ export default function ContactScreen() {
 									{"추가"}
 								</Text>
 							</TouchableOpacity>
-							<View >
-								<View style={styles.box2}>
-								</View>
-								<Image
-									source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/pzpy8wjr_expires_30_days.png"}} 
-									resizeMode = {"stretch"}
-									style={styles.absoluteImage}
-								/>
+							<View style={styles.box2}>
 							</View>
+							<Image
+								source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/9iit7732_expires_30_days.png"}} 
+								resizeMode = {"stretch"}
+								style={styles.absoluteImage}
+							/>
 						</View>
 					</View>
 				</View>

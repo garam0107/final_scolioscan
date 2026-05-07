@@ -7,15 +7,14 @@ const styles = StyleSheet.create({
 	},
 	absoluteImage: {
 		position: "absolute",
-		top: -6,
-		right: -6,
+		top: 0,
+		right: 0,
 		width: 20,
 		height: 20,
 	},
 	box: {
 		width: 24,
 		height: 24,
-		marginTop: 80,
 	},
 	box2: {
 		width: 84,
@@ -38,7 +37,7 @@ const styles = StyleSheet.create({
 		borderColor: "#7AD7D4",
 		borderRadius: 8,
 		borderWidth: 1,
-		paddingVertical: 7,
+		paddingVertical: 14,
 		marginRight: 8,
 	},
 	buttonColumn2: {
@@ -48,7 +47,7 @@ const styles = StyleSheet.create({
 		borderColor: "#ECEEF2",
 		borderRadius: 8,
 		borderWidth: 1,
-		paddingVertical: 7,
+		paddingVertical: 14,
 	},
 	buttonColumn3: {
 		flex: 1,
@@ -57,7 +56,7 @@ const styles = StyleSheet.create({
 		borderColor: "#ECEEF2",
 		borderRadius: 8,
 		borderWidth: 1,
-		paddingVertical: 7,
+		paddingVertical: 14,
 		marginRight: 8,
 	},
 	buttonColumn4: {
@@ -88,14 +87,9 @@ const styles = StyleSheet.create({
 	column2: {
 		marginBottom: 8,
 	},
-	column3: {
-		paddingVertical: 10,
-	},
 	image: {
 		width: 24,
 		height: 24,
-		marginTop: 80,
-		marginBottom: 20,
 	},
 	image2: {
 		borderRadius: 8,
@@ -131,8 +125,9 @@ const styles = StyleSheet.create({
 	row: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		alignItems: "center",
 		backgroundColor: "#F9F9FB",
-		paddingHorizontal: 20,
+		padding: 20,
 	},
 	row2: {
 		flexDirection: "row",
@@ -147,6 +142,7 @@ const styles = StyleSheet.create({
 		alignSelf: "flex-start",
 		flexDirection: "row",
 		alignItems: "center",
+		paddingVertical: 10,
 	},
 	scrollView: {
 		flex: 1,
@@ -164,7 +160,6 @@ const styles = StyleSheet.create({
 		color: "#2B2E35",
 		fontSize: 18,
 		fontWeight: "bold",
-		marginTop: 80,
 	},
 	text2: {
 		color: "#2B2E35",
@@ -188,7 +183,7 @@ const styles = StyleSheet.create({
 	},
 	text6: {
 		color: "#000000",
-		marginBottom: 7,
+		marginBottom: 2,
 		marginLeft: 8,
 	},
 	text7: {

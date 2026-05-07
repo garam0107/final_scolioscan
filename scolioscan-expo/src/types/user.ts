@@ -29,3 +29,6 @@ export interface ChangePasswordRequest {
   confirm_password : string;
 }
 
+export interface DeleteUserRequest {
+  password: string;
+}

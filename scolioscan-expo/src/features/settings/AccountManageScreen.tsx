@@ -112,7 +112,7 @@ export default function AccountManageScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ toast?: string }>();
   const insets = useSafeAreaInsets();
-  const { user, refreshSession } = useAuth();
+  const { user, refreshSession, logout } = useAuth();
 
   const [name, setName] = useState('');
   const [birthYear, setBirthYear] = useState('');
@@ -124,6 +124,8 @@ export default function AccountManageScreen() {
   const [saving, setSaving] = useState(false);
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
   const [withdrawPassword, setWithdrawPassword] = useState('');
+  const [withdrawErrorMessage, setWithdrawErrorMessage] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
   const [toastKey, setToastKey] = useState(0);
@@ -171,8 +173,13 @@ export default function AccountManageScreen() {
   }
 
   function closeWithdrawModal() {
+    if (withdrawing) {
+      return;
+    }
+
     setWithdrawModalVisible(false);
     setWithdrawPassword('');
+    setWithdrawErrorMessage('');
   }
 
   const initialBirthday = splitBirthday(user?.birthday);
@@ -225,6 +232,26 @@ export default function AccountManageScreen() {
     }
   }
 
+  async function handleWithdraw() {
+    const password = withdrawPassword.trim();
+
+    if (!password || withdrawing) {
+      return;
+    }
+
+    try {
+      setWithdrawErrorMessage('');
+      setWithdrawing(true);
+      await userAPI.deleteCurrentUser({ password });
+      await logout();
+      router.replace('/login');
+    } catch (error) {
+      setWithdrawErrorMessage(normalizeApiError(error));
+    } finally {
+      setWithdrawing(false);
+    }
+  }
+
   return (
     <SafeAreaView edges={['top', 'left', 'right', ]} style={styles.screen}>
       <ToastAlert
@@ -259,7 +286,12 @@ export default function AccountManageScreen() {
             <View style={styles.withdrawPasswordWrap}>
               <TextInput
                 value={withdrawPassword}
-                onChangeText={setWithdrawPassword}
+                onChangeText={(value) => {
+                  setWithdrawPassword(value);
+                  if (withdrawErrorMessage) {
+                    setWithdrawErrorMessage('');
+                  }
+                }}
                 placeholder="비밀번호를 입력해주세요"
                 placeholderTextColor="#B6BECE"
                 secureTextEntry
@@ -269,20 +301,23 @@ export default function AccountManageScreen() {
                 style={styles.withdrawPasswordInput}
               />
             </View>
+            {withdrawErrorMessage ? (
+              <Text style={styles.withdrawErrorText}>{withdrawErrorMessage}</Text>
+            ) : null}
 
             <View style={styles.withdrawButtonRow}>
               <Pressable style={styles.withdrawCancelButton} onPress={closeWithdrawModal}>
                 <Text style={styles.withdrawCancelText}>취소</Text>
               </Pressable>
               <Pressable
-                disabled={!withdrawPassword.trim()}
+                disabled={!withdrawPassword.trim() || withdrawing}
                 style={[
                   styles.withdrawConfirmButton,
                   withdrawPassword.trim() ? styles.withdrawConfirmButtonActive : null,
                 ]}
-                onPress={() => undefined}
+                onPress={() => void handleWithdraw()}
               >
-                <Text style={styles.withdrawConfirmButtonText}>회원탈퇴</Text>
+                <Text style={styles.withdrawConfirmButtonText}>{withdrawing ? '처리 중...' : '회원탈퇴'}</Text>
               </Pressable>
             </View>
           </Pressable>
