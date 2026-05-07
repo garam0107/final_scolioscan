@@ -2,7 +2,16 @@ import emails
 from emails.template import JinjaTemplate
 from ..config import settings
 import random
+import smtplib
 import string
+from email.message import EmailMessage
+from typing import Optional, Sequence, TypedDict
+
+
+class EmailAttachment(TypedDict):
+    filename: str
+    content_type: str
+    content: bytes
 
 
 def generate_random_password(length: int = 6) -> str:
@@ -44,6 +53,46 @@ def send_email(
         return False
 
 
+def send_email_with_attachments(
+    email_to: str,
+    subject: str,
+    html_content: str,
+    attachments: Sequence[EmailAttachment],
+) -> bool:
+    """첨부파일이 있는 이메일 발송"""
+    try:
+        message = EmailMessage()
+        message["Subject"] = subject
+        message["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+        message["To"] = email_to
+        message.set_content("HTML 이메일을 확인해주세요.")
+        message.add_alternative(html_content, subtype="html")
+
+        for attachment in attachments:
+            maintype, subtype = attachment["content_type"].split("/", 1)
+            message.add_attachment(
+                attachment["content"],
+                maintype=maintype,
+                subtype=subtype,
+                filename=attachment["filename"],
+            )
+
+        if settings.SMTP_SSL or settings.SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                server.send_message(message)
+        else:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+                server.starttls()
+                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                server.send_message(message)
+
+        return True
+    except Exception as e:
+        print(f"Failed to send email with attachments: {e}")
+        return False
+
+
 def send_password_reset_email(email_to: str, name: str, new_password: str) -> bool:
     """비밀번호 재설정 이메일 발송"""
     subject = f"{settings.APP_NAME} - 비밀번호 재설정"
@@ -71,7 +120,8 @@ def send_password_reset_email(email_to: str, name: str, new_password: str) -> bo
 def send_contact_email(
     user_email: str,
     inquiry_type: str,
-    inquiry_content: str
+    inquiry_content: str,
+    attachments: Optional[Sequence[EmailAttachment]] = None,
 ) -> bool:
     """고객센터 문의 이메일 발송"""
     subject = f"{settings.APP_NAME} - 고객 문의: {inquiry_type}"
@@ -90,5 +140,8 @@ def send_contact_email(
         </body>
     </html>
     """
+
+    if attachments:
+        return send_email_with_attachments(settings.ADMIN_EMAIL, subject, html_content, attachments)
 
     return send_email(settings.ADMIN_EMAIL, subject, html_content)

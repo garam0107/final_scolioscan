@@ -1,9 +1,9 @@
 import { StyleSheet } from 'react-native';
-
+import { Colors } from '@/src/constants/theme';
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#FFFFFF",
+		backgroundColor: Colors.gray[25],
 	},
 	absoluteImage: {
 		position: "absolute",
@@ -16,19 +16,14 @@ const styles = StyleSheet.create({
 		width: 24,
 		height: 24,
 	},
-	box2: {
-		width: 84,
-		height: 83,
-		backgroundColor: "#EDFCFC",
-		borderColor: "#7AD7D4",
-		borderRadius: 8,
-		borderWidth: 1,
-	},
 	button: {
 		alignItems: "center",
 		backgroundColor: "#2B9696",
 		borderRadius: 6,
 		paddingVertical: 13,
+	},
+	buttonDisabled: {
+		backgroundColor: "#C9D0DB",
 	},
 	buttonColumn: {
 		flex: 1,
@@ -65,12 +60,12 @@ const styles = StyleSheet.create({
 		borderColor: "#D3D8E2",
 		borderRadius: 8,
 		borderWidth: 1,
-		paddingVertical: 17,
-		paddingHorizontal: 30,
-		marginRight: 8,
+		height: 84,
+		justifyContent: "center",
+		width: 84,
 	},
 	column: {
-		backgroundColor: "#FFFFFF",
+		backgroundColor: Colors.primary["white"],
 		borderRadius: 12,
 		padding: 12,
 		marginBottom: 8,
@@ -103,6 +98,29 @@ const styles = StyleSheet.create({
 		height: 24,
 		marginBottom: 8,
 	},
+	screenshotImage: {
+		borderRadius: 8,
+		height: "100%",
+		width: "100%",
+	},
+	screenshotPreview: {
+		borderRadius: 8,
+		height: 84,
+		overflow: "hidden",
+		position: "relative",
+		width: 84,
+	},
+	screenshotRemoveButton: {
+		alignItems: "center",
+		backgroundColor: "rgba(0, 0, 0, 0.55)",
+		borderRadius: 10,
+		height: 20,
+		justifyContent: "center",
+		position: "absolute",
+		right: 4,
+		top: 4,
+		width: 20,
+	},
 	input: {
 		color: "#2B9696",
 		fontSize: 13,
@@ -114,13 +132,14 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 12,
 	},
 	input2: {
-		color: "#B5BDCE",
+		color: Colors.primary["black"],
 		fontSize: 15,
 		backgroundColor: "#F2F4F6",
 		borderColor: "#D3D8E2",
 		borderRadius: 6,
 		borderWidth: 1,
 		padding: 16,
+		textDecorationLine: "none",
 	},
 	row: {
 		flexDirection: "row",
@@ -128,6 +147,29 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		backgroundColor: "#F9F9FB",
 		padding: 20,
+	},
+	header: {
+		alignItems: "center",
+		backgroundColor: "#F9F9FB",
+		flexDirection: "row",
+		justifyContent: "space-between",
+		padding: 20,
+	},
+	headerBackButton: {
+		alignItems: "center",
+		height: 24,
+		justifyContent: "center",
+		width: 24,
+	},
+	headerTitle: {
+		color: "#2B2E35",
+		fontSize: 18,
+		fontWeight: "700",
+		lineHeight: 25,
+	},
+	headerSide: {
+		height: 24,
+		width: 24,
 	},
 	row2: {
 		flexDirection: "row",
@@ -142,6 +184,8 @@ const styles = StyleSheet.create({
 		alignSelf: "flex-start",
 		flexDirection: "row",
 		alignItems: "center",
+		flexWrap: "wrap",
+		gap: 8,
 		paddingVertical: 10,
 	},
 	scrollView: {
@@ -155,6 +199,23 @@ const styles = StyleSheet.create({
 		},
 		shadowRadius: 16,
 		elevation: 16,
+	},
+	scrollContent: {
+		paddingBottom: 16,
+	},
+	infoBox: {
+		backgroundColor: "#EDFCFC",
+		borderRadius: 8,
+		marginBottom: 16,
+		marginHorizontal: 16,
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+	},
+	infoText: {
+		color: "#2B9696",
+		fontSize: 13,
+		fontWeight: "400",
+		lineHeight: 18,
 	},
 	text: {
 		color: "#2B2E35",
@@ -174,7 +235,21 @@ const styles = StyleSheet.create({
 	text4: {
 		color: "#B5BDCE",
 		fontSize: 15,
-		marginBottom: 168,
+		lineHeight: 20,
+		minHeight: 188,
+	},
+	messageInput: {
+		backgroundColor: "#F2F4F6",
+		borderColor: "#D3D8E2",
+		borderRadius: 6,
+		borderWidth: 1,
+		color: Colors.primary["black"],
+		fontSize: 15,
+		lineHeight: 20,
+		minHeight: 220,
+		paddingHorizontal: 16,
+		paddingTop: 14,
+		textDecorationLine: "none",
 	},
 	text5: {
 		color: "#2B2E35",
@@ -205,6 +280,29 @@ const styles = StyleSheet.create({
 	view2: {
 		backgroundColor: "#F9F9FB",
 		padding: 16,
+	},
+	typeButton: {
+		flex: 1,
+		alignItems: "center",
+		borderRadius: 8,
+		borderWidth: 1,
+		paddingVertical: 14,
+	},
+	typeButtonGap: {
+		marginRight: 8,
+	},
+	typeButtonActive: {
+		backgroundColor: "#EDFCFC",
+		borderColor: "#7AD7D4",
+	},
+	typeButtonInactive: {
+		backgroundColor: "#F9F9FB",
+		borderColor: "#ECEEF2",
+	},
+	fixedFooter: {
+		backgroundColor: "#F9F9FB",
+		paddingHorizontal: 16,
+		paddingTop: 12,
 	},
 });
 

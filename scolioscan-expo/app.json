@@ -109,6 +109,12 @@
       "expo-secure-store",
       "expo-web-browser",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "문의에 스크린샷을 첨부하기 위해 사진 보관함 접근 권한을 사용합니다."
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "계정 보안을 위해 현재 로그인 기기의 위치를 표시하는 데 위치 정보를 사용합니다."
