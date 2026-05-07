@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 from ..database import get_db
 from ..models import User
+from sqlalchemy.exc import IntegrityError
 from ..schemas import UserResponse, UserUpdate, PasswordChange
 from ..utils import get_current_user, get_password_hash, verify_password
 
@@ -147,3 +148,21 @@ async def upload_profile_image(
     db.refresh(current_user)
 
     return current_user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_my_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """회원탈퇴"""
+    try:
+        db.delete(current_user)
+        db.commit()
+        return None
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="회원탈퇴 처리 중 관련 데이터가 남아 있어 삭제할 수 없습니다.",
+        )
