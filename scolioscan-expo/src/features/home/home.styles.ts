@@ -127,14 +127,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 2,
+    elevation: 0.04,
   },
   measurementCardContent: {
     width: '100%',
     minWidth: 0,
     alignItems: 'center',
     gap: 6,
-    minHeight: 66,
   },
   measurementTitle: {
     fontFamily: 'PretendardVariable',
@@ -182,12 +181,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   measurementIconWrap: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    marginBottom: 10,
+    marginBottom: 15,
   },
   proModalOverlay: {
     flex: 1,
@@ -206,7 +205,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.14,
     shadowRadius: 24,
-    elevation: 6,
+    elevation: 0.04,
   },
   proModalHeader: {
     height: 206,
@@ -353,7 +352,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
-    elevation: 1,
+    elevation: 0.04,
   },
   weeklyResultCardActive: {
     backgroundColor: '#EDFDFC',
@@ -389,7 +388,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 2,
+    elevation: 0.04,
   },
   trendHeader: {
     flexDirection: 'row',
