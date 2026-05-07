@@ -4,11 +4,14 @@ import { useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
+import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
+import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
 import ProfileIcon from '../../../assets/images/basic_profile_image.svg'
 
 type ToggleKey = 'cellular' | 'nightMode' | 'importantAlarm' | 'otherAlarm' | 'marketing' | 'cloudBackup';
 type NightTimeTarget = 'start' | 'end';
+type SettingsSheetType = 'language' | 'reset' | null;
 
 type SettingRowProps = {
   title: string;
@@ -96,6 +99,8 @@ export default function SettingsScreen() {
   const [nightStartHour, setNightStartHour] = useState(22);
   const [nightEndHour, setNightEndHour] = useState(6);
   const [nightTimeTarget, setNightTimeTarget] = useState<NightTimeTarget | null>(null);
+  const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('한국어');
 
   const profile = useMemo(
     () => ({
@@ -114,6 +119,10 @@ export default function SettingsScreen() {
 
   const showComingSoon = (label: string) => {
     Alert.alert(label, '아직 연결 전인 설정이에요.');
+  };
+
+  const closeSettingsSheet = () => {
+    setSettingsSheetType(null);
   };
 
   const closeNightTimeDropdown = () => {
@@ -186,7 +195,7 @@ export default function SettingsScreen() {
             title="언어 설정"
             description="앱 표시 언어"
             value="한국어"
-            onPress={() => showComingSoon('언어 설정')}
+            onPress={() => setSettingsSheetType('language')}
           />
           <SettingRow title="셀룰러 데이터 사용" toggleKey="cellular" toggles={toggles} onToggle={handleToggle} />
         </Section>
@@ -263,9 +272,21 @@ export default function SettingsScreen() {
           <SettingRow title="버전 정보" value="v.0.0.0" />
           <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
           <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
-          <SettingRow title="데이터 초기화" danger onPress={() => showComingSoon('데이터 초기화')} />
+          <SettingRow title="데이터 초기화" danger onPress={() => setSettingsSheetType('reset')} />
         </Section>
       </ScrollView>
+
+      <LanguageSettingsSheet
+        visible={settingsSheetType === 'language'}
+        selectedLanguage={selectedLanguage}
+        onSelect={setSelectedLanguage}
+        onClose={closeSettingsSheet}
+      />
+
+      <DataResetSheet
+        visible={settingsSheetType === 'reset'}
+        onClose={closeSettingsSheet}
+      />
 
       <Modal
         visible={nightTimeTarget !== null}
