@@ -64,6 +64,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 7,
   },
+  accountManagePillPressed: {
+    backgroundColor: '#E6EBF1',
+  },
   accountManageText: {
     color: Colors.gray[500],
     fontSize: 10,
@@ -91,7 +94,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 2,
+    elevation: 0.04,
   },
   subscriptionLeft: {
     gap: 8,
@@ -139,7 +142,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 2,
+    elevation: 0.04,
   },
   row: {
     alignItems: 'center',

@@ -157,7 +157,7 @@ export default function SettingsScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: 10 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={styles.profileCard} onPress={() => router.push('/settings/account')}>
+        <View style={styles.profileCard}>
           <View style={styles.avatar}>
             <ProfileIcon/>
           </View>
@@ -171,11 +171,15 @@ export default function SettingsScreen() {
             </View>
             <Text style={styles.profileEmail}>{profile.email}</Text>
           </View>
-            <View style={styles.accountManagePill}>
+          <Pressable
+            hitSlop={8}
+            onPress={() => router.push('/settings/account')}
+            style={({ pressed }) => [styles.accountManagePill, pressed && styles.accountManagePillPressed]}
+          >
             <Text style={styles.accountManageText}>계정 관리</Text>
             <Ionicons name="chevron-forward" size={12} color="#B8C0CA" />
-          </View>
-        </Pressable>
+          </Pressable>
+        </View>
         <Text style={styles.subscriptionLabel}>구독 정보</Text>
         <View style={styles.subscriptionCard}>
           <View style={styles.subscriptionLeft}>
