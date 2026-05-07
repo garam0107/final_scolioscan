@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
 import styles from '@/src/features/settings/settings.styles';
 import ProfileIcon from '../../../assets/images/basic_profile_image.svg'
@@ -91,8 +91,7 @@ function SettingRow({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [toggles, setToggles] = useState(DEFAULT_TOGGLES);
   const [nightStartHour, setNightStartHour] = useState(22);
   const [nightEndHour, setNightEndHour] = useState(6);
@@ -111,20 +110,6 @@ export default function SettingsScreen() {
       ...current,
       [key]: !current[key],
     }));
-  };
-
-  const handleLogout = () => {
-    Alert.alert('로그아웃', '현재 계정에서 로그아웃할까요?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '로그아웃',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/login');
-        },
-      },
-    ]);
   };
 
   const showComingSoon = (label: string) => {
@@ -237,14 +222,14 @@ export default function SettingsScreen() {
           </View>
           <SettingRow
             title="중요 알림"
-            description="측정 결과 알림, 자동 등"
+            description="측정 결과 알림, 채팅 등"
             toggleKey="importantAlarm"
             toggles={toggles}
             onToggle={handleToggle}
           />
           <SettingRow
             title="기타 알림"
-            description="새로운 측정 가이드 등"
+            description="새로운 측정 제안 등"
             toggleKey="otherAlarm"
             toggles={toggles}
             onToggle={handleToggle}
@@ -274,10 +259,10 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="정보">
-          <SettingRow title="버전 정보" value="v1.0.0" />
+          <SettingRow title="가이드 다시보기" onPress={() => showComingSoon('가이드 다시보기')} />
+          <SettingRow title="버전 정보" value="v.0.0.0" />
           <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
           <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
-          <SettingRow title="로그아웃" danger onPress={handleLogout} />
           <SettingRow title="데이터 초기화" danger onPress={() => showComingSoon('데이터 초기화')} />
         </Section>
       </ScrollView>
