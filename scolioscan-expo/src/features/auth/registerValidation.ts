@@ -67,7 +67,7 @@ export function isValidBirthday(year: string, month: string, day: string) {
 }
 
 export function formatBirthdayIso(year: string, month: string, day: string) {
-  return new Date(Number(year), Number(month) - 1, Number(day)).toISOString();
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00`;
 }
 
 export function normalizeRegisterMessage(message: string) {

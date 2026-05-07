@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from typing import List
 import os
@@ -6,8 +6,9 @@ import uuid
 from pathlib import Path
 from ..database import get_db
 from ..models import User
-from ..schemas import UserResponse, UserUpdate, PasswordChange
-from ..utils import get_current_user, get_password_hash
+from sqlalchemy.exc import IntegrityError,SQLAlchemyError
+from ..schemas import UserResponse, UserUpdate, PasswordChange, UserDeleteRequest
+from ..utils import get_current_user, get_password_hash, verify_password
 
 router = APIRouter()
 
@@ -66,13 +67,26 @@ async def change_password(
     db: Session = Depends(get_db)
 ):
     """비밀번호 변경"""
+      # 현재 비밀번호 확인
+    if not verify_password(password_data.current_password, current_user.user_pw):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="현재 비밀번호가 일치하지 않습니다"
+        )
+
+
     # 새 비밀번호와 확인 비밀번호 일치 확인
     if password_data.new_password != password_data.confirm_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="새 비밀번호가 일치하지 않습니다"
         )
-
+        # 현재 비밀번호와 새 비밀번호가 같은지 확인
+    if verify_password(password_data.new_password, current_user.user_pw):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="새 비밀번호는 현재 비밀번호와 달라야 합니다"
+        )
     # 비밀번호 변경
     current_user.user_pw = get_password_hash(password_data.new_password)
     db.commit()
@@ -134,3 +148,36 @@ async def upload_profile_image(
     db.refresh(current_user)
 
     return current_user
+
+
+@router.post("/me/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_my_account(
+    delete_data: UserDeleteRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """회원탈퇴"""
+
+    if not verify_password(delete_data.password, current_user.user_pw):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="비밀번호가 일치하지 않습니다.",
+        )
+
+    try:
+        user = db.get(User, current_user.id)
+
+        if user is None:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+        db.delete(user)
+        db.commit()
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="회원탈퇴 처리 중 오류가 발생했습니다.",
+        )
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

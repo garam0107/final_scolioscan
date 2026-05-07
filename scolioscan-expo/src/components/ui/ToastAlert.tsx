@@ -21,8 +21,8 @@ const TONE_STYLES: Record<ToastTone, { backgroundColor: string; borderColor: str
     icon: 'information-circle-outline',
   },
   success: {
-    backgroundColor: '#4FAF74',
-    borderColor: '#3F9C65',
+    backgroundColor: '#2C9696',
+    borderColor: '#2C9696',
     icon: 'checkmark-circle-outline',
   },
   warning: {

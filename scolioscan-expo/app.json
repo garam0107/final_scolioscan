@@ -11,7 +11,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSMotionUsageDescription": "척추측만계 측정을 위해 기기의 움직임 센서를 사용합니다."
+        "NSMotionUsageDescription": "척추측만계 측정을 위해 기기의 움직임 센서를 사용합니다.",
+        "NSLocationWhenInUseUsageDescription": "계정 보안을 위해 현재 로그인 기기의 위치를 표시하는 데 위치 정보를 사용합니다."
       }
     },
     "android": {
@@ -44,7 +45,81 @@
           }
         }
       ],
-      "expo-secure-store"
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "PretendardVariable",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/Pretendard-Thin.ttf",
+                    "weight": 100
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-ExtraLight.ttf",
+                    "weight": 200
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-Light.ttf",
+                    "weight": 300
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-Regular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-Medium.ttf",
+                    "weight": 500
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-SemiBold.ttf",
+                    "weight": 600
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-Bold.ttf",
+                    "weight": 700
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-ExtraBold.ttf",
+                    "weight": 800
+                  },
+                  {
+                    "path": "./assets/fonts/Pretendard-Black.ttf",
+                    "weight": 900
+                  }
+                ]
+              }
+            ]
+          },
+          "ios": [
+            "./assets/fonts/Pretendard-Thin.ttf",
+            "./assets/fonts/Pretendard-ExtraLight.ttf",
+            "./assets/fonts/Pretendard-Light.ttf",
+            "./assets/fonts/Pretendard-Regular.ttf",
+            "./assets/fonts/Pretendard-Medium.ttf",
+            "./assets/fonts/Pretendard-SemiBold.ttf",
+            "./assets/fonts/Pretendard-Bold.ttf",
+            "./assets/fonts/Pretendard-ExtraBold.ttf",
+            "./assets/fonts/Pretendard-Black.ttf"
+          ]
+        }
+      ],
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "문의에 스크린샷을 첨부하기 위해 사진 보관함 접근 권한을 사용합니다."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "계정 보안을 위해 현재 로그인 기기의 위치를 표시하는 데 위치 정보를 사용합니다."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -26,6 +26,7 @@ class PasswordReset(BaseModel):
 
 
 class PasswordChange(BaseModel):
+    current_password: str = Field(..., min_length=6, max_length=128, description="현재 비밀번호")
     new_password: str = Field(..., min_length=6, max_length=128, description="새 비밀번호 (6-128자)")
     confirm_password: str = Field(..., min_length=6, max_length=128, description="새 비밀번호 확인")
 
@@ -37,7 +38,8 @@ class UserUpdate(BaseModel):
     detail_address: Optional[str] = None
     birthday: Optional[datetime] = None
     sex: Optional[bool] = None  # True: Male, False: Female
-
+class UserDeleteRequest(BaseModel):
+    password: str = Field(..., min_length=1, max_length=128)
 
 class UserResponse(BaseModel):
     id: UUID
