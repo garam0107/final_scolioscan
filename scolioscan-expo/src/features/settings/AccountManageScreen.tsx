@@ -125,6 +125,7 @@ export default function AccountManageScreen() {
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
   const [withdrawPassword, setWithdrawPassword] = useState('');
   const [withdrawErrorMessage, setWithdrawErrorMessage] = useState('');
+  const [withdrawCompleteVisible, setWithdrawCompleteVisible] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
@@ -243,13 +244,18 @@ export default function AccountManageScreen() {
       setWithdrawErrorMessage('');
       setWithdrawing(true);
       await userAPI.deleteCurrentUser({ password });
-      await logout();
-      router.replace('/login');
+      setWithdrawModalVisible(false);
+      setWithdrawCompleteVisible(true);
     } catch (error) {
       setWithdrawErrorMessage(normalizeApiError(error));
     } finally {
       setWithdrawing(false);
     }
+  }
+
+  async function handleWithdrawCompleteConfirm() {
+    await logout();
+    router.replace('/login');
   }
 
   return (
@@ -322,6 +328,21 @@ export default function AccountManageScreen() {
             </View>
           </Pressable>
         </Pressable>
+      </Modal>
+      <Modal
+        visible={withdrawCompleteVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => undefined}
+      >
+        <View style={styles.withdrawModalOverlay}>
+          <View style={styles.withdrawCompleteCard}>
+            <Text style={styles.withdrawCompleteTitle}>회원 탈퇴가 완료되었습니다.</Text>
+            <Pressable style={styles.withdrawCompleteButton} onPress={() => void handleWithdrawCompleteConfirm()}>
+              <Text style={styles.withdrawCompleteButtonText}>확인</Text>
+            </Pressable>
+          </View>
+        </View>
       </Modal>
 
       <View style={styles.header}>

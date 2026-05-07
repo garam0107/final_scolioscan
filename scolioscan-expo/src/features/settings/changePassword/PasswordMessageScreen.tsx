@@ -49,6 +49,7 @@ export default function PasswordMessageScreen() {
       if (response.verified) {
         showToast('휴대전화 번호 인증이 완료되었습니다.', 'success');
         setSmsRequested(false);
+        router.push('/settings/password-reset')
         return;
       }
 

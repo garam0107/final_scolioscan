@@ -296,6 +296,38 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 20,
   },
+  withdrawCompleteCard: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    maxWidth: 320,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+    width: '100%',
+  },
+  withdrawCompleteTitle: {
+    color: '#25272D',
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 24,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  withdrawCompleteButton: {
+    alignItems: 'center',
+    backgroundColor: '#5EAAA8',
+    borderRadius: 6,
+    height: 44,
+    justifyContent: 'center',
+    width: '100%',
+  },
+  withdrawCompleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
 });
 
 export default styles;
