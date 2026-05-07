@@ -1,0 +1,216 @@
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		backgroundColor: "#FFFFFF",
+	},
+	absoluteImage: {
+		position: "absolute",
+		top: -6,
+		right: -6,
+		width: 20,
+		height: 20,
+	},
+	box: {
+		width: 24,
+		height: 24,
+		marginTop: 80,
+	},
+	box2: {
+		width: 84,
+		height: 83,
+		backgroundColor: "#EDFCFC",
+		borderColor: "#7AD7D4",
+		borderRadius: 8,
+		borderWidth: 1,
+	},
+	button: {
+		alignItems: "center",
+		backgroundColor: "#2B9696",
+		borderRadius: 6,
+		paddingVertical: 13,
+	},
+	buttonColumn: {
+		flex: 1,
+		alignItems: "center",
+		backgroundColor: "#EDFCFC",
+		borderColor: "#7AD7D4",
+		borderRadius: 8,
+		borderWidth: 1,
+		paddingVertical: 7,
+		marginRight: 8,
+	},
+	buttonColumn2: {
+		flex: 1,
+		alignItems: "center",
+		backgroundColor: "#F9F9FB",
+		borderColor: "#ECEEF2",
+		borderRadius: 8,
+		borderWidth: 1,
+		paddingVertical: 7,
+	},
+	buttonColumn3: {
+		flex: 1,
+		alignItems: "center",
+		backgroundColor: "#F9F9FB",
+		borderColor: "#ECEEF2",
+		borderRadius: 8,
+		borderWidth: 1,
+		paddingVertical: 7,
+		marginRight: 8,
+	},
+	buttonColumn4: {
+		alignItems: "center",
+		backgroundColor: "#F2F4F6",
+		borderColor: "#D3D8E2",
+		borderRadius: 8,
+		borderWidth: 1,
+		paddingVertical: 17,
+		paddingHorizontal: 30,
+		marginRight: 8,
+	},
+	column: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 12,
+		padding: 12,
+		marginBottom: 8,
+		marginHorizontal: 16,
+		shadowColor: "#00000008",
+		shadowOpacity: 1,
+		shadowOffset: {
+		    width: 0,
+		    height: 0
+		},
+		shadowRadius: 16,
+		elevation: 16,
+	},
+	column2: {
+		marginBottom: 8,
+	},
+	column3: {
+		paddingVertical: 10,
+	},
+	image: {
+		width: 24,
+		height: 24,
+		marginTop: 80,
+		marginBottom: 20,
+	},
+	image2: {
+		borderRadius: 8,
+		width: 24,
+		height: 24,
+		marginBottom: 10,
+	},
+	image3: {
+		borderRadius: 8,
+		width: 24,
+		height: 24,
+		marginBottom: 8,
+	},
+	input: {
+		color: "#2B9696",
+		fontSize: 13,
+		marginBottom: 16,
+		marginHorizontal: 16,
+		backgroundColor: "#EDFCFC",
+		borderRadius: 8,
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+	},
+	input2: {
+		color: "#B5BDCE",
+		fontSize: 15,
+		backgroundColor: "#F2F4F6",
+		borderColor: "#D3D8E2",
+		borderRadius: 6,
+		borderWidth: 1,
+		padding: 16,
+	},
+	row: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		backgroundColor: "#F9F9FB",
+		paddingHorizontal: 20,
+	},
+	row2: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 8,
+	},
+	row3: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	row4: {
+		alignSelf: "flex-start",
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	scrollView: {
+		flex: 1,
+		backgroundColor: "#F9F9FB",
+		shadowColor: "#00000008",
+		shadowOpacity: 1,
+		shadowOffset: {
+		    width: 0,
+		    height: 0
+		},
+		shadowRadius: 16,
+		elevation: 16,
+	},
+	text: {
+		color: "#2B2E35",
+		fontSize: 18,
+		fontWeight: "bold",
+		marginTop: 80,
+	},
+	text2: {
+		color: "#2B2E35",
+		fontSize: 15,
+		marginBottom: 8,
+		marginLeft: 4,
+	},
+	text3: {
+		color: "#000000",
+		fontSize: 10,
+	},
+	text4: {
+		color: "#B5BDCE",
+		fontSize: 15,
+		marginBottom: 168,
+	},
+	text5: {
+		color: "#2B2E35",
+		marginBottom: 8,
+		marginLeft: 4,
+	},
+	text6: {
+		color: "#000000",
+		marginBottom: 7,
+		marginLeft: 8,
+	},
+	text7: {
+		color: "#646F85",
+		fontSize: 12,
+	},
+	text8: {
+		color: "#FFFFFF",
+		fontSize: 16,
+	},
+	view: {
+		backgroundColor: "#F2F4F6",
+		borderColor: "#D3D8E2",
+		borderRadius: 6,
+		borderWidth: 1,
+		paddingTop: 14,
+		paddingLeft: 16,
+	},
+	view2: {
+		backgroundColor: "#F9F9FB",
+		padding: 16,
+	},
+});
+
+export default styles;

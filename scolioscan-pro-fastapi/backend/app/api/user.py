@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from typing import List
 import os
@@ -6,8 +6,8 @@ import uuid
 from pathlib import Path
 from ..database import get_db
 from ..models import User
-from sqlalchemy.exc import IntegrityError
-from ..schemas import UserResponse, UserUpdate, PasswordChange
+from sqlalchemy.exc import IntegrityError,SQLAlchemyError
+from ..schemas import UserResponse, UserUpdate, PasswordChange, UserDeleteRequest
 from ..utils import get_current_user, get_password_hash, verify_password
 
 router = APIRouter()
@@ -150,19 +150,34 @@ async def upload_profile_image(
     return current_user
 
 
-@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/me/delete", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_my_account(
+    delete_data: UserDeleteRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """회원탈퇴"""
-    try:
-        db.delete(current_user)
-        db.commit()
-        return None
-    except IntegrityError:
-        db.rollback()
+
+    if not verify_password(delete_data.password, current_user.user_pw):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="회원탈퇴 처리 중 관련 데이터가 남아 있어 삭제할 수 없습니다.",
+            detail="비밀번호가 일치하지 않습니다.",
         )
+
+    try:
+        user = db.get(User, current_user.id)
+
+        if user is None:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+        db.delete(user)
+        db.commit()
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="회원탈퇴 처리 중 오류가 발생했습니다.",
+        )
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,4 +1,4 @@
-from .user import UserCreate, UserLogin, UserResponse, UserUpdate, PasswordReset, PasswordChange
+from .user import UserCreate, UserLogin, UserResponse, UserUpdate, PasswordReset, PasswordChange, UserDeleteRequest
 from .alarm import AlarmResponse, AlarmCreate
 from .subscribe import SubscribeResponse, SubscribeCreate, SubscribeTypeResponse
 from .contact import ContactCreate
@@ -26,6 +26,7 @@ __all__ = [
     "compute_zone",
     "CurvatureMeasurementResponse",
     "Severity",
+    "UserDeleteRequest"
     "BackType",
     # OCTOMO API 관련
     "OctomoIssueCodeRequest",

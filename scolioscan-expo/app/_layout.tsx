@@ -109,6 +109,7 @@ export default function RootLayout() {
             <Stack.Screen name="settings/password-message" />
             <Stack.Screen name="settings/password-reset" />
             <Stack.Screen name="profile/edit" />
+             <Stack.Screen name="settings/contact" />
           </Stack>
           {hideTopSeparator ? null : <TopSeparator />}
         </View>

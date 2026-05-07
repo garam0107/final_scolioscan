@@ -228,7 +228,7 @@ export default function SettingsScreen() {
         <Section title="정보">
           <SettingRow title="버전 정보" value="v1.0.0" />
           <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
-          <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => showComingSoon('문의 / 피드백')} />
+          <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
           <SettingRow title="로그아웃" danger onPress={handleLogout} />
           <SettingRow title="데이터 초기화" danger onPress={() => showComingSoon('데이터 초기화')} />
         </Section>

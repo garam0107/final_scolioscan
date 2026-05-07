@@ -38,7 +38,8 @@ class UserUpdate(BaseModel):
     detail_address: Optional[str] = None
     birthday: Optional[datetime] = None
     sex: Optional[bool] = None  # True: Male, False: Female
-
+class UserDeleteRequest(BaseModel):
+    password: str = Field(..., min_length=1, max_length=128)
 
 class UserResponse(BaseModel):
     id: UUID
