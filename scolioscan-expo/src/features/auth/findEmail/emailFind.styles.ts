@@ -32,7 +32,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     paddingHorizontal: 20,
+    paddingBottom: 120,
     paddingTop: 14,
   },
   guideBoxWrap: {

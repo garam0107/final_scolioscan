@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormTextField from '@/src/components/FormTextField';
 import GuideMessageBox from '@/src/components/GuideMessageBox';
@@ -15,7 +15,6 @@ import styles from '@/src/features/auth/findPassword/passwordFindReset.styles';
 export default function PasswordFindResetScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ reset_token?: string }>();
-  const insets = useSafeAreaInsets();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newPasswordVisible, setNewPasswordVisible] = useState(false);
@@ -85,8 +84,8 @@ export default function PasswordFindResetScreen() {
         toastKey={toastKey}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={insets.top}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
         style={styles.screen}
       >
         <View style={styles.header}>
@@ -97,7 +96,12 @@ export default function PasswordFindResetScreen() {
           <View style={styles.headerSide} />
         </View>
 
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.guideBoxWrap}>
             <GuideMessageBox
               messages={[
@@ -155,7 +159,7 @@ export default function PasswordFindResetScreen() {
             onToggleSecure={() => setConfirmPasswordVisible((current) => !current)}
             onChangeText={setConfirmPassword}
           />
-        </View>
+        </ScrollView>
 
         <View style={styles.footer}>
           <PrimaryButton

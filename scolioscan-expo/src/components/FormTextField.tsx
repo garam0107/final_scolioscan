@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewProps } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
 
@@ -12,9 +12,17 @@ type FormTextFieldProps = {
   showSecureToggle?: boolean;
   onToggleSecure?: () => void;
   onChangeText: (value: string) => void;
+  onLayout?: ViewProps['onLayout'];
 } & Pick<
   TextInputProps,
-  'autoCapitalize' | 'autoComplete' | 'autoCorrect' | 'keyboardType' | 'maxLength' | 'returnKeyType' | 'textContentType'
+  | 'autoCapitalize'
+  | 'autoComplete'
+  | 'autoCorrect'
+  | 'keyboardType'
+  | 'maxLength'
+  | 'onFocus'
+  | 'returnKeyType'
+  | 'textContentType'
 >;
 
 export default function FormTextField({
@@ -26,18 +34,20 @@ export default function FormTextField({
   showSecureToggle = false,
   onToggleSecure,
   onChangeText,
+  onLayout,
   autoCapitalize = 'none',
   autoComplete,
   autoCorrect = false,
   keyboardType = 'default',
   maxLength,
+  onFocus,
   returnKeyType = 'next',
   textContentType,
 }: FormTextFieldProps) {
   const hasSecureButton = showSecureToggle && onToggleSecure;
 
   return (
-    <View style={styles.fieldGroup}>
+    <View style={styles.fieldGroup} onLayout={onLayout}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <View style={styles.inputWrap}>
         <TextInput
@@ -54,6 +64,7 @@ export default function FormTextField({
           textContentType={textContentType}
           value={value}
           onChangeText={onChangeText}
+          onFocus={onFocus}
         />
         {hasSecureButton ? (
           <Pressable onPress={onToggleSecure} hitSlop={10} style={styles.iconButton}>

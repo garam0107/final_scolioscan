@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormTextField from '@/src/components/FormTextField';
 import GuideMessageBox from '@/src/components/GuideMessageBox';
@@ -13,7 +13,6 @@ import styles from '@/src/features/auth/findEmail/emailFind.styles';
 
 export default function EmailFindScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -53,8 +52,8 @@ export default function EmailFindScreen() {
         toastKey={toastKey}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={insets.top}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
         style={styles.screen}
       >
         <View style={styles.header}>
@@ -65,7 +64,12 @@ export default function EmailFindScreen() {
           <View style={styles.headerSide} />
         </View>
 
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.guideBoxWrap}>
             <GuideMessageBox
               messages={[
@@ -93,7 +97,7 @@ export default function EmailFindScreen() {
             autoComplete="tel"
             onChangeText={(value) => setPhone(normalizePhoneNumber(value))}
           />
-        </View>
+        </ScrollView>
 
         <View style={styles.footer}>
           <PrimaryButton
