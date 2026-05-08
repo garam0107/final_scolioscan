@@ -25,6 +25,23 @@ class PasswordReset(BaseModel):
     name: str
 
 
+class PasswordResetVerify(BaseModel):
+    user_id: EmailStr
+    name: str = Field(..., min_length=1, max_length=32)
+    phone: str = Field(..., min_length=10, max_length=20)
+
+
+class PasswordResetVerifyResponse(BaseModel):
+    reset_token: str
+    token_type: str = "password_reset"
+
+
+class PasswordResetConfirm(BaseModel):
+    reset_token: str
+    new_password: str = Field(..., min_length=8, max_length=128)
+    confirm_password: str = Field(..., min_length=8, max_length=128)
+
+
 class PasswordChange(BaseModel):
     current_password: str = Field(..., min_length=6, max_length=128, description="현재 비밀번호")
     new_password: str = Field(..., min_length=6, max_length=128, description="새 비밀번호 (6-128자)")

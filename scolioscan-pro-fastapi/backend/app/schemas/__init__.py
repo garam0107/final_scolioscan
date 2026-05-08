@@ -1,4 +1,15 @@
-from .user import UserCreate, UserLogin, UserResponse, UserUpdate, PasswordReset, PasswordChange, UserDeleteRequest
+from .user import (
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    UserUpdate,
+    PasswordReset,
+    PasswordResetVerify,
+    PasswordResetVerifyResponse,
+    PasswordResetConfirm,
+    PasswordChange,
+    UserDeleteRequest,
+)
 from .alarm import AlarmResponse, AlarmCreate
 from .subscribe import SubscribeResponse, SubscribeCreate, SubscribeTypeResponse
 from .contact import ContactCreate
@@ -13,6 +24,9 @@ __all__ = [
     "UserResponse",
     "UserUpdate",
     "PasswordReset",
+    "PasswordResetVerify",
+    "PasswordResetVerifyResponse",
+    "PasswordResetConfirm",
     "PasswordChange",
     "AlarmResponse",
     "AlarmCreate",
