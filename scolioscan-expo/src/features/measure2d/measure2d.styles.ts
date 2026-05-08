@@ -90,26 +90,6 @@ export const styles = StyleSheet.create({
     borderColor: '#d9d9d9',
     backgroundColor: '#fff',
   },
-  permissionTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 40,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  permissionButton: {
-    alignSelf: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-  },
-  permissionButtonText: {
-    color: '#000',
-    fontSize: 15,
-    fontWeight: '600',
-  },
   outlineWrap: {
     position: 'absolute',
     pointerEvents: 'none',

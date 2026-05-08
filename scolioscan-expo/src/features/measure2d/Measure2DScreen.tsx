@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { curvatureAPI } from '@/src/api/curvature';
 import type { CurvatureResponse } from '@/src/types/curvature';
@@ -21,6 +21,14 @@ export default function Measure2DScreen() {
   const [stageLayout, setStageLayout] = useState({ width: 0, height: 0 });
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+  useEffect(() => {
+    if (!permission || permission.granted || !permission.canAskAgain) {
+      return;
+    }
+
+    void requestPermission();
+  }, [permission, requestPermission]);
   const [toastKey, setToastKey] = useState(0);
 
   const camera = useMemo(() => createExpoCameraAdapter(cameraRef), []);
@@ -54,7 +62,7 @@ export default function Measure2DScreen() {
     const nextEvaluation = result.evaluation;
     const firstReason = nextEvaluation.reasons[0] ?? '';
 
-    // if (nextEvaluation.aligned) {
+    if (nextEvaluation.aligned) {
       showToast('좋아요. 이 자세로 촬영할게요!', 'success');
       console.log('2D카메라 촬영', result);
       const fd = new FormData();
@@ -65,7 +73,7 @@ export default function Measure2DScreen() {
       } as any);
 
       const token = getAccessToken(); // tokenStorage에서
-      const res = await fetch('http://localhost:8001/api/curvature/', {
+      const res = await fetch(`${API_BASE_URL}/curvature/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token ?? ''}`,
@@ -84,29 +92,29 @@ export default function Measure2DScreen() {
 //     console.error('[curvature] axios url', error.config?.baseURL, error.config?.url);
 //     console.error('[curvature] axios status', error.response?.status);
 //     console.error('[curvature] axios data', error.response?.data);
-//   } else {
-//     console.error('[curvature] non-axios error', error);
-//   }
-// }
-
-    //   return;
-    // }
+  // } else {
+  //   console.error('[curvature] non-axios error', error);
+  // }
 
 
-    // if (firstReason.includes('조금 더 가까이 와주세요')) {
-    //   showToast('조금 더 가까이 와주세요.', 'warning');
-    //   return;
-    // }
+      return;
+    }
 
-    // if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
-    //   showToast('조금 더 멀리 떨어져주세요.', 'warning');
-    //   return;
-    // }
 
-    // if (firstReason.includes('뒷모습이 보이게 서주세요')) {
-    //   showToast('뒷모습이 보이게 서주세요.', 'warning');
-    //   return;
-    // }
+    if (firstReason.includes('조금 더 가까이 와주세요')) {
+      showToast('조금 더 가까이 와주세요.', 'warning');
+      return;
+    }
+
+    if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
+      showToast('조금 더 멀리 떨어져주세요.', 'warning');
+      return;
+    }
+
+    if (firstReason.includes('뒷모습이 보이게 서주세요')) {
+      showToast('뒷모습이 보이게 서주세요.', 'warning');
+      return;
+    }
 
     showToast(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'info');
   };
@@ -116,14 +124,7 @@ export default function Measure2DScreen() {
   }
 
   if (!permission.granted) {
-    return (
-      <SafeAreaView style={styles.screen}>
-        <Text style={styles.permissionTitle}>카메라 권한이 필요합니다.</Text>
-        <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>권한 허용</Text>
-        </Pressable>
-      </SafeAreaView>
-    );
+    return <View style={styles.screen} />;
   }
 
   return (

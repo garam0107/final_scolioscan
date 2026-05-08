@@ -2,10 +2,10 @@ import httpx
 from pathlib import Path
 from typing import TypedDict
 
-# AIS_API_URL = "http://ais-api:8000"
+AIS_API_URL = "http://ais-api:8000"
 
 #  로컬 테스트용 주소
-AIS_API_URL = "http://192.168.0.3:8002"
+# AIS_API_URL = "http://localhost:8002"
 
 
 class AngleResult(TypedDict):
