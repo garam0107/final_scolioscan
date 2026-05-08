@@ -3,8 +3,6 @@ import AnalysisScreen from '@/src/features/analysis/AnalysisScreen';
 
 export default function AnalysisIndexPage() {
   return (
-    <TabFocusTransition>
       <AnalysisScreen />
-    </TabFocusTransition>
   );
 }
