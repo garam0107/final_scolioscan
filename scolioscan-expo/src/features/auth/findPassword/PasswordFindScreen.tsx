@@ -167,7 +167,7 @@ export default function PasswordFindScreen() {
             title="계속하기"
             onPress={handleContinue}
             height={48}
-            backgroundColor="#5F9F9D"
+            backgroundColor="#2C9696"
             borderRadius={6}
             disabled={!canContinue || checkingAccount}
             style={styles.button}

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as Device from 'expo-device';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -207,6 +208,7 @@ function Field({
 
 export default function AccountManageScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const params = useLocalSearchParams<{ toast?: string }>();
   const insets = useSafeAreaInsets();
   const { user, refreshSession, logout } = useAuth();
@@ -398,12 +400,22 @@ export default function AccountManageScreen() {
 
   async function handleWithdrawCompleteConfirm() {
     await logout();
-    router.replace('/login');
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'login' }],
+      }),
+    );
   }
 
   async function handleDeviceLogout() {
     await logout();
-    router.replace('/login');
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'login' }],
+      }),
+    );
   }
 
   return (
