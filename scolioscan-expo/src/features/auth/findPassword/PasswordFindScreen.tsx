@@ -50,7 +50,12 @@ export default function PasswordFindScreen() {
       return;
     }
 
-    showToast('휴대전화 인증 단계는 다음 화면에서 연결됩니다.');
+    router.push({
+      pathname: '/password-find-message',
+      params: {
+        phone,
+      },
+    });
   }
 
   return (

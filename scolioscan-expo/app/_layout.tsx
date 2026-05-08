@@ -101,6 +101,8 @@ export default function RootLayout() {
             <Stack.Screen name="intro" />
             <Stack.Screen name="login" />
             <Stack.Screen name="password-find" />
+            <Stack.Screen name="password-find-message" />
+            <Stack.Screen name="password-find-reset" />
             <Stack.Screen name="register" />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="measure/2d" />
