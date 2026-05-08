@@ -2,7 +2,11 @@ import api from '@/src/api/client';
 import type {
   LoginRequest,
   LoginResponse,
+  PasswordResetAccountRequest,
+  PasswordResetAccountResponse,
+  PasswordResetConfirmRequest,
   PasswordResetRequest,
+  PasswordResetVerifyResponse,
   RegisterRequest,
   MessageCodeRequest,
   OctomoApiRequest
@@ -14,6 +18,12 @@ export const authAPI = {
   checkEmail: (email: string) => api.get<{ exists: boolean }>(`/auth/check-email/${encodeURIComponent(email)}`),
   checkPhone: (phone :string) => api.get<{exists: boolean}>(`/auth/check-phone/${encodeURIComponent(phone)}`),
   passwordReset: (data: PasswordResetRequest) => api.post('/auth/password-reset', data),
+  checkPasswordResetAccount: (data: PasswordResetAccountRequest) =>
+    api.post<PasswordResetAccountResponse>('/auth/password-reset/check', data),
+  verifyPasswordReset: (data: PasswordResetAccountRequest) =>
+    api.post<PasswordResetVerifyResponse>('/auth/password-reset/verify', data),
+  confirmPasswordReset: (data: PasswordResetConfirmRequest) =>
+    api.post('/auth/password-reset/confirm', data),
   messageCode : (data : MessageCodeRequest) => api.post('/auth/issue-code', data),
   octomoApi : (data : OctomoApiRequest) => api.post('/auth/verify', data),
 };

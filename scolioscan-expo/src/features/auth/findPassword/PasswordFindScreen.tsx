@@ -8,6 +8,7 @@ import FormTextField from '@/src/components/FormTextField';
 import GuideMessageBox from '@/src/components/GuideMessageBox';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import ToastAlert from '@/src/components/ui/ToastAlert';
+import { authAPI } from '@/src/api/auth';
 import {
   formatPhoneNumber,
   isValidEmail,
@@ -22,6 +23,7 @@ export default function PasswordFindScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [checkingAccount, setCheckingAccount] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
   const canContinue = useMemo(
@@ -34,7 +36,27 @@ export default function PasswordFindScreen() {
     setToastMessage(message);
   }
 
-  function handleContinue() {
+  function getApiErrorMessage(error: unknown) {
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+      const response = (error as { response?: { data?: { detail?: string } } }).response;
+      const detail = response?.data?.detail;
+      if (typeof detail === 'string' && detail.trim()) {
+        return detail;
+      }
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+      return error.message;
+    }
+
+    return '요청 처리 중 오류가 발생했습니다.';
+  }
+
+  async function handleContinue() {
+    if (checkingAccount) {
+      return;
+    }
+
     if (!name.trim()) {
       showToast('이름을 입력해주세요.');
       return;
@@ -50,12 +72,30 @@ export default function PasswordFindScreen() {
       return;
     }
 
-    router.push({
-      pathname: '/password-find-message',
-      params: {
-        phone,
-      },
-    });
+    setCheckingAccount(true);
+
+    try {
+      const payload = {
+        user_id: email.trim(),
+        name: name.trim(),
+        phone: normalizePhoneNumber(phone),
+      };
+      const response = await authAPI.checkPasswordResetAccount(payload);
+
+      if (!response.data.exists) {
+        showToast('입력하신 메일 혹은 휴대전화 번호로 가입한 계정 정보가 없어요');
+        return;
+      }
+
+      router.push({
+        pathname: '/password-find-message',
+        params: payload,
+      });
+    } catch (error) {
+      showToast(getApiErrorMessage(error));
+    } finally {
+      setCheckingAccount(false);
+    }
   }
 
   return (
@@ -125,7 +165,7 @@ export default function PasswordFindScreen() {
             height={48}
             backgroundColor="#5F9F9D"
             borderRadius={6}
-            disabled={!canContinue}
+            disabled={!canContinue || checkingAccount}
             style={styles.button}
             textStyle={{ fontSize: 16, fontWeight: '500', lineHeight: 22 }}
           />

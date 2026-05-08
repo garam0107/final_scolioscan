@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,18 +8,22 @@ import FormTextField from '@/src/components/FormTextField';
 import GuideMessageBox from '@/src/components/GuideMessageBox';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import ToastAlert from '@/src/components/ui/ToastAlert';
+import { authAPI } from '@/src/api/auth';
 import { hasPasswordLength, hasPasswordMix } from '@/src/features/auth/registerValidation';
 import styles from '@/src/features/auth/findPassword/passwordFindReset.styles';
 
 export default function PasswordFindResetScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ reset_token?: string }>();
   const insets = useSafeAreaInsets();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newPasswordVisible, setNewPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
+  const resetToken = typeof params.reset_token === 'string' ? params.reset_token : '';
   const passwordMixReady = hasPasswordMix(newPassword);
   const passwordLengthReady = hasPasswordLength(newPassword);
   const passwordConfirmed = confirmPassword.length > 0 && newPassword === confirmPassword;
@@ -33,7 +37,32 @@ export default function PasswordFindResetScreen() {
     setToastMessage(message);
   }
 
-  function handleContinue() {
+  function getApiErrorMessage(error: unknown) {
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+      const response = (error as { response?: { data?: { detail?: string } } }).response;
+      const detail = response?.data?.detail;
+      if (typeof detail === 'string' && detail.trim()) {
+        return detail;
+      }
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+      return error.message;
+    }
+
+    return '비밀번호 변경에 실패했습니다.';
+  }
+
+  async function handleContinue() {
+    if (submitting) {
+      return;
+    }
+
+    if (!resetToken) {
+      showToast('비밀번호 재설정 인증 정보가 없습니다. 다시 인증해주세요.');
+      return;
+    }
+
     if (!passwordMixReady || !passwordLengthReady) {
       showToast('비밀번호 조건을 확인해주세요.');
       return;
@@ -44,7 +73,23 @@ export default function PasswordFindResetScreen() {
       return;
     }
 
-    showToast('비밀번호 변경 API는 마지막에 연결할게요.');
+    setSubmitting(true);
+
+    try {
+      await authAPI.confirmPasswordReset({
+        reset_token: resetToken,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      showToast('비밀번호가 변경되었습니다.');
+      setTimeout(() => {
+        router.replace('/login');
+      }, 700);
+    } catch (error) {
+      showToast('기존의 비밀번호와 다른 비밀번호를 입력해주세요');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -135,7 +180,7 @@ export default function PasswordFindResetScreen() {
             height={48}
             backgroundColor="#5F9F9D"
             borderRadius={6}
-            disabled={!canContinue}
+            disabled={!canContinue || submitting}
             style={styles.button}
             textStyle={styles.buttonText}
           />

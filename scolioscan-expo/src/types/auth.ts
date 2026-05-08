@@ -16,6 +16,27 @@ export interface PasswordResetRequest {
   name: string;
 }
 
+export interface PasswordResetAccountRequest {
+  user_id: string;
+  name: string;
+  phone: string;
+}
+
+export interface PasswordResetAccountResponse {
+  exists: boolean;
+}
+
+export interface PasswordResetVerifyResponse {
+  reset_token: string;
+  token_type: 'password_reset' | string;
+}
+
+export interface PasswordResetConfirmRequest {
+  reset_token: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 export interface RegisterRequest {
   user_id: string;
   user_pw: string;

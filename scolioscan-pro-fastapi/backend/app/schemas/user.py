@@ -31,6 +31,10 @@ class PasswordResetVerify(BaseModel):
     phone: str = Field(..., min_length=10, max_length=20)
 
 
+class PasswordResetCheckResponse(BaseModel):
+    exists: bool
+
+
 class PasswordResetVerifyResponse(BaseModel):
     reset_token: str
     token_type: str = "password_reset"

@@ -14,6 +14,7 @@ from ..schemas import (
     UserLogin,
     PasswordReset,
     PasswordResetVerify,
+    PasswordResetCheckResponse,
     PasswordResetVerifyResponse,
     PasswordResetConfirm,
 )
@@ -178,6 +179,22 @@ async def verify_phone_verification(payload: OctomoVerifyRequest):
         ) from error
 
     return OctomoVerifyResponse(verified=verified)
+
+
+@router.post("/password-reset/check", response_model=PasswordResetCheckResponse)
+async def check_password_reset_account(
+    reset_data: PasswordResetVerify,
+    db: Session = Depends(get_db)
+):
+    """비밀번호 찾기 전에 이메일, 이름, 휴대전화 번호가 모두 일치하는지 확인합니다."""
+    normalized_phone = normalize_phone_number(reset_data.phone)
+    user = db.query(User).filter(
+        User.user_id == reset_data.user_id,
+        User.name == reset_data.name,
+    ).first()
+
+    exists = bool(user and normalize_phone_number(user.phone) == normalized_phone)
+    return PasswordResetCheckResponse(exists=exists)
 
 
 @router.post("/password-reset/verify", response_model=PasswordResetVerifyResponse)

@@ -75,5 +75,9 @@ export function normalizeRegisterMessage(message: string) {
     return '이미 가입된 이메일입니다.';
   }
 
+  if (message.includes('Phone verification is required')) {
+    return '휴대전화 인증이 안되었습니다.';
+  }
+
   return message;
 }
