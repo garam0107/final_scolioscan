@@ -43,6 +43,7 @@ export default function Measure2DScreen() {
   const { handleManualCapture, loading } = useMeasure2D({
     camera,
     guidePoints: guidelineGeometry?.referencePoints ?? null,
+    guideRect: guidelineGeometry?.rect ?? null,
   });
 
   const showToast = (message: string, tone: ToastTone = 'info') => {

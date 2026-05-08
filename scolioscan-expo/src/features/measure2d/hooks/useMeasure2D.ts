@@ -2,13 +2,14 @@ import { useCallback, useState } from 'react';
 
 import type { CameraCaptureSource, CapturedPhoto } from '../camera/cameraAdapter';
 import { evaluateLandmarks } from '../domain/landmarkRules';
-import type { GuideReferencePoints } from '../domain/guidelineGeometry';
+import type { GuideReferencePoints, NormalizedRect } from '../domain/guidelineGeometry';
 import { detectLandmarks } from '../services/landmarkApi';
 import type { LandmarkEvaluation } from '../types';
 
 type UseMeasure2DParams = {
   camera: CameraCaptureSource;
   guidePoints: GuideReferencePoints | null;
+  guideRect: NormalizedRect | null;
 };
 
 type ManualCaptureResult = {
@@ -16,7 +17,7 @@ type ManualCaptureResult = {
   evaluation: LandmarkEvaluation;
 };
 
-export function useMeasure2D({ camera, guidePoints }: UseMeasure2DParams) {
+export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DParams) {
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<LandmarkEvaluation | null>(null);
 
@@ -26,7 +27,20 @@ export function useMeasure2D({ camera, guidePoints }: UseMeasure2DParams) {
       skipProcessing: true,
     });
 
-    if (!photo?.uri || !guidePoints) {
+    console.log('[measure2d] 촬영 결과', {
+      hasUri: Boolean(photo?.uri),
+      width: photo?.width,
+      height: photo?.height,
+      hasGuidePoints: Boolean(guidePoints),
+      hasGuideRect: Boolean(guideRect),
+    });
+
+    if (!photo?.uri || !guidePoints || !guideRect) {
+      console.log('[measure2d] 촬영 분석 중단', {
+        hasUri: Boolean(photo?.uri),
+        hasGuidePoints: Boolean(guidePoints),
+        hasGuideRect: Boolean(guideRect),
+      });
       return null;
     }
 
@@ -34,6 +48,10 @@ export function useMeasure2D({ camera, guidePoints }: UseMeasure2DParams) {
       const response = await detectLandmarks(photo.uri);
 
       if (!response.detected || !response.landmarks) {
+        console.log('[measure2d] 사람 감지 실패', {
+          detected: response.detected,
+          landmarkCount: response.landmarks?.length ?? 0,
+        });
         const nextEvaluation: LandmarkEvaluation = {
           aligned: false,
           score: 0,
@@ -43,10 +61,12 @@ export function useMeasure2D({ camera, guidePoints }: UseMeasure2DParams) {
         return { photo, evaluation: nextEvaluation };
       }
 
-      const nextEvaluation = evaluateLandmarks(response.landmarks, guidePoints);
+      const nextEvaluation = evaluateLandmarks(response.landmarks, guidePoints, guideRect);
+      console.log('[measure2d] 최종 판정 결과', nextEvaluation);
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };
-    } catch {
+    } catch (error) {
+      console.log('[measure2d] 랜드마크 분석 예외', error);
       const nextEvaluation: LandmarkEvaluation = {
         aligned: false,
         score: 0,
@@ -55,7 +75,7 @@ export function useMeasure2D({ camera, guidePoints }: UseMeasure2DParams) {
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };
     }
-  }, [camera, guidePoints]);
+  }, [camera, guidePoints, guideRect]);
 
   const handleManualCapture = useCallback(async (): Promise<ManualCaptureResult | null> => {
     if (loading) return null;

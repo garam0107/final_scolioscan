@@ -32,7 +32,7 @@ export type GuidelineGeometry = {
 
 const BASE_W = 237;
 const BASE_H = 588;
-const GUIDE_WIDTH_RATIO = 0.62;
+const GUIDE_WIDTH_RATIO = 0.72;
 
 const LEFT_SHOULDER_X_RATIO = 0.24;
 const RIGHT_SHOULDER_X_RATIO = 0.76;
