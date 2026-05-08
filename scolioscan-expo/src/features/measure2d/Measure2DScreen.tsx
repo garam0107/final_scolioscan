@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useRouter } from 'expo-router';
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import { createGuidelineGeometry } from './domain/guidelineGeometry';
 import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
@@ -13,11 +14,13 @@ type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
 export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
+  const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [showGuideText, setShowGuideText] = useState(true);
   const [stageLayout, setStageLayout] = useState({ width: 0, height: 0 });
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
+  const [manualSubmitting, setManualSubmitting] = useState(false);
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
   useEffect(() => {
     if (!permission || permission.granted || !permission.canAskAgain) {
@@ -45,6 +48,8 @@ export default function Measure2DScreen() {
     countdown,
     autoToast,
     autoCaptureResult,
+    pauseAutoCapture,
+    resumeAutoCapture,
     clearAutoToast,
     clearAutoCaptureResult,
   } = useMeasure2D({
@@ -64,7 +69,7 @@ export default function Measure2DScreen() {
     // 자동 촬영 또는 수동 촬영이 성공한 뒤 최종 사진을 척추측만 분석 API로 보낸다.
     if (!API_BASE_URL) {
       showToast('API 주소가 설정되지 않았습니다.', 'error');
-      return;
+      return false;
     }
 
     try {
@@ -95,10 +100,14 @@ export default function Measure2DScreen() {
 
       if (!res.ok) {
         showToast('척추측만 분석 요청에 실패했습니다.', 'error');
+        return false;
       }
+
+      return true;
     } catch (error) {
       console.log('[measure2d] curvature 요청 예외', error);
       showToast('서버 연결에 실패했습니다. 네트워크를 확인해주세요.', 'error');
+      return false;
     }
   }, [API_BASE_URL, showToast]);
 
@@ -119,40 +128,57 @@ export default function Measure2DScreen() {
 
   const handlePressCapture = async () => {
     // 셔터 버튼은 자동 촬영과 같은 판정 로직을 사용하되, 사용자가 누른 시점의 사진을 즉시 검사한다.
-    const result = await handleManualCapture();
+    let shouldResumeAuto = true;
+    pauseAutoCapture();
+    setManualSubmitting(true);
 
-    if (!result) {
-      showToast('촬영에 실패했습니다. 다시 시도해주세요.', 'error');
-      return;
+    try {
+      const result = await handleManualCapture();
+
+      if (!result) {
+        showToast('촬영에 실패했습니다. 다시 시도해주세요.', 'error');
+        return;
+      }
+
+      const nextEvaluation = result.evaluation;
+      const firstReason = nextEvaluation.reasons[0] ?? '';
+
+      if (nextEvaluation.aligned) {
+        showToast('좋아요. 이 자세로 촬영할게요!', 'success');
+        console.log('2D카메라 촬영', result);
+        const submitted = await submitCurvature(result.photo.uri);
+
+        if (submitted) {
+          shouldResumeAuto = false;
+          router.replace('/home');
+        }
+
+        return;
+      }
+
+
+      if (firstReason.includes('조금 더 가까이 와주세요')) {
+        showToast('조금 더 가까이 와주세요.', 'warning');
+        return;
+      }
+
+      if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
+        showToast('조금 더 멀리 떨어져주세요.', 'warning');
+        return;
+      }
+
+      if (firstReason.includes('뒷모습이 보이게 서주세요')) {
+        showToast('뒷모습이 보이게 서주세요.', 'warning');
+        return;
+      }
+
+      showToast(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'info');
+    } finally {
+      setManualSubmitting(false);
+      if (shouldResumeAuto) {
+        resumeAutoCapture();
+      }
     }
-
-    const nextEvaluation = result.evaluation;
-    const firstReason = nextEvaluation.reasons[0] ?? '';
-
-    if (nextEvaluation.aligned) {
-      showToast('좋아요. 이 자세로 촬영할게요!', 'success');
-      console.log('2D카메라 촬영', result);
-      await submitCurvature(result.photo.uri);
-      return;
-    }
-
-
-    if (firstReason.includes('조금 더 가까이 와주세요')) {
-      showToast('조금 더 가까이 와주세요.', 'warning');
-      return;
-    }
-
-    if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
-      showToast('조금 더 멀리 떨어져주세요.', 'warning');
-      return;
-    }
-
-    if (firstReason.includes('뒷모습이 보이게 서주세요')) {
-      showToast('뒷모습이 보이게 서주세요.', 'warning');
-      return;
-    }
-
-    showToast(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'info');
   };
 
   if (!permission) {
@@ -181,7 +207,7 @@ export default function Measure2DScreen() {
           setStageLayout({ width, height });
         }}
       >
-        <CameraView ref={cameraRef} style={styles.camera} facing="back" />
+        <CameraView ref={cameraRef} style={styles.camera} facing="back" animateShutter={false} />
         {guidelineGeometry ? (
           <CameraGuidelineOverlay
             width={stageLayout.width}
@@ -212,9 +238,9 @@ export default function Measure2DScreen() {
 
         <View style={styles.bottomBar}>
           <Pressable
-            style={[styles.shutterButton, loading && styles.shutterButtonDisabled]}
+            style={[styles.shutterButton, (loading || manualSubmitting) && styles.shutterButtonDisabled]}
             onPress={handlePressCapture}
-            disabled={loading}
+            disabled={loading || manualSubmitting}
           >
             <View style={styles.shutterInner} />
           </Pressable>

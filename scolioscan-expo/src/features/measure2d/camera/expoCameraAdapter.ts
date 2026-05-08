@@ -16,6 +16,7 @@ export function createExpoCameraAdapter(cameraRef: RefObject<ExpoCameraRef | nul
       return cameraRef.current.takePictureAsync({
         quality: options?.quality ?? 0.9,
         skipProcessing: options?.skipProcessing ?? true,
+        shutterSound: options?.shutterSound ?? false,
       });
     },
   };

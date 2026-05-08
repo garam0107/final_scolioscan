@@ -7,6 +7,7 @@ export type CapturedPhoto = {
 export type CameraCaptureOptions = {
   quality?: number;
   skipProcessing?: boolean;
+  shutterSound?: boolean;
 };
 
 export type CameraCaptureSource = {

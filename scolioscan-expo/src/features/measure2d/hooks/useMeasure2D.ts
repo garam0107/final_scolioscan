@@ -47,6 +47,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
   // ref 값들은 렌더링과 무관한 진행 상태를 저장해서 중복 촬영과 중복 서버 호출을 막는다.
   const captureInFlightRef = useRef(false);
   const manualInProgressRef = useRef(false);
+  const autoPausedRef = useRef(false);
   const alignedSinceRef = useRef<number | null>(null);
   const autoCaptureCompletedRef = useRef(false);
   const toastKeyRef = useRef(0);
@@ -57,6 +58,17 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
     alignedSinceRef.current = null;
     setAutoAligned(false);
     setCountdown(null);
+  }, []);
+
+  const pauseAutoCapture = useCallback(() => {
+    // 수동 촬영 결과를 기다리는 동안 자동 체크가 새로 시작되지 않도록 외부에서 잠글 수 있다.
+    autoPausedRef.current = true;
+    resetAutoAlignment();
+  }, [resetAutoAlignment]);
+
+  const resumeAutoCapture = useCallback(() => {
+    // 수동 촬영이 실패했거나 자세 기준을 통과하지 못한 경우 다시 자동 체크를 허용한다.
+    autoPausedRef.current = false;
   }, []);
 
   const emitAutoToast = useCallback((message: string, tone: AutoToast['tone']) => {
@@ -166,6 +178,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
     const runAutoCheck = async () => {
       if (
         disposed ||
+        autoPausedRef.current ||
         manualInProgressRef.current ||
         captureInFlightRef.current ||
         autoCaptureCompletedRef.current
@@ -177,7 +190,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
       try {
         const result = await analyzeCapture(AUTO_CHECK_QUALITY, false);
 
-        if (!result || disposed) {
+        if (!result || disposed || autoPausedRef.current || manualInProgressRef.current) {
           resetAutoAlignment();
           return;
         }
@@ -209,6 +222,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
           const finalPhoto = await camera.capturePhoto({
             quality: AUTO_FINAL_QUALITY,
             skipProcessing: true,
+            shutterSound: false,
           });
 
           if (finalPhoto?.uri && !disposed) {
@@ -273,6 +287,8 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
     countdown,
     autoToast,
     autoCaptureResult,
+    pauseAutoCapture,
+    resumeAutoCapture,
     clearAutoToast: () => setAutoToast(null),
     clearAutoCaptureResult: () => setAutoCaptureResult(null),
   };
