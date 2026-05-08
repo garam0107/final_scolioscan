@@ -52,7 +52,7 @@ export default function EmailFindScreen() {
         toastKey={toastKey}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
         style={styles.screen}
       >
@@ -104,7 +104,7 @@ export default function EmailFindScreen() {
             title="계속하기"
             onPress={handleContinue}
             height={48}
-            backgroundColor="#5F9F9D"
+            backgroundColor="#2C9696"
             borderRadius={6}
             disabled={!canContinue}
             style={styles.button}

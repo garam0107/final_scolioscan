@@ -1,23 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import SmsVerificationGuide from '@/src/components/SmsVerificationGuide';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
-import styles from '@/src/features/auth/findEmail/emailFindMessage.styles';
+import styles from '@/src/features/auth/findEmail/emailFindResult.styles';
 
-export default function EmailFindMessageScreen() {
+export default function EmailFindResultScreen() {
   const router = useRouter();
-
-  function handleMessagePress() {
-    router.push({
-      pathname: '/email-find-result',
-      params: {
-        email: 'example@email.com',
-      },
-    });
-  }
+  const params = useLocalSearchParams<{ email?: string }>();
+  const email = typeof params.email === 'string' && params.email.trim() ? params.email : 'example@email.com';
 
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={styles.page}>
@@ -31,14 +23,26 @@ export default function EmailFindMessageScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>인증을 위해 메시지 어플을 실행할게요</Text>
-          <SmsVerificationGuide />
-        </View>
+          <Text style={styles.title}>이메일을 찾았어요!</Text>
+          <Text style={styles.description}>가입하신 이메일은</Text>
 
-        <View style={styles.footer}>
+          <View style={styles.emailCard}>
+            <Text style={styles.emailText}>{email}</Text>
+          </View>
+
           <PrimaryButton
-            title="동의 및 휴대전화 번호 확인"
-            onPress={handleMessagePress}
+            title="비밀번호 찾기"
+            onPress={() => router.push('/password-find')}
+            height={48}
+            backgroundColor="#F9FAFB"
+            borderRadius={6}
+            style={styles.secondaryButton}
+            textStyle={styles.secondaryButtonText}
+          />
+
+          <PrimaryButton
+            title="로그인 하러가기"
+            onPress={() => router.replace('/login')}
             height={48}
             backgroundColor="#2C9696"
             borderRadius={6}

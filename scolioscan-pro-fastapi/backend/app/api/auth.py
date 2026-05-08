@@ -17,6 +17,9 @@ from ..schemas import (
     PasswordResetCheckResponse,
     PasswordResetVerifyResponse,
     PasswordResetConfirm,
+    EmailFindRequest,
+    EmailFindCheckResponse,
+    EmailFindVerifyResponse,
 )
 from ..utils import create_access_token, verify_password, get_password_hash, send_password_reset_email, generate_random_password
 # OCTOMO 관련 import
@@ -63,6 +66,18 @@ def get_password_reset_user(reset_token: str, db: Session) -> User:
         raise credentials_exception
 
     return user
+
+
+def find_user_by_name_and_phone(name: str, phone: str, db: Session) -> User | None:
+    """이름과 휴대전화 번호가 모두 일치하는 사용자를 찾습니다."""
+    normalized_phone = normalize_phone_number(phone)
+    users = db.query(User).filter(User.name == name).all()
+
+    for user in users:
+        if normalize_phone_number(user.phone) == normalized_phone:
+            return user
+
+    return None
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -179,6 +194,66 @@ async def verify_phone_verification(payload: OctomoVerifyRequest):
         ) from error
 
     return OctomoVerifyResponse(verified=verified)
+
+
+@router.post("/email-find/check", response_model=EmailFindCheckResponse)
+async def check_email_find_account(
+    email_find_data: EmailFindRequest,
+    db: Session = Depends(get_db)
+):
+    """이메일 찾기 전에 이름과 휴대전화 번호가 일치하는 계정이 있는지 확인합니다."""
+    user = find_user_by_name_and_phone(
+        name=email_find_data.name,
+        phone=email_find_data.phone,
+        db=db,
+    )
+
+    return EmailFindCheckResponse(exists=user is not None)
+
+
+@router.post("/email-find/verify", response_model=EmailFindVerifyResponse)
+async def verify_email_find(
+    email_find_data: EmailFindRequest,
+    db: Session = Depends(get_db)
+):
+    """휴대전화 인증이 완료되면 해당 계정의 이메일을 반환합니다."""
+    user = find_user_by_name_and_phone(
+        name=email_find_data.name,
+        phone=email_find_data.phone,
+        db=db,
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found with provided name and phone"
+        )
+
+    try:
+        verified = await verify_verification_code_with_octomo(email_find_data.phone)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+    except httpx.HTTPError as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="OCTOMO API verification failed",
+        ) from error
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
+
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone verification is required"
+        )
+
+    return EmailFindVerifyResponse(email=user.user_id)
 
 
 @router.post("/password-reset/check", response_model=PasswordResetCheckResponse)

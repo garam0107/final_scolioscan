@@ -46,6 +46,19 @@ class PasswordResetConfirm(BaseModel):
     confirm_password: str = Field(..., min_length=8, max_length=128)
 
 
+class EmailFindRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=32)
+    phone: str = Field(..., min_length=10, max_length=20)
+
+
+class EmailFindCheckResponse(BaseModel):
+    exists: bool
+
+
+class EmailFindVerifyResponse(BaseModel):
+    email: str
+
+
 class PasswordChange(BaseModel):
     current_password: str = Field(..., min_length=6, max_length=128, description="현재 비밀번호")
     new_password: str = Field(..., min_length=6, max_length=128, description="새 비밀번호 (6-128자)")
