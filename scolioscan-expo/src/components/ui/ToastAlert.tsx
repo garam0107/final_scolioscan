@@ -16,8 +16,8 @@ type ToastAlertProps = {
 
 const TONE_STYLES: Record<ToastTone, { backgroundColor: string; borderColor: string; icon: keyof typeof Ionicons.glyphMap }> = {
   info: {
-    backgroundColor: '#6EA7A5',
-    borderColor: '#5F9F9D',
+    backgroundColor: '#2C9696',
+    borderColor: '#2C9696',
     icon: 'information-circle-outline',
   },
   success: {

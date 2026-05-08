@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 2,
+    elevation: 0.04,
   },
   chartWrap: {
     alignItems: 'center',
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
+    elevation: 0.04,
   },
   emptyStateHeader: {
   position: 'relative',
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 2,
+    elevation: 0.04,
   },
   trendHeader: {
     flexDirection: 'row',
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    elevation: 0.04,
   },
   trendSelectorText: {
     color: '#7A8497',
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 1,
+    elevation: 0.04,
   },
   summaryLabel: {
     color: '#7A8497',
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
-    elevation: 1,
+    elevation: 0.04,
   },
   itemLeft: {
     flex: 1,

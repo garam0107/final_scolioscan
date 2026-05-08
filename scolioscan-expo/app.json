@@ -4,7 +4,10 @@
     "slug": "scolioscan-expo",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo_non_rounded.png",
+    "splash" : {
+      "image" : "./assets/images/logo_splash.png"
+    },
     "scheme": "scolioscanexpo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -37,7 +40,6 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash.png",
-          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#22BCB7",
           "dark": {

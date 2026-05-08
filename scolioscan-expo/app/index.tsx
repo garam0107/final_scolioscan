@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function IndexPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function IndexPage() {
     <SafeAreaView style={styles.container}>
       <View style={styles.center}>
         <Text style={styles.brand}>ScolioScan</Text>
-        <ActivityIndicator color="#5F9F9D" style={styles.spinner} />
+        {/* <ActivityIndicator color="#5F9F9D" style={styles.spinner} /> */}
       </View>
     </SafeAreaView>
   );

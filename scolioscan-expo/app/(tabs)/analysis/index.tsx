@@ -1,5 +1,8 @@
+import TabFocusTransition from '@/src/components/navigation/TabFocusTransition';
 import AnalysisScreen from '@/src/features/analysis/AnalysisScreen';
 
 export default function AnalysisIndexPage() {
-  return <AnalysisScreen />;
+  return (
+      <AnalysisScreen />
+  );
 }

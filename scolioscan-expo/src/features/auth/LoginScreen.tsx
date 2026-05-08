@@ -163,8 +163,6 @@ export default function LoginScreen() {
   const [rememberId, setRememberId] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [findIdModalOpen, setFindIdModalOpen] = useState(false);
-  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [socialModalOpen, setSocialModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
@@ -356,7 +354,7 @@ export default function LoginScreen() {
 
             <View style={styles.findAccountRow}>
               <Pressable
-                onPress={() => setFindIdModalOpen(true)}
+                onPress={() => router.push('/email-find')}
                 disabled={loading || authLoading}
                 hitSlop={8}
               >
@@ -364,7 +362,7 @@ export default function LoginScreen() {
               </Pressable>
               <Text style={styles.findAccountDivider}>|</Text>
               <Pressable
-                onPress={() => setPasswordModalOpen(true)}
+                onPress={() => router.push('/password-find')}
                 disabled={loading || authLoading}
                 hitSlop={8}
               >
@@ -374,20 +372,6 @@ export default function LoginScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
-
-      <SimpleModal
-        visible={findIdModalOpen}
-        title="아이디 찾기"
-        message="현재는 화면만 맞춘 상태입니다. 다음 단계에서 실제 아이디 찾기 흐름을 연결하겠습니다."
-        onClose={() => setFindIdModalOpen(false)}
-      />
-
-      <SimpleModal
-        visible={passwordModalOpen}
-        title="비밀번호 찾기"
-        message="현재는 화면만 맞춘 상태입니다. 다음 단계에서 실제 비밀번호 재설정 흐름을 연결하겠습니다."
-        onClose={() => setPasswordModalOpen(false)}
-      />
 
       <SimpleModal
         visible={socialModalOpen}
