@@ -17,6 +17,8 @@ type CameraGuidelineOverlayProps = {
   width: number;
   height: number;
   geometry: GuidelineDisplayGeometry;
+  // 자동 판정이 성공하면 초록색 윤곽선으로 바꿔서 촬영 대기 상태를 보여준다.
+  aligned?: boolean;
 };
 
 
@@ -24,6 +26,7 @@ export function CameraGuidelineOverlay({
   width,
   height,
   geometry,
+  aligned = false,
 }: CameraGuidelineOverlayProps) {
   const { guideX, guideY, guideWidth, guideHeight } = geometry;
 
@@ -66,9 +69,37 @@ export function CameraGuidelineOverlay({
       </Svg>
 
       {/* 윤곽선 이미지는 실제 사용자가 따라야 하는 시각적 가이드다. */}
-      <View style={{ position: 'absolute', left: guideX, top: guideY, width: guideWidth, height: guideHeight }}>
+      <View
+        style={{
+          position: 'absolute',
+          left: guideX,
+          top: guideY,
+          width: guideWidth,
+          height: guideHeight,
+          opacity: aligned ? 0 : 1,
+        }}
+      >
         <CameraGuideline width="100%" height="100%" />
       </View>
+
+      {aligned ? (
+        // aligned 상태에서는 원본 가이드 이미지를 숨기고 성공 상태용 초록색 선만 덧그린다.
+        <Svg
+          width={guideWidth}
+          height={guideHeight}
+          viewBox={`0 0 ${BASE_W} ${BASE_H}`}
+          style={{ position: 'absolute', left: guideX, top: guideY }}
+        >
+          <Path
+            d={GUIDE_PATH}
+            fill="none"
+            stroke="#20C99C"
+            strokeWidth={4.8}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        </Svg>
+      ) : null}
     </View>
   );
 }

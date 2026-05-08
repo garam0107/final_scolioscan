@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { CameraCaptureSource, CapturedPhoto } from '../camera/cameraAdapter';
 import { evaluateLandmarks } from '../domain/landmarkRules';
@@ -17,20 +17,70 @@ type ManualCaptureResult = {
   evaluation: LandmarkEvaluation;
 };
 
+type AutoToast = {
+  message: string;
+  tone: 'info' | 'success' | 'warning' | 'error';
+  key: number;
+};
+
+const AUTO_CHECK_INTERVAL_MS = 1500;
+const COUNTDOWN_TICK_MS = 250;
+const AUTO_HOLD_MS = 3000;
+const MANUAL_WAIT_TIMEOUT_MS = 1500;
+// 자동 체크는 서버 부하를 줄이기 위해 낮은 화질로 보내고, 실제 분석용 사진은 더 높은 화질로 촬영한다.
+const AUTO_CHECK_QUALITY = 0.35;
+const MANUAL_CHECK_QUALITY = 0.8;
+const AUTO_FINAL_QUALITY = 0.85;
+
+const LANDMARK_NOT_FOUND = '사람을 찾지 못했습니다.';
+const LANDMARK_ANALYZE_FAIL = '랜드마크 분석에 실패했습니다.';
+const AUTO_CAPTURE_SUCCESS = '좋아요. 이 자세로 촬영할게요!';
+
 export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DParams) {
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<LandmarkEvaluation | null>(null);
+  const [autoAligned, setAutoAligned] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [autoToast, setAutoToast] = useState<AutoToast | null>(null);
+  const [autoCaptureResult, setAutoCaptureResult] = useState<ManualCaptureResult | null>(null);
 
-  const analyzeCapture = useCallback(async (): Promise<ManualCaptureResult | null> => {
+  // ref 값들은 렌더링과 무관한 진행 상태를 저장해서 중복 촬영과 중복 서버 호출을 막는다.
+  const captureInFlightRef = useRef(false);
+  const manualInProgressRef = useRef(false);
+  const alignedSinceRef = useRef<number | null>(null);
+  const autoCaptureCompletedRef = useRef(false);
+  const toastKeyRef = useRef(0);
+  const lastAutoReasonRef = useRef<string | null>(null);
+
+  const resetAutoAlignment = useCallback(() => {
+    // 자세가 흐트러지면 자동 촬영 대기 시간과 화면 카운트다운을 함께 초기화한다.
+    alignedSinceRef.current = null;
+    setAutoAligned(false);
+    setCountdown(null);
+  }, []);
+
+  const emitAutoToast = useCallback((message: string, tone: AutoToast['tone']) => {
+    toastKeyRef.current += 1;
+    setAutoToast({
+      message,
+      tone,
+      key: toastKeyRef.current,
+    });
+  }, []);
+
+  const analyzeCapture = useCallback(async (quality: number, skipProcessing: boolean): Promise<ManualCaptureResult | null> => {
+    // 수동 촬영과 자동 체크가 같은 분석 경로를 쓰도록 촬영과 랜드마크 판정을 한곳에서 처리한다.
     const photo = await camera.capturePhoto({
-      quality: 0.8,
-      skipProcessing: true,
+      quality,
+      skipProcessing,
     });
 
     console.log('[measure2d] 촬영 결과', {
       hasUri: Boolean(photo?.uri),
       width: photo?.width,
       height: photo?.height,
+      quality,
+      skipProcessing,
       hasGuidePoints: Boolean(guidePoints),
       hasGuideRect: Boolean(guideRect),
     });
@@ -55,7 +105,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
         const nextEvaluation: LandmarkEvaluation = {
           aligned: false,
           score: 0,
-          reasons: ['사람을 찾지 못했습니다.'],
+          reasons: [LANDMARK_NOT_FOUND],
         };
         setEvaluation(nextEvaluation);
         return { photo, evaluation: nextEvaluation };
@@ -70,7 +120,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
       const nextEvaluation: LandmarkEvaluation = {
         aligned: false,
         score: 0,
-        reasons: ['랜드마크 분석에 실패했습니다.'],
+        reasons: [LANDMARK_ANALYZE_FAIL],
       };
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };
@@ -78,19 +128,152 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
   }, [camera, guidePoints, guideRect]);
 
   const handleManualCapture = useCallback(async (): Promise<ManualCaptureResult | null> => {
-    if (loading) return null;
+    // 사용자가 직접 촬영하면 자동 체크 루프와 겹치지 않도록 잠시 기다린 뒤 수동 촬영을 우선한다.
+    manualInProgressRef.current = true;
+    resetAutoAlignment();
+
+    const waitStart = Date.now();
+    while (captureInFlightRef.current && Date.now() - waitStart < MANUAL_WAIT_TIMEOUT_MS) {
+      await new Promise((resolve) => setTimeout(resolve, 60));
+    }
+
+    if (loading || captureInFlightRef.current) {
+      manualInProgressRef.current = false;
+      return null;
+    }
 
     setLoading(true);
+    captureInFlightRef.current = true;
     try {
-      return await analyzeCapture();
+      return await analyzeCapture(MANUAL_CHECK_QUALITY, true);
     } finally {
+      captureInFlightRef.current = false;
       setLoading(false);
+      manualInProgressRef.current = false;
     }
-  }, [analyzeCapture, loading]);
+  }, [analyzeCapture, loading, resetAutoAlignment]);
+
+  useEffect(() => {
+    if (!guidePoints || !guideRect) {
+      resetAutoAlignment();
+      lastAutoReasonRef.current = null;
+      return;
+    }
+
+    let disposed = false;
+
+    // 자동 촬영 루프는 일정 간격으로 저화질 사진을 보내 현재 자세가 기준 안에 있는지 확인한다.
+    const runAutoCheck = async () => {
+      if (
+        disposed ||
+        manualInProgressRef.current ||
+        captureInFlightRef.current ||
+        autoCaptureCompletedRef.current
+      ) {
+        return;
+      }
+
+      captureInFlightRef.current = true;
+      try {
+        const result = await analyzeCapture(AUTO_CHECK_QUALITY, false);
+
+        if (!result || disposed) {
+          resetAutoAlignment();
+          return;
+        }
+
+        if (!result.evaluation.aligned) {
+          resetAutoAlignment();
+          const reason = result.evaluation.reasons[0] ?? null;
+          if (reason && reason !== lastAutoReasonRef.current) {
+            lastAutoReasonRef.current = reason;
+            emitAutoToast(reason, 'warning');
+          }
+          return;
+        }
+
+        lastAutoReasonRef.current = null;
+
+        if (!alignedSinceRef.current) {
+          // 처음으로 기준에 들어온 시점을 저장하고, 이 시점부터 3초 유지 여부를 계산한다.
+          alignedSinceRef.current = Date.now();
+        }
+
+        const elapsed = Date.now() - alignedSinceRef.current;
+
+        setAutoAligned(true);
+
+        if (elapsed >= AUTO_HOLD_MS) {
+          // 3초 동안 기준을 유지했을 때만 최종 사진을 다시 촬영해서 실제 척추측만 분석으로 넘긴다.
+          autoCaptureCompletedRef.current = true;
+          const finalPhoto = await camera.capturePhoto({
+            quality: AUTO_FINAL_QUALITY,
+            skipProcessing: true,
+          });
+
+          if (finalPhoto?.uri && !disposed) {
+            setAutoCaptureResult({
+              photo: finalPhoto,
+              evaluation: result.evaluation,
+            });
+            emitAutoToast(AUTO_CAPTURE_SUCCESS, 'success');
+          }
+
+          resetAutoAlignment();
+        }
+      } catch (error) {
+        console.log('[measure2d] 자동 체크 예외', error);
+        resetAutoAlignment();
+      } finally {
+        captureInFlightRef.current = false;
+      }
+    };
+
+    void runAutoCheck();
+    const timer = setInterval(() => {
+      void runAutoCheck();
+    }, AUTO_CHECK_INTERVAL_MS);
+
+    return () => {
+      disposed = true;
+      clearInterval(timer);
+    };
+  }, [analyzeCapture, camera, emitAutoToast, guidePoints, guideRect, resetAutoAlignment]);
+
+  useEffect(() => {
+    if (!autoAligned) {
+      return;
+    }
+
+    // 서버 체크 주기와 별도로 카운트다운은 더 자주 갱신해서 숫자가 자연스럽게 바뀌게 한다.
+    const updateCountdown = () => {
+      if (!alignedSinceRef.current) {
+        setCountdown(null);
+        return;
+      }
+
+      const elapsed = Date.now() - alignedSinceRef.current;
+      const remainingMs = Math.max(0, AUTO_HOLD_MS - elapsed);
+      setCountdown(remainingMs <= 0 ? 0 : Math.max(1, Math.ceil(remainingMs / 1000)));
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, COUNTDOWN_TICK_MS);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [autoAligned]);
 
   return {
     evaluation,
     handleManualCapture,
     loading,
+    autoAligned,
+    countdown,
+    autoToast,
+    autoCaptureResult,
+    clearAutoToast: () => setAutoToast(null),
+    clearAutoCaptureResult: () => setAutoCaptureResult(null),
   };
 }
