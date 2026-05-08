@@ -76,7 +76,7 @@ export function normalizeRegisterMessage(message: string) {
   }
 
   if (message.includes('Phone verification is required')) {
-    return '휴대전화 인증이 안되었습니다.';
+    return '휴대전화 인증에 실패하였습니다.';
   }
 
   return message;

@@ -2,6 +2,9 @@ import api from '@/src/api/client';
 import type {
   LoginRequest,
   LoginResponse,
+  EmailFindCheckResponse,
+  EmailFindRequest,
+  EmailFindVerifyResponse,
   PasswordResetAccountRequest,
   PasswordResetAccountResponse,
   PasswordResetConfirmRequest,
@@ -22,6 +25,10 @@ export const authAPI = {
     api.post<PasswordResetAccountResponse>('/auth/password-reset/check', data),
   verifyPasswordReset: (data: PasswordResetAccountRequest) =>
     api.post<PasswordResetVerifyResponse>('/auth/password-reset/verify', data),
+  checkEmailFindAccount: (data: EmailFindRequest) =>
+    api.post<EmailFindCheckResponse>('/auth/email-find/check', data),
+  verifyEmailFind: (data: EmailFindRequest) =>
+    api.post<EmailFindVerifyResponse>('/auth/email-find/verify', data),
   confirmPasswordReset: (data: PasswordResetConfirmRequest) =>
     api.post('/auth/password-reset/confirm', data),
   messageCode : (data : MessageCodeRequest) => api.post('/auth/issue-code', data),

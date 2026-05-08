@@ -37,6 +37,19 @@ export interface PasswordResetConfirmRequest {
   confirm_password: string;
 }
 
+export interface EmailFindRequest {
+  name: string;
+  phone: string;
+}
+
+export interface EmailFindCheckResponse {
+  exists: boolean;
+}
+
+export interface EmailFindVerifyResponse {
+  email: string;
+}
+
 export interface RegisterRequest {
   user_id: string;
   user_pw: string;

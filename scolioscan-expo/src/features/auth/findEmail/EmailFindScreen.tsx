@@ -4,17 +4,24 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { authAPI } from '@/src/api/auth';
 import FormTextField from '@/src/components/FormTextField';
 import GuideMessageBox from '@/src/components/GuideMessageBox';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import ToastAlert from '@/src/components/ui/ToastAlert';
-import { formatPhoneNumber, isValidPhoneNumber, normalizePhoneNumber } from '@/src/features/auth/registerValidation';
+import {
+  formatPhoneNumber,
+  isValidPhoneNumber,
+  normalizePhoneNumber,
+  normalizeRegisterMessage,
+} from '@/src/features/auth/registerValidation';
 import styles from '@/src/features/auth/findEmail/emailFind.styles';
 
 export default function EmailFindScreen() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [checkingAccount, setCheckingAccount] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
   const canContinue = useMemo(() => Boolean(name.trim()) && isValidPhoneNumber(phone), [name, phone]);
@@ -24,7 +31,27 @@ export default function EmailFindScreen() {
     setToastMessage(message);
   }
 
-  function handleContinue() {
+  function getApiErrorMessage(error: unknown) {
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+      const response = (error as { response?: { data?: { detail?: string } } }).response;
+      const detail = response?.data?.detail;
+      if (typeof detail === 'string' && detail.trim()) {
+        return normalizeRegisterMessage(detail);
+      }
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+      return normalizeRegisterMessage(error.message);
+    }
+
+    return '이메일 찾기 정보 확인에 실패했습니다.';
+  }
+
+  async function handleContinue() {
+    if (checkingAccount) {
+      return;
+    }
+
     if (!name.trim()) {
       showToast('이름을 입력해주세요.');
       return;
@@ -35,12 +62,33 @@ export default function EmailFindScreen() {
       return;
     }
 
-    router.push({
-      pathname: '/email-find-message',
-      params: {
-        phone,
-      },
-    });
+    const payload = {
+      name: name.trim(),
+      phone,
+    };
+
+    setCheckingAccount(true);
+
+    try {
+      const response = await authAPI.checkEmailFindAccount(payload);
+
+      if (!response.data.exists) {
+        showToast('해당 정보로 가입된 이메일이 없어요.');
+        return;
+      }
+
+      router.push({
+        pathname: '/email-find-message',
+        params: {
+          name: payload.name,
+          phone: payload.phone,
+        },
+      });
+    } catch (error) {
+      showToast(getApiErrorMessage(error));
+    } finally {
+      setCheckingAccount(false);
+    }
   }
 
   return (
@@ -106,7 +154,7 @@ export default function EmailFindScreen() {
             height={48}
             backgroundColor="#2C9696"
             borderRadius={6}
-            disabled={!canContinue}
+            disabled={!canContinue || checkingAccount}
             style={styles.button}
             textStyle={styles.buttonText}
           />
