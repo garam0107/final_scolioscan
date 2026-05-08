@@ -38,27 +38,6 @@ const styles = StyleSheet.create({
   guideBoxWrap: {
     marginBottom: 24,
   },
-  passwordRules: {
-    gap: 8,
-    marginBottom: 36,
-    marginTop: -12,
-    paddingHorizontal: 12,
-  },
-  passwordRuleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  passwordRuleIcon: {
-    marginRight: 8,
-  },
-  passwordRuleText: {
-    color: Colors.gray[500],
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  passwordRuleTextActive: {
-    color: Colors.primary[500],
-  },
   footer: {
     paddingBottom: 16,
     paddingHorizontal: 20,

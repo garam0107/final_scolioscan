@@ -99,6 +99,8 @@ export default function RootLayout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="intro" />
+            <Stack.Screen name="email-find" />
+            <Stack.Screen name="email-find-message" />
             <Stack.Screen name="login" />
             <Stack.Screen name="password-find" />
             <Stack.Screen name="password-find-message" />

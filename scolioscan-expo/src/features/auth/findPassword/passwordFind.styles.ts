@@ -32,15 +32,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 14,
   },
   guideBoxWrap: {
-    marginBottom: 36,
+    marginBottom: 24,
   },
   footer: {
     paddingBottom: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   button: {
     width: '100%',

@@ -3,15 +3,18 @@ import { StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 
 const styles = StyleSheet.create({
-  screen: {
+  page: {
     backgroundColor: Colors.gray[25],
     flex: 1,
+  },
+  screen: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
   header: {
     alignItems: 'center',
     flexDirection: 'row',
     height: 80,
-    paddingHorizontal: 16,
   },
   backButton: {
     alignItems: 'center',
@@ -32,43 +35,25 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 14,
+    paddingTop: 20,
   },
-  guideBoxWrap: {
+  title: {
+    color: Colors.gray[700],
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 36,
     marginBottom: 24,
-  },
-  passwordRules: {
-    gap: 8,
-    marginBottom: 36,
-    marginTop: -12,
-    paddingHorizontal: 12,
-  },
-  passwordRuleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  passwordRuleIcon: {
-    marginRight: 8,
-  },
-  passwordRuleText: {
-    color: Colors.gray[500],
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  passwordRuleTextActive: {
-    color: Colors.primary[500],
   },
   footer: {
     paddingBottom: 16,
-    paddingHorizontal: 20,
+    paddingTop: 40,
   },
-  button: {
+  primaryButton: {
     width: '100%',
   },
-  buttonText: {
+  primaryButtonText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     lineHeight: 22,
   },
 });

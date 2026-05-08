@@ -37,22 +37,6 @@ export default function PasswordFindResetScreen() {
     setToastMessage(message);
   }
 
-  function getApiErrorMessage(error: unknown) {
-    if (typeof error === 'object' && error !== null && 'response' in error) {
-      const response = (error as { response?: { data?: { detail?: string } } }).response;
-      const detail = response?.data?.detail;
-      if (typeof detail === 'string' && detail.trim()) {
-        return detail;
-      }
-    }
-
-    if (error instanceof Error && error.message.trim()) {
-      return error.message;
-    }
-
-    return '비밀번호 변경에 실패했습니다.';
-  }
-
   async function handleContinue() {
     if (submitting) {
       return;
@@ -85,7 +69,7 @@ export default function PasswordFindResetScreen() {
       setTimeout(() => {
         router.replace('/login');
       }, 700);
-    } catch (error) {
+    } catch {
       showToast('기존의 비밀번호와 다른 비밀번호를 입력해주세요');
     } finally {
       setSubmitting(false);
