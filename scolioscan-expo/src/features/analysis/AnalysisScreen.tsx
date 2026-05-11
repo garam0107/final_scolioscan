@@ -18,6 +18,7 @@ import type { SvgProps } from 'react-native-svg';
 
 import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
+import { useAuth } from '@/src/contexts/AuthContext';
 import type { AnalysisResponse } from '@/src/types/analysis';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { RotationResponse } from '@/src/types/rotation';
@@ -330,6 +331,7 @@ function SpineRig({
 export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
   const { width } = useWindowDimensions();
   const bottomTabBarHeight = useBottomTabBarHeight();
+  const { user } = useAuth();
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -340,7 +342,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const cardWidth = Math.min(width - 24, 440);
   const stageWidth = cardWidth - 20;
   const stageHeight = 380;
-  const summaryName = '회원님';
+  const summaryName = user?.name?.trim() || '회원';
   const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
   const mainValue = pose.metrics.find((metric) => metric.key === 'main')?.value ?? 0;
   const lumbarValue = pose.metrics.find((metric) => metric.key === 'lumbar')?.value ?? 0;
@@ -467,9 +469,9 @@ const InfoCardImageComponent = infoCardCopy.ImageComponent;
           ]}
         >
           <View style={styles.summaryTextBlock}>
-            <Text style={styles.summaryNameLine}>{summaryName}</Text>
+            <Text style={styles.summaryNameLine}>{summaryName} 님은</Text>
             <Text style={styles.summaryDiagnosisLine}>
-              <Text style={styles.summarySeverityBold}>{severityLabel} 척추측만증</Text>입니다.
+              <Text style={styles.summarySeverityBold}>{severityLabel} 척추측만증</Text>으로 예상 됩니다
             </Text>
           </View>
 
@@ -603,7 +605,7 @@ const InfoCardImageComponent = infoCardCopy.ImageComponent;
               <Text style={styles.dominantCurveTitle}>척추 지배만곡 유형</Text>
 
               <Text style={styles.dominantCurveBody}>
-                {summaryName} 님의 척추 지배만곡 유형은{'\n'}
+                {summaryName} 님의 척추 지배만곡 유형은{' '}
                 <Text style={styles.dominantCurveDiagnosis}>
                   {dominantCurve.diagnosisName}
                 </Text>{' '}

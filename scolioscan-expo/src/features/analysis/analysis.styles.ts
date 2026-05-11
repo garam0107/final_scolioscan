@@ -1,3 +1,4 @@
+import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
@@ -22,16 +23,15 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   summaryDiagnosisLine: {
-    color: '#627379',
-    fontSize: 22,
+      color: Colors.primary['black'],
+    fontSize: 20,
     fontWeight: '500',
     letterSpacing: -0.4,
   },
   summarySeverityBold: {
-    color: '#627379',
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: -0.4,
+    color: Colors.primary['black'],
+    fontSize: 24,
+    fontWeight: '700',
   },
   subtitle: {
     marginTop: 2,
