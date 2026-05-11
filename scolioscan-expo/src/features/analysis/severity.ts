@@ -12,24 +12,24 @@ export type SeverityConfig = {
 const SEVERITY_PALETTE: Record<SeverityKey, Omit<SeverityConfig, 'key'>> = {
   normal: {
     label: '정상',
-    badgeBackground: '#D7F4EE',
-    badgeTextColor: '#2BB59A',
-    barColor: '#5AC9B3',
-    trackColor: '#DDE0E2',
+    badgeBackground: '#D7F9F9',
+    badgeTextColor: '#22BCB7',
+    barColor: '#7AD7D4',
+    trackColor: '#D4D9E2',
   },
   moderate: {
     label: '보통',
-    badgeBackground: '#FBF1C8',
-    badgeTextColor: '#D4A41C',
-    barColor: '#E8C547',
-    trackColor: '#DDE0E2',
+    badgeBackground: '#FEF8DF',
+    badgeTextColor: '#FABE00',
+    barColor: '#FAD342',
+    trackColor: '#D4D9E2',
   },
   severe: {
     label: '위험',
-    badgeBackground: '#FBE0E0',
-    badgeTextColor: '#D86A6A',
-    barColor: '#E58A8A',
-    trackColor: '#DDE0E2',
+    badgeBackground: '#FFEDF0',
+    badgeTextColor: '#F97B7B',
+    barColor: '#F97B7B',
+    trackColor: '#D4D9E2',
   },
 };
 

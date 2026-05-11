@@ -10,7 +10,6 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -29,11 +28,15 @@ import {
   getDominantCurveInfo,
   getRegionalSeverity,
   getSeverityBarPercent,
+  type DominantCurveInfo,
 } from './severity';
 import Grade1Image from '../../../assets/images/grade1.svg';
 import Grade2Image from '../../../assets/images/grade2.svg';
 import Grade3Image from '../../../assets/images/grade3.svg';
 import Grade4Image from '../../../assets/images/grade4.svg';
+import VertebraeType from '../../../assets/images/vertebrae_type.svg'
+import CurvePatternIcon from '../../../assets/icons/heroicons-outline_chart-bar.svg';
+import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 
 const spineImage = require('../../../assets/images/spine.png');
 
@@ -51,6 +54,11 @@ type InfoCardCopy = {
   title: string;
   body: string;
   ImageComponent: React.ComponentType<SvgProps>;
+};
+
+type CurvePatternCopy = {
+  title: string;
+  body: string;
 };
 
 function getMeasurementDate(
@@ -118,6 +126,73 @@ function getInfoCardCopy(infoCardLevel: InfoCardLevel): InfoCardCopy {
         ImageComponent: Grade4Image,
       };
   }
+}
+
+function getCurvePatternCopy(dominantCurve: DominantCurveInfo): CurvePatternCopy {
+  switch (dominantCurve.key) {
+    case 'Normal':
+      return {
+        title: '정상 범위',
+        body: '현재는 뚜렷한 지배 만곡 패턴이 보이지 않아요.',
+      };
+    case 'Thoracic':
+      return {
+        title: '흉추 만곡',
+        body: '등 부위 중심으로 만곡이 나타나는 형태예요.',
+      };
+    case 'Double Thoracic':
+      return {
+        title: '이중 흉추 만곡',
+        body: '상부와 주 흉추에 함께 만곡이 나타나는 형태예요.',
+      };
+    case 'Double major':
+      return {
+        title: '흉추-요추 만곡 (S자형)',
+        body: '등과 허리에 반대 방향의 만곡이 있는 S자 형태예요.',
+      };
+    case 'Triple curve':
+      return {
+        title: '삼중 만곡',
+        body: '상부 흉추, 주 흉추, 요추에 모두 만곡이 나타나는 형태예요.',
+      };
+    case 'Lumbar':
+      return {
+        title: '요추 만곡',
+        body: '허리 부위 중심으로 만곡이 나타나는 형태예요.',
+      };
+    case 'Unknown':
+      return {
+        title: '비표준 만곡',
+        body: '일반적인 분류에 딱 맞지 않는 만곡 패턴이에요.',
+      };
+  }
+}
+
+function CurvePatternCard({ dominantCurve }: { dominantCurve: DominantCurveInfo }) {
+  const copy = getCurvePatternCopy(dominantCurve);
+
+  return (
+    <View style={styles.curvePatternCard}>
+      <Text style={styles.curvePatternTitle}>곡선 패턴</Text>
+      <View style={styles.curvePatternContent}>
+        <View style={styles.curvePatternIconBox}>
+          <CurvePatternIcon width={30} height={30} />
+        </View>
+        <View style={styles.curvePatternText}>
+          <Text style={styles.curvePatternName}>{copy.title}</Text>
+          <Text style={styles.curvePatternBody}>{copy.body}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function AiDoctorCard() {
+  return (
+    <View style={styles.aiDoctorSvgWrap}>
+      <AnalysisSubImage width="100%" height="100%" preserveAspectRatio="xMidYMid meet" />
+    </View>
+  );
 }
 
 function formatDegree(value: number) {
@@ -330,7 +405,6 @@ function SpineRig({
 
 export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
   const { width } = useWindowDimensions();
-  const bottomTabBarHeight = useBottomTabBarHeight();
   const { user } = useAuth();
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -529,7 +603,7 @@ const InfoCardImageComponent = infoCardCopy.ImageComponent;
             <View style={styles.infoCardText}>
               <Text style={styles.infoCardTitle}>{infoCardCopy.title}</Text>
               <Text style={styles.infoCardBody}>{infoCardCopy.body}</Text>
-              <Pressable onPress={() => Linking.openURL('https://naver.com')}>
+              <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
                 <Text style={styles.infoCardLink}>더 알아보기</Text>
               </Pressable>
             </View>
@@ -605,22 +679,26 @@ const InfoCardImageComponent = infoCardCopy.ImageComponent;
               <Text style={styles.dominantCurveTitle}>척추 지배만곡 유형</Text>
 
               <Text style={styles.dominantCurveBody}>
-                {summaryName} 님의 척추 지배만곡 유형은{' '}
+                {summaryName} 님의 척추 지배만곡 유형은 {'\n'}
                 <Text style={styles.dominantCurveDiagnosis}>
                   {dominantCurve.diagnosisName}
                 </Text>{' '}
                 {dominantCurve.key === 'Normal' ? '예요' : '이에요'}
               </Text>
 
-              <Pressable onPress={() => Linking.openURL('https://naver.com')}>
+              <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
                 <Text style={styles.dominantCurveLink}>더 알아보기</Text>
               </Pressable>
             </View>
 
             <View style={styles.dominantCurveImageWrap}>
-              <Grade1Image preserveAspectRatio="xMidYMid meet" />
+              <VertebraeType preserveAspectRatio="xMidYMid meet" />
             </View>
           </View>
+
+          <CurvePatternCard dominantCurve={dominantCurve} />
+
+          <AiDoctorCard />
         </ScrollView>
       </SafeAreaView>
     </View>
