@@ -424,7 +424,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.weeklySection}>
-            <Text style={styles.sectionHeading}>최근 1주일 측정 결과</Text>
+            <Text style={styles.sectionHeading}>최근 1개월 측정 결과</Text>
             <View style={styles.weeklyResultGrid}>
               {weeklyResults.map((item) => {
                 const isSelected = selectedWeeklyResultId === item.id;

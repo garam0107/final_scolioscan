@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
@@ -38,6 +39,7 @@ import TwoDCamera from '../../../assets/icons/2D_camera.svg';
 type FilterKey = 'all' | '2d' | 'scoliometer' | '3d';
 type MeasurementSource = 'curvature' | 'rotation';
 type TrendAngleKey = 'proximal' | 'main' | 'lumbar';
+type TrendPeriodKey = 'week1' | 'week2' | 'month1' | 'month3' | 'month6' | 'year1';
 
 type ReportMetric = {
   label: string;
@@ -54,18 +56,6 @@ type ReportListItem = {
   navigationId?: string;
 };
 
-type TrendPoint = {
-  label: string;
-  dateLabel: string;
-  value: number | null;
-  x: number;
-  y: number | null;
-};
-
-type TrendPlotPoint = Omit<TrendPoint, 'y'> & {
-  y: number;
-};
-
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: '2d', label: '2D' },
@@ -74,13 +64,13 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 ];
 
 const CURVATURE_METRIC_LABELS = [
-  '상부 흉추 만곡',
+  '상부 흉추만곡',
   '주 흉추만곡',
   '요추만곡',
 ] as const;
 
 const ROTATION_METRIC_LABELS = [
-  '상부 흉추 만곡',
+  '상부 흉추만곡',
   '주 흉추만곡',
   '요추만곡',
 ] as const;
@@ -114,10 +104,16 @@ const TREND_ANGLE_OPTIONS: {
   },
 ];
 
-const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-const CHART_WIDTH = 320;
-const CHART_HEIGHT = 148;
-const CHART_PADDING = { top: 10, right: 14, bottom: 12, left: 14 };
+const TREND_PERIOD_OPTIONS: { key: TrendPeriodKey; label: string; days: number }[] = [
+  { key: 'week1', label: '1주일', days: 7 },
+  { key: 'week2', label: '2주일', days: 14 },
+  { key: 'month1', label: '1개월', days: 30 },
+  { key: 'month3', label: '3개월', days: 90 },
+  { key: 'month6', label: '6개월', days: 180 },
+  { key: 'year1', label: '1년', days: 365 },
+];
+const TREND_CHART_HEIGHT = 120;
+const TREND_CHART_MAX_VALUE = 40;
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -133,6 +129,11 @@ function formatDate(value: string) {
 function formatDegree(value?: number | null) {
   if (value === null || value === undefined) return '-';
   return `${Math.abs(value).toFixed(1)}°`;
+}
+
+function formatRoundedDegree(value?: number | null) {
+  if (value === null || value === undefined) return '-';
+  return `${Math.round(Math.abs(value))}°`;
 }
 
 function getMeasurementDate(
@@ -177,17 +178,85 @@ function toRotationListItem(record: RotationResponse): ReportListItem {
   };
 }
 
-function getDateKey(date: Date) {
-  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-}
-
 function getTrendValue(record: CurvatureResponse | undefined, key: TrendAngleKey) {
   const option = TREND_ANGLE_OPTIONS.find((item) => item.key === key) ?? TREND_ANGLE_OPTIONS[1];
   return Math.abs(Number(record?.[option.field]) || 0);
 }
 
-function isTrendPlotPoint(point: TrendPoint): point is TrendPlotPoint {
-  return point.y !== null;
+function formatAngleValue(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.round(value * 10) / 10;
+}
+
+function formatChangeAngle(value: number, showPlus = false) {
+  const angle = formatAngleValue(Math.abs(value));
+  const sign = showPlus && angle > 0 ? '+' : '';
+
+  return `${sign}${angle}°`;
+}
+
+function getPeriodOption(period: TrendPeriodKey) {
+  return TREND_PERIOD_OPTIONS.find((item) => item.key === period) ?? TREND_PERIOD_OPTIONS[2];
+}
+
+function buildTrendPath(values: number[], chartWidth: number) {
+  if (values.length === 0 || chartWidth <= 0) {
+    return '';
+  }
+
+  if (values.length === 1) {
+    const y = TREND_CHART_HEIGHT - (Math.min(values[0], TREND_CHART_MAX_VALUE) / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+    return `M 0 ${y} L ${chartWidth} ${y}`;
+  }
+
+  const points = values.map((value, index) => {
+    const x = (chartWidth / (values.length - 1)) * index;
+    const safeValue = Math.max(0, Math.min(value, TREND_CHART_MAX_VALUE));
+    const y = TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+
+    return { x, y };
+  });
+  const path = [`M ${points[0].x} ${points[0].y}`];
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const current = points[index];
+    const next = points[index + 1];
+    const previous = points[index - 1] ?? current;
+    const afterNext = points[index + 2] ?? next;
+
+    const cp1x = current.x + (next.x - previous.x) / 6;
+    const cp1y = current.y + (next.y - previous.y) / 6;
+    const cp2x = next.x - (afterNext.x - current.x) / 6;
+    const cp2y = next.y - (afterNext.y - current.y) / 6;
+
+    path.push(`C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next.x} ${next.y}`);
+  }
+
+  return path.join(' ');
+}
+
+function getThresholdY(value: number) {
+  return TREND_CHART_HEIGHT - (value / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
+}
+
+function getTrendAxisLabels(period: TrendPeriodKey) {
+  if (period === 'week1') return ['6일 전', '4일 전', '2일 전', '어제', '오늘'];
+  if (period === 'week2') return ['2주 전', '10일 전', '1주 전', '3일 전', '오늘'];
+  if (period === 'year1') return ['1년 전', '9개월 전', '6개월 전', '3개월 전', '오늘'];
+
+  const monthLabels: Record<TrendPeriodKey, string[]> = {
+    week1: [],
+    week2: [],
+    month1: ['1개월 전', '3주 전', '2주 전', '1주 전', '오늘'],
+    month3: ['3개월 전', '2개월 전', '1개월 전', '2주 전', '오늘'],
+    month6: ['6개월 전', '4개월 전', '2개월 전', '1개월 전', '오늘'],
+    year1: [],
+  };
+
+  return monthLabels[period];
 }
 
 function TriangleChart({
@@ -335,7 +404,7 @@ function TriangleChart({
                 fontWeight="700"
                 fill="#2C9696"
               >
-                {formatDegree(value)}
+      
               </SvgText>
             </G>
           );
@@ -416,24 +485,40 @@ function ReportItem({
 function SummaryCard({
   label,
   value,
+  selected,
+  onPress,
 }: {
   label: string;
   value: string;
+  selected: boolean;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.summaryCard}>
-      <Text style={styles.summaryLabel}>{label}</Text>
-      <Text style={styles.summaryValue}>{value}</Text>
-    </View>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.summaryCard,
+        selected ? styles.summaryCardActive : null,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.summaryLabel, selected ? styles.summaryLabelActive : null]}>{label}</Text>
+      <Text style={[styles.summaryValue, selected ? styles.summaryValueActive : null]}>{value}</Text>
+    </Pressable>
   );
 }
 
 function TrendValueChart({
   records,
+  selectedAngle,
+  selectedPeriod,
 }: {
   records: CurvatureResponse[];
+  selectedAngle: TrendAngleKey;
+  selectedPeriod: TrendPeriodKey;
 }) {
-  const [selectedAngle, setSelectedAngle] = useState<TrendAngleKey>('main');
+  const { width } = useWindowDimensions();
+  const chartWidth = Math.max(1, width - 72);
 
   const sortedRecords = useMemo(
     () =>
@@ -444,42 +529,28 @@ function TrendValueChart({
     [records],
   );
 
-  const chartData = useMemo(() => {
+  const periodRecords = useMemo(() => {
     if (!sortedRecords.length) return [];
 
+    const periodOption = getPeriodOption(selectedPeriod);
     const endDate = new Date();
     const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - 6);
+    startDate.setDate(startDate.getDate() - (periodOption.days - 1));
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
 
-    const valuesByDay = new Map<string, number>();
-
-    sortedRecords.forEach((record) => {
+    return sortedRecords.filter((record) => {
       const measurementDate = new Date(getMeasurementDate(record));
-      if (measurementDate < startDate || measurementDate > endDate) return;
-
-      valuesByDay.set(getDateKey(measurementDate), getTrendValue(record, selectedAngle));
+      return measurementDate >= startDate && measurementDate <= endDate;
     });
-
-    return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + index);
-
-      return {
-        label: WEEKDAY_LABELS[date.getDay()],
-        dateLabel: `${date.getMonth() + 1}/${date.getDate()}`,
-        value: valuesByDay.get(getDateKey(date)) ?? null,
-      };
-    });
-  }, [selectedAngle, sortedRecords]);
+  }, [selectedPeriod, sortedRecords]);
 
   const values = useMemo(
-    () => chartData.map((item) => item.value).filter((value): value is number => typeof value === 'number'),
-    [chartData],
+    () => periodRecords.map((record) => formatAngleValue(getTrendValue(record, selectedAngle))),
+    [periodRecords, selectedAngle],
   );
 
-  const progression = useMemo(() => {
+  const averageChange = useMemo(() => {
     if (values.length < 2) return 0;
 
     let total = 0;
@@ -491,162 +562,91 @@ function TrendValueChart({
   }, [values]);
 
   const recentChange = useMemo(() => {
-    if (sortedRecords.length < 2) return 0;
+    if (values.length < 2) return 0;
 
-    const last = getTrendValue(sortedRecords[sortedRecords.length - 1], selectedAngle);
-    const previous = getTrendValue(sortedRecords[sortedRecords.length - 2], selectedAngle);
+    const last = values[values.length - 1];
+    const previous = values[values.length - 2];
 
     return Number((last - previous).toFixed(1));
-  }, [selectedAngle, sortedRecords]);
-
-  const maxValue = Math.max(40, ...values, 0);
-  const plotWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
-  const plotHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
-  const baselineY = CHART_PADDING.top + plotHeight;
-  const stepX = chartData.length > 1 ? plotWidth / (chartData.length - 1) : 0;
-
-  const points: TrendPoint[] = chartData.map((item, index) => {
-    const x = CHART_PADDING.left + stepX * index;
-    const y =
-      item.value === null ? null : CHART_PADDING.top + plotHeight - (item.value / maxValue) * plotHeight;
-
-    return { ...item, x, y };
-  });
-
-  const segments = useMemo<TrendPlotPoint[][]>(() => {
-    const result: TrendPlotPoint[][] = [];
-    let current: TrendPlotPoint[] = [];
-
-    points.forEach((point) => {
-      if (!isTrendPlotPoint(point)) {
-        if (current.length > 0) {
-          result.push(current);
-          current = [];
-        }
-        return;
-      }
-
-      current.push(point);
-    });
-
-    if (current.length > 0) {
-      result.push(current);
-    }
-
-    return result;
-  }, [points]);
+  }, [values]);
 
   const hasData = values.length > 0;
-  const activeLabel =
-    TREND_ANGLE_OPTIONS.find((item) => item.key === selectedAngle)?.displayLabel ?? '주 흉추만곡';
-
-  const buildSmoothLinePath = (segment: TrendPlotPoint[]) => {
-    if (segment.length === 1) {
-      return `M ${segment[0].x} ${segment[0].y}`;
-    }
-
-    const path = [`M ${segment[0].x} ${segment[0].y}`];
-
-    for (let index = 0; index < segment.length - 1; index += 1) {
-      const current = segment[index];
-      const next = segment[index + 1];
-      const previous = segment[index - 1] ?? current;
-      const afterNext = segment[index + 2] ?? next;
-
-      const cp1x = current.x + (next.x - previous.x) / 6;
-      const cp1y = current.y + (next.y - previous.y) / 6;
-      const cp2x = next.x - (afterNext.x - current.x) / 6;
-      const cp2y = next.y - (afterNext.y - current.y) / 6;
-
-      path.push(`C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next.x} ${next.y}`);
-    }
-
-    return path.join(' ');
-  };
-
-  const buildAreaPath = (segment: TrendPlotPoint[]) => {
-    const linePath = buildSmoothLinePath(segment);
-    const first = segment[0];
-    const last = segment[segment.length - 1];
-
-    return `${linePath} L ${last.x} ${baselineY} L ${first.x} ${baselineY} Z`;
-  };
+  const trendPath = useMemo(
+    () => buildTrendPath(values, chartWidth),
+    [chartWidth, values],
+  );
+  const xAxisLabels = getTrendAxisLabels(selectedPeriod);
 
   return (
     <View style={styles.trendCard}>
       <View style={styles.trendHeader}>
-        <View style={styles.trendHeaderTextWrap}>
+        <View style={styles.trendSummary}>
           <Text style={styles.trendTitle}>평균 변화량</Text>
           <View style={styles.trendValueRow}>
-            <Text style={styles.trendValue}>{progression.toFixed(1)}°</Text>
+            <Text style={styles.trendValue}>{formatChangeAngle(averageChange)}</Text>
             <View style={styles.trendBadge}>
-              <Text style={styles.trendBadgeText}>
-                최근 변화량{recentChange >= 0 ? '+' : ''}
-                {recentChange.toFixed(1)}°
-              </Text>
+              <Text style={styles.trendBadgeText}>최근 변화 {formatChangeAngle(recentChange, true)}</Text>
             </View>
           </View>
-          <Text style={styles.trendSubtitle}>{activeLabel}</Text>
         </View>
 
-        <View style={styles.trendSelector}>
-          {TREND_ANGLE_OPTIONS.map((option) => {
-            const active = selectedAngle === option.key;
-
-            return (
-              <Pressable
-                key={option.key}
-                onPress={() => setSelectedAngle(option.key)}
-                style={[styles.trendSelectorButton, active && styles.trendSelectorButtonActive]}
-              >
-                <Text style={[styles.trendSelectorText, active && styles.trendSelectorTextActive]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+        <View style={styles.trendLegend}>
+          <View style={styles.trendLegendRow}>
+            <View style={[styles.trendLegendLine, styles.trendLegendDanger]} />
+            <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>위험</Text>
+          </View>
+          <View style={styles.trendLegendRow}>
+            <View style={[styles.trendLegendLine, styles.trendLegendWarning]} />
+            <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>보통</Text>
+          </View>
+          <View style={styles.trendLegendRow}>
+            <View style={[styles.trendLegendLine, styles.trendLegendNormal]} />
+            <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>정상</Text>
+          </View>
         </View>
       </View>
 
       {hasData ? (
         <View style={styles.trendChartWrap}>
-          <Svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+          <Svg width={chartWidth} height={TREND_CHART_HEIGHT}>
             <Defs>
-              <LinearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor="#5AA6FF" stopOpacity={0.3} />
-                <Stop offset="55%" stopColor="#5AA6FF" stopOpacity={0.14} />
-                <Stop offset="100%" stopColor="#5AA6FF" stopOpacity={0} />
+              <LinearGradient id="reportTrendAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0%" stopColor="#2E96FF" stopOpacity={0.16} />
+                <Stop offset="100%" stopColor="#2E96FF" stopOpacity={0} />
               </LinearGradient>
             </Defs>
-
-            {segments.map((segment, index) => (
-              <G key={`segment-${index}`}>
-                {segment.length > 1 ? <Path d={buildAreaPath(segment)} fill="url(#trendFill)" /> : null}
+            <Line x1="0" y1={getThresholdY(40)} x2={chartWidth} y2={getThresholdY(40)} stroke="#FF4B3C" strokeWidth={1} strokeDasharray="6 6" />
+            <Line x1="0" y1={getThresholdY(25)} x2={chartWidth} y2={getThresholdY(25)} stroke="#FABE00" strokeWidth={1} strokeDasharray="6 6" />
+            <Line x1="0" y1={getThresholdY(10)} x2={chartWidth} y2={getThresholdY(10)} stroke="#2C9696" strokeWidth={1} strokeDasharray="6 6" />
+            {trendPath ? (
+              <>
                 <Path
-                  d={buildSmoothLinePath(segment)}
+                  d={`${trendPath} L ${chartWidth} ${TREND_CHART_HEIGHT} L 0 ${TREND_CHART_HEIGHT} Z`}
+                  fill="url(#reportTrendAreaGradient)"
+                />
+                <Path
+                  d={trendPath}
                   fill="none"
                   stroke="#2E96FF"
-                  strokeWidth={1}
+                  strokeWidth={1.5}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-              </G>
-            ))}
-
-            {points.map((point) => (
-              <G key={point.dateLabel}>
-                <SvgText x={point.x} y={CHART_HEIGHT - 2} textAnchor="middle" fontSize="10" fill="#A7B4C7">
-                  {point.label}
-                </SvgText>
-              </G>
-            ))}
+              </>
+            ) : null}
           </Svg>
         </View>
       ) : (
         <View style={styles.trendEmptyState}>
-          <Text style={styles.trendEmptyText}>최근 7일측정 데이터가 없습니다.</Text>
+          <Text style={styles.trendEmptyText}>선택한 기간의 측정 데이터가 없습니다.</Text>
         </View>
       )}
+
+      <View style={styles.trendXAxis}>
+        {xAxisLabels.map((label) => (
+          <Text key={label} style={styles.trendXAxisText}>{label}</Text>
+        ))}
+      </View>
     </View>
   );
 }
@@ -657,6 +657,9 @@ export default function ReportScreen() {
   const [rotations, setRotations] = useState<RotationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
+  const [selectedReportAngle, setSelectedReportAngle] = useState<TrendAngleKey>('proximal');
+  const [selectedTrendPeriod, setSelectedTrendPeriod] = useState<TrendPeriodKey>('month1');
+  const [periodDropdownVisible, setPeriodDropdownVisible] = useState(false);
   const [tabsWidth, setTabsWidth] = useState(0);
   const animatedTab = useMemo(() => new Animated.Value(0), []);
 
@@ -743,10 +746,11 @@ export default function ReportScreen() {
 
   const avgValues: [number, number, number] = [18, 18, 18];
   const summaryCards = [
-    { label: CURVATURE_METRIC_LABELS[0], value: formatDegree(latestCurvature?.secondary_thoracic_cobb) },
-    { label: CURVATURE_METRIC_LABELS[1], value: formatDegree(latestCurvature?.main_thoracic_cobb) },
-    { label: CURVATURE_METRIC_LABELS[2], value: formatDegree(latestCurvature?.lumbar_cobb) },
+    { key: 'proximal' as const, label: CURVATURE_METRIC_LABELS[0], value: formatRoundedDegree(latestCurvature?.secondary_thoracic_cobb) },
+    { key: 'main' as const, label: CURVATURE_METRIC_LABELS[1], value: formatRoundedDegree(latestCurvature?.main_thoracic_cobb) },
+    { key: 'lumbar' as const, label: CURVATURE_METRIC_LABELS[2], value: formatRoundedDegree(latestCurvature?.lumbar_cobb) },
   ];
+  const selectedPeriodLabel = getPeriodOption(selectedTrendPeriod).label;
 
   const tabWidth = tabsWidth > 0 ? tabsWidth / FILTERS.length : 0;
   const translateX = tabWidth
@@ -773,6 +777,11 @@ export default function ReportScreen() {
 
   const handleGoHome = () => {
     router.replace('/home');
+  };
+
+  const handlePeriodSelect = (period: TrendPeriodKey) => {
+    setSelectedTrendPeriod(period);
+    setPeriodDropdownVisible(false);
   };
 
   const hasCurvatureData = curvatures.length > 0;
@@ -839,13 +848,56 @@ export default function ReportScreen() {
             ) : null}
           </View>
 
+          <View style={styles.resultHeader}>
+            <Text style={styles.resultTitle}>최근 측정 결과</Text>
+            <View style={styles.periodSelectorWrap}>
+              <Pressable
+                style={({ pressed }) => [styles.periodSelectButton, pressed && styles.pressed]}
+                onPress={() => setPeriodDropdownVisible((visible) => !visible)}
+              >
+                <Text style={styles.periodSelectText}>{selectedPeriodLabel}</Text>
+                <Text style={styles.periodSelectIcon}>⌄</Text>
+              </Pressable>
+
+              {periodDropdownVisible ? (
+                <View style={styles.periodDropdownCard}>
+                  {TREND_PERIOD_OPTIONS.map((option) => {
+                    const selected = selectedTrendPeriod === option.key;
+
+                    return (
+                      <Pressable
+                        key={option.key}
+                        style={[styles.periodDropdownOption, selected ? styles.periodDropdownOptionActive : null]}
+                        onPress={() => handlePeriodSelect(option.key)}
+                      >
+                        <Text style={[styles.periodDropdownOptionText, selected ? styles.periodDropdownOptionTextActive : null]}>
+                          {option.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : null}
+            </View>
+          </View>
+
           <View style={styles.summaryRow}>
             {summaryCards.map((card) => (
-              <SummaryCard key={card.label} label={card.label} value={card.value} />
+              <SummaryCard
+                key={card.key}
+                label={card.label}
+                value={card.value}
+                selected={selectedReportAngle === card.key}
+                onPress={() => setSelectedReportAngle(card.key)}
+              />
             ))}
           </View>
 
-          <TrendValueChart records={curvatures} />
+          <TrendValueChart
+            records={curvatures}
+            selectedAngle={selectedReportAngle}
+            selectedPeriod={selectedTrendPeriod}
+          />
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>측정 목록</Text>
@@ -921,6 +973,7 @@ export default function ReportScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+
     </View>
   );
 }
