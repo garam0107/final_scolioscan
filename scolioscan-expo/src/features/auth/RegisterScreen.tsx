@@ -89,46 +89,46 @@ export default function RegisterScreen() {
 
 
 // OCTOMO API 호출 후 인증 완료 확인 함수
-//   const handleVerifyPhone = useCallback(async () => {
-//   if (verifyingPhone || loading || step !== 'message' || !smsRequested) {
-//     return;
-//   }
+  const handleVerifyPhone = useCallback(async () => {
+  if (verifyingPhone || loading || step !== 'message' || !smsRequested) {
+    return;
+  }
 
-//   setVerifyingPhone(true);
+  setVerifyingPhone(true);
 
-//   try {
-//     const response = await octomoApi(draft.phone);
+  try {
+    const response = await octomoApi(draft.phone);
 
-//     if (response.verified) {
-//       showToast('휴대전화 번호 인증이 완료되었습니다.');
-//       setSmsRequested(false);
-//       setStep('email');
-//       return;
-//     }
+    if (response.verified) {
+      showToast('휴대전화 번호 인증이 완료되었습니다.');
+      setSmsRequested(false);
+      setStep('email');
+      return;
+    }
 
-//     showToast('휴대전화 번호 인증이 아직 완료되지 않았습니다.');
-//   } catch (error) {
-//     const message = error instanceof Error ? error.message : '휴대전화 번호 인증 확인에 실패했습니다.';
-//     showToast(normalizeRegisterMessage(message));
-//   } finally {
-//     setVerifyingPhone(false);
-//   }
-// }, [draft.phone, loading, octomoApi, smsRequested, step, verifyingPhone]);
+    showToast('휴대전화 번호 인증이 아직 완료되지 않았습니다.');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '휴대전화 번호 인증 확인에 실패했습니다.';
+    showToast(normalizeRegisterMessage(message));
+  } finally {
+    setVerifyingPhone(false);
+  }
+}, [draft.phone, loading, octomoApi, smsRequested, step, verifyingPhone]);
 
 
-//   useEffect(() => {
-//   const subscription = AppState.addEventListener('change', (nextAppState) => {
-//         if (nextAppState === 'active') {
-//       setTimeout(() => {
-//         void handleVerifyPhone();
-//       }, 1500);
-//     }
-//   });
+  useEffect(() => {
+  const subscription = AppState.addEventListener('change', (nextAppState) => {
+        if (nextAppState === 'active') {
+      setTimeout(() => {
+        void handleVerifyPhone();
+      }, 1500);
+    }
+  });
 
-//   return () => {
-//     subscription.remove();
-//   };
-// }, [handleVerifyPhone]);
+  return () => {
+    subscription.remove();
+  };
+}, [handleVerifyPhone]);
 
 
   // footer 버튼 위치 조정
@@ -297,10 +297,10 @@ export default function RegisterScreen() {
     //   console.log("OCTOMO API 리스폰스 : ", OctomoApiResponse);
     //   setStep('email');
     // }
-    if (step === 'message') {
-      setStep('email');
-      return;
-    }
+    // if (step === 'message') {
+    //   setStep('email');
+    //   return;
+    // }
     if (step === 'email') {
       const trimmedEmail = draft.email.trim();
       if (!trimmedEmail) {
@@ -439,7 +439,7 @@ export default function RegisterScreen() {
 
     if (step === 'message'){
       void handleMessagePress();
-      goNext();
+      return;
     }
 
     goNext();
