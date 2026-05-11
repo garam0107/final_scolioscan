@@ -4,12 +4,17 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F4F6F7',
+      backgroundColor: Colors.gray[25],
   },
   content: {
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingBottom: 12,
+  },
+  measurementRequiredContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 120,
   },
   summaryTextBlock: {
     paddingTop: 10,

@@ -4,13 +4,18 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F5F7FB',
+    backgroundColor: Colors.gray[25],
   },
   content: {
     paddingHorizontal: 20,
     paddingTop: 34,
     paddingBottom: 12,
     flexGrow: 1,
+  },
+  measurementRequiredContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 120,
   },
   pageTitle: {
     color: '#000000',

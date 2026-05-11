@@ -29,6 +29,7 @@ import Svg, {
 } from 'react-native-svg';
 import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
+import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { RotationResponse } from '@/src/types/rotation';
 import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
@@ -527,6 +528,7 @@ export default function ReportScreen() {
   };
 
   const hasCurvatureData = curvatures.length > 0;
+  const shouldShowMeasurementRequired = !loading && !hasCurvatureData;
 
   return (
     <View style={styles.screen}>
@@ -535,6 +537,7 @@ export default function ReportScreen() {
           style={{ flex: 1 }}
           contentContainerStyle={[
             styles.content,
+            shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
             {
               paddingTop: 8,
               paddingBottom: 20,
@@ -542,6 +545,10 @@ export default function ReportScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
+          {shouldShowMeasurementRequired ? (
+            <MeasurementRequiredCard onPress={handleGoHome} />
+          ) : (
+            <>
           <Text style={styles.pageTitle}>척추 균형 분석</Text>
 
           <View style={styles.chartCard}>
@@ -554,7 +561,7 @@ export default function ReportScreen() {
               chartDescriptionText="중심에 가까울수록 정상 범위에 가깝습니다."
             />
 
-            {!hasCurvatureData ? (
+            {!loading && !hasCurvatureData ? (
               <View style={styles.emptyOverlay}>
                 <BlurView intensity={110} tint="light" style={styles.blurView} pointerEvents="none" />
                 <View style={styles.grayOverlay} pointerEvents="none" />
@@ -715,6 +722,8 @@ export default function ReportScreen() {
               )}
             </View>
           </View>
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
 

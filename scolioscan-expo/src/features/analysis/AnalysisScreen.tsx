@@ -17,6 +17,7 @@ import type { SvgProps } from 'react-native-svg';
 
 import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
+import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import { useAuth } from '@/src/contexts/AuthContext';
 import type { AnalysisResponse } from '@/src/types/analysis';
 import type { CurvatureResponse } from '@/src/types/curvature';
@@ -431,6 +432,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const severityLabel = infoCardLevel;
   const infoCardCopy = getInfoCardCopy(infoCardLevel);
   const InfoCardImageComponent = infoCardCopy.ImageComponent;
+  const shouldShowMeasurementRequired = !loading && !analysis && !error;
 
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);
@@ -539,9 +541,14 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
           showsVerticalScrollIndicator
           contentContainerStyle={[
             styles.content,
+            shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
             { paddingTop: 8, paddingBottom: 20  },
           ]}
         >
+          {shouldShowMeasurementRequired ? (
+            <MeasurementRequiredCard />
+          ) : (
+            <>
           <View style={styles.summaryTextBlock}>
             <Text style={styles.summaryNameLine}>{summaryName} 님은</Text>
             <Text style={styles.summaryDiagnosisLine}>
@@ -699,6 +706,8 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
           <CurvePatternCard dominantCurve={dominantCurve} />
 
           <AiDoctorCard />
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>
