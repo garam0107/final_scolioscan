@@ -6,7 +6,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F7FB',
   },
   content: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 20,
     paddingTop: 34,
     paddingBottom: 12,
     flexGrow: 1,

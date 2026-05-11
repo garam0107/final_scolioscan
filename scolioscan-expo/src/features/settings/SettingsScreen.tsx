@@ -78,9 +78,9 @@ function SettingRow({
         <Switch
           value={isOn}
           onValueChange={() => onToggle?.(toggleKey)}
-          trackColor={{ false: '#DDE3EA', true: '#74B8B3' }}
+          trackColor={{ false: '#D4D9E2', true: '#2C9696' }}
           thumbColor="#FFFFFF"
-          ios_backgroundColor="#DDE3EA"
+          ios_backgroundColor="#D4D9E2"
         />
       ) : (
         <View style={styles.rowMeta}>
