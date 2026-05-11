@@ -317,14 +317,13 @@ const styles = StyleSheet.create({
   dominantCurveCard: {
     marginTop: 14,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingLeft: 20,
-    paddingRight: 0,
-    paddingTop: 22,
-    paddingBottom: 22,
+    borderRadius: 18,
+    minHeight: 136,
+    paddingLeft: 14,
+    paddingRight: 10,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 200,
     overflow: 'hidden',
     shadowColor: '#000000',
     shadowOpacity: 0.06,
@@ -335,7 +334,9 @@ const styles = StyleSheet.create({
 
   dominantCurveText: {
     flex: 1,
-    paddingRight: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingRight: 12,
   },
 
   dominantCurveTitle: {
@@ -366,9 +367,11 @@ const styles = StyleSheet.create({
   },
 
   dominantCurveImageWrap: {
-    width: 140,
-    height: 180,
+    width: 120,
+    height: 140,
     flexShrink: 0,
+    marginLeft: 'auto',
+    marginRight: -14,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
