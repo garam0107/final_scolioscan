@@ -31,7 +31,7 @@ import {
 } from './severity';
 import Grade1Image from '../../../assets/images/grade1.svg';
 import Grade2Image from '../../../assets/images/grade2.svg';
-import Grade3Image from '../../../assets/images/grade.svg';
+import Grade3Image from '../../../assets/images/grade3.svg';
 import Grade4Image from '../../../assets/images/grade4.svg';
 
 const spineImage = require('../../../assets/images/spine.png');
@@ -43,6 +43,8 @@ type AnalysisScreenProps = {
 
 // 2D, 3D 토글
 type ViewMode = '2d' | '3d';
+type InfoCardLevel = '정상' | '경도' | '중등도' | '고도';
+
 
 type InfoCardCopy = {
   title: string;
@@ -88,24 +90,30 @@ function toAnalysisFromRotation(record: RotationResponse): AnalysisResponse {
 }
 
 // 분기별 척추측만증 표시 함수 — 3단계 (정상/보통/위험)
-function getInfoCardCopy(severityLabel: '정상' | '보통' | '위험'): InfoCardCopy {
-  switch (severityLabel) {
+function getInfoCardCopy(infoCardLevel: InfoCardLevel): InfoCardCopy {
+  switch (infoCardLevel) {
     case '정상':
       return {
         title: '정상 범위를 유지한 운동',
         body: '50분마다 간단한 스트레칭을 하고, 수영, 요가, 필라테스 등을 도전해보세요.',
         ImageComponent: Grade1Image,
       };
-    case '보통':
+    case '경도':
       return {
-        title: '보통 척추측만증이란?',
+        title: '경도 척추측만증이란?',
         body: "콥각도(cobb's angle)가 15도 이상으로 측정된 상태예요. 자세 습관을 관리하면서 변화를 확인해 주세요.",
         ImageComponent: Grade2Image,
       };
-    case '위험':
+    case '중등도':
       return {
-        title: '위험 척추측만증이란?',
+        title: '중등도 척추측만증이란?',
         body: "콥각도(cobb's angle)가 25도 이상으로 높아진 상태예요. 전문적인 진료와 관리 방향을 함께 확인해 주세요.",
+        ImageComponent: Grade3Image,
+      };
+    case '고도':
+      return {
+        title: '고도 척추측만증이란?',
+        body: "콥각도(cobb's angle)가 45도 이상으로 높아진 상태예요. 눈에 띌 정도로 심한 외관 변형과 심한 경우 흉곽 압박으로 심폐기능 이상을 초래할 수 있습니다.",
         ImageComponent: Grade4Image,
       };
   }
@@ -336,9 +344,25 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
   const mainValue = pose.metrics.find((metric) => metric.key === 'main')?.value ?? 0;
   const lumbarValue = pose.metrics.find((metric) => metric.key === 'lumbar')?.value ?? 0;
-  const severityLabel = getSeverityLabel(upperValue);
-  const infoCardCopy = getInfoCardCopy(severityLabel);
-  const InfoCardImageComponent = infoCardCopy.ImageComponent;
+const severityLabel = getSeverityLabel(upperValue);
+
+const maxCobbValue = Math.max(
+  Math.abs(upperValue),
+  Math.abs(mainValue),
+  Math.abs(lumbarValue),
+);
+
+const infoCardLevel = getInfoCardLevel(maxCobbValue);
+const infoCardCopy = getInfoCardCopy(infoCardLevel);
+const InfoCardImageComponent = infoCardCopy.ImageComponent;
+
+  function getInfoCardLevel(value: number): InfoCardLevel {
+    const maxValue = Math.abs(value);
+    if (maxValue < 15) return '정상';
+    if (maxValue < 25) return '경도';
+    if (maxValue < 45) return '중등도';
+    return '고도';
+  }
 
   // back_type 우선, 없으면 클라이언트 분류 — 인자 순서: (secondary, main, lumbar) = (upper, main, lumbar)
   const dominantCurve = useMemo(() => {
