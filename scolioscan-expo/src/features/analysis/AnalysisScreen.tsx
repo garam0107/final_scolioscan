@@ -22,7 +22,7 @@ import type { AnalysisResponse } from '@/src/types/analysis';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { RotationResponse } from '@/src/types/rotation';
 import styles from './analysis.styles';
-import { createAnalysisPose, VERTEBRA_COUNT, getSeverityLabel } from './analysisPose';
+import { createAnalysisPose, VERTEBRA_COUNT } from './analysisPose';
 import {
   classifyDominantCurve,
   getDominantCurveInfo,
@@ -98,7 +98,7 @@ function toAnalysisFromRotation(record: RotationResponse): AnalysisResponse {
   };
 }
 
-// 분기별 척추측만증 표시 함수 — 3단계 (정상/보통/위험)
+// 분기별 척추측만증 표시 함수 — 4단계 (정상/경도/중등도/고도)
 function getInfoCardCopy(infoCardLevel: InfoCardLevel): InfoCardCopy {
   switch (infoCardLevel) {
     case '정상':
@@ -420,17 +420,17 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
   const mainValue = pose.metrics.find((metric) => metric.key === 'main')?.value ?? 0;
   const lumbarValue = pose.metrics.find((metric) => metric.key === 'lumbar')?.value ?? 0;
-const severityLabel = getSeverityLabel(upperValue);
 
-const maxCobbValue = Math.max(
-  Math.abs(upperValue),
-  Math.abs(mainValue),
-  Math.abs(lumbarValue),
-);
+  const maxCobbValue = Math.max(
+    Math.abs(upperValue),
+    Math.abs(mainValue),
+    Math.abs(lumbarValue),
+  );
 
-const infoCardLevel = getInfoCardLevel(maxCobbValue);
-const infoCardCopy = getInfoCardCopy(infoCardLevel);
-const InfoCardImageComponent = infoCardCopy.ImageComponent;
+  const infoCardLevel = getInfoCardLevel(maxCobbValue);
+  const severityLabel = infoCardLevel;
+  const infoCardCopy = getInfoCardCopy(infoCardLevel);
+  const InfoCardImageComponent = infoCardCopy.ImageComponent;
 
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);

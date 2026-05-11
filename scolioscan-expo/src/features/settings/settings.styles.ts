@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 16,
   },
   profileCard: {

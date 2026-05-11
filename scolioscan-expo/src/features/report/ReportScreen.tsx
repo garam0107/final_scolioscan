@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -250,7 +251,7 @@ function getTrendAxisLabels(period: TrendPeriodKey) {
   const monthLabels: Record<TrendPeriodKey, string[]> = {
     week1: [],
     week2: [],
-    month1: ['1개월 전', '3주 전', '2주 전', '1주 전', '오늘'],
+    month1: ['한 달 전', '3주 전', '2주 전', '1주 전', '오늘'],
     month3: ['3개월 전', '2개월 전', '1개월 전', '2주 전', '오늘'],
     month6: ['6개월 전', '4개월 전', '2개월 전', '1개월 전', '오늘'],
     year1: [],
@@ -856,7 +857,7 @@ export default function ReportScreen() {
                 onPress={() => setPeriodDropdownVisible((visible) => !visible)}
               >
                 <Text style={styles.periodSelectText}>{selectedPeriodLabel}</Text>
-                <Text style={styles.periodSelectIcon}>⌄</Text>
+                <Ionicons name="chevron-down" size={16} color="#B6BECE" />
               </Pressable>
 
               {periodDropdownVisible ? (

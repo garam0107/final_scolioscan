@@ -74,6 +74,7 @@ const INITIAL_WEEKLY_RESULT_VALUES: WeeklyResultValues = {
   lumbar: 0,
 };
 
+const RECENT_CURVATURE_DAYS = 30;
 const TREND_CHART_HEIGHT = 120;
 const TREND_CHART_MAX_VALUE = 40;
 
@@ -102,6 +103,23 @@ function getSelectedCurvatureValue(record: CurvatureResponse, selectedId: Weekly
   }
 
   return record.lumbar_cobb;
+}
+
+function getMeasurementDate(record: Pick<CurvatureResponse, 'measured_at' | 'created_at'>) {
+  return record.measured_at || record.created_at;
+}
+
+function filterRecentCurvatureRecords(records: CurvatureResponse[]) {
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - (RECENT_CURVATURE_DAYS - 1));
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(23, 59, 59, 999);
+
+  return records.filter((record) => {
+    const measurementDate = new Date(getMeasurementDate(record));
+    return measurementDate >= startDate && measurementDate <= endDate;
+  });
 }
 
 function buildTrendPath(values: number[], chartWidth: number) {
@@ -261,9 +279,10 @@ export default function HomeScreen() {
 
   const loadLatestCurvature = useCallback(async () => {
     try {
-      const response = await curvatureAPI.getAnalyses({ limit: 30 });
-      const latestCurvature = response.data[0];
-      setCurvatureTrendRecords(response.data);
+      const response = await curvatureAPI.getAnalyses({ limit: 100 });
+      const recentCurvatures = filterRecentCurvatureRecords(response.data);
+      const latestCurvature = recentCurvatures[0];
+      setCurvatureTrendRecords(recentCurvatures);
 
       if (!latestCurvature) {
         setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);

@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     zIndex: 30,
   },
   periodSelectButton: {
-    minWidth: 82,
+    width: 82,
     height: 32,
     paddingHorizontal: 10,
     flexDirection: 'row',
@@ -179,16 +179,11 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '500',
   },
-  periodSelectIcon: {
-    color: '#B6BECE',
-    fontSize: 16,
-    lineHeight: 16,
-  },
   periodDropdownCard: {
     position: 'absolute',
     right: 0,
     top: 38,
-    width: 116,
+    width: 82,
     paddingVertical: 6,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
@@ -203,20 +198,20 @@ const styles = StyleSheet.create({
   periodDropdownOption: {
     minHeight: 34,
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   periodDropdownOptionActive: {
     backgroundColor: '#EDFDFC',
   },
   periodDropdownOptionText: {
-    color: '#515968',
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '500',
+    color: Colors.gray[600],
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400',
   },
   periodDropdownOptionTextActive: {
-    color: '#20797E',
-    fontWeight: '700',
+    color: Colors.primary[500],
+    fontWeight: '500',
   },
   trendCard: {
     backgroundColor: '#FFFFFF',
