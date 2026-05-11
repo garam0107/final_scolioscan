@@ -109,6 +109,25 @@ function getMeasurementDate(record: Pick<CurvatureResponse, 'measured_at' | 'cre
   return record.measured_at || record.created_at;
 }
 
+function formatDateParam(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function getRecentDateRange(days: number) {
+  const toDate = new Date();
+  const fromDate = new Date(toDate);
+  fromDate.setDate(fromDate.getDate() - (days - 1));
+
+  return {
+    from_date: formatDateParam(fromDate),
+    to_date: formatDateParam(toDate),
+  };
+}
+
 function filterRecentCurvatureRecords(records: CurvatureResponse[]) {
   const endDate = new Date();
   const startDate = new Date(endDate);
@@ -120,6 +139,34 @@ function filterRecentCurvatureRecords(records: CurvatureResponse[]) {
     const measurementDate = new Date(getMeasurementDate(record));
     return measurementDate >= startDate && measurementDate <= endDate;
   });
+}
+
+function getDateKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function getDailyLatestCurvatureRecords(records: CurvatureResponse[]) {
+  const latestByDay = new Map<string, CurvatureResponse>();
+
+  records.forEach((record) => {
+    const measurementDate = new Date(getMeasurementDate(record));
+    const dateKey = getDateKey(measurementDate);
+    const current = latestByDay.get(dateKey);
+
+    if (!current) {
+      latestByDay.set(dateKey, record);
+      return;
+    }
+
+    const currentTime = new Date(getMeasurementDate(current)).getTime();
+    if (measurementDate.getTime() >= currentTime) {
+      latestByDay.set(dateKey, record);
+    }
+  });
+
+  return Array.from(latestByDay.values()).sort(
+    (left, right) => new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),
+  );
 }
 
 function buildTrendPath(values: number[], chartWidth: number) {
@@ -279,10 +326,14 @@ export default function HomeScreen() {
 
   const loadLatestCurvature = useCallback(async () => {
     try {
-      const response = await curvatureAPI.getAnalyses({ limit: 100 });
+      const response = await curvatureAPI.getAnalyses({
+        limit: 1000,
+        ...getRecentDateRange(RECENT_CURVATURE_DAYS),
+      });
       const recentCurvatures = filterRecentCurvatureRecords(response.data);
-      const latestCurvature = recentCurvatures[0];
-      setCurvatureTrendRecords(recentCurvatures);
+      const dailyLatestCurvatures = getDailyLatestCurvatureRecords(recentCurvatures);
+      const latestCurvature = dailyLatestCurvatures[0];
+      setCurvatureTrendRecords(dailyLatestCurvatures);
 
       if (!latestCurvature) {
         setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);

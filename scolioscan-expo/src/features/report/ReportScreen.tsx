@@ -57,6 +57,16 @@ type ReportListItem = {
   navigationId?: string;
 };
 
+type TrendChartPoint = {
+  x: number;
+  y: number;
+};
+
+type TrendBucketPoint = {
+  timestamp: number;
+  value: number;
+};
+
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: '2d', label: '2D' },
@@ -113,6 +123,7 @@ const TREND_PERIOD_OPTIONS: { key: TrendPeriodKey; label: string; days: number }
   { key: 'month6', label: '6개월', days: 180 },
   { key: 'year1', label: '1년', days: 365 },
 ];
+const REPORT_CURVATURE_DAYS = 365;
 const TREND_CHART_HEIGHT = 120;
 const TREND_CHART_MAX_VALUE = 40;
 
@@ -203,23 +214,45 @@ function getPeriodOption(period: TrendPeriodKey) {
   return TREND_PERIOD_OPTIONS.find((item) => item.key === period) ?? TREND_PERIOD_OPTIONS[2];
 }
 
-function buildTrendPath(values: number[], chartWidth: number) {
-  if (values.length === 0 || chartWidth <= 0) {
+function formatDateParam(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function getRecentDateRange(days: number) {
+  const toDate = new Date();
+  const fromDate = new Date(toDate);
+  fromDate.setDate(fromDate.getDate() - (days - 1));
+
+  return {
+    from_date: formatDateParam(fromDate),
+    to_date: formatDateParam(toDate),
+  };
+}
+
+function getRecentDateRangeDates(days: number) {
+  const endDate = new Date();
+  endDate.setHours(23, 59, 59, 999);
+
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - (days - 1));
+  startDate.setHours(0, 0, 0, 0);
+
+  return { startDate, endDate };
+}
+
+function buildTrendPath(points: TrendChartPoint[]) {
+  if (points.length === 0) {
     return '';
   }
 
-  if (values.length === 1) {
-    const y = TREND_CHART_HEIGHT - (Math.min(values[0], TREND_CHART_MAX_VALUE) / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
-    return `M 0 ${y} L ${chartWidth} ${y}`;
+  if (points.length === 1) {
+    return `M ${points[0].x} ${points[0].y} L ${points[0].x + 0.1} ${points[0].y}`;
   }
 
-  const points = values.map((value, index) => {
-    const x = (chartWidth / (values.length - 1)) * index;
-    const safeValue = Math.max(0, Math.min(value, TREND_CHART_MAX_VALUE));
-    const y = TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
-
-    return { x, y };
-  });
   const path = [`M ${points[0].x} ${points[0].y}`];
 
   for (let index = 0; index < points.length - 1; index += 1) {
@@ -237,6 +270,94 @@ function buildTrendPath(values: number[], chartWidth: number) {
   }
 
   return path.join(' ');
+}
+
+function getBucketResolution(period: TrendPeriodKey) {
+  if (period === 'week1') return 'raw';
+  if (period === 'week2' || period === 'month1') return 'daily';
+  if (period === 'month3') return 'weekly';
+  if (period === 'month6') return 'biweekly';
+  return 'monthly';
+}
+
+function getBucketKey(date: Date, period: TrendPeriodKey) {
+  const resolution = getBucketResolution(period);
+
+  if (resolution === 'raw') {
+    return `${date.getTime()}`;
+  }
+
+  if (resolution === 'daily') {
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  }
+
+  if (resolution === 'weekly' || resolution === 'biweekly') {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const dayIndex = Math.floor((date.getTime() - startOfYear.getTime()) / 86400000);
+    const bucketSize = resolution === 'weekly' ? 7 : 14;
+    const bucketIndex = Math.floor(dayIndex / bucketSize);
+
+    return `${date.getFullYear()}-${resolution}-${bucketIndex}`;
+  }
+
+  return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
+function aggregateTrendPoints(
+  records: CurvatureResponse[],
+  selectedAngle: TrendAngleKey,
+  selectedPeriod: TrendPeriodKey,
+) {
+  const resolution = getBucketResolution(selectedPeriod);
+
+  if (resolution === 'raw') {
+    return records.map((record) => ({
+      timestamp: new Date(getMeasurementDate(record)).getTime(),
+      value: formatAngleValue(getTrendValue(record, selectedAngle)),
+    }));
+  }
+
+  const buckets = new Map<string, {
+    latestTimestamp: number;
+    latestValue: number;
+    totalValue: number;
+    count: number;
+  }>();
+
+  records.forEach((record) => {
+    const measurementDate = new Date(getMeasurementDate(record));
+    const timestamp = measurementDate.getTime();
+    const value = formatAngleValue(getTrendValue(record, selectedAngle));
+    const bucketKey = getBucketKey(measurementDate, selectedPeriod);
+    const current = buckets.get(bucketKey);
+
+    if (!current) {
+      buckets.set(bucketKey, {
+        latestTimestamp: timestamp,
+        latestValue: value,
+        totalValue: value,
+        count: 1,
+      });
+      return;
+    }
+
+    current.totalValue += value;
+    current.count += 1;
+
+    if (timestamp >= current.latestTimestamp) {
+      current.latestTimestamp = timestamp;
+      current.latestValue = value;
+    }
+  });
+
+  return Array.from(buckets.values())
+    .map<TrendBucketPoint>((bucket) => ({
+      timestamp: bucket.latestTimestamp,
+      value: resolution === 'daily'
+        ? bucket.latestValue
+        : formatAngleValue(bucket.totalValue / bucket.count),
+    }))
+    .sort((left, right) => left.timestamp - right.timestamp);
 }
 
 function getThresholdY(value: number) {
@@ -530,52 +651,85 @@ function TrendValueChart({
     [records],
   );
 
+  const periodRange = useMemo(
+    () => getRecentDateRangeDates(getPeriodOption(selectedPeriod).days),
+    [selectedPeriod],
+  );
+
   const periodRecords = useMemo(() => {
     if (!sortedRecords.length) return [];
 
-    const periodOption = getPeriodOption(selectedPeriod);
-    const endDate = new Date();
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - (periodOption.days - 1));
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-
     return sortedRecords.filter((record) => {
       const measurementDate = new Date(getMeasurementDate(record));
-      return measurementDate >= startDate && measurementDate <= endDate;
+      return measurementDate >= periodRange.startDate && measurementDate <= periodRange.endDate;
     });
-  }, [selectedPeriod, sortedRecords]);
+  }, [periodRange, sortedRecords]);
 
-  const values = useMemo(
+  const bucketPoints = useMemo(
+    () => aggregateTrendPoints(periodRecords, selectedAngle, selectedPeriod),
+    [periodRecords, selectedAngle, selectedPeriod],
+  );
+
+  const graphValues = useMemo(
+    () => bucketPoints.map((point) => point.value),
+    [bucketPoints],
+  );
+
+  const rawValues = useMemo(
     () => periodRecords.map((record) => formatAngleValue(getTrendValue(record, selectedAngle))),
     [periodRecords, selectedAngle],
   );
 
   const averageChange = useMemo(() => {
-    if (values.length < 2) return 0;
+    if (graphValues.length < 2) return 0;
 
     let total = 0;
-    for (let index = 1; index < values.length; index += 1) {
-      total += Math.abs(values[index] - values[index - 1]);
+    for (let index = 1; index < graphValues.length; index += 1) {
+      total += Math.abs(graphValues[index] - graphValues[index - 1]);
     }
 
-    return Number((total / (values.length - 1)).toFixed(1));
-  }, [values]);
+    return Number((total / (graphValues.length - 1)).toFixed(1));
+  }, [graphValues]);
 
   const recentChange = useMemo(() => {
-    if (values.length < 2) return 0;
+    if (rawValues.length < 2) return 0;
 
-    const last = values[values.length - 1];
-    const previous = values[values.length - 2];
+    const last = rawValues[rawValues.length - 1];
+    const previous = rawValues[rawValues.length - 2];
 
     return Number((last - previous).toFixed(1));
-  }, [values]);
+  }, [rawValues]);
 
-  const hasData = values.length > 0;
+  const hasData = bucketPoints.length > 0;
+  const chartPoints = useMemo(() => {
+    const rangeTime = Math.max(1, periodRange.endDate.getTime() - periodRange.startDate.getTime());
+
+    return bucketPoints.map((point) => {
+      const clampedTime = Math.max(
+        periodRange.startDate.getTime(),
+        Math.min(periodRange.endDate.getTime(), point.timestamp),
+      );
+      const safeValue = Math.max(0, Math.min(point.value, TREND_CHART_MAX_VALUE));
+
+      return {
+        x: ((clampedTime - periodRange.startDate.getTime()) / rangeTime) * chartWidth,
+        y: TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT,
+      };
+    });
+  }, [bucketPoints, chartWidth, periodRange]);
+
   const trendPath = useMemo(
-    () => buildTrendPath(values, chartWidth),
-    [chartWidth, values],
+    () => buildTrendPath(chartPoints),
+    [chartPoints],
   );
+  const trendAreaPath = useMemo(() => {
+    if (!trendPath || chartPoints.length === 0) return '';
+
+    const firstPoint = chartPoints[0];
+    const lastPoint = chartPoints[chartPoints.length - 1];
+
+    return `${trendPath} L ${lastPoint.x} ${TREND_CHART_HEIGHT} L ${firstPoint.x} ${TREND_CHART_HEIGHT} Z`;
+  }, [chartPoints, trendPath]);
   const xAxisLabels = getTrendAxisLabels(selectedPeriod);
 
   return (
@@ -622,7 +776,7 @@ function TrendValueChart({
             {trendPath ? (
               <>
                 <Path
-                  d={`${trendPath} L ${chartWidth} ${TREND_CHART_HEIGHT} L 0 ${TREND_CHART_HEIGHT} Z`}
+                  d={trendAreaPath}
                   fill="url(#reportTrendAreaGradient)"
                 />
                 <Path
@@ -670,7 +824,10 @@ export default function ReportScreen() {
     const load = async () => {
       try {
         const [curvatureResult, rotationResult] = await Promise.allSettled([
-          curvatureAPI.getAnalyses({ limit: 100 }),
+          curvatureAPI.getAnalyses({
+            limit: 1000,
+            ...getRecentDateRange(REPORT_CURVATURE_DAYS),
+          }),
           rotationAPI.getAnalyses({ limit: 100 }),
         ]);
 

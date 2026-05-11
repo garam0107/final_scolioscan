@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pathlib import Path
 from typing import List
+from datetime import date, datetime, time
 import uuid
 import shutil
 
@@ -89,13 +90,31 @@ async def create_curvature(
 @router.get("/", response_model=List[CurvatureMeasurementResponse])
 def list_curvatures(
     skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=1000),
+    from_date: date | None = Query(None),
+    to_date: date | None = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if from_date and to_date and from_date > to_date:
+        raise HTTPException(status_code=400, detail="from_date must be before or equal to to_date")
+
+    query = db.query(CurvatureMeasurement).filter(
+        CurvatureMeasurement.user_id == str(current_user.id)
+    )
+
+    if from_date:
+        query = query.filter(
+            CurvatureMeasurement.measured_at >= datetime.combine(from_date, time.min)
+        )
+
+    if to_date:
+        query = query.filter(
+            CurvatureMeasurement.measured_at <= datetime.combine(to_date, time.max)
+        )
+
     return (
-        db.query(CurvatureMeasurement)
-        .filter(CurvatureMeasurement.user_id == str(current_user.id))
+        query
         .order_by(CurvatureMeasurement.measured_at.desc())
         .offset(skip)
         .limit(limit)
