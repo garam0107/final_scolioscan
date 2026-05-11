@@ -34,7 +34,7 @@ import Grade1Image from '../../../assets/images/grade1.svg';
 import Grade2Image from '../../../assets/images/grade2.svg';
 import Grade3Image from '../../../assets/images/grade3.svg';
 import Grade4Image from '../../../assets/images/grade4.svg';
-import VertebraeType from '../../../assets/images/vertebrae_type.svg'
+import VertebraeType from '../../../assets/images/analysis/analysis_type_normal.svg'
 import CurvePatternIcon from '../../../assets/icons/heroicons-outline_chart-bar.svg';
 import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 
