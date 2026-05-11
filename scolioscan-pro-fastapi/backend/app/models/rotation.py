@@ -29,3 +29,10 @@ class RotationMeasurement(Base):
     max_severity_zone = Column(SQLEnum(SeverityZone), nullable=False)
 
     created_at = Column(DateTime, nullable=False, server_default=func.now())
+    # 같이 측정한 2D 촬영 결과를 연결하기 위한 curvature id
+    curvature_measurement_id = Column(
+        Integer,
+        ForeignKey("curvature_measurements.id"),
+        nullable=True,
+        index=True,
+    )

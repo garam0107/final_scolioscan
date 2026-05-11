@@ -15,6 +15,7 @@ class RotationMeasurementCreate(BaseModel):
     thoracolumbar_atr: float = Field(..., ge=-30, le=30)
     upper_lumbar_atr: float = Field(..., ge=-30, le=30)
     lower_lumbar_atr: float = Field(..., ge=-30, le=30)
+    curvature_measurement_id: int | None = Field(default=None, ge=1)
 
 
 class RotationMeasurementResponse(BaseModel):
@@ -30,6 +31,7 @@ class RotationMeasurementResponse(BaseModel):
     lumbar_atr: float
     max_severity_zone: SeverityZone
     created_at: datetime
+    curvature_measurement_id: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

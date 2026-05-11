@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from ..database import get_db
+from ..models.curvature import CurvatureMeasurement
 from ..models.rotation import RotationMeasurement
 from ..models.user import User
 from ..schemas.rotation import (
@@ -33,8 +34,22 @@ def create_rotation(
     lumbar_atr = (payload.upper_lumbar_atr + payload.lower_lumbar_atr) / 2
     zone = compute_zone([thoracic_atr, payload.thoracolumbar_atr, lumbar_atr])
 
+    if payload.curvature_measurement_id is not None:
+        # 요청한 2D 촬영 결과가 존재하고 현재 사용자 소유인지 확인한다.
+        curvature = (
+            db.query(CurvatureMeasurement)
+            .filter(
+                CurvatureMeasurement.id == payload.curvature_measurement_id,
+                CurvatureMeasurement.user_id == str(current_user.id),
+            )
+            .first()
+        )
+        if not curvature:
+            raise HTTPException(status_code=404, detail="Linked curvature measurement not found")
+
     measurement = RotationMeasurement(
         user_id=str(current_user.id),
+        curvature_measurement_id=payload.curvature_measurement_id,
         upper_thoracic_atr=payload.upper_thoracic_atr,
         lower_thoracic_atr=payload.lower_thoracic_atr,
         thoracolumbar_atr=payload.thoracolumbar_atr,
