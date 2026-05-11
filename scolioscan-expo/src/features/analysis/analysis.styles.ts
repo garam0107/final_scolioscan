@@ -63,6 +63,17 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
   },
+  arcMarker: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arcMarkerCenter: {
+    backgroundColor: '#FFFFFF',
+  },
   textLayer: {
     position: 'absolute',
     left: 0,

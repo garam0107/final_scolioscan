@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { SvgProps } from 'react-native-svg';
@@ -30,6 +31,7 @@ import {
 } from './severity';
 import Grade1Image from '../../../assets/images/grade1.svg';
 import Grade2Image from '../../../assets/images/grade2.svg';
+import Grade3Image from '../../../assets/images/grade.svg';
 import Grade4Image from '../../../assets/images/grade4.svg';
 
 const spineImage = require('../../../assets/images/spine.png');
@@ -159,6 +161,44 @@ function CountUpNumber({ value, active }: { value: number; active: boolean }) {
   return <Text style={styles.metricValue}>{formatDegree(displayValue)}</Text>;
 }
 
+function ArcMarker({
+  x,
+  yRatio,
+  radiusRatio,
+  progress,
+  stageWidth,
+  stageHeight,
+}: {
+  x: number;
+  yRatio: number;
+  radiusRatio: number;
+  progress: Animated.Value;
+  stageWidth: number;
+  stageHeight: number;
+}) {
+  const size = stageWidth * radiusRatio * 2;
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, x] });
+
+  return (
+    <Animated.View
+      style={[
+        styles.arcMarker,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          left: (stageWidth - size) / 2,
+          top: stageHeight * yRatio - size / 2,
+          transform: [{ translateX }],
+        },
+      ]}
+      pointerEvents="none"
+    >
+      <View style={[styles.arcMarkerCenter, { width: size * 0.42, height: size * 0.42, borderRadius: size * 0.21 }]} />
+    </Animated.View>
+  );
+}
+
 function MetricBlock({
   metricKey,
   label,
@@ -167,6 +207,7 @@ function MetricBlock({
   top,
   xOffset,
   active,
+  progress,
 }: {
   metricKey: 'upper' | 'main' | 'lumbar';
   label: string;
@@ -175,16 +216,19 @@ function MetricBlock({
   top: number;
   xOffset: number;
   active: boolean;
+  progress: Animated.Value;
 }) {
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, xOffset] });
 
   return (
-    <View
+    <Animated.View
       style={[
         styles.metric,
         {
           top,
-          left: side === 'left' ? 52 + xOffset : undefined,
-          right: side === 'right' ? 52 + xOffset : undefined,
+          left: side === 'left' ? 52 : undefined,
+          right: side === 'right' ? 52 : undefined,
+          transform: [{ translateX }],
         },
       ]}
     >
@@ -201,7 +245,7 @@ function MetricBlock({
 </View>
 
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -253,8 +297,8 @@ function SpineRig({
   slices: { x: number; rotation: number }[];
   stageWidth: number;
 }) {
-  const boneSize = 56;
-  const spacing = 22;
+  const boneSize = 72;
+  const spacing = 24;
   const rigHeight = (VERTEBRA_COUNT - 1) * spacing + boneSize;
   const left = (stageWidth - boneSize) / 2;
 
@@ -287,7 +331,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
   const cardWidth = Math.min(width - 24, 440);
   const stageWidth = cardWidth - 20;
-  const stageHeight = 318;
+  const stageHeight = 380;
   const summaryName = '회원님';
   const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
   const mainValue = pose.metrics.find((metric) => metric.key === 'main')?.value ?? 0;
@@ -301,6 +345,18 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     if (analysis?.back_type) return getDominantCurveInfo(analysis.back_type);
     return classifyDominantCurve(upperValue, mainValue, lumbarValue);
   }, [analysis?.back_type, upperValue, mainValue, lumbarValue]);
+
+  const startAnalysisAnimation = useCallback((duration: number) => {
+    // 분석 탭에 다시 들어올 때마다 곧은 척추에서 측정 각도까지 같은 애니메이션을 반복한다.
+    progress.stopAnimation();
+    progress.setValue(0);
+    Animated.timing(progress, {
+      toValue: 1,
+      duration,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [progress]);
 
   useEffect(() => {
     let mounted = true;
@@ -347,13 +403,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
         if (!mounted) return;
 
         setAnalysis(targetAnalysis ?? null);
-        progress.setValue(0);
-        Animated.timing(progress, {
-          toValue: 1,
-          duration: targetAnalysis ? 1600 : 0,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
+        startAnalysisAnimation(targetAnalysis ? 1600 : 0);
       } catch {
         if (!mounted) return;
         setAnalysis(null);
@@ -369,7 +419,15 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     return () => {
       mounted = false;
     };
-  }, [analysisId, progress, reloadKey, sourceType]);
+  }, [analysisId, progress, reloadKey, sourceType, startAnalysisAnimation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (analysis) {
+        startAnalysisAnimation(1600);
+      }
+    }, [analysis, startAnalysisAnimation]),
+  );
 
   return (
     <View style={styles.screen}>
@@ -381,7 +439,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
           showsVerticalScrollIndicator
           contentContainerStyle={[
             styles.content,
-            { paddingTop: 8, paddingBottom: bottomTabBarHeight  },
+            { paddingTop: 8, paddingBottom: 20  },
           ]}
         >
           <View style={styles.summaryTextBlock}>
@@ -396,6 +454,20 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
               <SpineRig progress={progress} slices={pose.vertebrae} stageWidth={stageWidth} />
             </View>
 
+            <View style={styles.overlayLayer} pointerEvents="none">
+              {pose.arcs.map((arc) => (
+                <ArcMarker
+                  key={arc.key}
+                  x={arc.x}
+                  yRatio={arc.yRatio}
+                  radiusRatio={arc.radiusRatio}
+                  progress={progress}
+                  stageWidth={stageWidth}
+                  stageHeight={stageHeight}
+                />
+              ))}
+            </View>
+
             <View style={styles.textLayer}>
               {pose.metrics.map((metric) => (
                 <MetricBlock
@@ -407,6 +479,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
                   top={metric.topRatio * stageHeight}
                   xOffset={metric.xOffset}
                   active={Boolean(analysis)}
+                  progress={progress}
                 />
 
               ))}

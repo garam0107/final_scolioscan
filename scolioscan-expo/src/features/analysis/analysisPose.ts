@@ -22,7 +22,7 @@ export type MetricPose = {
 // 원호 표시용 위치/ 크기 정보 구조, 지금은 잠시 사용 안함. 추후 넣을 예정
 export type ArcPose = {
   key: 'upper' | 'main' | 'lumbar';
-  xRatio: number;
+  x: number;
   yRatio: number;
   radiusRatio: number;
 };
@@ -50,6 +50,21 @@ function clampDegree(value?: number | null) {
 function smoothLerp(a: number, b: number, t: number) {
   const ct = (1 - Math.cos(t * Math.PI)) / 2;
   return a + (b - a) * ct;
+}
+
+function getMetricXOffset(key: 'upper' | 'main' | 'lumbar', value: number) {
+  // 각도가 커질수록 라벨을 곡선 바깥쪽으로 조금 더 밀어 뼈와 겹치지 않게 한다.
+  const dynamicOffset = Math.min(26, value * 0.75);
+
+  if (key === 'upper') {
+    return -14 - dynamicOffset;
+  }
+
+  if (key === 'main') {
+    return 10 + dynamicOffset;
+  }
+
+  return -8 - dynamicOffset * 0.2;
 }
 
 // 상부 흉추만곡 각도에 따라 달라지는 텍스트 표시 — severity.ts 임계값과 동일
@@ -98,18 +113,19 @@ export function createAnalysisPose(analysis: AnalysisResponse | null): AnalysisP
   const upper = clampDegree(analysis?.main_thoracic);
   const main = clampDegree(analysis?.second_thoracic ?? upper * 0.72);
   const lumbar = clampDegree(analysis?.lumbar);
+  const vertebrae = buildSpineTrack(upper, main, lumbar);
 
   return {
     metrics: [
-      { key: 'upper', label: '상부 흉추만곡', value: upper, side: 'left', topRatio: 0.14, xOffset: 20 },
-      { key: 'main', label: '주 흉추만곡', value: main, side: 'right', topRatio: 0.47, xOffset: 10 },
-      { key: 'lumbar', label: '요추만곡', value: lumbar, side: 'right', topRatio: 0.76, xOffset: 48 },
+      { key: 'upper', label: '상부 흉추만곡', value: upper, side: 'left', topRatio: 0.14, xOffset: getMetricXOffset('upper', upper) },
+      { key: 'main', label: '주 흉추만곡', value: main, side: 'right', topRatio: 0.47, xOffset: getMetricXOffset('main', main) },
+      { key: 'lumbar', label: '요추만곡', value: lumbar, side: 'right', topRatio: 0.76, xOffset: getMetricXOffset('lumbar', lumbar) },
     ],
-    vertebrae: buildSpineTrack(upper, main, lumbar),
+    vertebrae,
     arcs: [
-      { key: 'upper', xRatio: 0.34, yRatio: 0.18, radiusRatio: 0.14 },
-      { key: 'main', xRatio: 0.52, yRatio: 0.49, radiusRatio: 0.16 },
-      { key: 'lumbar', xRatio: 0.44, yRatio: 0.79, radiusRatio: 0.15 },
+      { key: 'upper', x: vertebrae[3]?.x ?? 0, yRatio: 0.20, radiusRatio: 0.15 },
+      { key: 'main', x: vertebrae[7]?.x ?? 0, yRatio: 0.50, radiusRatio: 0.15 },
+      { key: 'lumbar', x: vertebrae[11]?.x ?? 0, yRatio: 0.79, radiusRatio: 0.15 },
     ],
   };
 }
