@@ -11,7 +11,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
@@ -32,15 +31,23 @@ import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { RotationResponse } from '@/src/types/rotation';
+import ReportTrendChart from '@/src/features/report/components/ReportTrendChart';
 import styles from '@/src/features/report/report.styles';
+import {
+  getMeasurementDate,
+  getPeriodOption,
+  getRecentDateRange,
+  REPORT_CURVATURE_DAYS,
+  TREND_PERIOD_OPTIONS,
+  type TrendAngleKey,
+  type TrendPeriodKey,
+} from '@/src/features/report/reportTrend';
 import MyRectangle from '../../../assets/icons/my_rectangle.svg';
 import KoreanRectangle from '../../../assets/icons/korean_rectangle.svg';
 import TwoDCamera from '../../../assets/icons/2D_camera.svg';
 
 type FilterKey = 'all' | '2d' | 'scoliometer' | '3d';
 type MeasurementSource = 'curvature' | 'rotation';
-type TrendAngleKey = 'proximal' | 'main' | 'lumbar';
-type TrendPeriodKey = 'week1' | 'week2' | 'month1' | 'month3' | 'month6' | 'year1';
 
 type ReportMetric = {
   label: string;
@@ -55,16 +62,6 @@ type ReportListItem = {
   badgeLabel: string;
   metrics: [ReportMetric, ReportMetric, ReportMetric];
   navigationId?: string;
-};
-
-type TrendChartPoint = {
-  x: number;
-  y: number;
-};
-
-type TrendBucketPoint = {
-  timestamp: number;
-  value: number;
 };
 
 const FILTERS: { key: FilterKey; label: string }[] = [
@@ -86,47 +83,6 @@ const ROTATION_METRIC_LABELS = [
   '요추만곡',
 ] as const;
 
-const TREND_ANGLE_OPTIONS: {
-  key: TrendAngleKey;
-  label: string;
-  displayLabel: string;
-  field: keyof Pick<
-    CurvatureResponse,
-    'secondary_thoracic_cobb' | 'main_thoracic_cobb' | 'lumbar_cobb'
-  >;
-}[] = [
-  {
-    key: 'proximal',
-    label: '상부 흉추',
-    displayLabel: '상부 흉추만곡',
-    field: 'secondary_thoracic_cobb',
-  },
-  {
-    key: 'main',
-    label: '주 흉추',
-    displayLabel: '주 흉추만곡',
-    field: 'main_thoracic_cobb',
-  },
-  {
-    key: 'lumbar',
-    label: '요추',
-    displayLabel: '요추만곡',
-    field: 'lumbar_cobb',
-  },
-];
-
-const TREND_PERIOD_OPTIONS: { key: TrendPeriodKey; label: string; days: number }[] = [
-  { key: 'week1', label: '1주일', days: 7 },
-  { key: 'week2', label: '2주일', days: 14 },
-  { key: 'month1', label: '1개월', days: 30 },
-  { key: 'month3', label: '3개월', days: 90 },
-  { key: 'month6', label: '6개월', days: 180 },
-  { key: 'year1', label: '1년', days: 365 },
-];
-const REPORT_CURVATURE_DAYS = 365;
-const TREND_CHART_HEIGHT = 120;
-const TREND_CHART_MAX_VALUE = 40;
-
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -146,12 +102,6 @@ function formatDegree(value?: number | null) {
 function formatRoundedDegree(value?: number | null) {
   if (value === null || value === undefined) return '-';
   return `${Math.round(Math.abs(value))}°`;
-}
-
-function getMeasurementDate(
-  record: Pick<CurvatureResponse, 'measured_at' | 'created_at'> | Pick<RotationResponse, 'measured_at' | 'created_at'>,
-) {
-  return record.measured_at || record.created_at;
 }
 
 function toCurvatureListItem(record: CurvatureResponse): ReportListItem {
@@ -188,197 +138,6 @@ function toRotationListItem(record: RotationResponse): ReportListItem {
       { label: ROTATION_METRIC_LABELS[2], value: record.lumbar_atr },
     ],
   };
-}
-
-function getTrendValue(record: CurvatureResponse | undefined, key: TrendAngleKey) {
-  const option = TREND_ANGLE_OPTIONS.find((item) => item.key === key) ?? TREND_ANGLE_OPTIONS[1];
-  return Math.abs(Number(record?.[option.field]) || 0);
-}
-
-function formatAngleValue(value: number) {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-
-  return Math.round(value * 10) / 10;
-}
-
-function formatChangeAngle(value: number, showPlus = false) {
-  const angle = formatAngleValue(Math.abs(value));
-  const sign = showPlus && angle > 0 ? '+' : '';
-
-  return `${sign}${angle}°`;
-}
-
-function getPeriodOption(period: TrendPeriodKey) {
-  return TREND_PERIOD_OPTIONS.find((item) => item.key === period) ?? TREND_PERIOD_OPTIONS[2];
-}
-
-function formatDateParam(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-function getRecentDateRange(days: number) {
-  const toDate = new Date();
-  const fromDate = new Date(toDate);
-  fromDate.setDate(fromDate.getDate() - (days - 1));
-
-  return {
-    from_date: formatDateParam(fromDate),
-    to_date: formatDateParam(toDate),
-  };
-}
-
-function getRecentDateRangeDates(days: number) {
-  const endDate = new Date();
-  endDate.setHours(23, 59, 59, 999);
-
-  const startDate = new Date(endDate);
-  startDate.setDate(startDate.getDate() - (days - 1));
-  startDate.setHours(0, 0, 0, 0);
-
-  return { startDate, endDate };
-}
-
-function buildTrendPath(points: TrendChartPoint[]) {
-  if (points.length === 0) {
-    return '';
-  }
-
-  if (points.length === 1) {
-    return `M ${points[0].x} ${points[0].y} L ${points[0].x + 0.1} ${points[0].y}`;
-  }
-
-  const path = [`M ${points[0].x} ${points[0].y}`];
-
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const current = points[index];
-    const next = points[index + 1];
-    const previous = points[index - 1] ?? current;
-    const afterNext = points[index + 2] ?? next;
-
-    const cp1x = current.x + (next.x - previous.x) / 6;
-    const cp1y = current.y + (next.y - previous.y) / 6;
-    const cp2x = next.x - (afterNext.x - current.x) / 6;
-    const cp2y = next.y - (afterNext.y - current.y) / 6;
-
-    path.push(`C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next.x} ${next.y}`);
-  }
-
-  return path.join(' ');
-}
-
-function getBucketResolution(period: TrendPeriodKey) {
-  if (period === 'week1') return 'raw';
-  if (period === 'week2' || period === 'month1') return 'daily';
-  if (period === 'month3') return 'weekly';
-  if (period === 'month6') return 'biweekly';
-  return 'monthly';
-}
-
-function getBucketKey(date: Date, period: TrendPeriodKey) {
-  const resolution = getBucketResolution(period);
-
-  if (resolution === 'raw') {
-    return `${date.getTime()}`;
-  }
-
-  if (resolution === 'daily') {
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-  }
-
-  if (resolution === 'weekly' || resolution === 'biweekly') {
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const dayIndex = Math.floor((date.getTime() - startOfYear.getTime()) / 86400000);
-    const bucketSize = resolution === 'weekly' ? 7 : 14;
-    const bucketIndex = Math.floor(dayIndex / bucketSize);
-
-    return `${date.getFullYear()}-${resolution}-${bucketIndex}`;
-  }
-
-  return `${date.getFullYear()}-${date.getMonth()}`;
-}
-
-function aggregateTrendPoints(
-  records: CurvatureResponse[],
-  selectedAngle: TrendAngleKey,
-  selectedPeriod: TrendPeriodKey,
-) {
-  const resolution = getBucketResolution(selectedPeriod);
-
-  if (resolution === 'raw') {
-    return records.map((record) => ({
-      timestamp: new Date(getMeasurementDate(record)).getTime(),
-      value: formatAngleValue(getTrendValue(record, selectedAngle)),
-    }));
-  }
-
-  const buckets = new Map<string, {
-    latestTimestamp: number;
-    latestValue: number;
-    totalValue: number;
-    count: number;
-  }>();
-
-  records.forEach((record) => {
-    const measurementDate = new Date(getMeasurementDate(record));
-    const timestamp = measurementDate.getTime();
-    const value = formatAngleValue(getTrendValue(record, selectedAngle));
-    const bucketKey = getBucketKey(measurementDate, selectedPeriod);
-    const current = buckets.get(bucketKey);
-
-    if (!current) {
-      buckets.set(bucketKey, {
-        latestTimestamp: timestamp,
-        latestValue: value,
-        totalValue: value,
-        count: 1,
-      });
-      return;
-    }
-
-    current.totalValue += value;
-    current.count += 1;
-
-    if (timestamp >= current.latestTimestamp) {
-      current.latestTimestamp = timestamp;
-      current.latestValue = value;
-    }
-  });
-
-  return Array.from(buckets.values())
-    .map<TrendBucketPoint>((bucket) => ({
-      timestamp: bucket.latestTimestamp,
-      value: resolution === 'daily'
-        ? bucket.latestValue
-        : formatAngleValue(bucket.totalValue / bucket.count),
-    }))
-    .sort((left, right) => left.timestamp - right.timestamp);
-}
-
-function getThresholdY(value: number) {
-  return TREND_CHART_HEIGHT - (value / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
-}
-
-function getTrendAxisLabels(period: TrendPeriodKey) {
-  if (period === 'week1') return ['6일 전', '4일 전', '2일 전', '어제', '오늘'];
-  if (period === 'week2') return ['2주 전', '10일 전', '1주 전', '3일 전', '오늘'];
-  if (period === 'year1') return ['1년 전', '9개월 전', '6개월 전', '3개월 전', '오늘'];
-
-  const monthLabels: Record<TrendPeriodKey, string[]> = {
-    week1: [],
-    week2: [],
-    month1: ['한 달 전', '3주 전', '2주 전', '1주 전', '오늘'],
-    month3: ['3개월 전', '2개월 전', '1개월 전', '2주 전', '오늘'],
-    month6: ['6개월 전', '4개월 전', '2개월 전', '1개월 전', '오늘'],
-    year1: [],
-  };
-
-  return monthLabels[period];
 }
 
 function TriangleChart({
@@ -630,182 +389,6 @@ function SummaryCard({
   );
 }
 
-function TrendValueChart({
-  records,
-  selectedAngle,
-  selectedPeriod,
-}: {
-  records: CurvatureResponse[];
-  selectedAngle: TrendAngleKey;
-  selectedPeriod: TrendPeriodKey;
-}) {
-  const { width } = useWindowDimensions();
-  const chartWidth = Math.max(1, width - 72);
-
-  const sortedRecords = useMemo(
-    () =>
-      [...records].sort(
-        (left, right) =>
-          new Date(getMeasurementDate(left)).getTime() - new Date(getMeasurementDate(right)).getTime(),
-      ),
-    [records],
-  );
-
-  const periodRange = useMemo(
-    () => getRecentDateRangeDates(getPeriodOption(selectedPeriod).days),
-    [selectedPeriod],
-  );
-
-  const periodRecords = useMemo(() => {
-    if (!sortedRecords.length) return [];
-
-    return sortedRecords.filter((record) => {
-      const measurementDate = new Date(getMeasurementDate(record));
-      return measurementDate >= periodRange.startDate && measurementDate <= periodRange.endDate;
-    });
-  }, [periodRange, sortedRecords]);
-
-  const bucketPoints = useMemo(
-    () => aggregateTrendPoints(periodRecords, selectedAngle, selectedPeriod),
-    [periodRecords, selectedAngle, selectedPeriod],
-  );
-
-  const graphValues = useMemo(
-    () => bucketPoints.map((point) => point.value),
-    [bucketPoints],
-  );
-
-  const rawValues = useMemo(
-    () => periodRecords.map((record) => formatAngleValue(getTrendValue(record, selectedAngle))),
-    [periodRecords, selectedAngle],
-  );
-
-  const averageChange = useMemo(() => {
-    if (graphValues.length < 2) return 0;
-
-    let total = 0;
-    for (let index = 1; index < graphValues.length; index += 1) {
-      total += Math.abs(graphValues[index] - graphValues[index - 1]);
-    }
-
-    return Number((total / (graphValues.length - 1)).toFixed(1));
-  }, [graphValues]);
-
-  const recentChange = useMemo(() => {
-    if (rawValues.length < 2) return 0;
-
-    const last = rawValues[rawValues.length - 1];
-    const previous = rawValues[rawValues.length - 2];
-
-    return Number((last - previous).toFixed(1));
-  }, [rawValues]);
-
-  const hasData = bucketPoints.length > 0;
-  const chartPoints = useMemo(() => {
-    const rangeTime = Math.max(1, periodRange.endDate.getTime() - periodRange.startDate.getTime());
-
-    return bucketPoints.map((point) => {
-      const clampedTime = Math.max(
-        periodRange.startDate.getTime(),
-        Math.min(periodRange.endDate.getTime(), point.timestamp),
-      );
-      const safeValue = Math.max(0, Math.min(point.value, TREND_CHART_MAX_VALUE));
-
-      return {
-        x: ((clampedTime - periodRange.startDate.getTime()) / rangeTime) * chartWidth,
-        y: TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT,
-      };
-    });
-  }, [bucketPoints, chartWidth, periodRange]);
-
-  const trendPath = useMemo(
-    () => buildTrendPath(chartPoints),
-    [chartPoints],
-  );
-  const trendAreaPath = useMemo(() => {
-    if (!trendPath || chartPoints.length === 0) return '';
-
-    const firstPoint = chartPoints[0];
-    const lastPoint = chartPoints[chartPoints.length - 1];
-
-    return `${trendPath} L ${lastPoint.x} ${TREND_CHART_HEIGHT} L ${firstPoint.x} ${TREND_CHART_HEIGHT} Z`;
-  }, [chartPoints, trendPath]);
-  const xAxisLabels = getTrendAxisLabels(selectedPeriod);
-
-  return (
-    <View style={styles.trendCard}>
-      <View style={styles.trendHeader}>
-        <View style={styles.trendSummary}>
-          <Text style={styles.trendTitle}>평균 변화량</Text>
-          <View style={styles.trendValueRow}>
-            <Text style={styles.trendValue}>{formatChangeAngle(averageChange)}</Text>
-            <View style={styles.trendBadge}>
-              <Text style={styles.trendBadgeText}>최근 변화 {formatChangeAngle(recentChange, true)}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.trendLegend}>
-          <View style={styles.trendLegendRow}>
-            <View style={[styles.trendLegendLine, styles.trendLegendDanger]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>위험</Text>
-          </View>
-          <View style={styles.trendLegendRow}>
-            <View style={[styles.trendLegendLine, styles.trendLegendWarning]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>보통</Text>
-          </View>
-          <View style={styles.trendLegendRow}>
-            <View style={[styles.trendLegendLine, styles.trendLegendNormal]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>정상</Text>
-          </View>
-        </View>
-      </View>
-
-      {hasData ? (
-        <View style={styles.trendChartWrap}>
-          <Svg width={chartWidth} height={TREND_CHART_HEIGHT}>
-            <Defs>
-              <LinearGradient id="reportTrendAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor="#2E96FF" stopOpacity={0.16} />
-                <Stop offset="100%" stopColor="#2E96FF" stopOpacity={0} />
-              </LinearGradient>
-            </Defs>
-            <Line x1="0" y1={getThresholdY(40)} x2={chartWidth} y2={getThresholdY(40)} stroke="#FF4B3C" strokeWidth={1} strokeDasharray="6 6" />
-            <Line x1="0" y1={getThresholdY(25)} x2={chartWidth} y2={getThresholdY(25)} stroke="#FABE00" strokeWidth={1} strokeDasharray="6 6" />
-            <Line x1="0" y1={getThresholdY(10)} x2={chartWidth} y2={getThresholdY(10)} stroke="#2C9696" strokeWidth={1} strokeDasharray="6 6" />
-            {trendPath ? (
-              <>
-                <Path
-                  d={trendAreaPath}
-                  fill="url(#reportTrendAreaGradient)"
-                />
-                <Path
-                  d={trendPath}
-                  fill="none"
-                  stroke="#2E96FF"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </>
-            ) : null}
-          </Svg>
-        </View>
-      ) : (
-        <View style={styles.trendEmptyState}>
-          <Text style={styles.trendEmptyText}>선택한 기간의 측정 데이터가 없습니다.</Text>
-        </View>
-      )}
-
-      <View style={styles.trendXAxis}>
-        {xAxisLabels.map((label) => (
-          <Text key={label} style={styles.trendXAxisText}>{label}</Text>
-        ))}
-      </View>
-    </View>
-  );
-}
-
 export default function ReportScreen() {
   const router = useRouter();
   const [curvatures, setCurvatures] = useState<CurvatureResponse[]>([]);
@@ -1051,7 +634,7 @@ export default function ReportScreen() {
             ))}
           </View>
 
-          <TrendValueChart
+          <ReportTrendChart
             records={curvatures}
             selectedAngle={selectedReportAngle}
             selectedPeriod={selectedTrendPeriod}
