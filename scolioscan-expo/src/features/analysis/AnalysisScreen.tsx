@@ -479,27 +479,9 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             targetAnalysis = toAnalysisFromCurvature(response.data);
           }
         } else {
-          const [curvatureResult, rotationResult] = await Promise.allSettled([
-            curvatureAPI.getAnalyses({ limit: 1 }),
-            rotationAPI.getAnalyses({ limit: 1 }),
-          ]);
-
-          const latestCurvature =
-            curvatureResult.status === 'fulfilled' ? curvatureResult.value.data[0] ?? null : null;
-          const latestRotation =
-            rotationResult.status === 'fulfilled' ? rotationResult.value.data[0] ?? null : null;
-
-          if (latestCurvature && latestRotation) {
-            targetAnalysis =
-              new Date(getMeasurementDate(latestCurvature)).getTime() >=
-              new Date(getMeasurementDate(latestRotation)).getTime()
-                ? toAnalysisFromCurvature(latestCurvature)
-                : toAnalysisFromRotation(latestRotation);
-          } else if (latestCurvature) {
-            targetAnalysis = toAnalysisFromCurvature(latestCurvature);
-          } else if (latestRotation) {
-            targetAnalysis = toAnalysisFromRotation(latestRotation);
-          }
+          const response = await curvatureAPI.getAnalyses({ limit: 1 });
+          const latestCurvature = response.data[0] ?? null;
+          targetAnalysis = latestCurvature ? toAnalysisFromCurvature(latestCurvature) : null;
         }
 
         if (!mounted) return;
