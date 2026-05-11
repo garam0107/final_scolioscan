@@ -12,6 +12,8 @@ import { styles } from './measure2d.styles';
 import { getAccessToken } from '@/src/lib/tokenStorage';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
+const NEXT_MEASUREMENT_ROUTE = '/measure/scoliometer';
+
 export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
   const router = useRouter();
@@ -64,6 +66,11 @@ export default function Measure2DScreen() {
     setToastTone(tone);
     setToastMessage(message);
   }, []);
+
+  const goToNextMeasurement = useCallback(() => {
+    console.log('[measure2d] 척추측만계 화면으로 이동', NEXT_MEASUREMENT_ROUTE);
+    router.push(NEXT_MEASUREMENT_ROUTE);
+  }, [router]);
 
   const submitCurvature = useCallback(async (photoUri: string) => {
     // 자동 촬영 또는 수동 촬영이 성공한 뒤 최종 사진을 척추측만 분석 API로 보낸다.
@@ -122,9 +129,17 @@ export default function Measure2DScreen() {
     // 자동 촬영이 완료되면 사용자가 버튼을 누르지 않아도 바로 척추측만 분석 요청을 시작한다.
     if (!autoCaptureResult) return;
     console.log('[measure2d] 자동 촬영 완료', autoCaptureResult);
-    void submitCurvature(autoCaptureResult.photo.uri);
+    const submitAndNavigate = async () => {
+      const submitted = await submitCurvature(autoCaptureResult.photo.uri);
+
+      if (submitted) {
+        goToNextMeasurement();
+      }
+    };
+
+    void submitAndNavigate();
     clearAutoCaptureResult();
-  }, [autoCaptureResult, clearAutoCaptureResult, submitCurvature]);
+  }, [autoCaptureResult, clearAutoCaptureResult, goToNextMeasurement, submitCurvature]);
 
   const handlePressCapture = async () => {
     // 셔터 버튼은 자동 촬영과 같은 판정 로직을 사용하되, 사용자가 누른 시점의 사진을 즉시 검사한다.
@@ -150,7 +165,7 @@ export default function Measure2DScreen() {
 
         if (submitted) {
           shouldResumeAuto = false;
-          router.replace('/home');
+          goToNextMeasurement();
         }
 
         return;
@@ -172,7 +187,7 @@ export default function Measure2DScreen() {
         return;
       }
 
-      showToast(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'info');
+      showToast(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'warning');
     } finally {
       setManualSubmitting(false);
       if (shouldResumeAuto) {

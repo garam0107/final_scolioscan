@@ -1,12 +1,19 @@
 import { useRouter } from 'expo-router';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import React, { useEffect, useMemo } from 'react';
-import { Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, BackHandler, Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
+import { rotationAPI } from '@/src/api/rotation';
 import { useScoliometer } from '@/src/features/scoliometer/hooks/useScoliometer';
+import {
+  SCOLIOMETER_REQUIRED_SAMPLE_COUNT,
+  type ScoliometerSample,
+  useScoliometerSessionStore,
+} from '@/src/store/scoliometerSessionStore';
+import type { RotationCreatePayload } from '@/src/types/rotation';
 import styles from '@/src/features/scoliometer/scoliometer.styles';
 
 const MINT = '#7AD7D4';
@@ -57,8 +64,8 @@ function getBackgroundColor(angle: number) {
   return RED;
 }
 
-function formatAngle(angle: number, isFlat: boolean) {
-  const value = isFlat ? Math.abs(angle) : angle;
+function formatAngle(angle: number) {
+  const value = Math.abs(angle);
   const rounded = Math.round(value * 10) / 10;
 
   if (Math.abs(rounded) < 0.05) {
@@ -70,6 +77,18 @@ function formatAngle(angle: number, isFlat: boolean) {
   }
 
   return `${rounded.toFixed(1)}°`;
+}
+
+function buildRotationPayload(samples: ScoliometerSample[]): RotationCreatePayload {
+  const values = samples.map((sample) => Math.abs(sample.angle));
+
+  return {
+    upper_thoracic_atr: values[0] ?? 0,
+    lower_thoracic_atr: values[1] ?? 0,
+    thoracolumbar_atr: values[2] ?? 0,
+    upper_lumbar_atr: values[3] ?? 0,
+    lower_lumbar_atr: values[4] ?? 0,
+  };
 }
 
 function getCircleOverlapPath(
@@ -121,6 +140,10 @@ export default function ScoliometerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
+  const [submitting, setSubmitting] = useState(false);
+  const samples = useScoliometerSessionStore((state) => state.samples);
+  const addSample = useScoliometerSessionStore((state) => state.addSample);
+  const resetSession = useScoliometerSessionStore((state) => state.resetSession);
   const {
     angle,
     mode,
@@ -134,7 +157,13 @@ export default function ScoliometerScreen() {
 
   const isFlat = mode === 'flat';
   const backgroundColor = useMemo(() => getBackgroundColor(angle), [angle]);
-  const angleLabel = useMemo(() => formatAngle(angle, isFlat), [angle, isFlat]);
+  const angleLabel = useMemo(() => formatAngle(angle), [angle]);
+  const measuredCount = samples.length;
+  const measureButtonLabel = submitting
+    ? '저장 중'
+    : measuredCount >= SCOLIOMETER_REQUIRED_SAMPLE_COUNT
+      ? '저장 재시도'
+      : `측정 ${measuredCount}/${SCOLIOMETER_REQUIRED_SAMPLE_COUNT}`;
   // 가로 모드에서 색상 영역과 흰색 영역이 만나는 기준선이다.
   const horizonY = height * 0.5;
   
@@ -166,6 +195,65 @@ export default function ScoliometerScreen() {
   // 측정 횟수에 따라 변하도록 text 변경 필요
   const guideText = '측정을 진행해주세요';
   
+  const displayGuideText = measuredCount > 0
+    ? `${measuredCount}회 측정했어요. 이어서 측정해주세요`
+    : guideText;
+
+  const handleStopConfirmed = useCallback(() => {
+    resetSession();
+    router.replace('/home');
+  }, [resetSession, router]);
+
+  const showStopConfirm = useCallback(() => {
+    Alert.alert(
+      '측정을 중단할까요?',
+      '진행 중인 척추측만계 측정값이 삭제됩니다.',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '확인', style: 'destructive', onPress: handleStopConfirmed },
+      ],
+      { cancelable: true },
+    );
+  }, [handleStopConfirmed]);
+
+  const handleMeasurePress = useCallback(async () => {
+    if (submitting) return;
+
+    const currentAngle = Math.abs(angle);
+    const nextSamples =
+      samples.length >= SCOLIOMETER_REQUIRED_SAMPLE_COUNT
+        ? samples
+        : [
+            ...samples,
+            {
+              angle: currentAngle,
+              measuredAt: Date.now(),
+            },
+          ];
+
+    if (samples.length < SCOLIOMETER_REQUIRED_SAMPLE_COUNT) {
+      addSample(currentAngle);
+    }
+
+    if (nextSamples.length < SCOLIOMETER_REQUIRED_SAMPLE_COUNT) {
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      await rotationAPI.createAnalysis(buildRotationPayload(nextSamples));
+      resetSession();
+      Alert.alert('측정 완료', '척추측만계 측정이 저장되었습니다.', [
+        { text: '확인', onPress: () => router.replace('/home') },
+      ]);
+    } catch {
+      Alert.alert('저장 실패', '척추측만계 측정을 저장하지 못했습니다. 다시 시도해주세요.');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [addSample, angle, resetSession, router, samples, submitting]);
+
   useEffect(() => {
     void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
 
@@ -183,6 +271,21 @@ export default function ScoliometerScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return undefined;
+    }
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      showStopConfirm();
+      return true;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [showStopConfirm]);
+
   if (!isSupported) {
     return (
       <SafeAreaView style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
@@ -197,7 +300,7 @@ export default function ScoliometerScreen() {
     <SafeAreaView style={[styles.screen, { backgroundColor }]} edges={[]}>
       <View style={styles.content}>
         <View style={[styles.topBar, { paddingTop: insets.top + 2 }]}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={showStopConfirm} style={styles.backButton}>
             <Text style={styles.backButtonText}>‹</Text>
           </Pressable>
         </View>
@@ -256,7 +359,7 @@ export default function ScoliometerScreen() {
               <Text style={[styles.angleText, styles.angleTextDark]}>{angleLabel}</Text>
             </View>
             <View pointerEvents="none" style={styles.flatGuideTextWrap}>
-              <Text style={styles.flatGuideText}>{guideText}</Text>
+              <Text style={styles.flatGuideText}>{displayGuideText}</Text>
             </View>
           </>
         ) : (
@@ -288,7 +391,7 @@ export default function ScoliometerScreen() {
                 },
               ]}
             >
-              <Text style={styles.landscapeGuideText}>{guideText}</Text>
+              <Text style={styles.landscapeGuideText}>{displayGuideText}</Text>
             </View>
           </>
         )}
@@ -313,10 +416,12 @@ export default function ScoliometerScreen() {
           <Pressable onPress={calibrate} style={styles.zeroButton}>
             <Text style={styles.zeroButtonText}>0° 보정</Text>
           </Pressable>
-          <Pressable style={styles.measureButton}>
-            {/* 측정 횟수에 따라 숫자가 바뀌도록 변경 필요 */}
-            {/* 버튼 눌렀을 때 측정 되는 API 연결 필요 */}
-            <Text style={styles.measureButtonText}>측정 0/5</Text>
+          <Pressable
+            style={[styles.measureButton, submitting ? styles.measureButtonDisabled : null]}
+            disabled={submitting}
+            onPress={handleMeasurePress}
+          >
+            <Text style={styles.measureButtonText}>{measureButtonLabel}</Text>
           </Pressable>
         </View>
       </View>

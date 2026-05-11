@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray[25],
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 34,
     paddingBottom: 12,
     flexGrow: 1,

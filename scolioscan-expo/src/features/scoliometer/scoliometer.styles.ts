@@ -128,6 +128,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#2C9696',
   },
+  measureButtonDisabled: {
+    opacity: 0.72,
+  },
   zeroButtonText: {
     color: '#657085',
     fontSize: 14,
