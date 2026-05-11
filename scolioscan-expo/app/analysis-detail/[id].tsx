@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
+
 import AnalysisScreen from '@/src/features/analysis/AnalysisScreen';
 
 export default function AnalysisDetailPage() {

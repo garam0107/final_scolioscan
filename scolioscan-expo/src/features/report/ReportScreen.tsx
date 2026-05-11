@@ -509,7 +509,7 @@ export default function ReportScreen() {
   const handleAnalysisPress = (item: ReportListItem) => {
     if (!item.navigationId) return;
     router.push({
-      pathname: '/analysis/[id]',
+      pathname: '/analysis-detail/[id]',
       params: {
         id: item.navigationId,
         source: item.source,

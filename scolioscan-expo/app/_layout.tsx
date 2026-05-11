@@ -108,6 +108,7 @@ export default function RootLayout() {
             <Stack.Screen name="password-find-reset" />
             <Stack.Screen name="register" />
             <Stack.Screen name="notifications" />
+            <Stack.Screen name="analysis-detail/[id]" />
             <Stack.Screen name="measure/2d" />
             <Stack.Screen name="measure/scoliometer" />
             <Stack.Screen name="settings" />

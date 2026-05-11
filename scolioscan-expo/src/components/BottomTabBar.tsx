@@ -84,7 +84,11 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
             canPreventDefault: true,
           });
 
-          if (!active && !event.defaultPrevented) {
+          if (event.defaultPrevented) {
+            return;
+          }
+
+          if (!active) {
             navigation.navigate(route.name, route.params);
           }
         };
