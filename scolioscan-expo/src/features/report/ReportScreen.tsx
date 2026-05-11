@@ -31,6 +31,7 @@ import { curvatureAPI } from '@/src/api/curvature';
 import { rotationAPI } from '@/src/api/rotation';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { RotationResponse } from '@/src/types/rotation';
+import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
 import ReportTrendChart from '@/src/features/report/components/ReportTrendChart';
 import styles from '@/src/features/report/report.styles';
 import {
@@ -639,6 +640,8 @@ export default function ReportScreen() {
             selectedAngle={selectedReportAngle}
             selectedPeriod={selectedTrendPeriod}
           />
+
+          <ReportAiDoctorCard latestCurvature={latestCurvature} />
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>측정 목록</Text>
