@@ -268,7 +268,7 @@ export default function LoginScreen() {
         toastKey={toastKey}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardWrap}
       >
         <View style={styles.content}>

@@ -4,6 +4,7 @@ import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fo
 import { Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import 'react-native-reanimated';
@@ -91,6 +92,7 @@ export default function RootLayout() {
   }
 
   return (
+    <KeyboardProvider>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         {/* View, TopSeparator 추가해서 상단바 밑으로 표시 */}
@@ -124,6 +126,7 @@ export default function RootLayout() {
       </AuthProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
+    </KeyboardProvider>
   );
 }
 // 상단바 아래 그라데이션 스타일 

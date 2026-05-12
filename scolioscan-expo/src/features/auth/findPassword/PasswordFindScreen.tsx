@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormTextField from '@/src/components/FormTextField';
@@ -105,11 +106,6 @@ export default function PasswordFindScreen() {
         onDismiss={() => setToastMessage('')}
         toastKey={toastKey}
       />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
-        style={styles.screen}
-      >
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Ionicons name="chevron-back" size={22} color="#7E89A0" />
@@ -118,7 +114,8 @@ export default function PasswordFindScreen() {
           <View style={styles.headerSide} />
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
+          bottomOffset={126}
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled"
@@ -160,8 +157,10 @@ export default function PasswordFindScreen() {
             autoComplete="tel"
             onChangeText={(value) => setPhone(normalizePhoneNumber(value))}
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
+      <KeyboardStickyView offset={{ closed: 0, opened: 46 }}>
+        {/* 키보드에 화면 높이를 맡기지 않고 하단 버튼만 키보드 위로 붙인다. */}
         <View style={styles.footer}>
           <PrimaryButton
             title="계속하기"
@@ -174,7 +173,7 @@ export default function PasswordFindScreen() {
             textStyle={{ fontSize: 16, fontWeight: '500', lineHeight: 22 }}
           />
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardStickyView>
     </SafeAreaView>
   );
 }
