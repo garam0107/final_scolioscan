@@ -193,6 +193,7 @@ export default function ContactScreen() {
 						<TextInput
 							underlineColorAndroid="transparent"
 							placeholder={"이메일 주소를 적어주세요"}
+							placeholderTextColor="#B5BDCE"
 							value={textInput2}
 							onChangeText={onChangeTextInput2}
 							style={styles.input2}

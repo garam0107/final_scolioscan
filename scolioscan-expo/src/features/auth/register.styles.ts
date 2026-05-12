@@ -25,6 +25,10 @@ export const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  // 스크롤뷰 내부 정렬 속성은 contentContainerStyle에서만 적용합니다.
+  contentContainer: {
+    flexGrow: 1,
     justifyContent: 'flex-start',
     paddingTop: 24,
   },

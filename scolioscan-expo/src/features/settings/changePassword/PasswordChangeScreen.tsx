@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -12,7 +13,6 @@ import styles from '@/src/features/settings/changePassword/passwordChange.styles
 
 export default function PasswordChangeScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [phone, setPhone] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -54,11 +54,6 @@ export default function PasswordChangeScreen() {
         onDismiss={() => setToastMessage('')}
         toastKey={toastKey}
       />
-      <KeyboardAvoidingView
-        style={styles.screen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={insets.top}
-      >
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
@@ -67,7 +62,12 @@ export default function PasswordChangeScreen() {
           <View style={styles.headerSide} />
         </View>
 
-        <View style={styles.content}>
+        <KeyboardAwareScrollView
+          bottomOffset={96}
+          style={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.guideBox}>
             <Text style={styles.guideText}>휴대전화 인증 후 비밀번호를 변경해주세요.</Text>
             <Text style={styles.guideText}>보안을 위해 다른 기기에서는 자동 로그아웃 돼요.</Text>
@@ -90,8 +90,10 @@ export default function PasswordChangeScreen() {
               />
             </View>
           </View>
-        </View>
+        </KeyboardAwareScrollView>
 
+      <KeyboardStickyView offset={{ closed: 0, opened: 46 }}>
+        {/* 키보드에 화면 높이를 맡기지 않고 하단 버튼만 키보드 위로 붙인다. */}
         <View style={styles.footer}>
           <PrimaryButton
             title="계속하기"
@@ -103,7 +105,7 @@ export default function PasswordChangeScreen() {
             disabled={!canContinue}
           />
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardStickyView>
     </SafeAreaView>
   );
 }

@@ -20,13 +20,13 @@ export default function GuideMessageBox({ messages }: GuideMessageBoxProps) {
 
 const styles = StyleSheet.create({
   guideBox: {
-    backgroundColor: Colors.primary[500],
+    backgroundColor: Colors.mint[25],
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
   guideText: {
-    color: Colors.primary['white'],
+    color: Colors.primary[500],
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,

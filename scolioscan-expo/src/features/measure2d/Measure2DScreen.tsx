@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import { createGuidelineGeometry } from './domain/guidelineGeometry';
 import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
@@ -18,8 +19,9 @@ const NEXT_MEASUREMENT_ROUTE = '/measure/scoliometer';
 
 export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
+  const permissionRequestingRef = useRef(false);
   const router = useRouter();
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission, getPermission] = useCameraPermissions();
   const [showGuideText, setShowGuideText] = useState(true);
   const [stageLayout, setStageLayout] = useState({ width: 0, height: 0 });
   const [toastMessage, setToastMessage] = useState('');
@@ -27,13 +29,6 @@ export default function Measure2DScreen() {
   const [manualSubmitting, setManualSubmitting] = useState(false);
   const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
-  useEffect(() => {
-    if (!permission || permission.granted || !permission.canAskAgain) {
-      return;
-    }
-
-    void requestPermission();
-  }, [permission, requestPermission]);
   const [toastKey, setToastKey] = useState(0);
 
   const camera = useMemo(() => createExpoCameraAdapter(cameraRef), []);
@@ -70,6 +65,34 @@ export default function Measure2DScreen() {
     setToastTone(tone);
     setToastMessage(message);
   }, []);
+
+  const requestCameraPermission = useCallback(async () => {
+    if (permissionRequestingRef.current) {
+      return;
+    }
+
+    permissionRequestingRef.current = true;
+
+    try {
+      // 화면에 다시 들어올 때마다 최신 권한 상태를 확인한 뒤 요청 창을 다시 띄운다.
+      const currentPermission = await getPermission();
+
+      if (currentPermission.granted || !currentPermission.canAskAgain) {
+        return;
+      }
+
+      await requestPermission();
+    } finally {
+      permissionRequestingRef.current = false;
+    }
+  }, [getPermission, requestPermission]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // 권한을 취소한 뒤 다시 진입하는 경우에도 검은 화면에 머무르지 않고 권한 요청을 재시도한다.
+      void requestCameraPermission();
+    }, [requestCameraPermission]),
+  );
 
   const goToNextMeasurement = useCallback((curvatureMeasurementId: number) => {
     // 2D 분석 결과 id를 저장해 측만계 측정과 같은 세트로 묶는다.
@@ -223,7 +246,24 @@ export default function Measure2DScreen() {
   }
 
   if (!permission.granted) {
-    return <View style={styles.screen} />;
+    const canAskAgain = permission.canAskAgain;
+
+    return (
+      <SafeAreaView style={styles.permissionScreen}>
+        <View style={styles.permissionContent}>
+          <Text style={styles.permissionTitle}>카메라 권한이 필요합니다</Text>
+          <Text style={styles.permissionMessage}>
+            2D 측정을 진행하려면 카메라 접근 권한을 허용해주세요.
+          </Text>
+          <Pressable
+            style={styles.permissionButton}
+            onPress={canAskAgain ? requestCameraPermission : () => Linking.openSettings()}
+          >
+            <Text style={styles.permissionButtonText}>{canAskAgain ? '권한 허용하기' : '설정으로 이동'}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (

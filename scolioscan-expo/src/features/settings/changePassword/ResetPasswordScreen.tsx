@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { userAPI } from '@/src/api/user';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -30,7 +31,6 @@ function normalizeApiError(error: unknown) {
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -133,81 +133,81 @@ export default function ResetPasswordScreen() {
         toastKey={toastKey}
         onDismiss={() => setToastMessage('')}
       />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.screen}
-        keyboardVerticalOffset={insets.top}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
+        </Pressable>
+        <Text style={styles.headerTitle}>비밀번호 변경</Text>
+        <View style={styles.headerSide} />
+      </View>
+
+      <KeyboardAwareScrollView
+        bottomOffset={112}
+        style={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView style={{ flex: 1 }}>
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
-            </Pressable>
-            <Text style={styles.headerTitle}>비밀번호 변경</Text>
-            <View style={styles.headerSide} />
-          </View>
+        <View style={styles.guideBox}>
+          <Text style={styles.guideText}>새로 사용할 비밀번호를 입력해주세요.</Text>
+          <Text style={styles.guideText}>보안을 위해 다른 기기에서는 자동 로그아웃 돼요.</Text>
+        </View>
 
-          <View style={styles.content}>
-            <View style={styles.guideBox}>
-              <Text style={styles.guideText}>새로 사용할 비밀번호를 입력해주세요.</Text>
-              <Text style={styles.guideText}>보안을 위해 다른 기기에서는 자동 로그아웃 돼요.</Text>
+        <View style={styles.inputCard}>
+          {renderPasswordField(
+            '현재 비밀번호',
+            '현재 비밀번호를 입력하세요',
+            currentPassword,
+            setCurrentPassword,
+            currentPasswordVisible,
+            () => setCurrentPasswordVisible((current) => !current),
+          )}
+
+          {renderPasswordField(
+            '새 비밀번호',
+            '새 비밀번호를 입력해주세요',
+            newPassword,
+            setNewPassword,
+            newPasswordVisible,
+            () => setNewPasswordVisible((current) => !current),
+            true,
+          )}
+
+          <View style={styles.ruleList}>
+            <View style={styles.ruleRow}>
+              <Ionicons
+                name="checkmark"
+                size={14}
+                color={passwordMixReady ? '#5F9F9D' : '#C0CAD8'}
+              />
+              <Text style={[styles.ruleText, passwordMixReady ? styles.ruleTextActive : null]}>
+                영문자, 숫자, 특수문자 포함
+              </Text>
             </View>
-
-            <View style={styles.inputCard}>
-              {renderPasswordField(
-                '현재 비밀번호',
-                '현재 비밀번호를 입력하세요',
-                currentPassword,
-                setCurrentPassword,
-                currentPasswordVisible,
-                () => setCurrentPasswordVisible((current) => !current),
-              )}
-
-              {renderPasswordField(
-                '새 비밀번호',
-                '새 비밀번호를 입력해주세요',
-                newPassword,
-                setNewPassword,
-                newPasswordVisible,
-                () => setNewPasswordVisible((current) => !current),
-                true,
-              )}
-
-              <View style={styles.ruleList}>
-                <View style={styles.ruleRow}>
-                  <Ionicons
-                    name="checkmark"
-                    size={14}
-                    color={passwordMixReady ? '#5F9F9D' : '#C0CAD8'}
-                  />
-                  <Text style={[styles.ruleText, passwordMixReady ? styles.ruleTextActive : null]}>
-                    영문자, 숫자, 특수문자 포함
-                  </Text>
-                </View>
-                <View style={styles.ruleRow}>
-                  <Ionicons
-                    name="checkmark"
-                    size={14}
-                    color={passwordLengthReady ? '#5F9F9D' : '#C0CAD8'}
-                  />
-                  <Text style={[styles.ruleText, passwordLengthReady ? styles.ruleTextActive : null]}>
-                    최소 8자 이상
-                  </Text>
-                </View>
-              </View>
-
-              {renderPasswordField(
-                '비밀번호 확인',
-                '한 번 더 입력해주세요',
-                confirmPassword,
-                setConfirmPassword,
-                confirmPasswordVisible,
-                () => setConfirmPasswordVisible((current) => !current),
-              )}
+            <View style={styles.ruleRow}>
+              <Ionicons
+                name="checkmark"
+                size={14}
+                color={passwordLengthReady ? '#5F9F9D' : '#C0CAD8'}
+              />
+              <Text style={[styles.ruleText, passwordLengthReady ? styles.ruleTextActive : null]}>
+                최소 8자 이상
+              </Text>
             </View>
           </View>
-        </ScrollView>
 
+          {renderPasswordField(
+            '비밀번호 확인',
+            '한 번 더 입력해주세요',
+            confirmPassword,
+            setConfirmPassword,
+            confirmPasswordVisible,
+            () => setConfirmPasswordVisible((current) => !current),
+          )}
+        </View>
+      </KeyboardAwareScrollView>
+
+      <KeyboardStickyView offset={{ closed: 0, opened: 46 }}>
+        {/* 키보드에 화면 높이를 맡기지 않고 하단 버튼만 키보드 위로 붙인다. */}
         <View style={styles.footer}>
           <PrimaryButton
             title="비밀번호 변경하기"
@@ -219,7 +219,7 @@ export default function ResetPasswordScreen() {
             disabled={!canSubmit}
           />
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardStickyView>
     </SafeAreaView>
   );
 }

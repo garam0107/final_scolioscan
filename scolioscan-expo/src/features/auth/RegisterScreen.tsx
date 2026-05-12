@@ -3,14 +3,12 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   AppState,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView, } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAuthStore } from '@/src/store/authStore';
 import ToastAlert from '@/src/components/ui/ToastAlert';
@@ -75,7 +73,6 @@ export default function RegisterScreen() {
   // /verify 호출 중인지
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   // 키보드 창 닫히고 버튼 위치 조정
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [toastKey, setToastKey] = useState(0);
   const passwordHasLength = hasPasswordLength(draft.password);
   const passwordHasMix = hasPasswordMix(draft.password);
@@ -129,23 +126,6 @@ export default function RegisterScreen() {
     subscription.remove();
   };
 }, [handleVerifyPhone]);
-
-
-  // footer 버튼 위치 조정
-  useEffect(() => {
-  const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
-    setKeyboardHeight(event.endCoordinates.height);
-  });
-
-  const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-    setKeyboardHeight(0);
-  });
-
-  return () => {
-    showSubscription.remove();
-    hideSubscription.remove();
-  };
-}, []);
 
 
   useEffect(() => {
@@ -495,18 +475,20 @@ export default function RegisterScreen() {
         toastKey={toastKey}
       />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardWrap}
-      >
-        <View style={styles.screen}>
+      <View style={styles.screen}>
           <View style={styles.header}>
             <Pressable onPress={handleBack} hitSlop={12}>
               <Ionicons name="chevron-back" size={28} color="#4B5563" />
             </Pressable>
           </View>
 
-          <View style={styles.content}>
+          <KeyboardAwareScrollView
+            bottomOffset={112}
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             {step === 'complete' || step === 'agreement' ? null : (
               <Text style={styles.title}>{stepMeta.title}</Text>
             )}
@@ -554,30 +536,25 @@ export default function RegisterScreen() {
               <RegisterCompleteStep />
             ) : null}
 
-          </View>
+          </KeyboardAwareScrollView>
 
-            <View
-              style={[
-                styles.footer,
-                Platform.OS === 'android' && keyboardHeight > 0
-                  ? { paddingBottom: 0}
-                  : null,
-              ]}
-            >
-            <Pressable
-              disabled={primaryDisabled}
-              onPress={handlePrimaryPress}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                primaryDisabled ? styles.primaryButtonDisabled : styles.primaryButtonActive,
-                pressed && !primaryDisabled ? styles.pressed : null,
-              ]}
-            >
-              <Text style={styles.primaryButtonText}>{stepMeta.buttonText}</Text>
-            </Pressable>
-          </View>
+          <KeyboardStickyView offset={{ closed: 0, opened: 46 }}>
+            {/* 키보드에 화면 높이를 맡기지 않고 하단 버튼만 키보드 위로 붙인다. */}
+            <View style={styles.footer}>
+              <Pressable
+                disabled={primaryDisabled}
+                onPress={handlePrimaryPress}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  primaryDisabled ? styles.primaryButtonDisabled : styles.primaryButtonActive,
+                  pressed && !primaryDisabled ? styles.pressed : null,
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>{stepMeta.buttonText}</Text>
+              </Pressable>
+            </View>
+          </KeyboardStickyView>
         </View>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

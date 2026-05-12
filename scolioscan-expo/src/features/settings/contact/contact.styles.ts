@@ -122,6 +122,7 @@ const styles = StyleSheet.create({
 		width: 20,
 	},
 	input: {
+		fontFamily: 'PretendardVariable',
 		color: "#2B9696",
 		fontSize: 13,
 		marginBottom: 16,
@@ -132,6 +133,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 12,
 	},
 	input2: {
+		fontFamily: 'PretendardVariable',
 		color: Colors.primary["black"],
 		fontSize: 15,
 		backgroundColor: "#F2F4F6",
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
 		paddingBottom: 16,
 	},
 	infoBox: {
-		backgroundColor: "#EDFCFC",
+		backgroundColor: Colors.mint[25],
 		borderRadius: 8,
 		marginBottom: 16,
 		marginHorizontal: 16,
@@ -212,9 +214,9 @@ const styles = StyleSheet.create({
 		paddingVertical: 8,
 	},
 	infoText: {
-		color: "#2B9696",
+		color: Colors.primary[500],
 		fontSize: 13,
-		fontWeight: "400",
+		fontWeight: "500",
 		lineHeight: 18,
 	},
 	text: {
