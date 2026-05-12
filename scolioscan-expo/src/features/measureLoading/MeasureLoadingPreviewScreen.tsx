@@ -1,16 +1,16 @@
 import { useFonts as useExpoFonts } from 'expo-font';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import LoadingChartIcon from '../../../assets/icons/home/loading_chart.svg';
 import LoadingSearchIcon from '../../../assets/icons/home/loading_search.svg';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { Colors } from '@/src/constants/theme';
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
-
+// 피그마의 블러와 외곽 그림자 효과를 유지하기 위해 차트는 PNG로 표시한다.
+const loadingChartImage4x = require('../../../assets/icons/home/loading_chart_4x.png');
 const loadingMessages = [
   'AI 의사가 진단하는 중이에요',
   '척추 각도 정보를 확인하고 있어요',
@@ -33,6 +33,8 @@ export default function MeasureLoadingPreviewScreen() {
   const spinnerProgress = useRef(new Animated.Value(0)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const buttonTranslateY = useRef(new Animated.Value(18)).current;
+  // 문구가 바뀔 때 새 문구만 아래에서 위로 나타나게 제어한다.
+  const messageEnterProgress = useRef(new Animated.Value(1)).current;
   const [messageIndex, setMessageIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
@@ -81,13 +83,17 @@ export default function MeasureLoadingPreviewScreen() {
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
+  const messageTranslateY = messageEnterProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [10, 0],
+  });
   const currentMessage = useMemo(() => loadingMessages[messageIndex], [messageIndex]);
 
   useEffect(() => {
     const orbitAnimation = Animated.loop(
       Animated.timing(rotateProgress, {
         toValue: 1,
-        duration: 3600,
+        duration: 4800,
         easing: Easing.linear,
         useNativeDriver: true,
       }),
@@ -129,11 +135,18 @@ export default function MeasureLoadingPreviewScreen() {
 
     // 분석 중 문구만 일정 간격으로 바꾼다.
     const messageTimer = setInterval(() => {
+      messageEnterProgress.setValue(0);
       setMessageIndex((value) => (value + 1) % loadingMessages.length);
+      Animated.timing(messageEnterProgress, {
+        toValue: 1,
+        duration: 360,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
     }, 1500);
 
     return () => clearInterval(messageTimer);
-  }, [isComplete]);
+  }, [isComplete, messageEnterProgress]);
 
   useEffect(() => {
     const completeTimer = setTimeout(() => {
@@ -165,7 +178,11 @@ export default function MeasureLoadingPreviewScreen() {
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right', 'bottom']}>
       <View style={styles.content}>
         <View style={[styles.visualWrap, { width: orbitSize, height: orbitSize }]}>
-          <LoadingChartIcon width={chartSize} height={chartSize} />
+          <Image
+            source={loadingChartImage4x}
+            style={{ width: chartSize, height: chartSize }}
+            resizeMode="contain"
+          />
           <Animated.View
             pointerEvents="none"
             style={[
@@ -192,7 +209,17 @@ export default function MeasureLoadingPreviewScreen() {
           {isComplete ? null : (
             <View style={styles.loadingRow}>
               <Animated.View style={[styles.spinner, { transform: [{ rotate: spinnerRotate }] }]} />
-              <Text style={styles.loadingText}>{currentMessage}</Text>
+              <Animated.Text
+                style={[
+                  styles.loadingText,
+                  {
+                    opacity: messageEnterProgress,
+                    transform: [{ translateY: messageTranslateY }],
+                  },
+                ]}
+              >
+                {currentMessage}
+              </Animated.Text>
             </View>
           )}
         </View>
@@ -302,9 +329,9 @@ const styles = StyleSheet.create({
   },
   tipBadgeText: {
     fontFamily: 'PretendardVariable',
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: '700',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '400',
     color: Colors.primary.white,
   },
   tipText: {
