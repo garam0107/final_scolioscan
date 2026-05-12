@@ -9,12 +9,15 @@ export type ScoliometerSample = {
 
 type ScoliometerSessionState = {
   samples: ScoliometerSample[];
+  curvatureMeasurementId: number | null;
   addSample: (angle: number) => void;
+  setCurvatureMeasurementId: (curvatureMeasurementId: number | null) => void;
   resetSession: () => void;
 };
 
 export const useScoliometerSessionStore = create<ScoliometerSessionState>((set) => ({
   samples: [],
+  curvatureMeasurementId: null,
   addSample: (angle) =>
     set((state) => ({
       samples:
@@ -28,5 +31,6 @@ export const useScoliometerSessionStore = create<ScoliometerSessionState>((set) 
               },
             ],
     })),
-  resetSession: () => set({ samples: [] }),
+  setCurvatureMeasurementId: (curvatureMeasurementId) => set({ curvatureMeasurementId }),
+  resetSession: () => set({ samples: [], curvatureMeasurementId: null }),
 }));

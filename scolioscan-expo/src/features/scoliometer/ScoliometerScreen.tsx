@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -79,7 +79,10 @@ function formatAngle(angle: number) {
   return `${rounded.toFixed(1)}°`;
 }
 
-function buildRotationPayload(samples: ScoliometerSample[]): RotationCreatePayload {
+function buildRotationPayload(
+  samples: ScoliometerSample[],
+  curvatureMeasurementId?: number | null,
+): RotationCreatePayload {
   const values = samples.map((sample) => Math.abs(sample.angle));
 
   return {
@@ -88,7 +91,15 @@ function buildRotationPayload(samples: ScoliometerSample[]): RotationCreatePaylo
     thoracolumbar_atr: values[2] ?? 0,
     upper_lumbar_atr: values[3] ?? 0,
     lower_lumbar_atr: values[4] ?? 0,
+    curvature_measurement_id: curvatureMeasurementId ?? null,
   };
+}
+
+function parsePositiveId(value?: string | string[]) {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const parsedValue = rawValue ? Number(rawValue) : NaN;
+
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
 }
 
 function getCircleOverlapPath(
@@ -138,11 +149,16 @@ function getCircleOverlapPath(
 
 export default function ScoliometerScreen() {
   const router = useRouter();
+  const { curvatureMeasurementId: curvatureMeasurementIdParam } = useLocalSearchParams<{
+    curvatureMeasurementId?: string | string[];
+  }>();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [submitting, setSubmitting] = useState(false);
   const samples = useScoliometerSessionStore((state) => state.samples);
+  const curvatureMeasurementId = useScoliometerSessionStore((state) => state.curvatureMeasurementId);
   const addSample = useScoliometerSessionStore((state) => state.addSample);
+  const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const resetSession = useScoliometerSessionStore((state) => state.resetSession);
   const {
     angle,
@@ -179,6 +195,7 @@ export default function ScoliometerScreen() {
   const flatSvgCenter = flatSvgSize / 2;
   const flatOffsetX = (bubbleX / 100) * flatTravel;
   const flatOffsetY = (bubbleY / 100) * flatTravel;
+  const activeCurvatureMeasurementId = curvatureMeasurementId ?? parsePositiveId(curvatureMeasurementIdParam);
   // 원 2개가 반대 방향으로 벌어지는 비율
   const flatFirstCx = flatSvgCenter - flatOffsetY * 0.6;
   const flatFirstCy = flatSvgCenter - flatOffsetX * 0.6;
@@ -198,6 +215,14 @@ export default function ScoliometerScreen() {
   const displayGuideText = measuredCount > 0
     ? `${measuredCount}회 측정했어요. 이어서 측정해주세요`
     : guideText;
+
+  useEffect(() => {
+    const nextCurvatureMeasurementId = parsePositiveId(curvatureMeasurementIdParam);
+
+    if (nextCurvatureMeasurementId) {
+      setCurvatureMeasurementId(nextCurvatureMeasurementId);
+    }
+  }, [curvatureMeasurementIdParam, setCurvatureMeasurementId]);
 
   const handleStopConfirmed = useCallback(() => {
     resetSession();
@@ -242,7 +267,7 @@ export default function ScoliometerScreen() {
     setSubmitting(true);
 
     try {
-      await rotationAPI.createAnalysis(buildRotationPayload(nextSamples));
+      await rotationAPI.createAnalysis(buildRotationPayload(nextSamples, activeCurvatureMeasurementId));
       resetSession();
       Alert.alert('측정 완료', '척추측만계 측정이 저장되었습니다.', [
         { text: '확인', onPress: () => router.replace('/home') },
@@ -252,7 +277,7 @@ export default function ScoliometerScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [addSample, angle, resetSession, router, samples, submitting]);
+  }, [activeCurvatureMeasurementId, addSample, angle, resetSession, router, samples, submitting]);
 
   useEffect(() => {
     void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);

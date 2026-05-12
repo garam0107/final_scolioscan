@@ -16,11 +16,13 @@ import { StatusBar } from 'expo-status-bar';
 import type { SvgProps } from 'react-native-svg';
 
 import { curvatureAPI } from '@/src/api/curvature';
+import { measurementSetAPI } from '@/src/api/measurementSet';
 import { rotationAPI } from '@/src/api/rotation';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import { useAuth } from '@/src/contexts/AuthContext';
 import type { AnalysisResponse } from '@/src/types/analysis';
 import type { CurvatureResponse } from '@/src/types/curvature';
+import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import type { RotationResponse } from '@/src/types/rotation';
 import styles from './analysis.styles';
 import { createAnalysisPose, VERTEBRA_COUNT } from './analysisPose';
@@ -97,6 +99,18 @@ function toAnalysisFromRotation(record: RotationResponse): AnalysisResponse {
     image_url: null,
     created_at: getMeasurementDate(record),
   };
+}
+
+function toAnalysisFromMeasurementSet(measurementSet: MeasurementSetResponse): AnalysisResponse | null {
+  if (measurementSet.curvature) {
+    return toAnalysisFromCurvature(measurementSet.curvature);
+  }
+
+  if (measurementSet.rotation) {
+    return toAnalysisFromRotation(measurementSet.rotation);
+  }
+
+  return null;
 }
 
 // 분기별 척추측만증 표시 함수 — 4단계 (정상/경도/중등도/고도)
@@ -481,7 +495,11 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
         } else {
           const response = await curvatureAPI.getAnalyses({ limit: 1 });
           const latestCurvature = response.data[0] ?? null;
-          targetAnalysis = latestCurvature ? toAnalysisFromCurvature(latestCurvature) : null;
+
+          if (latestCurvature) {
+            const measurementSetResponse = await measurementSetAPI.getByCurvature(latestCurvature.id);
+            targetAnalysis = toAnalysisFromMeasurementSet(measurementSetResponse.data);
+          }
         }
 
         if (!mounted) return;

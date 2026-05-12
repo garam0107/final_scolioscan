@@ -11,6 +11,7 @@ export interface RotationResponse {
   lumbar_atr: number;
   max_severity_zone: 'safe' | 'caution' | 'alert';
   created_at: string;
+  curvature_measurement_id?: number | null;
 }
 
 export type RotationCreatePayload = {
@@ -19,4 +20,5 @@ export type RotationCreatePayload = {
   thoracolumbar_atr: number;
   upper_lumbar_atr: number;
   lower_lumbar_atr: number;
+  curvature_measurement_id?: number | null;
 };

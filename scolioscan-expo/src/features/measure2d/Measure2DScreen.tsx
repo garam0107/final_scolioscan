@@ -10,6 +10,8 @@ import { CameraGuidelineOverlay } from './components/CameraGuidelineOverlay';
 import { useMeasure2D } from './hooks/useMeasure2D';
 import { styles } from './measure2d.styles';
 import { getAccessToken } from '@/src/lib/tokenStorage';
+import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
+import type { CurvatureResponse } from '@/src/types/curvature';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
 const NEXT_MEASUREMENT_ROUTE = '/measure/scoliometer';
@@ -23,6 +25,7 @@ export default function Measure2DScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
   useEffect(() => {
     if (!permission || permission.granted || !permission.canAskAgain) {
@@ -67,16 +70,22 @@ export default function Measure2DScreen() {
     setToastMessage(message);
   }, []);
 
-  const goToNextMeasurement = useCallback(() => {
+  const goToNextMeasurement = useCallback((curvatureMeasurementId: number) => {
     console.log('[measure2d] 척추측만계 화면으로 이동', NEXT_MEASUREMENT_ROUTE);
-    router.push(NEXT_MEASUREMENT_ROUTE);
-  }, [router]);
+    setCurvatureMeasurementId(curvatureMeasurementId);
+    router.push({
+      pathname: NEXT_MEASUREMENT_ROUTE,
+      params: {
+        curvatureMeasurementId: String(curvatureMeasurementId),
+      },
+    });
+  }, [router, setCurvatureMeasurementId]);
 
   const submitCurvature = useCallback(async (photoUri: string) => {
     // 자동 촬영 또는 수동 촬영이 성공한 뒤 최종 사진을 척추측만 분석 API로 보낸다.
     if (!API_BASE_URL) {
       showToast('API 주소가 설정되지 않았습니다.', 'error');
-      return false;
+      return null;
     }
 
     try {
@@ -107,14 +116,21 @@ export default function Measure2DScreen() {
 
       if (!res.ok) {
         showToast('척추측만 분석 요청에 실패했습니다.', 'error');
-        return false;
+        return null;
       }
 
-      return true;
+      const curvature = JSON.parse(text) as CurvatureResponse;
+
+      if (!curvature.id) {
+        showToast('2D 측정 결과를 확인하지 못했습니다.', 'error');
+        return null;
+      }
+
+      return curvature;
     } catch (error) {
       console.log('[measure2d] curvature 요청 예외', error);
       showToast('서버 연결에 실패했습니다. 네트워크를 확인해주세요.', 'error');
-      return false;
+      return null;
     }
   }, [API_BASE_URL, showToast]);
 
@@ -130,10 +146,10 @@ export default function Measure2DScreen() {
     if (!autoCaptureResult) return;
     console.log('[measure2d] 자동 촬영 완료', autoCaptureResult);
     const submitAndNavigate = async () => {
-      const submitted = await submitCurvature(autoCaptureResult.photo.uri);
+      const curvature = await submitCurvature(autoCaptureResult.photo.uri);
 
-      if (submitted) {
-        goToNextMeasurement();
+      if (curvature) {
+        goToNextMeasurement(curvature.id);
       }
     };
 
@@ -161,11 +177,11 @@ export default function Measure2DScreen() {
       if (nextEvaluation.aligned) {
         showToast('좋아요. 이 자세로 촬영할게요!', 'success');
         console.log('2D카메라 촬영', result);
-        const submitted = await submitCurvature(result.photo.uri);
+        const curvature = await submitCurvature(result.photo.uri);
 
-        if (submitted) {
+        if (curvature) {
           shouldResumeAuto = false;
-          goToNextMeasurement();
+          goToNextMeasurement(curvature.id);
         }
 
         return;
