@@ -38,6 +38,7 @@ export default function Measure2DScreen() {
 
   const camera = useMemo(() => createExpoCameraAdapter(cameraRef), []);
   const guidelineGeometry = useMemo(() => {
+    // 실제 카메라 영역 크기가 잡힌 뒤에만 가이드 기준 좌표를 계산한다.
     // 화면에 실제로 표시된 카메라 영역 크기를 기준으로 가이드 위치와 판정 좌표를 만든다.
     if (stageLayout.width <= 0 || stageLayout.height <= 0) {
       return null;
@@ -71,6 +72,7 @@ export default function Measure2DScreen() {
   }, []);
 
   const goToNextMeasurement = useCallback((curvatureMeasurementId: number) => {
+    // 2D 분석 결과 id를 저장해 측만계 측정과 같은 세트로 묶는다.
     console.log('[measure2d] 척추측만계 화면으로 이동', NEXT_MEASUREMENT_ROUTE);
     setCurvatureMeasurementId(curvatureMeasurementId);
     router.push({
@@ -82,6 +84,7 @@ export default function Measure2DScreen() {
   }, [router, setCurvatureMeasurementId]);
 
   const submitCurvature = useCallback(async (photoUri: string) => {
+    // 자동/수동 촬영으로 확보한 최종 사진을 척추측만 분석 API에 제출한다.
     // 자동 촬영 또는 수동 촬영이 성공한 뒤 최종 사진을 척추측만 분석 API로 보낸다.
     if (!API_BASE_URL) {
       showToast('API 주소가 설정되지 않았습니다.', 'error');
@@ -135,6 +138,7 @@ export default function Measure2DScreen() {
   }, [API_BASE_URL, showToast]);
 
   useEffect(() => {
+    // 훅에서 발생한 자동 촬영 안내 메시지를 화면 공용 토스트로 옮긴다.
     // 자동 체크 중 나온 안내 문구는 화면 토스트 컴포넌트로 전달한 뒤 훅 상태에서 비운다.
     if (!autoToast) return;
     showToast(autoToast.message, autoToast.tone);
@@ -142,6 +146,7 @@ export default function Measure2DScreen() {
   }, [autoToast, clearAutoToast, showToast]);
 
   useEffect(() => {
+    // 자동 촬영이 완료되면 사용자 입력 없이 바로 2D 분석 요청과 다음 측정 이동을 진행한다.
     // 자동 촬영이 완료되면 사용자가 버튼을 누르지 않아도 바로 척추측만 분석 요청을 시작한다.
     if (!autoCaptureResult) return;
     console.log('[measure2d] 자동 촬영 완료', autoCaptureResult);
@@ -158,6 +163,7 @@ export default function Measure2DScreen() {
   }, [autoCaptureResult, clearAutoCaptureResult, goToNextMeasurement, submitCurvature]);
 
   const handlePressCapture = async () => {
+    // 수동 촬영은 자동 촬영을 잠시 멈추고, 현재 사진이 가이드 조건을 만족할 때만 분석 요청으로 이어진다.
     // 셔터 버튼은 자동 촬영과 같은 판정 로직을 사용하되, 사용자가 누른 시점의 사진을 즉시 검사한다.
     let shouldResumeAuto = true;
     pauseAutoCapture();
@@ -234,6 +240,7 @@ export default function Measure2DScreen() {
         style={styles.cameraStage}
         onLayout={(event) => {
           const { width, height } = event.nativeEvent.layout;
+          // 레이아웃이 확정된 뒤에만 가이드 비율 계산이 가능하므로 stage 크기를 상태로 보관한다.
           // 레이아웃이 잡힌 뒤에야 가이드 비율 계산이 가능하므로 stage 크기를 상태로 보관한다.
           setStageLayout({ width, height });
         }}

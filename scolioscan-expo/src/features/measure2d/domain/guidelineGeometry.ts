@@ -49,6 +49,7 @@ export function buildGuideRect(
   previewWidth: number,
   previewHeight: number,
 ): NormalizedRect {
+  // 화면 픽셀 좌표로 만든 가이드 영역을 랜드마크 서버 응답과 같은 0~1 좌표계로 변환한다.
   return {
     left: guideX / previewWidth,
     top: guideY / previewHeight,
@@ -58,6 +59,7 @@ export function buildGuideRect(
 }
 
 export function createGuideReferencePoints(rect: NormalizedRect): GuideReferencePoints {
+  // 어깨와 골반 기준점은 전체 가이드 박스 안의 상대 비율로 고정한다.
   const width = rect.right - rect.left;
   const height = rect.bottom - rect.top;
 
@@ -85,6 +87,7 @@ export function createGuidelineGeometry(
   previewWidth: number,
   previewHeight: number,
 ): GuidelineGeometry {
+  // 기준 SVG 비율을 유지하면서 카메라 프리뷰 아래쪽에 가이드 박스를 배치한다.
   const guideWidth = previewWidth * GUIDE_WIDTH_RATIO;
   const guideHeight = guideWidth * (BASE_H / BASE_W);
   const guideX = (previewWidth - guideWidth) / 2;

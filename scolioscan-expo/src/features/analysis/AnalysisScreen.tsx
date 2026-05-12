@@ -74,10 +74,12 @@ function getMeasurementDate(
     | Pick<CurvatureResponse, 'measured_at' | 'created_at'>
     | Pick<RotationResponse, 'measured_at' | 'created_at'>,
 ) {
+  // 측정 시각이 있으면 우선 사용하고, 없을 때만 생성 시각을 분석 표시 기준으로 삼는다.
   return record.measured_at || record.created_at;
 }
 
 function toAnalysisFromCurvature(record: CurvatureResponse): AnalysisResponse {
+  // 2D 곡률 결과를 분석 화면 공통 모델로 맞춰 화면 로직을 하나로 유지한다.
   return {
     id: String(record.id),
     user_uuid: record.user_id,
@@ -93,6 +95,7 @@ function toAnalysisFromCurvature(record: CurvatureResponse): AnalysisResponse {
 }
 
 function toAnalysisFromRotation(record: RotationResponse): AnalysisResponse {
+  // 측만계 회전 결과도 같은 분석 모델로 변환해 최신 결과 화면에서 함께 다룬다.
   return {
     id: String(record.id),
     user_uuid: record.user_id,
@@ -107,6 +110,7 @@ function toAnalysisFromRotation(record: RotationResponse): AnalysisResponse {
 }
 
 function toAnalysisFromMeasurementSet(measurementSet: MeasurementSetResponse): AnalysisResponse | null {
+  // 같은 측정 세트에 2D와 측만계 결과가 함께 있을 수 있어 우선순위를 정해 하나의 분석으로 변환한다.
   if (measurementSet.curvature) {
     return toAnalysisFromCurvature(measurementSet.curvature);
   }
@@ -189,6 +193,7 @@ function getCurvePatternCopy(dominantCurve: DominantCurveInfo): CurvePatternCopy
 }
 
 function getDominantCurveImageComponent(dominantCurve: DominantCurveInfo) {
+  // 서버가 내려준 back_type 또는 로컬 분류 결과에 맞는 척추 유형 이미지를 고른다.
   switch (dominantCurve.key) {
     case 'Thoracic':
       return VertebraeThoracic;
@@ -257,6 +262,7 @@ function CountUpNumber({
   active: boolean;
   animationKey: number;
 }) {
+  // 분석 탭 재진입 시 animationKey가 바뀌면 숫자도 다시 0부터 올라간다.
   const target = Math.max(0, Math.abs(value));
   const [displayValue, setDisplayValue] = useState(target);
 
@@ -498,6 +504,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const DominantCurveImageComponent = getDominantCurveImageComponent(dominantCurve);
 
   const startAnalysisAnimation = useCallback((duration: number) => {
+    // 척추 뼈, 표시 원, 각도 숫자를 같은 타이밍으로 처음 상태에서 다시 재생한다.
     // 분석 탭에 다시 들어올 때마다 곧은 척추에서 측정 각도까지 같은 애니메이션을 반복한다.
     progress.stopAnimation();
     progress.setValue(0);
@@ -521,6 +528,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
         let targetAnalysis: AnalysisResponse | null = null;
 
         if (analysisId) {
+          // 상세 화면은 전달받은 id와 sourceType 기준으로 정확한 분석 한 건을 불러온다.
           if (sourceType === 'rotation') {
             const response = await rotationAPI.getAnalysis(analysisId);
             targetAnalysis = toAnalysisFromRotation(response.data);
@@ -529,6 +537,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             targetAnalysis = toAnalysisFromCurvature(response.data);
           }
         } else {
+          // 탭 화면은 최신 2D 결과를 기준으로 연결된 측정 세트를 찾아 보여준다.
           const response = await curvatureAPI.getAnalyses({ limit: 1 });
           const latestCurvature = response.data[0] ?? null;
 

@@ -41,6 +41,7 @@ export type AnalysisPose = {
 
 // value : 서버에서 받아온 값
 function clampDegree(value?: number | null) {
+  // 화면 애니메이션이 과하게 휘지 않도록 분석 각도를 표시 가능한 범위로 제한한다.
   if (value === null || value === undefined || Number.isNaN(value)) return 0;
   return Math.max(0, Math.min(45, Math.abs(value)));
 }
@@ -48,11 +49,13 @@ function clampDegree(value?: number | null) {
 // 두 위치를 부드럽게 이어서 척추 곡선을 표시
 // a : 시작 위치, b : 끝 위치, t : 0~1 사이의 진행률
 function smoothLerp(a: number, b: number, t: number) {
+  // 직선 보간보다 부드러운 곡선으로 척추 마디의 x 위치를 이어준다.
   const ct = (1 - Math.cos(t * Math.PI)) / 2;
   return a + (b - a) * ct;
 }
 
 function getMetricXOffset(key: 'upper' | 'main' | 'lumbar', value: number) {
+  // 각도 라벨이 척추 이미지와 겹치지 않도록 만곡 크기에 따라 조금씩 밀어낸다.
   // 각도가 커질수록 라벨을 곡선 바깥쪽으로 조금 더 밀어 뼈와 겹치지 않게 한다.
   const dynamicOffset = Math.min(26, value * 0.75);
 
@@ -79,6 +82,7 @@ export function getSeverityLabel(upper: number): '정상' | '보통' | '위험' 
 // 세 구간의 만곡을 척추 마디별 x 오프셋과 회전값으로 변환
 // upper : 상부 흉추 만곡값, main : 주 흉추 만곡값, lumber : 요추 만곡값
 function buildSpineTrack(upper: number, main: number, lumbar: number): VertebraPose[] {
+  // 세 구간의 만곡 각도를 척추 마디별 x 이동과 회전값으로 변환한다.
   const vertebraHeight = 20;
   const lastIndex = VERTEBRA_COUNT - 1;
 
@@ -109,6 +113,7 @@ function buildSpineTrack(upper: number, main: number, lumbar: number): VertebraP
 }
 
 export function createAnalysisPose(analysis: AnalysisResponse | null): AnalysisPose {
+  // API 응답 하나를 화면에서 필요한 라벨, 척추 마디, 원형 표시 좌표로 분해한다.
   // 백엔드 필드를 분석 화면에표시할 세 개의 라벨로 매핑
   const upper = clampDegree(analysis?.main_thoracic);
   const main = clampDegree(analysis?.second_thoracic ?? upper * 0.72);

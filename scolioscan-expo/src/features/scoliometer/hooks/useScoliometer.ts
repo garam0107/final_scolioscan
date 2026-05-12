@@ -66,6 +66,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function lowPass(previous: Vector3 | null, next: Vector3): Vector3 {
+  // 센서 값 흔들림을 줄이기 위해 이전 중력 벡터와 새 값을 부드럽게 섞는다.
   if (!previous) {
     return next;
   }
@@ -78,6 +79,7 @@ function lowPass(previous: Vector3 | null, next: Vector3): Vector3 {
 }
 
 function toGravityVector(event: DeviceMotionMeasurement): Vector3 | null {
+  // 기기별 가속도 단위 차이를 없애기 위해 중력 벡터를 -1~1 범위로 정규화한다.
   const sample = event.accelerationIncludingGravity;
 
   if (!sample) {
@@ -111,6 +113,7 @@ function getGyroscopeMagnitude(event: GyroscopeMeasurement) {
 }
 
 function resolveMode(gravity: Vector3, currentMode: ScoliometerMode): ScoliometerMode {
+  // 평면/가로 모드가 자주 튀지 않도록 진입 기준과 이탈 기준을 다르게 둔다.
   const absZ = Math.abs(gravity.z);
 
   // 평면과 가로만 사용한다. 세로로 세운 경우도 별도 모드 없이 가로 화면으로 유지한다.
@@ -122,11 +125,13 @@ function resolveMode(gravity: Vector3, currentMode: ScoliometerMode): Scoliomete
 }
 
 function getLandscapeAngle(gravity: Vector3) {
+  // 가로 모드에서는 좌우 기울기를 부호 있는 각도로 계산한다.
   // 가로 측정의 핵심 각도다. 실기기에서 좌우 방향이 반대면 이 값의 부호를 바꾸면 된다.
   return toDegrees(Math.atan2(gravity.y, Math.abs(gravity.x) + EPSILON));
 }
 
 function getFlatSignedAngle(gravity: Vector3, offset: FlatOffset) {
+  // 평면 모드에서는 보정값을 뺀 뒤 중심에서 벗어난 정도를 각도로 변환한다.
   const adjustedX = gravity.x - offset.x;
   const adjustedY = gravity.y - offset.y;
 
@@ -153,6 +158,7 @@ export function useScoliometer() {
   });
 
   const calibrate = useCallback(() => {
+    // 현재 자세를 기준점으로 저장해 이후 측정값에서 보정값을 빼준다.
     const gravity = latestGravityRef.current;
 
     if (!gravity) {
@@ -210,6 +216,7 @@ export function useScoliometer() {
       });
 
       motionSubscription = DeviceMotion.addListener((event) => {
+        // DeviceMotion은 실제 각도 계산, Gyroscope는 모드 전환 안정화에 사용한다.
         const nextGravity = toGravityVector(event);
 
         if (!nextGravity) {

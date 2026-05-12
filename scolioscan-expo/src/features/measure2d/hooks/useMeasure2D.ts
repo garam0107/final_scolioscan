@@ -54,6 +54,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
   const lastAutoReasonRef = useRef<string | null>(null);
 
   const resetAutoAlignment = useCallback(() => {
+    // 자세가 가이드에서 벗어나면 자동 촬영 대기 상태를 처음부터 다시 잡는다.
     // 자세가 흐트러지면 자동 촬영 대기 시간과 화면 카운트다운을 함께 초기화한다.
     alignedSinceRef.current = null;
     setAutoAligned(false);
@@ -61,12 +62,14 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
   }, []);
 
   const pauseAutoCapture = useCallback(() => {
+    // 사용자가 직접 촬영을 누른 동안 자동 촬영 루프가 끼어들지 못하게 잠시 멈춘다.
     // 수동 촬영 결과를 기다리는 동안 자동 체크가 새로 시작되지 않도록 외부에서 잠글 수 있다.
     autoPausedRef.current = true;
     resetAutoAlignment();
   }, [resetAutoAlignment]);
 
   const resumeAutoCapture = useCallback(() => {
+    // 수동 촬영이 실패하거나 제출로 이어지지 않으면 자동 촬영을 다시 허용한다.
     // 수동 촬영이 실패했거나 자세 기준을 통과하지 못한 경우 다시 자동 체크를 허용한다.
     autoPausedRef.current = false;
   }, []);
@@ -81,6 +84,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
   }, []);
 
   const analyzeCapture = useCallback(async (quality: number, skipProcessing: boolean): Promise<ManualCaptureResult | null> => {
+    // 촬영한 사진을 랜드마크 서버에 보내고, 가이드 기준 안에 들어왔는지 같은 평가 규칙으로 판정한다.
     // 수동 촬영과 자동 체크가 같은 분석 경로를 쓰도록 촬영과 랜드마크 판정을 한곳에서 처리한다.
     const photo = await camera.capturePhoto({
       quality,
@@ -140,6 +144,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
   }, [camera, guidePoints, guideRect]);
 
   const handleManualCapture = useCallback(async (): Promise<ManualCaptureResult | null> => {
+    // 자동 분석 요청이 진행 중이면 잠깐 기다린 뒤, 수동 촬영 결과를 우선 처리한다.
     // 사용자가 직접 촬영하면 자동 체크 루프와 겹치지 않도록 잠시 기다린 뒤 수동 촬영을 우선한다.
     manualInProgressRef.current = true;
     resetAutoAlignment();
@@ -176,6 +181,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
 
     // 자동 촬영 루프는 일정 간격으로 저화질 사진을 보내 현재 자세가 기준 안에 있는지 확인한다.
     const runAutoCheck = async () => {
+      // 낮은 품질의 사진으로 자세만 검사해 서버 부하를 줄이고, 최종 저장용 사진은 나중에 다시 찍는다.
       if (
         disposed ||
         autoPausedRef.current ||
@@ -217,6 +223,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
         setAutoAligned(true);
 
         if (elapsed >= AUTO_HOLD_MS) {
+          // 정렬 상태가 충분히 유지된 순간에만 고품질 최종 사진을 촬영해 다음 분석 단계로 넘긴다.
           // 3초 동안 기준을 유지했을 때만 최종 사진을 다시 촬영해서 실제 척추측만 분석으로 넘긴다.
           autoCaptureCompletedRef.current = true;
           const finalPhoto = await camera.capturePhoto({
@@ -261,6 +268,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
 
     // 서버 체크 주기와 별도로 카운트다운은 더 자주 갱신해서 숫자가 자연스럽게 바뀌게 한다.
     const updateCountdown = () => {
+      // 서버 검사 주기와 별도로 남은 시간을 자주 갱신해 카운트다운이 끊겨 보이지 않게 한다.
       if (!alignedSinceRef.current) {
         setCountdown(null);
         return;

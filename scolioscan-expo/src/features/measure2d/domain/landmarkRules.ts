@@ -86,6 +86,7 @@ function visibilityScore(points: (LandmarkPoint | null)[]) {
 }
 
 function buildDetectedPoints(landmarks: LandmarkPoint[]): NamedDetectedPoints {
+  // MediaPipe Pose 인덱스를 화면에서 쓰는 이름 있는 관절 포인트로 바꾼다.
   return {
     nose: pointAt(landmarks, NOSE),
     leftEye: pointAt(landmarks, LEFT_EYE),
@@ -106,6 +107,7 @@ function buildDetectedPoints(landmarks: LandmarkPoint[]): NamedDetectedPoints {
  * - 두 값을 함께 사용해 전면/후면/판정불가로 분류
  */
 function computeDirection(detected: NamedDetectedPoints) {
+  // 어깨 좌우 순서와 얼굴 랜드마크 노출 정도를 함께 보고 전면/후면을 판단한다.
   const shoulderOrderBack = (() => {
     if (!detected.leftShoulder || !detected.rightShoulder) return false;
     return detected.rightShoulder.x - detected.leftShoulder.x > BEHIND_SHOULDER_DELTA;
@@ -141,6 +143,7 @@ function computeDirection(detected: NamedDetectedPoints) {
  * - 비율이 크면 가까움, 작으면 멂
  */
 function computeDistanceState(detected: NamedDetectedPoints, guidePoints: GuideReferencePoints) {
+  // 감지된 어깨 폭과 몸통 높이를 가이드 기준과 비교해 카메라와의 거리를 판정한다.
   if (!detected.leftShoulder || !detected.rightShoulder || !detected.leftHip || !detected.rightHip) {
     return { distanceState: '판정불가' as DistanceLabel, scale: 0 };
   }
@@ -186,6 +189,7 @@ function pointInRect(point: LandmarkPoint | null, rect: NormalizedRect) {
 }
 
 function computeGuideAreaScore(detected: NamedDetectedPoints, guideRect: NormalizedRect): GuideAreaResult {
+  // 어깨와 골반 4개 핵심 포인트가 가이드 박스 안에 얼마나 들어왔는지 점수화한다.
   const expandedRect = expandRect(guideRect);
   const corePoints = [detected.leftShoulder, detected.rightShoulder, detected.leftHip, detected.rightHip];
   const insideCount = corePoints.filter((point) => pointInRect(point, expandedRect)).length;
@@ -259,6 +263,7 @@ export function evaluateLandmarks(
   guidePoints: GuideReferencePoints,
   guideRect: NormalizedRect,
 ): LandmarkEvaluation {
+  // 후면 여부, 거리, 가이드 내부 위치를 차례대로 검사해 사용자 안내 문구를 만든다.
   const reasons: string[] = [];
   const detected = buildDetectedPoints(landmarks);
 

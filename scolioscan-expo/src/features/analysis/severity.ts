@@ -35,6 +35,7 @@ const SEVERITY_PALETTE: Record<SeverityKey, Omit<SeverityConfig, 'key'>> = {
 
 // 3단계 임계값: <15° 정상 / 15–24° 보통 / ≥25° 위험
 export function getRegionalSeverity(angleDeg: number): SeverityConfig {
+  // 각 부위의 절대 각도를 기준으로 정상/보통/위험 색상 세트를 고른다.
   const value = Math.abs(angleDeg);
   let key: SeverityKey;
   if (value < 15) key = 'normal';
@@ -48,6 +49,7 @@ export function getOverallSeverity(
   mainThoracic: number,
   lumbar: number,
 ): SeverityConfig {
+  // 여러 만곡 값 중 가장 큰 값을 전체 위험도 기준으로 사용한다.
   const max = Math.max(
     Math.abs(secondaryThoracic),
     Math.abs(mainThoracic),
@@ -59,6 +61,7 @@ export function getOverallSeverity(
 export const SEVERITY_BAR_MAX = 50;
 
 export function getSeverityBarPercent(angleDeg: number): number {
+  // 막대 그래프는 최대 기준값을 넘지 않도록 잘라서 퍼센트로 변환한다.
   const clamped = Math.max(0, Math.min(SEVERITY_BAR_MAX, Math.abs(angleDeg)));
   return (clamped / SEVERITY_BAR_MAX) * 100;
 }
@@ -119,6 +122,7 @@ export function classifyDominantCurve(
   mainThoracic: number,
   lumbar: number,
 ): DominantCurveInfo {
+  // 세 구간이 임계값보다 휘었는지 여부를 패턴으로 만들어 대표 만곡 유형을 찾는다.
   const labels = [secondaryThoracic, mainThoracic, lumbar].map((value) =>
     Math.abs(value) <= CURVE_THRESHOLD ? 'Straight' : 'Bent',
   );
@@ -136,5 +140,6 @@ export function classifyDominantCurve(
 }
 
 export function getDominantCurveInfo(key: DominantCurveKey): DominantCurveInfo {
+  // 서버에서 이미 분류된 back_type을 화면 표시용 정보로 변환한다.
   return { key, ...CURVE_INFO[key] };
 }

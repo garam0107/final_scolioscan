@@ -42,6 +42,7 @@ function mixColor(from: string, to: string, amount: number) {
 }
 
 function getBackgroundColor(angle: number) {
+  // 측정 각도 구간에 따라 화면 배경색을 단계적으로 바꿔 위험도를 직관적으로 보여준다.
   const absAngle = Math.abs(angle);
 
   // 각도 구간별 배경색이다. 구간 숫자와 색상값을 바꾸면 위험도 색상 느낌을 조정할 수 있다.
@@ -83,6 +84,7 @@ function buildRotationPayload(
   samples: ScoliometerSample[],
   curvatureMeasurementId?: number | null,
 ): RotationCreatePayload {
+  // 측정 순서는 화면 가이드 순서와 API 필드 순서가 같아야 하므로 배열 인덱스로 매핑한다.
   const values = samples.map((sample) => Math.abs(sample.angle));
 
   return {
@@ -109,6 +111,7 @@ function getCircleOverlapPath(
   secondCy: number,
   radius: number,
 ) {
+  // 평면 모드의 두 원이 겹치는 영역만 흰색으로 채우기 위한 SVG path를 만든다.
   const dx = secondCx - firstCx;
   const dy = secondCy - firstCy;
   const distance = Math.sqrt(dx ** 2 + dy ** 2);
@@ -225,6 +228,7 @@ export default function ScoliometerScreen() {
   }, [curvatureMeasurementIdParam, setCurvatureMeasurementId]);
 
   const handleStopConfirmed = useCallback(() => {
+    // 측정 중단 시에는 2D 측정과 이어지는 임시 세션도 함께 비운다.
     resetSession();
     router.replace('/home');
   }, [resetSession, router]);
@@ -242,6 +246,7 @@ export default function ScoliometerScreen() {
   }, [handleStopConfirmed]);
 
   const handleMeasurePress = useCallback(async () => {
+    // 필요한 샘플 수가 모이면 회전 측정값을 저장하고, 부족하면 현재 각도만 세션에 누적한다.
     if (submitting) return;
 
     const currentAngle = Math.abs(angle);
@@ -280,6 +285,7 @@ export default function ScoliometerScreen() {
   }, [activeCurvatureMeasurementId, addSample, angle, resetSession, router, samples, submitting]);
 
   useEffect(() => {
+    // 측만계는 가로 화면에서 측정하므로 진입 시 방향과 안드로이드 내비게이션 바를 조정한다.
     void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
 
     if (Platform.OS === 'android') {
@@ -297,6 +303,7 @@ export default function ScoliometerScreen() {
   }, []);
 
   useEffect(() => {
+    // 안드로이드 뒤로가기는 측정 중단 확인창으로 연결해 실수로 세션이 사라지는 것을 막는다.
     if (Platform.OS !== 'android') {
       return undefined;
     }
