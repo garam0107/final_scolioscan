@@ -314,8 +314,8 @@ export default function LoginScreen() {
               disabled={isLoginDisabled}
               active={isLoginReady}
             />
-
-            <View style={styles.dividerWrap}>
+            {/* 소셜 로그인 추가 후 해제 */}
+            {/* <View style={styles.dividerWrap}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>또는</Text>
               <View style={styles.dividerLine} />
@@ -343,7 +343,7 @@ export default function LoginScreen() {
               >
                 <AppleIcon width={40} height={40} />
               </Pressable>
-            </View>
+            </View> */}
 
             <View style={styles.signupPrompt}>
               <Text style={styles.signupPromptText}>아직 계정이 없으신가요?</Text>
