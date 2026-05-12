@@ -85,19 +85,19 @@ const CURVE_THRESHOLD = 8;
 
 const CURVE_INFO: Record<DominantCurveKey, Omit<DominantCurveInfo, 'key'>> = {
   Normal: {
-    diagnosisName: '정상 범위',
+    diagnosisName: '정상',
     affectedRegions: [],
   },
   Thoracic: {
-    diagnosisName: '흉추 만곡형 척추측만증',
+    diagnosisName: '흉추형 척추측만증',
     affectedRegions: ['main'],
   },
   'Double Thoracic': {
-    diagnosisName: '이중 흉추 만곡형 척추측만증',
+    diagnosisName: '이중 흉추형 척추측만증',
     affectedRegions: ['upper', 'main'],
   },
   'Double major': {
-    diagnosisName: '흉요추 이중 만곡형 척추측만증',
+    diagnosisName: '이중 주만곡형 척추측만증',
     affectedRegions: ['main', 'lumbar'],
   },
   'Triple curve': {
@@ -105,7 +105,7 @@ const CURVE_INFO: Record<DominantCurveKey, Omit<DominantCurveInfo, 'key'>> = {
     affectedRegions: ['upper', 'main', 'lumbar'],
   },
   Lumbar: {
-    diagnosisName: '요추 만곡형 척추측만증',
+    diagnosisName: '요추형 척추측만증',
     affectedRegions: ['lumbar'],
   },
   Unknown: {

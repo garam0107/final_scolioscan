@@ -38,6 +38,11 @@ import Grade2Image from '../../../assets/images/grade2.svg';
 import Grade3Image from '../../../assets/images/grade3.svg';
 import Grade4Image from '../../../assets/images/grade4.svg';
 import VertebraeType from '../../../assets/images/analysis/analysis_type_normal.svg'
+import VertebraeDoubleMajor from '../../../assets/images/analysis/Double_major.svg';
+import VertebraeDoubleThoracic from '../../../assets/images/analysis/Double_Thoracic.svg';
+import VertebraeLumbar from '../../../assets/images/analysis/Lumbar.svg';
+import VertebraeThoracic from '../../../assets/images/analysis/Thoracic.svg';
+import VertebraeTripleCurve from '../../../assets/images/analysis/Triple_curve.svg';
 import CurvePatternIcon from '../../../assets/icons/heroicons-outline_chart-bar.svg';
 import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 
@@ -180,6 +185,24 @@ function getCurvePatternCopy(dominantCurve: DominantCurveInfo): CurvePatternCopy
         title: '비표준 만곡',
         body: '일반적인 분류에 딱 맞지 않는 만곡 패턴이에요.',
       };
+  }
+}
+
+function getDominantCurveImageComponent(dominantCurve: DominantCurveInfo) {
+  switch (dominantCurve.key) {
+    case 'Thoracic':
+      return VertebraeThoracic;
+    case 'Double Thoracic':
+      return VertebraeDoubleThoracic;
+    case 'Double major':
+      return VertebraeDoubleMajor;
+    case 'Triple curve':
+      return VertebraeTripleCurve;
+    case 'Lumbar':
+      return VertebraeLumbar;
+    case 'Normal':
+    case 'Unknown':
+      return VertebraeType;
   }
 }
 
@@ -461,6 +484,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     if (analysis?.back_type) return getDominantCurveInfo(analysis.back_type);
     return classifyDominantCurve(upperValue, mainValue, lumbarValue);
   }, [analysis?.back_type, upperValue, mainValue, lumbarValue]);
+  const DominantCurveImageComponent = getDominantCurveImageComponent(dominantCurve);
 
   const startAnalysisAnimation = useCallback((duration: number) => {
     // 분석 탭에 다시 들어올 때마다 곧은 척추에서 측정 각도까지 같은 애니메이션을 반복한다.
@@ -699,7 +723,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             </View>
 
             <View style={styles.dominantCurveImageWrap}>
-              <VertebraeType preserveAspectRatio="xMidYMid meet" />
+              <DominantCurveImageComponent preserveAspectRatio="xMidYMid meet" />
             </View>
           </View>
 
