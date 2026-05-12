@@ -127,7 +127,7 @@ function resolveMode(gravity: Vector3, currentMode: ScoliometerMode): Scoliomete
 function getLandscapeAngle(gravity: Vector3) {
   // 가로 모드에서는 좌우 기울기를 부호 있는 각도로 계산한다.
   // 가로 측정의 핵심 각도다. 실기기에서 좌우 방향이 반대면 이 값의 부호를 바꾸면 된다.
-  return toDegrees(Math.atan2(gravity.y, Math.abs(gravity.x) + EPSILON));
+  return -toDegrees(Math.atan2(gravity.y, Math.abs(gravity.x) + EPSILON));
 }
 
 function getFlatSignedAngle(gravity: Vector3, offset: FlatOffset) {

@@ -127,10 +127,11 @@ export function createAnalysisPose(analysis: AnalysisResponse | null): AnalysisP
       { key: 'lumbar', label: '요추만곡', value: lumbar, side: 'right', topRatio: 0.76, xOffset: getMetricXOffset('lumbar', lumbar) },
     ],
     vertebrae,
+    // x 값이 (vertebrae[3]?.x ?? 0) []는 3,7,11
     arcs: [
-      { key: 'upper', x: vertebrae[3]?.x ?? 0, yRatio: 0.20, radiusRatio: 0.15 },
-      { key: 'main', x: vertebrae[7]?.x ?? 0, yRatio: 0.50, radiusRatio: 0.15 },
-      { key: 'lumbar', x: vertebrae[11]?.x ?? 0, yRatio: 0.79, radiusRatio: 0.15 },
+      { key: 'upper', x: (vertebrae[3]?.x ?? 0) + 5, yRatio: 0.20, radiusRatio: 0.15 },
+      { key: 'main', x: (vertebrae[7]?.x ?? 0) + 5, yRatio: 0.50, radiusRatio: 0.15 },
+      { key: 'lumbar', x: (vertebrae[11]?.x ?? 0) + 5, yRatio: 0.79, radiusRatio: 0.15 },
     ],
   };
 }

@@ -4,7 +4,8 @@ import { useRouter } from 'expo-router';
 import React, {useState} from "react";
 import { contactAPI } from '@/src/api/contact';
 import styles from '@/src/features/settings/contact/contact.styles';
-import { Alert, View, ScrollView, Image, Text, TextInput, TouchableOpacity, Pressable } from "react-native";
+import { Alert, View, Image, Text, TextInput, TouchableOpacity, Pressable } from "react-native";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ContactType = 'bug' | 'feature' | 'ux' | 'etc';
@@ -117,9 +118,11 @@ export default function ContactScreen() {
 				<View style={styles.headerSide} />
 			</View>
 
-			<ScrollView
+			<KeyboardAwareScrollView
+				bottomOffset={128}
 				style={styles.scrollView}
-				contentContainerStyle={[styles.scrollContent, { paddingBottom: 0}]}
+				contentContainerStyle={[styles.scrollContent, { paddingBottom: 0 }]}
+				keyboardShouldPersistTaps="handled"
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.infoBox}>
@@ -231,7 +234,7 @@ export default function ContactScreen() {
 						</View>
 					</View>
 				</View>
-			</ScrollView>
+			</KeyboardAwareScrollView>
 			<View style={[styles.fixedFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
 				<TouchableOpacity
 					disabled={isSubmitting}

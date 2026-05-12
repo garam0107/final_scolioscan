@@ -19,6 +19,8 @@ import styles from '@/src/features/scoliometer/scoliometer.styles';
 const MINT = '#7AD7D4';
 const YELLOW = '#FAD342';
 const RED = '#F97B7B';
+const LANDSCAPE_ANGLE_ANCHOR_HEIGHT = 58;
+const LANDSCAPE_GUIDE_ANCHOR_HEIGHT = 28;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -211,6 +213,9 @@ export default function ScoliometerScreen() {
   // 가로 모드 숫자 위치다. 흰색 경계에 묻히면 0.24 값을 키워 조금 더 위로 올린다.
   const landscapeAngleTop = horizonY - Math.min(height * 0.24, 96);
   const angleTop = isFlat ? height * 0.43 : landscapeAngleTop;
+  // 가로 모드 문구와 숫자는 고정된 박스 중심에서 회전해야 좌우 기울임이 같은 위치처럼 보인다.
+  const landscapeAngleAnchorWidth = Math.min(width * 0.62, 260);
+  const landscapeGuideAnchorWidth = Math.min(width * 0.74, 360);
 
   // 측정 횟수에 따라 변하도록 text 변경 필요
   const guideText = '측정을 진행해주세요';
@@ -416,8 +421,11 @@ export default function ScoliometerScreen() {
             <View style={styles.bottomBubble} />
             <View
               style={[
-                styles.landscapeGuideTextWrap,
+                styles.landscapeGuideAnchor,
                 {
+                  width: landscapeGuideAnchorWidth,
+                  height: LANDSCAPE_GUIDE_ANCHOR_HEIGHT,
+                  left: (width - landscapeGuideAnchorWidth) / 2,
                   top: horizonY + 16,
                   transform: [{ rotateZ: `${surfaceAngle}deg` }],
                 },
@@ -431,8 +439,11 @@ export default function ScoliometerScreen() {
         {!isFlat ? (
           <View
             style={[
-              styles.angleWrap,
+              styles.landscapeAngleAnchor,
               {
+                width: landscapeAngleAnchorWidth,
+                height: LANDSCAPE_ANGLE_ANCHOR_HEIGHT,
+                left: (width - landscapeAngleAnchorWidth) / 2,
                 top: angleTop,
                 transform: [{ rotateZ: `${surfaceAngle}deg` }],
               },

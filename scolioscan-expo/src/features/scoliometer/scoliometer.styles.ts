@@ -35,6 +35,13 @@ const styles = StyleSheet.create({
     zIndex: 100,
     elevation: 100,
   },
+  landscapeAngleAnchor: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    elevation: 100,
+  },
   angleText: {
     color: '#FFFFFF',
     fontSize: 36,
@@ -68,6 +75,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
+    zIndex: 101,
+    elevation: 101,
+  },
+  landscapeGuideAnchor: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 101,
     elevation: 101,
   },
