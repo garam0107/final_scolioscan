@@ -8,6 +8,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 import { rotationAPI } from '@/src/api/rotation';
 import { useScoliometer } from '@/src/features/scoliometer/hooks/useScoliometer';
+import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import {
   SCOLIOMETER_REQUIRED_SAMPLE_COUNT,
   type ScoliometerSample,
@@ -163,6 +164,7 @@ export default function ScoliometerScreen() {
   const samples = useScoliometerSessionStore((state) => state.samples);
   const curvatureMeasurementId = useScoliometerSessionStore((state) => state.curvatureMeasurementId);
   const addSample = useScoliometerSessionStore((state) => state.addSample);
+  const markMeasurementChanged = useMeasurementRefreshStore((state) => state.markMeasurementChanged);
   const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const resetSession = useScoliometerSessionStore((state) => state.resetSession);
   const {
@@ -278,6 +280,7 @@ export default function ScoliometerScreen() {
 
     try {
       await rotationAPI.createAnalysis(buildRotationPayload(nextSamples, activeCurvatureMeasurementId));
+      markMeasurementChanged();
       resetSession();
       Alert.alert('측정 완료', '척추측만계 측정이 저장되었습니다.', [
         { text: '확인', onPress: () => router.replace('/home') },
@@ -287,7 +290,7 @@ export default function ScoliometerScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [activeCurvatureMeasurementId, addSample, angle, resetSession, router, samples, submitting]);
+  }, [activeCurvatureMeasurementId, addSample, angle, markMeasurementChanged, resetSession, router, samples, submitting]);
 
   useEffect(() => {
     // 측만계는 가로 화면에서 측정하므로 진입 시 방향과 안드로이드 내비게이션 바를 조정한다.

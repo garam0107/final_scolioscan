@@ -31,6 +31,7 @@ import { curvatureAPI } from '@/src/api/curvature';
 import { measurementSetAPI } from '@/src/api/measurementSet';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import { Colors } from '@/src/constants/theme';
+import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
@@ -463,6 +464,7 @@ export default function ReportScreen() {
   const [selectedTrendPeriod, setSelectedTrendPeriod] = useState<TrendPeriodKey>('month1');
   const [periodDropdownVisible, setPeriodDropdownVisible] = useState(false);
   const [tabsWidth, setTabsWidth] = useState(0);
+  const measurementVersion = useMeasurementRefreshStore((state) => state.version);
   const animatedTab = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
@@ -511,7 +513,7 @@ export default function ReportScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [measurementVersion]);
 
   useEffect(() => {
     const targetIndex = MEASUREMENT_FILTERS.findIndex((item) => item.key === selectedFilter);

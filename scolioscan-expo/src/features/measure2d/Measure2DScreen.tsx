@@ -11,6 +11,7 @@ import { CameraGuidelineOverlay } from './components/CameraGuidelineOverlay';
 import { useMeasure2D } from './hooks/useMeasure2D';
 import { styles } from './measure2d.styles';
 import { getAccessToken } from '@/src/lib/tokenStorage';
+import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
 import type { CurvatureResponse } from '@/src/types/curvature';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
@@ -27,6 +28,7 @@ export default function Measure2DScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  const markMeasurementChanged = useMeasurementRefreshStore((state) => state.markMeasurementChanged);
   const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
   const [toastKey, setToastKey] = useState(0);
@@ -152,13 +154,14 @@ export default function Measure2DScreen() {
         return null;
       }
 
+      markMeasurementChanged();
       return curvature;
     } catch (error) {
       console.log('[measure2d] curvature 요청 예외', error);
       showToast('서버 연결에 실패했습니다. 네트워크를 확인해주세요.', 'error');
       return null;
     }
-  }, [API_BASE_URL, showToast]);
+  }, [API_BASE_URL, markMeasurementChanged, showToast]);
 
   useEffect(() => {
     // 훅에서 발생한 자동 촬영 안내 메시지를 화면 공용 토스트로 옮긴다.

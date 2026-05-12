@@ -23,7 +23,7 @@ export type MetricPose = {
 export type ArcPose = {
   key: 'upper' | 'main' | 'lumbar';
   x: number;
-  yRatio: number;
+  vertebraIndex: number;
   radiusRatio: number;
 };
 
@@ -127,11 +127,11 @@ export function createAnalysisPose(analysis: AnalysisResponse | null): AnalysisP
       { key: 'lumbar', label: '요추만곡', value: lumbar, side: 'right', topRatio: 0.76, xOffset: getMetricXOffset('lumbar', lumbar) },
     ],
     vertebrae,
-    // x 값이 (vertebrae[3]?.x ?? 0) []는 3,7,11
+    // 원은 각 영역을 대표하는 척추뼈 index를 기준으로 배치해 뼈의 움직임과 같은 기준을 사용한다.
     arcs: [
-      { key: 'upper', x: (vertebrae[3]?.x ?? 0) + 5, yRatio: 0.20, radiusRatio: 0.15 },
-      { key: 'main', x: (vertebrae[7]?.x ?? 0) + 5, yRatio: 0.50, radiusRatio: 0.15 },
-      { key: 'lumbar', x: (vertebrae[11]?.x ?? 0) + 5, yRatio: 0.79, radiusRatio: 0.15 },
+      { key: 'upper', x: (vertebrae[3]?.x ?? 0) + 5, vertebraIndex: 3, radiusRatio: 0.15 },
+      { key: 'main', x: (vertebrae[7]?.x ?? 0) + 5, vertebraIndex: 7, radiusRatio: 0.15 },
+      { key: 'lumbar', x: (vertebrae[11]?.x ?? 0) + 5, vertebraIndex: 11, radiusRatio: 0.15 },
     ],
   };
 }

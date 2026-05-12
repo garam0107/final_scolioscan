@@ -20,6 +20,7 @@ import { measurementSetAPI } from '@/src/api/measurementSet';
 import { rotationAPI } from '@/src/api/rotation';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { AnalysisResponse } from '@/src/types/analysis';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
@@ -47,6 +48,8 @@ import CurvePatternIcon from '../../../assets/icons/heroicons-outline_chart-bar.
 import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 
 const spineImage = require('../../../assets/images/spine.png');
+const SPINE_BONE_SIZE = 72;
+const SPINE_BONE_SPACING = 24;
 
 type AnalysisScreenProps = {
   analysisId?: string;
@@ -299,20 +302,24 @@ function CountUpNumber({
 
 function ArcMarker({
   x,
-  yRatio,
+  vertebraIndex,
   radiusRatio,
   progress,
   stageWidth,
   stageHeight,
 }: {
   x: number;
-  yRatio: number;
+  vertebraIndex: number;
   radiusRatio: number;
   progress: Animated.Value;
   stageWidth: number;
   stageHeight: number;
 }) {
   const size = stageWidth * radiusRatio * 2;
+  const rigHeight = (VERTEBRA_COUNT - 1) * SPINE_BONE_SPACING + SPINE_BONE_SIZE;
+  const rigTop = (stageHeight - rigHeight) / 2;
+  // 원의 세로 중심은 척추뼈를 놓는 공식과 같은 기준을 사용해 기본 위치와 움직임을 맞춘다.
+  const centerY = rigTop + vertebraIndex * SPINE_BONE_SPACING + SPINE_BONE_SIZE / 2;
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, x] });
 
   return (
@@ -324,7 +331,7 @@ function ArcMarker({
           height: size,
           borderRadius: size / 2,
           left: (stageWidth - size) / 2,
-          top: stageHeight * yRatio - size / 2,
+          top: centerY - size / 2,
           transform: [{ translateX }],
         },
       ]}
@@ -435,8 +442,8 @@ function SpineRig({
   slices: { x: number; rotation: number }[];
   stageWidth: number;
 }) {
-  const boneSize = 72;
-  const spacing = 24;
+  const boneSize = SPINE_BONE_SIZE;
+  const spacing = SPINE_BONE_SPACING;
   const rigHeight = (VERTEBRA_COUNT - 1) * spacing + boneSize;
   const left = (stageWidth - boneSize) / 2;
 
@@ -466,6 +473,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const [reloadKey, setReloadKey] = useState(0);
   const [angleAnimationKey, setAngleAnimationKey] = useState(0);
   const progress = useRef(new Animated.Value(0)).current;
+  const measurementVersion = useMeasurementRefreshStore((state) => state.version);
 
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
   const cardWidth = Math.min(width - 24, 440);
@@ -566,7 +574,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     return () => {
       mounted = false;
     };
-  }, [analysisId, progress, reloadKey, sourceType, startAnalysisAnimation]);
+  }, [analysisId, measurementVersion, progress, reloadKey, sourceType, startAnalysisAnimation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -611,7 +619,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
                 <ArcMarker
                   key={arc.key}
                   x={arc.x}
-                  yRatio={arc.yRatio}
+                  vertebraIndex={arc.vertebraIndex}
                   radiusRatio={arc.radiusRatio}
                   progress={progress}
                   stageWidth={stageWidth}
