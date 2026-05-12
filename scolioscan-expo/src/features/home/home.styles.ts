@@ -86,12 +86,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 4,
   },
+  greetingTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
   greetingTitle: {
+    flex: 1,
     fontFamily: 'PretendardVariable',
     fontSize: 24,
     lineHeight: 32,
     fontWeight: '700',
     color: '#000000',
+  },
+  previewButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
   },
   greetingSubtitle: {
     fontFamily: 'PretendardVariable',

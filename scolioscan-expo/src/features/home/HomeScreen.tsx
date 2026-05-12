@@ -35,6 +35,7 @@ import type { CurvatureResponse } from '@/src/types/curvature';
 import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
 import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
+import PrimaryButton from '@/src/components/ui/PrimaryButton';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 const banner1 = require('../../../assets/images/BannerImage1.png');
 
@@ -518,7 +519,18 @@ export default function HomeScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom:  0 }]}
         >
           <View style={styles.greetingBlock}>
-            <Text style={styles.greetingTitle}>{displayName}님 안녕하세요.</Text>
+            <View style={styles.greetingTitleRow}>
+              <Text style={styles.greetingTitle}>{displayName}님 안녕하세요.</Text>
+              <PrimaryButton
+                title="분석중 보기"
+                onPress={() => router.push('/measure-loading-preview')}
+                width={94}
+                height={32}
+                backgroundColor="#2C9696"
+                borderRadius={6}
+                textStyle={styles.previewButtonText}
+              />
+            </View>
             <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>
 

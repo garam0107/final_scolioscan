@@ -248,7 +248,15 @@ function regionDisplayLabel(key: 'upper' | 'main' | 'lumbar'): string {
   }
 }
 
-function CountUpNumber({ value, active }: { value: number; active: boolean }) {
+function CountUpNumber({
+  value,
+  active,
+  animationKey,
+}: {
+  value: number;
+  active: boolean;
+  animationKey: number;
+}) {
   const target = Math.max(0, Math.abs(value));
   const [displayValue, setDisplayValue] = useState(target);
 
@@ -278,7 +286,7 @@ function CountUpNumber({ value, active }: { value: number; active: boolean }) {
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [active, target]);
+  }, [active, animationKey, target]);
 
   return <Text style={styles.metricValue}>{formatDegree(displayValue)}</Text>;
 }
@@ -329,6 +337,7 @@ function MetricBlock({
   top,
   xOffset,
   active,
+  animationKey,
   progress,
 }: {
   metricKey: 'upper' | 'main' | 'lumbar';
@@ -338,6 +347,7 @@ function MetricBlock({
   top: number;
   xOffset: number;
   active: boolean;
+  animationKey: number;
   progress: Animated.Value;
 }) {
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, xOffset] });
@@ -363,7 +373,7 @@ function MetricBlock({
     metricKey === 'lumbar' && { transform: [{ translateX: 20 }] },
   ]}
 >
-  <CountUpNumber value={value} active={active} />
+  <CountUpNumber value={value} active={active} animationKey={animationKey} />
 </View>
 
       </View>
@@ -448,6 +458,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [angleAnimationKey, setAngleAnimationKey] = useState(0);
   const progress = useRef(new Animated.Value(0)).current;
 
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
@@ -490,6 +501,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     // 분석 탭에 다시 들어올 때마다 곧은 척추에서 측정 각도까지 같은 애니메이션을 반복한다.
     progress.stopAnimation();
     progress.setValue(0);
+    setAngleAnimationKey((value) => value + 1);
     Animated.timing(progress, {
       toValue: 1,
       duration,
@@ -610,6 +622,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
                   top={metric.topRatio * stageHeight}
                   xOffset={metric.xOffset}
                   active={Boolean(analysis)}
+                  animationKey={angleAnimationKey}
                   progress={progress}
                 />
 

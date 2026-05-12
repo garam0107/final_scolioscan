@@ -109,6 +109,7 @@ export default function RootLayout() {
             <Stack.Screen name="register" />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="analysis-detail/[id]" />
+            <Stack.Screen name="measure-loading-preview" />
             <Stack.Screen name="measure/2d" />
             <Stack.Screen name="measure/scoliometer" />
             <Stack.Screen name="settings" />
