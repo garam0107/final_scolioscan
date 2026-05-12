@@ -1,6 +1,5 @@
-import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -11,6 +10,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
@@ -28,10 +28,10 @@ import Svg, {
   Text as SvgText,
 } from 'react-native-svg';
 import { curvatureAPI } from '@/src/api/curvature';
-import { rotationAPI } from '@/src/api/rotation';
+import { measurementSetAPI } from '@/src/api/measurementSet';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import type { CurvatureResponse } from '@/src/types/curvature';
-import type { RotationResponse } from '@/src/types/rotation';
+import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
 import ReportTrendChart from '@/src/features/report/components/ReportTrendChart';
 import styles from '@/src/features/report/report.styles';
@@ -48,38 +48,30 @@ import MyRectangle from '../../../assets/icons/my_rectangle.svg';
 import KoreanRectangle from '../../../assets/icons/korean_rectangle.svg';
 import TwoDCamera from '../../../assets/icons/2D_camera.svg';
 
-type FilterKey = 'all' | '2d' | 'scoliometer' | '3d';
-type MeasurementSource = 'curvature' | 'rotation';
+type FilterKey = 'all' | '2d' | '3d';
 
-type ReportMetric = {
-  label: string;
-  value: number | null;
-};
-
-type ReportListItem = {
+type MeasurementListItem = {
   id: string;
-  source: MeasurementSource;
   createdAt: string;
-  category: Exclude<FilterKey, 'all'>;
-  badgeLabel: string;
-  metrics: [ReportMetric, ReportMetric, ReportMetric];
+  category: '2d' | '3d';
+  measurementSet: MeasurementSetResponse;
   navigationId?: string;
 };
 
-const FILTERS: { key: FilterKey; label: string }[] = [
+const MEASUREMENT_FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: '2d', label: '2D' },
-  { key: 'scoliometer', label: '척추측만계' },
-  { key: '3d', label: '3D' },
+  { key: '2d', label: '2D 측정' },
+  { key: '3d', label: '3D 스캔' },
 ];
 
-const CURVATURE_METRIC_LABELS = [
-  '상부 흉추만곡',
-  '주 흉추만곡',
-  '요추만곡',
-] as const;
+const REPORT_SCREEN_HORIZONTAL_PADDING = 16;
+const MEASUREMENT_CARD_HORIZONTAL_PADDING = 20;
+const FIGMA_MEASUREMENT_SEPARATOR_TOTAL_WIDTH = 2;
+const FIGMA_MEASUREMENT_REGION_GAP_TOTAL = 40;
+const FIGMA_MEASUREMENT_VALUE_GAP = 16;
+const MIN_MEASUREMENT_VALUE_WIDTH = 66;
 
-const ROTATION_METRIC_LABELS = [
+const CURVATURE_METRIC_LABELS = [
   '상부 흉추만곡',
   '주 흉추만곡',
   '요추만곡',
@@ -96,49 +88,40 @@ function formatDate(value: string) {
   }).format(date);
 }
 
-function formatDegree(value?: number | null) {
-  if (value === null || value === undefined) return '-';
-  return `${Math.abs(value).toFixed(1)}°`;
-}
-
 function formatRoundedDegree(value?: number | null) {
   if (value === null || value === undefined) return '-';
   return `${Math.round(Math.abs(value))}°`;
 }
 
-function toCurvatureListItem(record: CurvatureResponse): ReportListItem {
-  const createdAt = getMeasurementDate(record);
+function formatRotationDegree(value?: number | null) {
+  if (value === null || value === undefined) return '-';
+  const rounded = Math.round(Math.abs(value) * 10) / 10;
 
-  return {
-    id: `curvature-${record.id}`,
-    source: 'curvature',
-    createdAt,
-    category: '2d',
-    badgeLabel: '2D 카메라촬영',
-    navigationId: String(record.id),
-    metrics: [
-      { label: CURVATURE_METRIC_LABELS[0], value: record.secondary_thoracic_cobb },
-      { label: CURVATURE_METRIC_LABELS[1], value: record.main_thoracic_cobb },
-      { label: CURVATURE_METRIC_LABELS[2], value: record.lumbar_cobb },
-    ],
-  };
+  if (Number.isInteger(rounded)) {
+    return `${rounded.toFixed(0)}°`;
+  }
+
+  return `${rounded.toFixed(1)}°`;
 }
 
-function toRotationListItem(record: RotationResponse): ReportListItem {
-  const createdAt = getMeasurementDate(record);
+function formatCurvatureDegree(value?: number | null) {
+  if (value === null || value === undefined) return '-';
+  return `${Math.round(Math.abs(value))}°`;
+}
+
+function toMeasurementListItem(measurementSet: MeasurementSetResponse): MeasurementListItem | null {
+  if (!measurementSet.curvature) {
+    return null;
+  }
+
+  const createdAt = getMeasurementDate(measurementSet.curvature);
 
   return {
-    id: `rotation-${record.id}`,
-    source: 'rotation',
+    id: `measurement-set-${measurementSet.curvature.id}`,
     createdAt,
-    category: 'scoliometer',
-    navigationId: String(record.id),
-    badgeLabel: '척추측만계 측정',
-    metrics: [
-      { label: ROTATION_METRIC_LABELS[0], value: record.upper_thoracic_atr },
-      { label: ROTATION_METRIC_LABELS[1], value: record.thoracic_atr },
-      { label: ROTATION_METRIC_LABELS[2], value: record.lumbar_atr },
-    ],
+    category: '2d',
+    measurementSet,
+    navigationId: String(measurementSet.curvature.id),
   };
 }
 
@@ -333,32 +316,94 @@ function ReportItem({
   item,
   onPress,
 }: {
-  item: ReportListItem;
-  onPress: (item: ReportListItem) => void;
+  item: MeasurementListItem;
+  onPress: (item: MeasurementListItem) => void;
 }) {
   const isDisabled = !item.navigationId;
+  const { width } = useWindowDimensions();
+  const { curvature, rotation } = item.measurementSet;
+  const cardInnerWidth = Math.max(
+    0,
+    width - REPORT_SCREEN_HORIZONTAL_PADDING * 2 - MEASUREMENT_CARD_HORIZONTAL_PADDING * 2,
+  );
+  const regionWidth = (
+    cardInnerWidth -
+    FIGMA_MEASUREMENT_SEPARATOR_TOTAL_WIDTH -
+    FIGMA_MEASUREMENT_REGION_GAP_TOTAL
+  ) / 3;
+  const valueGap = Math.max(
+    0,
+    Math.min(FIGMA_MEASUREMENT_VALUE_GAP, regionWidth - MIN_MEASUREMENT_VALUE_WIDTH),
+  );
+
+  if (!curvature) {
+    return null;
+  }
+
+  const regions = [
+    {
+      key: 'upper',
+      label: '상부 흉추',
+      dotStyle: styles.measurementRegionDotDanger,
+      curvatureValue: curvature.secondary_thoracic_cobb,
+      rotationValue: rotation?.upper_thoracic_atr,
+    },
+    {
+      key: 'main',
+      label: '주 흉추',
+      dotStyle: styles.measurementRegionDotWarning,
+      curvatureValue: curvature.main_thoracic_cobb,
+      rotationValue: rotation?.thoracic_atr,
+    },
+    {
+      key: 'lumbar',
+      label: '요추',
+      dotStyle: styles.measurementRegionDotNormal,
+      curvatureValue: curvature.lumbar_cobb,
+      rotationValue: rotation?.lumbar_atr,
+    },
+  ];
 
   return (
     <Pressable
-      style={styles.itemCard}
+      style={({ pressed }) => [styles.measurementCard, pressed && styles.pressed]}
       disabled={isDisabled}
       onPress={() => onPress(item)}
     >
-      <View style={styles.itemLeft}>
-        <Text style={styles.itemDate}>{formatDate(item.createdAt)}</Text>
-        <View style={item.source === 'rotation' ? styles.ThreeitemBadge : styles.itemBadge}>
-          <Text style={item.source === 'rotation' ? styles.ThreeitemBadgeText : styles.itemBadgeText}>
-            {item.badgeLabel}
-          </Text>
+      <View style={styles.measurementCardHeader}>
+        <Text style={styles.measurementDate}>{formatDate(item.createdAt)}</Text>
+        <View style={styles.measurementBadge}>
+          <Text style={styles.measurementBadgeText}>2D 측정</Text>
         </View>
       </View>
 
-      <View style={styles.itemRight}>
-        {item.metrics.map((metric) => (
-          <Text key={metric.label} style={styles.metricLine}>
-            <Text style={styles.metricLabel}>{metric.label} </Text>
-            <Text style={styles.metricValue}>{formatDegree(metric.value)}</Text>
-          </Text>
+      <View style={styles.measurementRegionRow}>
+        {regions.map((region, index) => (
+          <Fragment key={region.key}>
+            <View style={styles.measurementRegion}>
+              <View style={styles.measurementRegionPill}>
+                <Text style={styles.measurementRegionLabel}>{region.label}</Text>
+                <View style={[styles.measurementRegionDot, region.dotStyle]} />
+              </View>
+
+              <View style={[styles.measurementValueRow, { gap: valueGap }]}>
+                <View style={styles.measurementValueBlock}>
+                  <Text style={styles.measurementValueLabel}>만곡도</Text>
+                  <Text style={styles.measurementCurvatureValue}>
+                    {formatCurvatureDegree(region.curvatureValue)}
+                  </Text>
+                </View>
+
+                <View style={styles.measurementValueBlock}>
+                  <Text style={styles.measurementValueLabel}>비틀림</Text>
+                  <Text style={styles.measurementRotationValue}>
+                    {formatRotationDegree(region.rotationValue)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            {index < regions.length - 1 ? <View style={styles.measurementRegionSeparator} /> : null}
+          </Fragment>
         ))}
       </View>
     </Pressable>
@@ -394,7 +439,7 @@ function SummaryCard({
 export default function ReportScreen() {
   const router = useRouter();
   const [curvatures, setCurvatures] = useState<CurvatureResponse[]>([]);
-  const [rotations, setRotations] = useState<RotationResponse[]>([]);
+  const [measurementSets, setMeasurementSets] = useState<MeasurementSetResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [selectedReportAngle, setSelectedReportAngle] = useState<TrendAngleKey>('proximal');
@@ -408,12 +453,15 @@ export default function ReportScreen() {
 
     const load = async () => {
       try {
-        const [curvatureResult, rotationResult] = await Promise.allSettled([
+        const [curvatureResult, measurementSetResult] = await Promise.allSettled([
           curvatureAPI.getAnalyses({
             limit: 1000,
             ...getRecentDateRange(REPORT_CURVATURE_DAYS),
           }),
-          rotationAPI.getAnalyses({ limit: 100 }),
+          measurementSetAPI.getAnalyses({
+            limit: 1000,
+            ...getRecentDateRange(REPORT_CURVATURE_DAYS),
+          }),
         ]);
 
         if (!active) return;
@@ -430,15 +478,11 @@ export default function ReportScreen() {
           setCurvatures([]);
         }
 
-        if (rotationResult.status === 'fulfilled') {
-          const sortedRotations = [...rotationResult.value.data].sort(
-            (left, right) =>
-              new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),
-          );
-          setRotations(sortedRotations);
+        if (measurementSetResult.status === 'fulfilled') {
+          setMeasurementSets(measurementSetResult.value.data);
         } else {
-          console.error('Failed to load rotations:', rotationResult.reason);
-          setRotations([]);
+          console.error('Failed to load measurement sets:', measurementSetResult.reason);
+          setMeasurementSets([]);
         }
       } finally {
         if (active) setLoading(false);
@@ -453,7 +497,7 @@ export default function ReportScreen() {
   }, []);
 
   useEffect(() => {
-    const targetIndex = FILTERS.findIndex((item) => item.key === selectedFilter);
+    const targetIndex = MEASUREMENT_FILTERS.findIndex((item) => item.key === selectedFilter);
 
     Animated.timing(animatedTab, {
       toValue: targetIndex < 0 ? 0 : targetIndex,
@@ -464,15 +508,14 @@ export default function ReportScreen() {
   }, [animatedTab, selectedFilter]);
 
   const listItems = useMemo(() => {
-    const merged = [
-      ...curvatures.map(toCurvatureListItem),
-      ...rotations.map(toRotationListItem),
-    ];
+    const items = measurementSets
+      .map(toMeasurementListItem)
+      .filter((item): item is MeasurementListItem => item !== null);
 
-    return merged.sort(
+    return items.sort(
       (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
     );
-  }, [curvatures, rotations]);
+  }, [measurementSets]);
 
   const filteredItems = useMemo(() => {
     if (selectedFilter === 'all') return listItems;
@@ -495,11 +538,11 @@ export default function ReportScreen() {
   ];
   const selectedPeriodLabel = getPeriodOption(selectedTrendPeriod).label;
 
-  const tabWidth = tabsWidth > 0 ? tabsWidth / FILTERS.length : 0;
+  const tabWidth = tabsWidth > 0 ? tabsWidth / MEASUREMENT_FILTERS.length : 0;
   const translateX = tabWidth
     ? animatedTab.interpolate({
-        inputRange: FILTERS.map((_, index) => index),
-        outputRange: FILTERS.map((_, index) => tabWidth * index),
+        inputRange: MEASUREMENT_FILTERS.map((_, index) => index),
+        outputRange: MEASUREMENT_FILTERS.map((_, index) => tabWidth * index),
       })
     : 0;
 
@@ -507,13 +550,13 @@ export default function ReportScreen() {
     setTabsWidth(event.nativeEvent.layout.width);
   };
 
-  const handleAnalysisPress = (item: ReportListItem) => {
+  const handleAnalysisPress = (item: MeasurementListItem) => {
     if (!item.navigationId) return;
     router.push({
       pathname: '/analysis-detail/[id]',
       params: {
         id: item.navigationId,
-        source: item.source,
+        source: 'curvature',
       },
     });
   };
@@ -655,8 +698,8 @@ export default function ReportScreen() {
 
             <View style={styles.tabsWrap} onLayout={handleTabsLayout}>
               <View style={styles.tabs}>
-                {FILTERS.map((filter) => {
-                  const tabIndex = FILTERS.findIndex((item) => item.key === filter.key);
+                {MEASUREMENT_FILTERS.map((filter) => {
+                  const tabIndex = MEASUREMENT_FILTERS.findIndex((item) => item.key === filter.key);
                   const color = animatedTab.interpolate({
                     inputRange: [tabIndex - 1, tabIndex, tabIndex + 1],
                     outputRange: ['#111827', '#5E9F9E', '#111827'],
