@@ -407,14 +407,24 @@ function ReportItem({
               <View style={[styles.measurementValueRow, { gap: valueGap }]}>
                 <View style={styles.measurementValueBlock}>
                   <Text style={styles.measurementValueLabel}>만곡도</Text>
-                  <Text style={styles.measurementCurvatureValue}>
+                  <Text
+                    style={styles.measurementCurvatureValue}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.82}
+                  >
                     {formatCurvatureDegree(region.curvatureValue)}
                   </Text>
                 </View>
 
                 <View style={styles.measurementValueBlock}>
                   <Text style={styles.measurementValueLabel}>비틀림</Text>
-                  <Text style={styles.measurementRotationValue}>
+                  <Text
+                    style={styles.measurementRotationValue}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.82}
+                  >
                     {formatRotationDegree(region.rotationValue)}
                   </Text>
                 </View>

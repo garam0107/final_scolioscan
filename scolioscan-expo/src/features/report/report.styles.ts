@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     paddingHorizontal: 0,
   },
   measurementRegionSeparator: {
@@ -675,13 +675,15 @@ const styles = StyleSheet.create({
   measurementValueRow: {
     marginTop: 8,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     width: '100%',
+    minHeight: 42,
   },
   measurementValueBlock: {
     alignItems: 'center',
-    minWidth: 30,
-    flexShrink: 1,
+    justifyContent: 'flex-start',
+    width: 38,
+    flexShrink: 0,
   },
   measurementValueLabel: {
     fontFamily: 'PretendardVariable',
@@ -696,6 +698,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '600',
+    includeFontPadding: false,
+    textAlign: 'center',
+    width: '100%',
   },
   measurementRotationValue: {
     fontFamily: 'PretendardVariable',
@@ -703,6 +708,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '600',
+    includeFontPadding: false,
+    textAlign: 'center',
+    width: '100%',
   },
   emptyBox: {
     minHeight: 120,
