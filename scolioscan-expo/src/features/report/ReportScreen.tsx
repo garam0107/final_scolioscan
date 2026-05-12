@@ -112,6 +112,7 @@ function formatCurvatureDegree(value?: number | null) {
 }
 
 function getCurvatureDotColor(value?: number | null) {
+  // 만곡 각도 구간에 따라 목록의 상태 점 색상을 나눈다.
   const angle = Math.abs(value ?? 0);
 
   if (angle < 15) {
@@ -126,6 +127,7 @@ function getCurvatureDotColor(value?: number | null) {
 }
 
 function toMeasurementListItem(measurementSet: MeasurementSetResponse): MeasurementListItem | null {
+  // 리포트 목록은 만곡 결과가 있는 측정 세트만 상세 화면으로 연결한다.
   if (!measurementSet.curvature) {
     return null;
   }
@@ -166,6 +168,7 @@ function TriangleChart({
   const gridAngles = [15, 30, 45];
 
   const getPoint = (index: number, value: number) => {
+    // 세 부위 값을 120도 간격의 삼각형 좌표로 변환한다.
     const angle = (index * 120 - 90) * (Math.PI / 180);
     const radius = (Math.min(value, maxAngle) / maxAngle) * maxRadius;
 
@@ -176,6 +179,7 @@ function TriangleChart({
   };
 
   const createPath = (values: [number, number, number]) => {
+    // 세 좌표를 닫힌 면으로 이어 내 측정값과 평균값 영역을 그린다.
     const points = values.map((value, index) => getPoint(index, value));
 
     return (
@@ -342,6 +346,7 @@ function ReportItem({
     0,
     width - REPORT_SCREEN_HORIZONTAL_PADDING * 2 - MEASUREMENT_CARD_HORIZONTAL_PADDING * 2,
   );
+  // 피그마 기준 여백을 유지하면서 작은 화면에서도 값 영역이 겹치지 않도록 폭을 계산한다.
   const regionWidth = (
     cardInnerWidth -
     FIGMA_MEASUREMENT_SEPARATOR_TOTAL_WIDTH -
@@ -482,6 +487,7 @@ export default function ReportScreen() {
 
     const load = async () => {
       try {
+        // 만곡과 측정 세트는 서로 독립적이므로 한쪽 실패가 전체 화면 실패로 번지지 않게 분리해서 처리한다.
         const [curvatureResult, measurementSetResult] = await Promise.allSettled([
           curvatureAPI.getAnalyses({
             limit: 1000,
@@ -528,6 +534,7 @@ export default function ReportScreen() {
   useEffect(() => {
     const targetIndex = MEASUREMENT_FILTERS.findIndex((item) => item.key === selectedFilter);
 
+    // 선택된 탭 위치로 밑줄과 글자색을 부드럽게 이동시킨다.
     Animated.timing(animatedTab, {
       toValue: targetIndex < 0 ? 0 : targetIndex,
       duration: 220,
@@ -537,6 +544,7 @@ export default function ReportScreen() {
   }, [animatedTab, selectedFilter]);
 
   const listItems = useMemo(() => {
+    // 서버 응답을 화면 목록 전용 형태로 바꾸고 최신 측정순으로 정렬한다.
     const items = measurementSets
       .map(toMeasurementListItem)
       .filter((item): item is MeasurementListItem => item !== null);
@@ -580,6 +588,7 @@ export default function ReportScreen() {
   };
 
   const handleAnalysisPress = (item: MeasurementListItem) => {
+    // 상세 화면은 현재 만곡 결과 아이디를 경로 파라미터로 받아 다시 조회한다.
     if (!item.navigationId) return;
     router.push({
       pathname: '/analysis-detail/[id]',

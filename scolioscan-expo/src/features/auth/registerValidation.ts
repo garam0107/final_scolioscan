@@ -1,12 +1,15 @@
 export function isValidEmail(email: string) {
+  // 가입 단계에서 서버 요청 전에 기본 이메일 형식만 먼저 거른다.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export function hasPasswordLength(password: string) {
+  // 비밀번호 최소 길이 조건을 UI 체크리스트와 동일하게 맞춘다.
   return password.trim().length >= 8;
 }
 
 export function hasPasswordMix(password: string) {
+  // 영문, 숫자, 특수문자가 모두 포함되어야 가입을 진행한다.
   return /[A-Za-z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
 }
 
@@ -15,10 +18,12 @@ function isDigits(value: string) {
 }
 
 export function normalizePhoneNumber(phone: string) {
+  // 저장과 검증은 하이픈 없는 숫자만 사용한다.
   return phone.replace(/\D/g, '');
 }
 
 export function formatPhoneNumber(phone: string) {
+  // 입력 중인 휴대폰 번호를 화면 표시용 하이픈 형식으로 바꾼다.
   const digits = normalizePhoneNumber(phone).slice(0, 11);
 
   if (digits.length <= 3) {
@@ -38,6 +43,7 @@ export function isValidPhoneNumber(phone: string) {
 }
 
 export function isValidBirthday(year: string, month: string, day: string) {
+  // 실제 존재하는 날짜인지까지 확인해 잘못된 생년월일 저장을 막는다.
   if (!year || !month || !day) {
     return false;
   }

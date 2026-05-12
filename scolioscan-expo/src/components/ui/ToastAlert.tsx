@@ -50,6 +50,7 @@ export default function ToastAlert({
   const translateY = useRef(new Animated.Value(-10)).current;
 
   useEffect(() => {
+    // 새 토스트가 들어올 때마다 위에서 부드럽게 나타난 뒤 지정 시간 후 닫힌다.
     if (!visible || !message) {
       opacity.setValue(0);
       translateY.setValue(-10);

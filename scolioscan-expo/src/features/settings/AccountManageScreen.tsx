@@ -46,6 +46,7 @@ const DEVICE_MODEL_NAMES: Record<string, string> = {
 };
 
 function splitBirthday(birthday?: string) {
+  // 서버 생년월일 문자열을 입력칸 세 개에서 쓰기 쉬운 값으로 나눈다.
   if (!birthday) {
     return { year: '', month: '', day: '' };
   }
@@ -61,10 +62,12 @@ function splitBirthday(birthday?: string) {
 }
 
 function normalizeBirthdayInput(value: string, maxLength: number) {
+  // 생년월일 입력은 숫자만 남기고 각 칸의 최대 길이를 제한한다.
   return value.replace(/\D/g, '').slice(0, maxLength);
 }
 
 function normalizeApiError(error: unknown) {
+  // API 응답과 일반 오류를 토스트에 보여줄 수 있는 한 줄 메시지로 정리한다.
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (error as { response?: { data?: { detail?: string } } }).response;
     const detail = response?.data?.detail;
@@ -82,6 +85,7 @@ function normalizeApiError(error: unknown) {
 }
 
 function getCurrentDeviceLabel() {
+  // 기기 모델 코드가 그대로 보이지 않도록 가능한 경우 사용자 친화적인 모델명으로 바꾼다.
   const modelName = Device.modelName?.trim();
   const modelId = Device.modelId?.trim();
   const deviceName = Device.deviceName?.trim();
@@ -146,6 +150,7 @@ function normalizeRegionName(regionName: string) {
 }
 
 function formatLocationAddress(address?: Location.LocationGeocodedAddress) {
+  // 위치 권한이 허용된 경우 설정 화면에 시도 단위의 짧은 위치만 표시한다.
   if (!address) {
     return '위치 확인 완료';
   }
@@ -182,6 +187,7 @@ function Field({
   onFocus?: () => void;
   editable?: boolean;
 }) {
+  // 계정 관리 입력 필드는 라벨, 입력, 우측 버튼 구조를 공통으로 사용한다.
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -235,6 +241,7 @@ export default function AccountManageScreen() {
   const [phoneFieldY, setPhoneFieldY] = useState(0);
 
   useEffect(() => {
+    // 세션 사용자 정보가 바뀌면 화면 입력값도 최신 계정 정보로 맞춘다.
     const birthday = splitBirthday(user?.birthday);
 
     setName(user?.name || '');
@@ -247,6 +254,7 @@ export default function AccountManageScreen() {
   }, [user]);
 
   useEffect(() => {
+    // 비밀번호 변경 화면에서 돌아온 경우 한 번만 성공 토스트를 보여준다.
     if (params.toast !== 'passwordChanged') {
       return;
     }
@@ -259,6 +267,7 @@ export default function AccountManageScreen() {
     let isMounted = true;
 
     async function loadDeviceLocation() {
+      // 현재 로그인 기기와 최근 위치를 가져와 기기 목록 영역에 표시한다.
       setDeviceName(getCurrentDeviceLabel());
 
       try {
@@ -306,6 +315,7 @@ export default function AccountManageScreen() {
   }
 
   function scrollToField(y: number) {
+    // 키보드가 올라왔을 때 전화번호 입력칸이 가려지지 않도록 살짝 위로 이동한다.
     scrollViewRef.current?.scrollTo({
       y: Math.max(0, y - 30),
       animated: true,
@@ -331,6 +341,7 @@ export default function AccountManageScreen() {
   const initialBirthday = splitBirthday(user?.birthday);
   const initialGender: GenderValue = user?.sex === false ? 'female' : 'male';
   const hasChanges =
+    // 서버에 저장된 값과 달라진 항목이 있을 때만 저장 버튼을 활성화한다.
     name !== (user?.name || '') ||
     phone !== (user?.phone || '') ||
     birthYear !== initialBirthday.year ||
@@ -340,6 +351,7 @@ export default function AccountManageScreen() {
   const canSave = hasChanges && !saving;
 
   async function handleSave() {
+    // 저장 전에 필수값과 형식을 다시 확인해 잘못된 프로필 갱신을 막는다.
     if (!canSave) {
       return;
     }
@@ -379,6 +391,7 @@ export default function AccountManageScreen() {
   }
 
   async function handleWithdraw() {
+    // 회원 탈퇴는 비밀번호 확인이 끝난 뒤 완료 모달을 보여준다.
     const password = withdrawPassword.trim();
 
     if (!password || withdrawing) {
@@ -409,6 +422,7 @@ export default function AccountManageScreen() {
   }
 
   async function handleDeviceLogout() {
+    // 현재 기기 로그아웃 후 네비게이션 스택을 로그인 화면으로 초기화한다.
     await logout();
     navigation.dispatch(
       CommonActions.reset({

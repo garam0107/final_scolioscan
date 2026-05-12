@@ -35,6 +35,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withShortCmakePath.js",
       [
         "expo-splash-screen",
         {

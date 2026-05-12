@@ -23,6 +23,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function normalizeApiError(error: unknown) {
+  // API 오류 형태를 화면에서 그대로 사용할 수 있는 메시지로 통일한다.
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (error as { response?: { data?: { detail?: string } } }).response;
     const detail = response?.data?.detail;
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refreshSession = useCallback(async () => {
+    // 앱 시작과 프로필 갱신 후 저장된 토큰으로 현재 사용자 정보를 다시 맞춘다.
     setLoading(true);
     try {
       const storedToken = await loadAccessToken();
@@ -71,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (credentials: LoginRequest) => {
     try {
+      // 로그인 성공 후 토큰 저장과 사용자 조회를 한 번에 끝내 전역 인증 상태를 갱신한다.
       const response = await authAPI.login(credentials);
       const token = response.data.access_token;
       await saveAccessToken(token);
@@ -108,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const messageCode = useCallback(async (phone : string) => {
+    // 문자 인증 앱에 전달할 수신번호와 메시지 본문을 서버에서 받아온다.
     try {
     const response = await authAPI.messageCode({ phoneNumber: phone });
     return response.data;
@@ -117,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const octomoApi = useCallback(async (phone : string) => {
+    // 문자 발송 후 실제 인증 완료 여부를 서버에서 확인한다.
     try{
       const response = await authAPI.octomoApi({phoneNumber : phone});
       return response.data;
@@ -133,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // 로그아웃은 저장된 토큰과 메모리의 사용자 상태를 함께 비운다.
     await clearAccessToken();
     setAccessToken(null);
     setAccessTokenState(null);
@@ -140,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
+    // 컨텍스트 값 참조를 고정해 인증 상태 변경이 있을 때만 하위 화면을 다시 렌더링한다.
     () => ({
       user,
       accessToken,

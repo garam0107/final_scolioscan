@@ -36,6 +36,7 @@ const DEFAULT_TOGGLES: Record<ToggleKey, boolean> = {
 const NIGHT_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour);
 
 function formatHourLabel(hour: number) {
+  // 야간 모드 시간 선택값을 설정 화면 표시 형식으로 바꾼다.
   const period = hour < 12 ? '오전' : '오후';
   const displayHour = hour % 12 || 12;
 
@@ -61,6 +62,7 @@ function SettingRow({
   toggles,
   onToggle,
 }: SettingRowProps) {
+  // 같은 행 컴포넌트에서 스위치형 설정과 이동형 설정을 함께 처리한다.
   const hasSwitch = Boolean(toggleKey && toggles && onToggle);
   const isOn = toggleKey ? toggles?.[toggleKey] : false;
 
@@ -103,6 +105,7 @@ export default function SettingsScreen() {
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
 
   const profile = useMemo(
+    // 세션의 사용자 정보가 없을 때도 설정 화면이 빈 값으로 깨지지 않게 기본값을 둔다.
     () => ({
       name: user?.name || 'ooo',
       email: user?.user_id || 'abcd@example.com',
@@ -111,6 +114,7 @@ export default function SettingsScreen() {
   );
 
   const handleToggle = (key: ToggleKey) => {
+    // 설정 토글은 서버 연동 전까지 화면 내부 상태로만 즉시 반영한다.
     setToggles((current) => ({
       ...current,
       [key]: !current[key],
@@ -130,6 +134,7 @@ export default function SettingsScreen() {
   };
 
   const handleNightTimeSelect = (hour: number) => {
+    // 시작과 종료 시간이 같으면 야간 모드 범위가 사라지므로 선택을 막는다.
     if (nightTimeTarget === 'start' && hour === nightEndHour) {
       Alert.alert('시간 설정', '시작 시간과 종료 시간은 같을 수 없습니다.');
       return;

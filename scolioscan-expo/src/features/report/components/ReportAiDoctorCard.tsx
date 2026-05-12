@@ -63,6 +63,7 @@ const EXERCISES = [
 ];
 
 function getRiskLevel(latestCurvature: CurvatureResponse | null): RiskLevel | null {
+  // 세 부위 만곡 평균으로 AI 의견 카드의 위험 단계를 간단히 분류한다.
   if (!latestCurvature) return null;
 
   const average =
@@ -79,6 +80,7 @@ function getRiskLevel(latestCurvature: CurvatureResponse | null): RiskLevel | nu
 
 export default function ReportAiDoctorCard({ latestCurvature }: ReportAiDoctorCardProps) {
   const riskLevel = getRiskLevel(latestCurvature);
+  // 측정 데이터가 없을 때는 기본 아이콘과 안내 문구를 보여준다.
   const copy = riskLevel ? RISK_COPY[riskLevel] : null;
   const RiskIcon = copy?.Icon ?? DangerSafeIcon;
 

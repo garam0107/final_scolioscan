@@ -61,15 +61,18 @@ export const TREND_CHART_MAX_VALUE = 40;
 export function getMeasurementDate(
   record: Pick<CurvatureResponse, 'measured_at' | 'created_at'> | Pick<RotationResponse, 'measured_at' | 'created_at'>,
 ) {
+  // 실제 측정 시간이 없을 때는 생성 시간을 기준 날짜로 사용한다.
   return record.measured_at || record.created_at;
 }
 
 export function getTrendValue(record: CurvatureResponse | undefined, key: TrendAngleKey) {
+  // 선택된 부위에 해당하는 만곡 각도를 추세 계산용 양수 값으로 가져온다.
   const option = TREND_ANGLE_OPTIONS.find((item) => item.key === key) ?? TREND_ANGLE_OPTIONS[1];
   return Math.abs(Number(record?.[option.field]) || 0);
 }
 
 export function formatAngleValue(value: number) {
+  // 차트와 변화량 표시는 소수 한 자리까지만 사용한다.
   if (!Number.isFinite(value)) {
     return 0;
   }
@@ -103,6 +106,7 @@ export function formatDateParam(date: Date) {
 }
 
 export function getRecentDateRange(days: number) {
+  // API 조회용 날짜 범위를 오늘을 포함한 최근 기간으로 만든다.
   const toDate = new Date();
   const fromDate = new Date(toDate);
   fromDate.setDate(fromDate.getDate() - (days - 1));
@@ -125,6 +129,7 @@ export function getRecentDateRangeDates(days: number) {
 }
 
 export function buildTrendPath(points: TrendChartPoint[]) {
+  // 여러 측정점을 베지어 곡선으로 이어 부드러운 추세선을 만든다.
   if (points.length === 0) {
     return '';
   }
@@ -153,6 +158,7 @@ export function buildTrendPath(points: TrendChartPoint[]) {
 }
 
 function getBucketResolution(period: TrendPeriodKey) {
+  // 기간이 길수록 점을 묶어 과하게 촘촘한 그래프가 되지 않게 한다.
   if (period === 'week1') return 'raw';
   if (period === 'week2' || period === 'month1') return 'daily';
   if (period === 'month3') return 'weekly';
@@ -188,6 +194,7 @@ export function aggregateTrendPoints(
   selectedAngle: TrendAngleKey,
   selectedPeriod: TrendPeriodKey,
 ) {
+  // 선택 기간에 맞춰 원본 측정값을 그대로 쓰거나 일/주/월 단위 대표값으로 묶는다.
   const resolution = getBucketResolution(selectedPeriod);
 
   if (resolution === 'raw') {

@@ -26,10 +26,12 @@ import AppleIcon from '../../../assets/icons/apple.svg';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 
 function isValidEmail(email: string) {
+  // 서버 호출 전에 기본 이메일 형식만 먼저 확인해 불필요한 요청을 줄인다.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function normalizeLoginToastMessage(message: string) {
+  // 서버와 라이브러리에서 온 에러 문구를 로그인 화면의 안내 문구로 맞춘다.
   if (message.includes('Incorrect email or password')) {
     return '아이디 혹은 비밀번호가 맞지 않아요';
   }
@@ -63,6 +65,7 @@ function Field({
   onClear?: () => void;
   onToggleSecure?: () => void;
 }) {
+  // 로그인 화면에서 이메일과 비밀번호 입력 UI를 같은 구조로 재사용한다.
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -177,6 +180,7 @@ export default function LoginScreen() {
     let active = true;
 
     const loadRememberedEmail = async () => {
+      // 저장된 이메일이 있으면 입력값과 체크 상태를 함께 복원한다.
       const savedEmail = await loadSavedEmail();
       if (!active || !savedEmail) {
         return;
@@ -194,6 +198,7 @@ export default function LoginScreen() {
   }, []);
 
   useEffect(() => {
+    // 이미 로그인된 사용자는 로그인 화면을 건너뛰고 홈으로 보낸다.
     if (!authLoading && isAuthenticated) {
       router.replace('/home');
     }
@@ -234,6 +239,7 @@ export default function LoginScreen() {
 
     try {
       await login({ user_id: trimmedEmail, user_pw: password });
+      // 아이디 저장 선택에 맞춰 로컬 저장소의 이메일을 갱신한다.
       if (rememberId) {
         await saveSavedEmail(trimmedEmail);
       } else {

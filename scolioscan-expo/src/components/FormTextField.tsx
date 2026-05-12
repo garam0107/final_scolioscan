@@ -44,6 +44,7 @@ export default function FormTextField({
   returnKeyType = 'next',
   textContentType,
 }: FormTextFieldProps) {
+  // 비밀번호 보기 버튼이 필요한 화면에서도 같은 입력 컴포넌트를 재사용한다.
   const hasSecureButton = showSecureToggle && onToggleSecure;
 
   return (

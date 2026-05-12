@@ -55,6 +55,7 @@ export default function RegisterScreen() {
   };
 
   const toggleAllAgreements = () => {
+    // 전체 동의는 현재 전체 선택 여부를 기준으로 모든 약관 값을 한 번에 맞춘다.
     const next = !isAllAgreed(agreement);
     setAgreement(
       AGREEMENTS.reduce(
@@ -87,6 +88,7 @@ export default function RegisterScreen() {
 
 // OCTOMO API 호출 후 인증 완료 확인 함수
   const handleVerifyPhone = useCallback(async () => {
+  // 문자 앱에서 돌아왔을 때 인증 완료 여부를 서버에 다시 확인한다.
   if (verifyingPhone || loading || step !== 'message' || !smsRequested) {
     return;
   }
@@ -114,6 +116,7 @@ export default function RegisterScreen() {
 
 
   useEffect(() => {
+  // 문자 앱을 열고 돌아온 뒤에는 약간 기다렸다가 인증 상태를 확인한다.
   const subscription = AppState.addEventListener('change', (nextAppState) => {
         if (nextAppState === 'active') {
       setTimeout(() => {
@@ -139,6 +142,7 @@ export default function RegisterScreen() {
   }, [resetRegisterDraft]);
 
   const stepMeta = useMemo(() => {
+    // 현재 가입 단계에 맞춰 상단 제목과 하단 버튼 문구를 한 곳에서 결정한다.
     if (step === 'agreement') {
       return {
         title: '',
@@ -203,6 +207,7 @@ export default function RegisterScreen() {
   };
 
   const handleEmailCheck = async (trimmedEmail: string) => {
+    // 이메일 중복 확인이 끝난 뒤에만 비밀번호 단계로 넘어간다.
     if (checkingEmail || loading) {
       return;
     }
@@ -226,6 +231,7 @@ export default function RegisterScreen() {
   };
 
   const handlePhoneCheck = async (normalizePhoneNumber: string) =>{
+    // 휴대폰 번호 중복 확인 후 문자 인증 단계로 진입한다.
     if (checkingPhone || loading){
       return;
     }
@@ -247,6 +253,7 @@ export default function RegisterScreen() {
   };
 
   const goNext = () => {
+    // 단계별 필수값을 검증하고 다음 가입 단계로 이동한다.
     if (step === 'agreement') {
       if (!requiredAgreed) {
         showToast('필수 약관에 모두 동의해주세요.');
@@ -333,6 +340,7 @@ export default function RegisterScreen() {
   };
 
   const handleStart = async () => {
+    // 마지막 단계에서 수집한 가입 정보를 서버 형식에 맞춰 전송한다.
     if (draft.gender === null) {
       showToast('성별을 선택해주세요.');
       return;
@@ -370,6 +378,7 @@ export default function RegisterScreen() {
   };
 
   const primaryDisabled =
+    // 현재 단계에서 필요한 값이 준비되지 않았거나 요청 중이면 하단 버튼을 비활성화한다.
     loading ||
     checkingEmail ||
     checkingPhone ||
@@ -383,6 +392,7 @@ export default function RegisterScreen() {
     (step === 'gender' && draft.gender === null);
   // 문자 인증 함수
   const handleMessagePress = async () => {
+  // 인증 문구를 받아 문자 앱을 열고, 이후 복귀 시 검증할 수 있게 요청 상태를 저장한다.
   try {
     const messageCodeResponse = await messageCode(draft.phone);
 
@@ -407,6 +417,7 @@ export default function RegisterScreen() {
 
 
   const handlePrimaryPress = () => {
+    // 하단 버튼은 완료, 가입 요청, 문자 인증, 일반 다음 단계 이동을 단계별로 분기한다.
     if (step === 'complete') {
       router.replace('/login');
       return;
@@ -426,6 +437,7 @@ export default function RegisterScreen() {
   };
 
   const handleBack = () => {
+    // 가입 순서의 역방향으로 이동해 사용자가 이전 입력을 수정할 수 있게 한다.
     if (step === 'agreement') {
       router.back();
       return;

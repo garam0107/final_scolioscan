@@ -37,6 +37,7 @@ export default function ReportTrendChart({
   const chartWidth = Math.max(1, width - 72);
 
   const sortedRecords = useMemo(
+    // 차트 계산은 시간 흐름 기준이므로 오래된 측정부터 정렬한다.
     () =>
       [...records].sort(
         (left, right) =>
@@ -51,6 +52,7 @@ export default function ReportTrendChart({
   );
 
   const periodRecords = useMemo(() => {
+    // 선택한 기간 밖의 측정값은 변화량과 그래프 계산에서 제외한다.
     if (!sortedRecords.length) return [];
 
     return sortedRecords.filter((record) => {
@@ -75,6 +77,7 @@ export default function ReportTrendChart({
   );
 
   const averageChange = useMemo(() => {
+    // 그래프에 표시된 대표값 사이의 평균 변화 폭을 계산한다.
     if (graphValues.length < 2) return 0;
 
     let total = 0;
@@ -86,6 +89,7 @@ export default function ReportTrendChart({
   }, [graphValues]);
 
   const recentChange = useMemo(() => {
+    // 최근 변화량은 묶은 값이 아니라 실제 최신 두 측정값으로 계산한다.
     if (rawValues.length < 2) return 0;
 
     const last = rawValues[rawValues.length - 1];
@@ -95,6 +99,7 @@ export default function ReportTrendChart({
   }, [rawValues]);
 
   const chartPoints = useMemo(() => {
+    // 시간과 각도 값을 SVG 좌표계 안으로 변환한다.
     const rangeTime = Math.max(1, periodRange.endDate.getTime() - periodRange.startDate.getTime());
 
     return bucketPoints.map((point) => {

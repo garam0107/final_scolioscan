@@ -85,6 +85,7 @@ const TREND_CHART_HEIGHT = 120;
 const TREND_CHART_MAX_VALUE = 40;
 
 function formatAngleValue(value: number) {
+  // 서버 값이 비정상이어도 홈 카드와 차트 계산이 깨지지 않게 보정한다.
   if (!Number.isFinite(value)) {
     return 0;
   }
@@ -106,6 +107,7 @@ function formatChangeAngle(value: number, showPlus = false) {
 }
 
 function getSelectedCurvatureValue(record: CurvatureResponse, selectedId: WeeklyResultId) {
+  // 화면 카드의 선택값을 서버 응답의 실제 만곡 필드와 연결한다.
   if (selectedId === 'upper-thoracic') {
     return record.secondary_thoracic_cobb;
   }
@@ -152,6 +154,7 @@ function getRecentDateRangeDates(days: number) {
 }
 
 function filterRecentCurvatureRecords(records: CurvatureResponse[]) {
+  // 홈 추세는 최근 30일만 보여주므로 범위 밖 측정값은 제외한다.
   const endDate = new Date();
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - (RECENT_CURVATURE_DAYS - 1));
@@ -169,6 +172,7 @@ function getDateKey(date: Date) {
 }
 
 function getDailyLatestCurvatureRecords(records: CurvatureResponse[]) {
+  // 같은 날 여러 번 측정한 경우 가장 최신 측정만 하루 대표값으로 사용한다.
   const latestByDay = new Map<string, CurvatureResponse>();
 
   records.forEach((record) => {
@@ -193,6 +197,7 @@ function getDailyLatestCurvatureRecords(records: CurvatureResponse[]) {
 }
 
 function buildTrendPath(points: TrendChartPoint[]) {
+  // 측정점 사이를 부드러운 곡선으로 이어 홈 추세 그래프를 만든다.
   if (points.length === 0) {
     return '';
   }
@@ -394,6 +399,7 @@ export default function HomeScreen() {
 
   const loadLatestCurvature = useCallback(async () => {
     try {
+      // 최근 측정값과 원본 기록을 함께 보관해 카드, 변화량, 차트가 같은 응답을 기준으로 갱신되게 한다.
       const response = await curvatureAPI.getAnalyses({
         limit: 1000,
         ...getRecentDateRange(RECENT_CURVATURE_DAYS),
@@ -430,6 +436,7 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // 홈으로 돌아올 때 알림 수와 최신 측정 결과를 다시 불러와 탭 간 데이터 차이를 줄인다.
       void loadAlarmCount();
       void loadLatestCurvature();
     }, [loadAlarmCount, loadLatestCurvature]),
@@ -463,6 +470,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const timer = setInterval(() => {
       setBannerIndex((value) => {
+        // 마지막 복제 배너까지 이동한 뒤 첫 배너로 되돌려 무한 캐러셀처럼 보이게 한다.
         const isLastBanner = value === banners.length - 1;
         const nextIndex = isLastBanner ? banners.length : value + 1;
         bannerScrollRef.current?.scrollTo({

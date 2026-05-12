@@ -24,6 +24,7 @@ export default function PrimaryButton({
   textStyle,
   disabled = false,
 }: PrimaryButtonProps) {
+  // 화면별 크기와 색상은 props로 바꾸되 눌림과 비활성 상태는 공통으로 처리한다.
   return (
     <Pressable
       onPress={onPress}
