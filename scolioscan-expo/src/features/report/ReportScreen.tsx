@@ -30,6 +30,7 @@ import Svg, {
 import { curvatureAPI } from '@/src/api/curvature';
 import { measurementSetAPI } from '@/src/api/measurementSet';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
+import { Colors } from '@/src/constants/theme';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
@@ -107,6 +108,20 @@ function formatRotationDegree(value?: number | null) {
 function formatCurvatureDegree(value?: number | null) {
   if (value === null || value === undefined) return '-';
   return `${Math.round(Math.abs(value))}°`;
+}
+
+function getCurvatureDotColor(value?: number | null) {
+  const angle = Math.abs(value ?? 0);
+
+  if (angle < 15) {
+    return Colors.mint[300];
+  }
+
+  if (angle < 25) {
+    return Colors.yellow[300];
+  }
+
+  return Colors.red[300];
 }
 
 function toMeasurementListItem(measurementSet: MeasurementSetResponse): MeasurementListItem | null {
@@ -344,21 +359,18 @@ function ReportItem({
     {
       key: 'upper',
       label: '상부 흉추',
-      dotStyle: styles.measurementRegionDotDanger,
       curvatureValue: curvature.secondary_thoracic_cobb,
       rotationValue: rotation?.upper_thoracic_atr,
     },
     {
       key: 'main',
       label: '주 흉추',
-      dotStyle: styles.measurementRegionDotWarning,
       curvatureValue: curvature.main_thoracic_cobb,
       rotationValue: rotation?.thoracic_atr,
     },
     {
       key: 'lumbar',
       label: '요추',
-      dotStyle: styles.measurementRegionDotNormal,
       curvatureValue: curvature.lumbar_cobb,
       rotationValue: rotation?.lumbar_atr,
     },
@@ -381,10 +393,15 @@ function ReportItem({
         {regions.map((region, index) => (
           <Fragment key={region.key}>
             <View style={styles.measurementRegion}>
-              <View style={styles.measurementRegionPill}>
-                <Text style={styles.measurementRegionLabel}>{region.label}</Text>
-                <View style={[styles.measurementRegionDot, region.dotStyle]} />
-              </View>
+            <View style={styles.measurementRegionPill}>
+              <Text style={styles.measurementRegionLabel}>{region.label}</Text>
+              <View
+                style={[
+                  styles.measurementRegionDot,
+                  { backgroundColor: getCurvatureDotColor(region.curvatureValue) },
+                ]}
+              />
+            </View>
 
               <View style={[styles.measurementValueRow, { gap: valueGap }]}>
                 <View style={styles.measurementValueBlock}>
@@ -583,7 +600,7 @@ export default function ReportScreen() {
             shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
             {
               paddingTop: 8,
-              paddingBottom: 20,
+              paddingBottom: 0,
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -702,7 +719,7 @@ export default function ReportScreen() {
                   const tabIndex = MEASUREMENT_FILTERS.findIndex((item) => item.key === filter.key);
                   const color = animatedTab.interpolate({
                     inputRange: [tabIndex - 1, tabIndex, tabIndex + 1],
-                    outputRange: ['#111827', '#5E9F9E', '#111827'],
+                    outputRange: ['#000000', '#2C9696', '#000000'],
                     extrapolate: 'clamp',
                   });
 

@@ -57,9 +57,13 @@ export const Colors = {
     25: '#EBF5FF',
   },
   red: {
+    300: '#FF7373',
     400: '#FF4747',
     50: '#FFDBDB',
     25: '#FFF3F3',
+  },
+  yellow: {
+    300: '#FAD342',
   },
 
 };

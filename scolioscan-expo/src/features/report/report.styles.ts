@@ -235,10 +235,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 18,
   },
-  trendHeaderTextWrap: {
-    flex: 1,
-    minWidth: 0,
-  },
   trendSummary: {
     gap: 6,
   },
@@ -273,42 +269,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '500',
-  },
-  trendSubtitle: {
-    color: '#94A3B8',
-    fontSize: 11,
-    marginTop: 3,
-  },
-  trendSelector: {
-    flexDirection: 'row',
-    gap: 6,
-    backgroundColor: '#F2F5FA',
-    padding: 4,
-    borderRadius: 999,
-  },
-  trendSelectorButton: {
-    minWidth: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 999,
-  },
-  trendSelectorButtonActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 0.04,
-  },
-  trendSelectorText: {
-    color: '#7A8497',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  trendSelectorTextActive: {
-    color: '#4D90FF',
   },
   trendChartWrap: {
     width: '100%',
@@ -603,7 +563,7 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: -1,
     height: 2,
-    backgroundColor: '#69B7BC',
+    backgroundColor: Colors.primary['500'],
     borderRadius: 99,
   },
   loadingBox: {
@@ -622,7 +582,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   list: {
-    gap: 20,
+    gap: 16,
   },
   measurementCard: {
     backgroundColor: '#FFFFFF',
@@ -647,7 +607,7 @@ const styles = StyleSheet.create({
   },
   measurementDate: {
     fontFamily: 'PretendardVariable',
-    color: '#25272D',
+    color: Colors.gray[900],
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '500',
@@ -688,10 +648,6 @@ const styles = StyleSheet.create({
     height: 56,
     backgroundColor: '#D9DDE7',
   },
-  measurementRegionDivider: {
-    borderRightWidth: 1,
-    borderRightColor: '#D9DDE7',
-  },
   measurementRegionPill: {
     alignSelf: 'center',
     minHeight: 18,
@@ -716,15 +672,6 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  measurementRegionDotDanger: {
-    backgroundColor: '#FF7373',
-  },
-  measurementRegionDotWarning: {
-    backgroundColor: '#FAD342',
-  },
-  measurementRegionDotNormal: {
-    backgroundColor: '#7AD7D4',
-  },
   measurementValueRow: {
     marginTop: 8,
     flexDirection: 'row',
@@ -738,90 +685,24 @@ const styles = StyleSheet.create({
   },
   measurementValueLabel: {
     fontFamily: 'PretendardVariable',
-    color: '#25272D',
+    color: Colors.gray[900],
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '400',
   },
   measurementCurvatureValue: {
     fontFamily: 'PretendardVariable',
-    color: '#25272D',
+    color: Colors.gray[900],
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '600',
   },
   measurementRotationValue: {
     fontFamily: 'PretendardVariable',
-    color: '#25272D',
+    color: Colors.gray[900],
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '600',
-  },
-  itemCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    shadowColor: '#000000',
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 0.04,
-  },
-  itemLeft: {
-    flex: 1,
-    minWidth: 0,
-    gap: 8,
-    paddingRight: 12,
-  },
-  itemDate: {
-    color: '#111827',
-    fontSize: 16,
-
-  },
-  itemBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#EAF8FA',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  ThreeitemBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#EBF5FF',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  itemBadgeText: {
-    color: '#69B7BC',
-    fontSize: 12,
-  },
-  ThreeitemBadgeText: {
-    color: '#007AF5',
-    fontSize: 12,
-  },
-  itemRight: {
-    width: 122,
-    flexShrink: 0,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  metricLine: {
-    fontSize: 12,
-    textAlign: 'right',
-    lineHeight: 17,
-  },
-  metricLabel: {
-    color: '#667085',
-  },
-  metricValue: {
-    color: '#111827',
-    fontWeight: '800',
   },
   emptyBox: {
     minHeight: 120,
