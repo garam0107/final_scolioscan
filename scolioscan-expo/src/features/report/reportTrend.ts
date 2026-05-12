@@ -79,7 +79,13 @@ export function formatAngleValue(value: number) {
 
 export function formatChangeAngle(value: number, showPlus = false) {
   const angle = formatAngleValue(Math.abs(value));
-  const sign = showPlus && angle > 0 ? '+' : '';
+  const sign = showPlus
+    ? value > 0
+      ? '+'
+      : value < 0
+        ? '-'
+        : ''
+    : '';
 
   return `${sign}${angle}°`;
 }

@@ -154,7 +154,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: 10 }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 20 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.profileCard}>

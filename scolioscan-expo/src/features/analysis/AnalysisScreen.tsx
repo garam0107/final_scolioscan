@@ -542,7 +542,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
           contentContainerStyle={[
             styles.content,
             shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
-            { paddingTop: 8, paddingBottom: 20  },
+            { paddingTop: 8, paddingBottom: 16  },
           ]}
         >
           {shouldShowMeasurementRequired ? (

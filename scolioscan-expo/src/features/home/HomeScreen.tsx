@@ -68,6 +68,11 @@ type WeeklyResultValues = {
   lumbar: number;
 };
 
+type TrendChartPoint = {
+  x: number;
+  y: number;
+};
+
 const INITIAL_WEEKLY_RESULT_VALUES: WeeklyResultValues = {
   upperThoracic: 0,
   mainThoracic: 0,
@@ -88,7 +93,13 @@ function formatAngleValue(value: number) {
 
 function formatChangeAngle(value: number, showPlus = false) {
   const angle = formatAngleValue(Math.abs(value));
-  const sign = showPlus && angle > 0 ? '+' : '';
+  const sign = showPlus
+    ? value > 0
+      ? '+'
+      : value < 0
+        ? '-'
+        : ''
+    : '';
 
   return `${sign}${angle}°`;
 }
@@ -126,6 +137,17 @@ function getRecentDateRange(days: number) {
     from_date: formatDateParam(fromDate),
     to_date: formatDateParam(toDate),
   };
+}
+
+function getRecentDateRangeDates(days: number) {
+  const endDate = new Date();
+  endDate.setHours(23, 59, 59, 999);
+
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - (days - 1));
+  startDate.setHours(0, 0, 0, 0);
+
+  return { startDate, endDate };
 }
 
 function filterRecentCurvatureRecords(records: CurvatureResponse[]) {
@@ -169,23 +191,15 @@ function getDailyLatestCurvatureRecords(records: CurvatureResponse[]) {
   );
 }
 
-function buildTrendPath(values: number[], chartWidth: number) {
-  if (values.length === 0 || chartWidth <= 0) {
+function buildTrendPath(points: TrendChartPoint[]) {
+  if (points.length === 0) {
     return '';
   }
 
-  if (values.length === 1) {
-    const y = TREND_CHART_HEIGHT - (Math.min(values[0], TREND_CHART_MAX_VALUE) / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
-    return `M 0 ${y} L ${chartWidth} ${y}`;
+  if (points.length === 1) {
+    return `M ${points[0].x} ${points[0].y} L ${points[0].x + 0.1} ${points[0].y}`;
   }
 
-  const points = values.map((value, index) => {
-    const x = (chartWidth / (values.length - 1)) * index;
-    const safeValue = Math.max(0, Math.min(value, TREND_CHART_MAX_VALUE));
-    const y = TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
-
-    return { x, y };
-  });
   const path = [`M ${points[0].x} ${points[0].y}`];
 
   for (let index = 0; index < points.length - 1; index += 1) {
@@ -254,6 +268,7 @@ export default function HomeScreen() {
   const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState<WeeklyResultId>('upper-thoracic');
   const [weeklyResultValues, setWeeklyResultValues] = useState<WeeklyResultValues>(INITIAL_WEEKLY_RESULT_VALUES);
   const [curvatureTrendRecords, setCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
+  const [rawCurvatureTrendRecords, setRawCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
   const bannerWidth = width - 40;
@@ -295,24 +310,76 @@ export default function HomeScreen() {
     () => trendRecords.map((record) => formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId))),
     [selectedWeeklyResultId, trendRecords],
   );
-  const trendPath = useMemo(
-    () => buildTrendPath(trendValues, trendChartWidth),
-    [trendChartWidth, trendValues],
+  const rawTrendRecords = useMemo(
+    () =>
+      [...rawCurvatureTrendRecords].sort(
+        (left, right) =>
+          new Date(getMeasurementDate(left)).getTime() - new Date(getMeasurementDate(right)).getTime(),
+      ),
+    [rawCurvatureTrendRecords],
   );
-  const latestTrendValue = trendValues[trendValues.length - 1] ?? 0;
-  const previousTrendValue = trendValues[trendValues.length - 2] ?? latestTrendValue;
-  const recentChange = latestTrendValue - previousTrendValue;
-  const averageChange = useMemo(() => {
-    if (trendValues.length < 2) {
+  const rawTrendValues = useMemo(
+    () => rawTrendRecords.map((record) => formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId))),
+    [rawTrendRecords, selectedWeeklyResultId],
+  );
+  const trendPeriodRange = useMemo(
+    () => getRecentDateRangeDates(RECENT_CURVATURE_DAYS),
+    [],
+  );
+  const trendPoints = useMemo(() => {
+    const startTime = trendPeriodRange.startDate.getTime();
+    const endTime = trendPeriodRange.endDate.getTime();
+    const rangeTime = Math.max(1, endTime - startTime);
+
+    return trendRecords.map((record) => {
+      const measurementTime = new Date(getMeasurementDate(record)).getTime();
+      const clampedTime = Math.max(startTime, Math.min(endTime, measurementTime));
+      const value = formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId));
+      const safeValue = Math.max(0, Math.min(value, TREND_CHART_MAX_VALUE));
+
+      return {
+        x: ((clampedTime - startTime) / rangeTime) * trendChartWidth,
+        y: TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT,
+      };
+    });
+  }, [selectedWeeklyResultId, trendChartWidth, trendPeriodRange, trendRecords]);
+  const trendPath = useMemo(
+    () => buildTrendPath(trendPoints),
+    [trendPoints],
+  );
+  const trendAreaPath = useMemo(() => {
+    if (!trendPath || trendPoints.length === 0) {
+      return '';
+    }
+
+    const firstPoint = trendPoints[0];
+    const lastPoint = trendPoints[trendPoints.length - 1];
+
+    return `${trendPath} L ${lastPoint.x} ${TREND_CHART_HEIGHT} L ${firstPoint.x} ${TREND_CHART_HEIGHT} Z`;
+  }, [trendPath, trendPoints]);
+  const recentChange = useMemo(() => {
+    if (rawTrendValues.length < 2) {
       return 0;
     }
 
-    const totalChange = trendValues.slice(1).reduce((sum, value, index) => {
-      return sum + Math.abs(value - trendValues[index]);
+    const latestTrendValue = rawTrendValues[rawTrendValues.length - 1];
+    const previousTrendValue = rawTrendValues[rawTrendValues.length - 2];
+
+    return Number((latestTrendValue - previousTrendValue).toFixed(1));
+  }, [rawTrendValues]);
+  const averageChange = useMemo(() => {
+    const values = trendValues.length >= 2 ? trendValues : rawTrendValues;
+
+    if (values.length < 2) {
+      return 0;
+    }
+
+    const totalChange = values.slice(1).reduce((sum, value, index) => {
+      return sum + Math.abs(value - values[index]);
     }, 0);
 
-    return totalChange / (trendValues.length - 1);
-  }, [trendValues]);
+    return Number((totalChange / (values.length - 1)).toFixed(1));
+  }, [rawTrendValues, trendValues]);
 
   const loadAlarmCount = useCallback(async () => {
     try {
@@ -333,10 +400,12 @@ export default function HomeScreen() {
       const recentCurvatures = filterRecentCurvatureRecords(response.data);
       const dailyLatestCurvatures = getDailyLatestCurvatureRecords(recentCurvatures);
       const latestCurvature = dailyLatestCurvatures[0];
+      setRawCurvatureTrendRecords(recentCurvatures);
       setCurvatureTrendRecords(dailyLatestCurvatures);
 
       if (!latestCurvature) {
         setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
+        setRawCurvatureTrendRecords([]);
         return;
       }
 
@@ -348,6 +417,7 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Failed to load latest curvature:', error);
       setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
+      setRawCurvatureTrendRecords([]);
       setCurvatureTrendRecords([]);
     }
   }, []);
@@ -445,7 +515,7 @@ export default function HomeScreen() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom:  10 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom:  0 }]}
         >
           <View style={styles.greetingBlock}>
             <Text style={styles.greetingTitle}>{displayName}님 안녕하세요.</Text>
@@ -562,7 +632,7 @@ export default function HomeScreen() {
                   {trendPath ? (
                     <>
                       <Path
-                        d={`${trendPath} L ${trendChartWidth} ${TREND_CHART_HEIGHT} L 0 ${TREND_CHART_HEIGHT} Z`}
+                        d={trendAreaPath}
                         fill="url(#trendAreaGradient)"
                       />
                       <Path
