@@ -6,7 +6,7 @@
     "orientation": "default",
     "icon": "./assets/icons/scolioscan_icon.png",
     "splash" : {
-      "image" : "./assets/images/logo_splash.png"
+      "image" : "./assets/icons/splash_icon.png"
     },
     "scheme": "scolioscanexpo",
     "userInterfaceStyle": "automatic",
@@ -38,7 +38,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo_splash.png",
+          "image": "./assets/icons/splash_icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#22BCB7",
           "dark": {
