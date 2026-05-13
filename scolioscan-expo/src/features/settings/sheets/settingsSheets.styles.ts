@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   languageOptionList: {
@@ -15,6 +16,7 @@ const styles = StyleSheet.create({
     minHeight: 58,
   },
   languageOptionText: {
+    ...textFont,
     color: '#000000',
     fontSize: 14,
     fontWeight: '400',
@@ -27,6 +29,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   resetDeleteTitle: {
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 12,
     fontWeight: '400',
@@ -34,6 +37,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   resetDeleteItem: {
+    ...textFont,
     color: Colors.gray[700],
     fontSize: 14,
     fontWeight: '400',
@@ -41,6 +45,7 @@ const styles = StyleSheet.create({
     paddingLeft: 19,
   },
   resetConfirmLabel: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 15,
     fontWeight: '500',
@@ -57,6 +62,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   resetInput: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 15,
     fontWeight: '500',

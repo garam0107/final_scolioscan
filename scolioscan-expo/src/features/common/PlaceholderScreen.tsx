@@ -3,6 +3,7 @@ import React from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
+import { textFont } from '@/src/constants/fonts';
 
 export default function PlaceholderScreen({
   title,
@@ -43,13 +44,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#20222D',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 22,
     fontWeight: '700',
   },
   description: {
     color: '#6B7280',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     lineHeight: 22,
     marginTop: 10,

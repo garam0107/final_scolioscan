@@ -22,6 +22,7 @@ import LoginLogo from '../../../assets/icons/login_logo.svg';
 import GoogleIcon from '../../../assets/icons/google.svg';
 import NaverIcon from '../../../assets/icons/naver.svg';
 import AppleIcon from '../../../assets/icons/apple.svg';
+import { textFont } from '@/src/constants/fonts';
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 
@@ -426,7 +427,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: '#4F5564',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     fontWeight: '600',
     lineHeight: 22,
@@ -443,7 +444,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: '#000000',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     fontWeight: '500',
     lineHeight : 20,
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
   fieldInput: {
     color: '#292929',
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '500',
     minHeight: 56,
@@ -511,12 +512,12 @@ const styles = StyleSheet.create({
   },
   rememberText: {
     color: '#000000',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
   },
   findPasswordText: {
     color: '#6B7280',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
   },
   primaryButton: {
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#FFFFFF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     lineHeight: 22,
   },
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: '#9CA3AF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '500',
     marginHorizontal: 10,
@@ -577,14 +578,14 @@ const styles = StyleSheet.create({
   },
   signupPromptText: {
     color: '#6B7280',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
   },
   signupLink: {
     color: '#5F9F9D',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     lineHeight: 20,
     marginLeft: 4,
@@ -597,14 +598,14 @@ const styles = StyleSheet.create({
   },
   findAccountText: {
     color: '#6B7280',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 20,
   },
   findAccountDivider: {
     color: '#94A3B8',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     marginHorizontal: 8,
   },
@@ -631,7 +632,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     color: '#1F2937',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 10,
@@ -639,7 +640,7 @@ const styles = StyleSheet.create({
   },
   modalMessage: {
     color: '#4B5563',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -654,7 +655,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: '#FFFFFF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '600',
   },

@@ -11,6 +11,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 type AuthFieldVariant = 'email' | 'password' | 'text';
 
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: '#111827',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 10,
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   fieldInput: {
     color: '#292929',
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '500',
     minHeight: 56,

@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 export const styles = StyleSheet.create({
   screen: {
@@ -16,6 +17,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   permissionTitle: {
+    ...textFont,
     color: '#1F2A2A',
     fontSize: 20,
     fontWeight: '700',
@@ -23,6 +25,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   permissionMessage: {
+    ...textFont,
     marginTop: 10,
     color: '#667077',
     fontSize: 14,
@@ -41,6 +44,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   permissionButtonText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
@@ -66,11 +70,13 @@ export const styles = StyleSheet.create({
     zIndex: 10,
   },
   topText: {
+    ...textFont,
     color: '#fff',
     fontSize: 15,
 
   },
   closeText: {
+    ...textFont,
     color: '#fff',
     fontSize: 13,
     fontWeight: '700',
@@ -86,6 +92,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(12, 14, 18, 0.62)',
   },
   guideCardText: {
+    ...textFont,
     color: '#fff',
     fontSize: 14,
     lineHeight: 20,
@@ -98,6 +105,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   guideMetaText: {
+    ...textFont,
     color: 'rgba(255,255,255,0.72)',
     fontSize: 12,
   },
@@ -118,6 +126,7 @@ export const styles = StyleSheet.create({
   },
   // 카메라 프리뷰 위에서도 숫자가 잘 보이도록 큰 글자와 그림자를 사용한다.
   countdownText: {
+    ...textFont,
     color: '#fff',
     fontSize: 76,
     fontWeight: '800',

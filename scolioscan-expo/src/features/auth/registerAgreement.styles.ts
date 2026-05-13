@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 export const agreementStyles = StyleSheet.create({
   wrap: {
@@ -10,14 +11,14 @@ export const agreementStyles = StyleSheet.create({
   },
   title: {
     color: '#3B4049',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 38,
   },
   subtitle: {
     color: '#657085',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 22,
@@ -57,21 +58,21 @@ export const agreementStyles = StyleSheet.create({
   },
   allLabel: {
     color: '#000000',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
   },
   itemLabel: {
     color: '#25272D',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
   },
   moreLink: {
     color: '#97A2B9',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -93,7 +94,7 @@ export const agreementStyles = StyleSheet.create({
   modalTitle: {
     color: '#3B4049',
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     fontWeight: '700',
     marginRight: 16,
@@ -105,7 +106,7 @@ export const agreementStyles = StyleSheet.create({
   },
   modalText: {
     color: '#3B4049',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     lineHeight: 22,
   },

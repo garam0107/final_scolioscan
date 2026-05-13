@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
 import baseStyles from '@/src/features/settings/changePassword/passwordChange.styles';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   ...baseStyles,
@@ -22,6 +23,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   passwordInput: {
+    ...textFont,
     color: Colors.gray[800],
     flex: 1,
     fontSize: 15,
@@ -48,6 +50,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ruleText: {
+    ...textFont,
     color: '#93A0B5',
     fontSize: 13,
     fontWeight: '500',

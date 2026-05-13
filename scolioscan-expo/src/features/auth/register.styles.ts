@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 export const styles = StyleSheet.create({
   page: {
@@ -34,7 +35,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     color: '#404552',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 36,
@@ -42,7 +43,7 @@ export const styles = StyleSheet.create({
   },
   helperText: {
     color: '#7A8190',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     lineHeight: 18,
     marginTop: 10,
@@ -60,7 +61,7 @@ export const styles = StyleSheet.create({
   },
   passwordRuleText: {
     color: '#8D95A3',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -95,7 +96,7 @@ export const styles = StyleSheet.create({
   },
   birthdayInput: {
     color: '#292929',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '500',
     paddingVertical: 0,
@@ -124,7 +125,7 @@ export const styles = StyleSheet.create({
     borderColor: '#69A9A7',
   },
   carrierButtonText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '500',
     textAlign: 'center',
@@ -148,7 +149,7 @@ export const styles = StyleSheet.create({
   phoneInput: {
     color: '#292929',
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '500',
     minHeight: 56,
@@ -157,7 +158,7 @@ export const styles = StyleSheet.create({
   },
   phoneHelperText: {
     color: '#8D95A3',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     lineHeight: 18,
     marginTop: 8,
@@ -168,7 +169,7 @@ export const styles = StyleSheet.create({
   },
   messageTitle: {
     color: '#3B4049',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 38,
@@ -195,7 +196,7 @@ export const styles = StyleSheet.create({
   },
   messageGuideNumberText: {
     color: '#FFFFFF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 16,
@@ -203,7 +204,7 @@ export const styles = StyleSheet.create({
   messageGuideText: {
     color: '#000000',
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 20,
@@ -220,7 +221,7 @@ export const styles = StyleSheet.create({
   },
   messageFootnote: {
     color: '#97A2B9',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 10,
     lineHeight: 16,
     marginTop: 10,
@@ -232,7 +233,7 @@ export const styles = StyleSheet.create({
   },
   completeTitle: {
     color: '#404552',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 24,
     fontWeight: '700',
     lineHeight: 34,
@@ -260,7 +261,7 @@ export const styles = StyleSheet.create({
   },
   genderText: {
     color: '#7A8190',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -285,7 +286,7 @@ export const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#FFFFFF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     fontWeight: '600',
     lineHeight: 22,
@@ -310,7 +311,7 @@ export const styles = StyleSheet.create({
   },
   modalTitle: {
     color: '#1F2937',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 10,
@@ -318,7 +319,7 @@ export const styles = StyleSheet.create({
   },
   modalMessage: {
     color: '#4B5563',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -333,7 +334,7 @@ export const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: '#FFFFFF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '600',
   },

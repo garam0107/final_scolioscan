@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 type GuideMessageBoxProps = {
   messages: string[];
@@ -26,6 +27,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   guideText: {
+    ...textFont,
     color: Colors.primary[500],
     fontSize: 13,
     fontWeight: '500',

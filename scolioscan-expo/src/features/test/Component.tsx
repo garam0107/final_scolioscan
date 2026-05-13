@@ -2,6 +2,7 @@ import * as React from "react";
 import {Text, StyleSheet, View} from "react-native";
 import UnorderedList from "../test/UnorderedList"
 import ListItem from "../test/ListItem"
+import { textFont } from '@/src/constants/fonts';
 
 const Component = () => {
   	
@@ -57,14 +58,14 @@ const Component = () => {
               							position: "absolute"
             						},
             						textTypo1: {
+              							...textFont,
               							textAlign: "left",
-              							fontFamily: "Pretendard Variable"
             						},
             						textTypo: {
+              							...textFont,
               							fontWeight: "500",
               							lineHeight: 20,
               							textAlign: "left",
-              							fontFamily: "Pretendard Variable"
             						},
             						framePosition: {
               							right: 0,
@@ -72,15 +73,16 @@ const Component = () => {
               							position: "absolute"
             						},
             						d3dClr: {
+              							...textFont,
               							color: "#3b4049",
               							fontSize: 14
             						},
             						text7Typo: {
+              							...textFont,
               							color: "#25272d",
               							fontWeight: "500",
               							lineHeight: 20,
               							textAlign: "left",
-              							fontFamily: "Pretendard Variable"
             						},
             						wrapperBorder: {
               							borderWidth: 1,
@@ -118,6 +120,7 @@ const Component = () => {
               							top: 0
             						},
             						text: {
+              							...textFont,
               							top: 24,
               							fontSize: 10,
               							lineHeight: 14,
@@ -126,6 +129,7 @@ const Component = () => {
               							position: "absolute"
             						},
             						text2: {
+              							...textFont,
               							color: "#ff4b3c",
               							fontSize: 15,
               							left: 0,
@@ -147,6 +151,7 @@ const Component = () => {
               							alignSelf: "stretch"
             						},
             						text3: {
+              							...textFont,
               							fontSize: 12,
               							lineHeight: 16,
               							color: "#657085"
@@ -163,6 +168,7 @@ const Component = () => {
               							color: "#3b4049"
             						},
             						text7: {
+              							...textFont,
               							top: 187,
               							fontSize: 15,
               							left: 8,
@@ -181,6 +187,7 @@ const Component = () => {
               							overflow: "hidden"
             						},
             						text8: {
+              							...textFont,
               							color: "#b6bece",
               							fontSize: 15,
               							alignSelf: "stretch"
@@ -211,12 +218,14 @@ const Component = () => {
               							flex: 1
             						},
             						claim: {
+              							...textFont,
               							fontSize: 14
             						},
             						filledregular2: {
               							backgroundColor: "#d4d9e2"
             						},
             						claim2: {
+              							...textFont,
               							color: "#fff",
               							fontSize: 14
             						}

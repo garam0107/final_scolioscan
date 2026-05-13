@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -24,7 +25,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 18,
     fontWeight: '700',
     color: '#2A2F3A',
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   headerActionText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '600',
     color: '#7FAFD8',
@@ -51,7 +52,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   emptyText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '500',
     color: '#A4A9B6',
@@ -99,20 +100,20 @@ const styles = StyleSheet.create({
   },
   alarmType: {
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     fontWeight: '700',
     color: '#2D3343',
   },
   alarmDate: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 11,
     fontWeight: '500',
     color: '#A8AFBF',
     flexShrink: 0,
   },
   alarmContent: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,

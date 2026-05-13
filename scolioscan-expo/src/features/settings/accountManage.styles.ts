@@ -1,5 +1,6 @@
 import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
     width: 36,
   },
   headerTitle: {
+    ...textFont,
     color: '#20242C',
     flex: 1,
     fontSize: 15,
@@ -37,6 +39,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   sectionTitle: {
+    ...textFont,
     color: '#000000',
     fontSize: 14,
     fontWeight: '400',
@@ -89,12 +92,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loginMethodTitle: {
+    ...textFont,
     color: Colors.gray[800],
     fontSize: 15,
     fontWeight: '600',
     lineHeight: 20,
   },
   loginMethodEmail: {
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 11,
     fontWeight: '400',
@@ -110,6 +115,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   infoBadgeText: {
+    ...textFont,
     color: Colors.mint[600],
     fontSize: 10,
     fontWeight: '600',
@@ -142,12 +148,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   deviceTitle: {
+    ...textFont,
     color: '#000000',
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
   },
   deviceMeta: {
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 10,
     fontWeight: '400',
@@ -163,12 +171,14 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   activeBadgeText: {
+    ...textFont,
     color: Colors.mint[600],
     fontSize: 10,
     fontWeight: '600',
     lineHeight: 14,
   },
   deviceLogoutText: {
+    ...textFont,
     color: Colors.gray[400],
     fontSize: 13,
     fontWeight: '500',
@@ -186,6 +196,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   actionLinkText: {
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 14,
     fontWeight: '500',
@@ -203,6 +214,7 @@ const styles = StyleSheet.create({
     height : 48
   },
   saveButtonText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
@@ -211,6 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   fieldLabel: {
+    ...textFont,
     color: Colors.gray[800],
     fontSize: 15,
     fontWeight: '500',
@@ -227,6 +240,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   input: {
+    ...textFont,
     color: '#2B2F36',
     flex: 1,
     fontSize: 13,
@@ -248,6 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   birthInput: {
+    ...textFont,
     color: '#2B2F36',
     fontSize: 13,
     fontWeight: '700',
@@ -256,6 +271,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   birthInputText: {
+    ...textFont,
     color: '#2B2F36',
     fontSize: 13,
     fontWeight: '700',
@@ -279,6 +295,7 @@ const styles = StyleSheet.create({
     borderColor: '#5EAAA8',
   },
   genderText: {
+    ...textFont,
     color: '#A1A9B3',
     fontSize: 13,
     fontWeight: '800',
@@ -303,6 +320,7 @@ const styles = StyleSheet.create({
     maxWidth: 360,
   },
   withdrawModalTitle: {
+    ...textFont,
     color: '#25272D',
     fontSize: 15,
     fontWeight: '500',
@@ -311,6 +329,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   withdrawModalDescription: {
+    ...textFont,
     color: '#657085',
     fontSize: 10,
     fontWeight: '400',
@@ -327,6 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   withdrawDeleteTitle: {
+    ...textFont,
     color: '#657085',
     fontSize: 12,
     fontWeight: '400',
@@ -334,6 +354,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   withdrawDeleteText: {
+    ...textFont,
     color: '#3B4049',
     fontSize: 14,
     fontWeight: '400',
@@ -341,6 +362,7 @@ const styles = StyleSheet.create({
     paddingLeft: 19,
   },
   withdrawConfirmText: {
+    ...textFont,
     color: '#25272D',
     fontSize: 15,
     fontWeight: '500',
@@ -361,6 +383,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   withdrawPasswordInput: {
+    ...textFont,
     color: '#25272D',
     flex: 1,
     fontSize: 14,
@@ -369,6 +392,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   withdrawErrorText: {
+    ...textFont,
     color: '#E5484D',
     fontSize: 12,
     fontWeight: '500',
@@ -394,6 +418,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   withdrawCancelText: {
+    ...textFont,
     color: '#25272D',
     fontSize: 14,
     fontWeight: '500',
@@ -412,6 +437,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff4b3c',
   },
   withdrawConfirmButtonText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
@@ -428,6 +454,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   withdrawCompleteTitle: {
+    ...textFont,
     color: '#25272D',
     fontSize: 16,
     fontWeight: '600',
@@ -444,6 +471,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   withdrawCompleteButtonText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',

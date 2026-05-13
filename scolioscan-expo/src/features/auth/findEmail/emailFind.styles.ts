@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -20,6 +21,7 @@ const styles = StyleSheet.create({
     width: 36,
   },
   headerTitle: {
+    ...textFont,
     color: Colors.gray[800],
     flex: 1,
     fontSize: 18,
@@ -49,6 +51,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   buttonText: {
+    ...textFont,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 22,

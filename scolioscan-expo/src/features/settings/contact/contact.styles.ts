@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
 		width: 20,
 	},
 	input: {
-		fontFamily: 'PretendardVariable',
+		...textFont,
 		color: "#2B9696",
 		fontSize: 13,
 		marginBottom: 16,
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 12,
 	},
 	input2: {
-		fontFamily: 'PretendardVariable',
+		...textFont,
 		color: Colors.primary["black"],
 		fontSize: 15,
 		backgroundColor: "#F2F4F6",
@@ -164,6 +165,7 @@ const styles = StyleSheet.create({
 		width: 24,
 	},
 	headerTitle: {
+		...textFont,
 		color: "#2B2E35",
 		fontSize: 18,
 		fontWeight: "700",
@@ -214,33 +216,39 @@ const styles = StyleSheet.create({
 		paddingVertical: 8,
 	},
 	infoText: {
+		...textFont,
 		color: Colors.primary[500],
 		fontSize: 13,
 		fontWeight: "500",
 		lineHeight: 18,
 	},
 	text: {
+		...textFont,
 		color: "#2B2E35",
 		fontSize: 18,
 		fontWeight: "bold",
 	},
 	text2: {
+		...textFont,
 		color: "#2B2E35",
 		fontSize: 15,
 		marginBottom: 8,
 		marginLeft: 4,
 	},
 	text3: {
+		...textFont,
 		color: "#000000",
 		fontSize: 10,
 	},
 	text4: {
+		...textFont,
 		color: "#B5BDCE",
 		fontSize: 15,
 		lineHeight: 20,
 		minHeight: 188,
 	},
 	messageInput: {
+		...textFont,
 		backgroundColor: "#F2F4F6",
 		borderColor: "#D3D8E2",
 		borderRadius: 6,
@@ -264,10 +272,12 @@ const styles = StyleSheet.create({
 		marginLeft: 8,
 	},
 	text7: {
+		...textFont,
 		color: "#646F85",
 		fontSize: 12,
 	},
 	text8: {
+		...textFont,
 		color: "#FFFFFF",
 		fontSize: 16,
 	},

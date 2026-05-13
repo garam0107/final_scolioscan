@@ -10,6 +10,7 @@ import GuideMessageBox from '@/src/components/GuideMessageBox';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import { authAPI } from '@/src/api/auth';
+import { textFont } from '@/src/constants/fonts';
 import {
   formatPhoneNumber,
   isValidEmail,
@@ -170,7 +171,7 @@ export default function PasswordFindScreen() {
             borderRadius={6}
             disabled={!canContinue || checkingAccount}
             style={styles.button}
-            textStyle={{ fontSize: 16, fontWeight: '500', lineHeight: 22 }}
+            textStyle={{ ...textFont, fontSize: 16, fontWeight: '500', lineHeight: 22 }}
           />
         </View>
       </KeyboardStickyView>

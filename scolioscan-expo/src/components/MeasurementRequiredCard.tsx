@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import CameraImage from '../../assets/home/test.svg';
 import { Colors } from '../constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 type MeasurementRequiredCardProps = {
   onPress?: () => void;
@@ -62,6 +63,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   title: {
+    ...textFont,
     color: Colors.primary['500'],
     fontSize: 18,
     fontWeight: '600',
@@ -69,6 +71,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   description: {
+    ...textFont,
     color: Colors.gray[600],
     fontSize: 12,
     fontWeight: '500',
@@ -87,6 +90,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   buttonText: {
+    ...textFont,
     color: Colors.primary['white'],
     fontSize: 14,
     fontWeight: '500',

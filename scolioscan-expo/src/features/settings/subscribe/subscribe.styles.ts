@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -25,6 +26,7 @@ const styles = StyleSheet.create({
     width: 24,
   },
   headerTitle: {
+    ...textFont,
     color: '#2B2E35',
     fontSize: 18,
     fontWeight: '700',
@@ -66,6 +68,7 @@ const styles = StyleSheet.create({
     width: 24,
   },
   planTitle: {
+    ...textFont,
     color: '#000000',
     fontSize: 16,
     fontWeight: '700',
@@ -94,6 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   featureText: {
+    ...textFont,
     color: '#24272C',
     fontSize: 13,
     fontWeight: '400',
@@ -111,6 +115,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   priceText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '700',
@@ -131,6 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3D8E2',
   },
   planButtonText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '400',
@@ -143,6 +149,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   membershipNoticeText: {
+    ...textFont,
     color: Colors.gray[600],
     flex: 1,
     fontSize: 15,
@@ -154,6 +161,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   membershipNoticeSectionTitle: {
+    ...textFont,
     color: '#5C5C5C',
     fontSize: 14,
     fontWeight: '400',
@@ -164,6 +172,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   membershipNoticeItem: {
+    ...textFont,
     color: '#5C5C5C',
     fontSize: 14,
     fontWeight: '400',

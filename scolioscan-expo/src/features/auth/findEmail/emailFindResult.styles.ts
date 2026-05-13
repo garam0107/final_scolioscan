@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   page: {
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
     width: 36,
   },
   headerTitle: {
+    ...textFont,
     color: Colors.gray[800],
     flex: 1,
     fontSize: 18,
@@ -39,6 +41,7 @@ const styles = StyleSheet.create({
     paddingBottom: 154,
   },
   title: {
+    ...textFont,
     color: Colors.gray[800],
     fontSize: 18,
     fontWeight: '700',
@@ -46,6 +49,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   description: {
+    ...textFont,
     color: Colors.gray[400],
     fontSize: 13,
     fontWeight: '500',
@@ -66,6 +70,7 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
   },
   emailText: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 18,
     fontWeight: '600',
@@ -78,6 +83,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   secondaryButtonText: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 16,
     fontWeight: '500',
@@ -88,6 +94,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   primaryButtonText: {
+    ...textFont,
     color : Colors.primary['white'],
     fontSize: 16,
     fontWeight: '500',

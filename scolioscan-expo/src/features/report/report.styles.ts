@@ -1,5 +1,6 @@
 import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -18,6 +19,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   pageTitle: {
+    ...textFont,
     color: '#000000',
     fontSize: 24,
     fontWeight: '700',
@@ -91,12 +93,14 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   emptyStateTitle: {
+    ...textFont,
     color: '#4C9E9D',
     fontSize: 18,
     fontWeight: '800',
     textAlign: 'center',
   },
   emptyStateMessage: {
+    ...textFont,
     color: '#4B5563',
     fontSize: 13,
     lineHeight: 19,
@@ -114,6 +118,7 @@ const styles = StyleSheet.create({
     width: 138,
   },
   emptyStateButtonText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 12,
   },
@@ -132,10 +137,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   legendText: {
+    ...textFont,
     color: '#6B7280',
     fontSize: 11,
   },
   chartCaption: {
+    ...textFont,
     color: '#9AA7B8',
     fontSize: 12,
     textAlign: 'center',
@@ -155,7 +162,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   resultTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[800],
     fontSize: 16,
     lineHeight: 22,
@@ -179,6 +186,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   periodSelectText: {
+    ...textFont,
     color: '#657085',
     fontSize: 12,
     lineHeight: 16,
@@ -209,12 +217,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#EDFDFC',
   },
   periodDropdownOptionText: {
+    ...textFont,
     color: Colors.gray[600],
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '400',
   },
   periodDropdownOptionTextActive: {
+    ...textFont,
     color: Colors.primary[500],
     fontWeight: '500',
   },
@@ -239,7 +249,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   trendTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#25272D',
     fontSize: 13,
     lineHeight: 18,
@@ -251,7 +261,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   trendValue: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#25272D',
     fontSize: 28,
     lineHeight: 38,
@@ -264,7 +274,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   trendBadgeText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#20797E',
     fontSize: 11,
     lineHeight: 16,
@@ -301,6 +311,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#2C9696',
   },
   trendLegendText: {
+    ...textFont,
     minWidth: 22,
     fontSize: 10,
     lineHeight: 14,
@@ -323,6 +334,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   trendXAxisText: {
+    ...textFont,
     color: '#97A2B9',
     fontSize: 12,
     lineHeight: 16,
@@ -334,6 +346,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trendEmptyText: {
+    ...textFont,
     color: '#A6AFC4',
     fontSize: 14,
     textAlign: 'center',
@@ -366,7 +379,7 @@ const styles = StyleSheet.create({
     borderColor: '#7AD7D4',
   },
   summaryLabel: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#515968',
     fontSize: 13,
     lineHeight: 18,
@@ -377,7 +390,7 @@ const styles = StyleSheet.create({
     color: '#20797E',
   },
   summaryValue: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#25272D',
     fontSize: 18,
     lineHeight: 24,
@@ -385,6 +398,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   summaryValueActive: {
+    ...textFont,
     color: '#20797E',
     fontWeight: '700',
     textAlign: 'center',
@@ -404,7 +418,7 @@ const styles = StyleSheet.create({
     elevation: 0.04,
   },
   aiDoctorTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 16,
     lineHeight: 22,
@@ -426,14 +440,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   aiRiskTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '400',
   },
   aiRiskLabel: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
@@ -463,14 +477,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   aiOpinionHeading: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
   },
   aiOpinionBody: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 11,
     lineHeight: 16,
@@ -480,7 +494,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   aiExerciseTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 13,
     lineHeight: 18,
@@ -509,14 +523,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   aiExerciseName: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#25272D',
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
   },
   aiExerciseDetail: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 11,
     lineHeight: 16,
@@ -526,6 +540,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   sectionTitle: {
+    ...textFont,
     color: '#111827',
     fontSize: 18,
     fontWeight: '800',
@@ -555,6 +570,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   tabText: {
+    ...textFont,
     color: '#111827',
     fontSize: 15,
   },
@@ -606,7 +622,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   measurementDate: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 14,
     lineHeight: 20,
@@ -623,7 +639,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   measurementBadgeText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#20797E',
     fontSize: 10,
     lineHeight: 14,
@@ -661,7 +677,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   measurementRegionLabel: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#25272D',
     fontSize: 10,
     lineHeight: 14,
@@ -686,14 +702,14 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   measurementValueLabel: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '400',
   },
   measurementCurvatureValue: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 18,
     lineHeight: 24,
@@ -703,7 +719,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   measurementRotationValue: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 18,
     lineHeight: 24,
@@ -718,11 +734,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyTitle: {
+    ...textFont,
     color: '#20222D',
     fontSize: 16,
     fontWeight: '700',
   },
   emptyText: {
+    ...textFont,
     color: '#A6AFC4',
     fontSize: 14,
     textAlign: 'center',

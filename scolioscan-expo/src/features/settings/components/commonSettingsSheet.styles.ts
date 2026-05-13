@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   overlay: {
@@ -21,6 +22,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   title: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 15,
     fontWeight: '500',
@@ -30,6 +32,7 @@ const styles = StyleSheet.create({
     color: '#FF4B3C',
   },
   description: {
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 10,
     fontWeight: '400',
@@ -64,6 +67,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.gray[100],
   },
   actionButtonText: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 14,
     fontWeight: '500',

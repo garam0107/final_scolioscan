@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 const styles = StyleSheet.create({
   screen: {
     backgroundColor: Colors.gray[25],
@@ -18,6 +19,7 @@ const styles = StyleSheet.create({
     width: 36,
   },
   headerTitle: {
+    ...textFont,
     color: Colors.gray[800],
     flex: 1,
     fontSize: 18,
@@ -41,6 +43,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   guideText: {
+    ...textFont,
     color: Colors.primary[500],
     fontSize: 13,
     fontWeight: '500',
@@ -53,6 +56,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   fieldLabel: {
+    ...textFont,
     color: Colors.gray[800],
     fontSize: 15,
     fontWeight: '500',
@@ -69,6 +73,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   input: {
+    ...textFont,
     color: Colors.gray[800],
     fontSize: 15,
     fontWeight: '500',

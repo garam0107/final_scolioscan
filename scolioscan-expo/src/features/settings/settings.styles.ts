@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -33,6 +34,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   profileName: {
+    ...textFont,
     color: '#20242C',
     fontSize: 14,
     fontWeight: '700',
@@ -44,11 +46,13 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   proBadgeText: {
+    ...textFont,
     color: '#F5A623',
     fontSize: 9,
     fontWeight: '700',
   },
     profileEmail: {
+    ...textFont,
     color: Colors.gray[400],
     fontSize: 14,
     fontWeight : 400,
@@ -68,12 +72,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#E6EBF1',
   },
   accountManageText: {
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 10,
     fontWeight: '400',
     lineHeight : 14,
   },
   subscriptionTitle: {
+    ...textFont,
     color: '#222832',
     fontSize: 13,
     fontWeight: '800',
@@ -100,6 +106,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   subscriptionLabel: {
+    ...textFont,
     color: '#454B56',
     fontSize: 14,
     fontWeight: '400',
@@ -112,12 +119,14 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   subscriptionText: {
+    ...textFont,
     color: '#000000',
     fontSize: 14,
     fontWeight: '400',
     lineHeight : 20,
   },
   linkText: {
+    ...textFont,
     color: Colors.primary[500],
     fontSize: 12,
     fontWeight: '400',
@@ -127,6 +136,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   sectionTitle: {
+    ...textFont,
     color: '#000000',
     fontSize: 14,
     fontWeight: '400',
@@ -161,12 +171,14 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   rowTitle: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 16,
     fontWeight: '500',
     lineHeight : 22
   },
   rowDescription: {
+    ...textFont,
     color: '#646F85',
     fontSize: 12,
     lineHeight: 16,
@@ -178,6 +190,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   rowValue: {
+    ...textFont,
     color: '#96A2B9',
     fontSize: 12,
   },
@@ -200,6 +213,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   timeLabel: {
+    ...textFont,
     color: '#646F85',
     fontSize: 12,
     fontWeight: '400',
@@ -220,6 +234,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray[75],
   },
   timePillText: {
+    ...textFont,
     color: '#24272C',
     fontSize: 12,
     fontWeight: '400',
@@ -227,6 +242,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   timeSeparator: {
+    ...textFont,
     color: '#646F85',
     fontSize: 12,
     fontWeight: '400',
@@ -250,6 +266,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   timeDropdownTitle: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 16,
     fontWeight: '700',
@@ -274,12 +291,14 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   timeDropdownOptionText: {
+    ...textFont,
     color: Colors.gray[700],
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
   },
   timeDropdownOptionTextSelected: {
+    ...textFont,
     color: Colors.mint[600],
     fontWeight: '700',
   },

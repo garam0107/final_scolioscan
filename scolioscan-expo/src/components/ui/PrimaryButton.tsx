@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, type TextStyle, type ViewStyle } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 type PrimaryButtonProps = {
   title: string;
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#FFFFFF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,

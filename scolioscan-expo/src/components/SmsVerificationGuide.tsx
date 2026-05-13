@@ -1,4 +1,5 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 const defaultSteps = [
   '[동의 및 휴대전화 번호 확인] 버튼을 누르세요.',
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   },
   messageGuideNumberText: {
     color: '#FFFFFF',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 16,
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
   messageGuideText: {
     color: '#000000',
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 20,
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
   },
   messageFootnote: {
     color: '#97A2B9',
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 10,
     lineHeight: 16,
     marginTop: 24,

@@ -1,5 +1,6 @@
 import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -22,23 +23,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   summaryNameLine: {
+    ...textFont,
     color: '#1E2D30',
     fontSize: 16,
     fontWeight: '800',
     marginBottom: 2,
   },
   summaryDiagnosisLine: {
+      ...textFont,
       color: Colors.primary['black'],
     fontSize: 20,
     fontWeight: '500',
     letterSpacing: -0.4,
   },
   summarySeverityBold: {
+    ...textFont,
     color: Colors.primary['black'],
     fontSize: 24,
     fontWeight: '700',
   },
   subtitle: {
+    ...textFont,
     marginTop: 2,
     color: '#627379',
     fontSize: 13,
@@ -98,6 +103,7 @@ const styles = StyleSheet.create({
   },
   // 상부 흉추만곡, 주 흉추만곡, 요추 만곡 텍스트 스타일
   metricLabel: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '400',
@@ -113,6 +119,7 @@ const styles = StyleSheet.create({
   },
   // 각도 텍스트 스타일
   metricValue: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 34,
     lineHeight: 38,
@@ -139,6 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   digitCell: {
+    ...textFont,
     width: 24,
     height: 38,
     lineHeight: 38,
@@ -155,6 +163,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   degree: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 16,
     lineHeight: 20,
@@ -166,6 +175,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   errorText: {
+    ...textFont,
     marginTop: 10,
     color: '#B04545',
     fontSize: 13,
@@ -173,6 +183,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptyText: {
+    ...textFont,
     marginTop: 10,
     color: '#65767B',
     fontSize: 13,
@@ -188,6 +199,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   retryText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
@@ -216,18 +228,21 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   infoCardTitle: {
+    ...textFont,
     color: '#2B2F36',
     fontSize: 14,
     fontWeight: '800',
     marginBottom: 16,
   },
   infoCardBody: {
+    ...textFont,
     color: '#6E7783',
     fontSize: 11,
     lineHeight: 18,
     fontWeight: '500',
   },
   infoCardLink: {
+    ...textFont,
     marginTop: 18,
     color: '#A9B2BE',
     fontSize: 11,
@@ -259,6 +274,7 @@ const styles = StyleSheet.create({
   },
 
   severityCardTitle: {
+    ...textFont,
     color: '#1E2D30',
     fontSize: 18,
     fontWeight: '700',
@@ -274,6 +290,7 @@ const styles = StyleSheet.create({
   },
 
   severityRegionLabel: {
+    ...textFont,
     color: '#2B2F36',
     fontSize: 14,
     fontWeight: '600',
@@ -286,12 +303,14 @@ const styles = StyleSheet.create({
   },
 
   severityCurvatureLabel: {
+    ...textFont,
     color: '#8A949A',
     fontSize: 12,
     fontWeight: '500',
   },
 
   severityValue: {
+    ...textFont,
     color: '#1E2D30',
     fontSize: 16,
     fontWeight: '700',
@@ -304,6 +323,7 @@ const styles = StyleSheet.create({
   },
 
   severityBadgeText: {
+    ...textFont,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -358,6 +378,7 @@ const styles = StyleSheet.create({
   },
 
   dominantCurveTitle: {
+    ...textFont,
     color: Colors.primary['white'],
     fontSize: 16,
     fontWeight: '600',
@@ -365,6 +386,7 @@ const styles = StyleSheet.create({
   },
 
   dominantCurveBody: {
+    ...textFont,
     color: Colors.gray[25],
     fontSize: 11,
     lineHeight: 16,
@@ -372,11 +394,13 @@ const styles = StyleSheet.create({
   },
 
   dominantCurveDiagnosis: {
+    ...textFont,
     color: Colors.primary['white'],
     fontWeight: '500',
   },
 
   dominantCurveLink: {
+    ...textFont,
     marginTop: 22,
     color: Colors.gray[25],
     fontSize: 10,
@@ -408,6 +432,7 @@ const styles = StyleSheet.create({
   },
 
   curvePatternTitle: {
+    ...textFont,
     color: Colors.gray[900],
     fontSize: 16,
     fontWeight: '600',
@@ -455,6 +480,7 @@ const styles = StyleSheet.create({
   },
 
   curvePatternName: {
+    ...textFont,
     color: Colors.primary[500],
     fontSize: 14,
     lineHeight: 20,
@@ -462,6 +488,7 @@ const styles = StyleSheet.create({
   },
 
   curvePatternBody: {
+    ...textFont,
     color: Colors.gray[500],
     fontSize: 11,
     lineHeight: 16,

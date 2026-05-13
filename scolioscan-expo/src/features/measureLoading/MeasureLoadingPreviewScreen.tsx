@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LoadingSearchIcon from '../../../assets/icons/home/loading_search.svg';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 // 피그마의 블러와 외곽 그림자 효과를 유지하기 위해 차트는 PNG로 표시한다.
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
     marginTop: 36,
   },
   title: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     lineHeight: 22,
     fontWeight: '700',
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#7F8EA8',
   },
   loadingText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '400',
@@ -328,14 +329,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.mint[400],
   },
   tipBadgeText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '400',
     color: Colors.primary.white,
   },
   tipText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 11,
     lineHeight: 17,
     fontWeight: '400',
@@ -350,6 +351,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
+    ...textFont,
     fontSize: 17,
     lineHeight: 24,
     fontWeight: '600',

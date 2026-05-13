@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewProps } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
 type FormTextFieldProps = {
   label: string;
@@ -86,6 +87,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   fieldLabel: {
+    ...textFont,
     color: Colors.gray[800],
     fontSize: 15,
     fontWeight: '500',
@@ -103,6 +105,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   input: {
+    ...textFont,
     color: Colors.gray[800],
     flex: 1,
     fontSize: 15,

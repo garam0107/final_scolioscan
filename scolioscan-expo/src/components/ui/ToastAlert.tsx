@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { textFont } from '@/src/constants/fonts';
 
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
   message: {
     color: '#FFFFFF',
     flexShrink: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '600',
     lineHeight: 16,

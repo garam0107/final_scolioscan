@@ -1,5 +1,6 @@
 import * as React from "react";
 import {Text, StyleSheet, View, Image} from "react-native";
+import { textFont } from '@/src/constants/fonts';
 
 const LaComponent = () => {
   	
@@ -29,8 +30,8 @@ const LaComponent = () => {
 
 const styles = StyleSheet.create({
   	textTypo: {
+    		...textFont,
     		textAlign: "left",
-    		fontFamily: "Pretendard Variable",
     		left: 0,
     		position: "absolute"
   	},
@@ -39,10 +40,10 @@ const styles = StyleSheet.create({
     		overflow: "hidden"
   	},
   	text3Typo: {
+    		...textFont,
     		color: "#000",
     		fontSize: 14,
     		textAlign: "left",
-    		fontFamily: "Pretendard Variable",
     		lineHeight: 20
   	},
   	view: {
@@ -61,15 +62,16 @@ const styles = StyleSheet.create({
     		position: "absolute"
   	},
   	text: {
+    		...textFont,
     		top: 0,
     		fontSize: 15,
     		fontWeight: "500",
     		color: "#25272d",
     		lineHeight: 20,
     		textAlign: "left",
-    		fontFamily: "Pretendard Variable"
   	},
   	text2: {
+    		...textFont,
     		top: 24,
     		fontSize: 10,
     		lineHeight: 14,

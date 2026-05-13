@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -19,7 +20,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '500',
     color: '#47777D',
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
     borderColor: '#F7B4B4',
   },
   fontWarningText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '600',
     color: '#B13535',
@@ -94,26 +95,27 @@ const styles = StyleSheet.create({
   },
   greetingTitle: {
     flex: 1,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 24,
     lineHeight: 32,
     fontWeight: '700',
     color: '#000000',
   },
   previewButtonText: {
+    ...textFont,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '600',
   },
   greetingSubtitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     lineHeight: 22,
     fontWeight: '500',
     color: '#000000',
   },
   sectionHeading: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 16,
     lineHeight: 22,
     fontWeight: '600',
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   measurementTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '500',
@@ -170,7 +172,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   proBadgeText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '500',
@@ -185,7 +187,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   measurementBadgeText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '400',
@@ -232,7 +234,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   proModalTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 18,
     lineHeight: 26,
     fontWeight: '700',
@@ -241,7 +243,7 @@ const styles = StyleSheet.create({
   },
   proModalSubtitle: {
     marginTop: 10,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '500',
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   proModalButtonText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
@@ -269,7 +271,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 15,
     fontWeight: '700',
     color: '#30333B',
@@ -296,14 +298,14 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     marginTop: 10,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 14,
     fontWeight: '700',
     color: '#30343D',
   },
   infoSubtitle: {
     marginTop: 2,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     fontWeight: '500',
     color: '#6FAAB5',
@@ -329,7 +331,7 @@ const styles = StyleSheet.create({
   bannerImage: {
   },
   bannerPlaceholderText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     color: '#2C9696',
     fontSize: 18,
     fontWeight: '700',
@@ -344,7 +346,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   bannerBadgeText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 10,
     fontWeight: '500',
     color: '#2C9696',
@@ -380,7 +382,7 @@ const styles = StyleSheet.create({
     borderColor: '#7AD7D4',
   },
   weeklyResultLabel: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '400',
@@ -391,7 +393,7 @@ const styles = StyleSheet.create({
     color: '#20797E',
   },
   weeklyResultValue: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '700',
@@ -421,7 +423,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   trendCaption: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '400',
@@ -433,7 +435,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   trendAverageValue: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 28,
     lineHeight: 38,
     fontWeight: '700',
@@ -446,7 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.mint[25],
   },
   trendChangeText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '500',
@@ -479,7 +481,7 @@ const styles = StyleSheet.create({
   },
   trendLegendText: {
     minWidth: 22,
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '400',
@@ -506,7 +508,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   trendXAxisText: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400',
@@ -540,7 +542,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   bottomTabLabel: {
-    fontFamily: 'PretendardVariable',
+    ...textFont,
     fontSize: 11,
     fontWeight: '500',
     color: '#B7BECC',

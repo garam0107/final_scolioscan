@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
@@ -24,6 +25,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backButtonText: {
+    ...textFont,
     color: '#36595E',
     fontSize: 40,
   },
@@ -43,6 +45,7 @@ const styles = StyleSheet.create({
     elevation: 100,
   },
   angleText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 36,
     fontWeight: '700',
@@ -86,6 +89,7 @@ const styles = StyleSheet.create({
     elevation: 101,
   },
   landscapeGuideText: {
+    ...textFont,
     color: '#4B5663',
     fontSize: 13,
     fontWeight: '500',
@@ -104,6 +108,7 @@ const styles = StyleSheet.create({
     elevation: 21,
   },
   flatGuideText: {
+    ...textFont,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -146,11 +151,13 @@ const styles = StyleSheet.create({
     opacity: 0.72,
   },
   zeroButtonText: {
+    ...textFont,
     color: '#657085',
     fontSize: 14,
     fontWeight: '500',
   },
   measureButtonText: {
+    ...textFont,
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
@@ -163,6 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#9EDAD6',
   },
   unsupportedText: {
+    ...textFont,
     color: '#315A60',
     fontSize: 16,
     fontWeight: '700',
