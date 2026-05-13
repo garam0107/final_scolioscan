@@ -9,6 +9,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
+import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 import ProfileIcon from '../../../assets/images/basic_profile_image.svg'
 
 type ToggleKey = 'cellular' | 'nightMode' | 'importantAlarm' | 'otherAlarm' | 'marketing' | 'cloudBackup';
@@ -27,12 +28,12 @@ type SettingRowProps = {
 };
 
 const DEFAULT_TOGGLES: Record<ToggleKey, boolean> = {
-  cellular: true,
-  nightMode: true,
-  importantAlarm: true,
-  otherAlarm: true,
+  cellular: false,
+  nightMode: false,
+  importantAlarm: false,
+  otherAlarm: false,
   marketing: false,
-  cloudBackup: true,
+  cloudBackup: false,
 };
 
 const NIGHT_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour);
@@ -99,9 +100,14 @@ function SettingRow({
 export default function SettingsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const cellularDataAllowed = useAppSettingsStore((state) => state.cellularDataAllowed);
+  const nightModeEnabled = useAppSettingsStore((state) => state.nightModeEnabled);
+  const nightStartHour = useAppSettingsStore((state) => state.nightStartHour);
+  const nightEndHour = useAppSettingsStore((state) => state.nightEndHour);
+  const setCellularDataAllowed = useAppSettingsStore((state) => state.setCellularDataAllowed);
+  const setNightModeEnabled = useAppSettingsStore((state) => state.setNightModeEnabled);
+  const setNightModeHours = useAppSettingsStore((state) => state.setNightModeHours);
   const [toggles, setToggles] = useState(DEFAULT_TOGGLES);
-  const [nightStartHour, setNightStartHour] = useState(22);
-  const [nightEndHour, setNightEndHour] = useState(6);
   const [nightTimeTarget, setNightTimeTarget] = useState<NightTimeTarget | null>(null);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
@@ -119,7 +125,32 @@ export default function SettingsScreen() {
     [user?.name, user?.user_id],
   );
 
+  const displayedToggles = useMemo(
+    () => ({
+      ...toggles,
+      cellular: cellularDataAllowed,
+      nightMode: nightModeEnabled,
+    }),
+    [cellularDataAllowed, nightModeEnabled, toggles],
+  );
+
   const handleToggle = (key: ToggleKey) => {
+    if (key === 'cellular') {
+      // 모바일 데이터 허용 여부는 앱을 다시 켜도 유지되도록 저장소에 반영한다.
+      void setCellularDataAllowed(!cellularDataAllowed).catch(() => {
+        Alert.alert('설정 저장 실패', '셀룰러 데이터 사용 설정을 저장하지 못했어요. 다시 시도해주세요.');
+      });
+      return;
+    }
+
+    if (key === 'nightMode') {
+      // 야간 모드 사용 여부도 앱 재실행 후 유지되도록 저장소에 반영한다.
+      void setNightModeEnabled(!nightModeEnabled).catch(() => {
+        Alert.alert('설정 저장 실패', '야간 모드 설정을 저장하지 못했어요. 다시 시도해주세요.');
+      });
+      return;
+    }
+
     // 설정 토글은 서버 연동 전까지 화면 내부 상태로만 즉시 반영한다.
     setToggles((current) => ({
       ...current,
@@ -128,7 +159,7 @@ export default function SettingsScreen() {
   };
 
   const showComingSoon = (label: string) => {
-    Alert.alert(label, '아직 연결 전인 설정이에요.');
+    Alert.alert(label, '아직 준비중이에요.');
   };
 
   const closeSettingsSheet = () => {
@@ -151,13 +182,13 @@ export default function SettingsScreen() {
       return;
     }
 
-    if (nightTimeTarget === 'start') {
-      setNightStartHour(hour);
-    }
+    const nextStartHour = nightTimeTarget === 'start' ? hour : nightStartHour;
+    const nextEndHour = nightTimeTarget === 'end' ? hour : nightEndHour;
 
-    if (nightTimeTarget === 'end') {
-      setNightEndHour(hour);
-    }
+    // 야간 모드 시간도 앱을 다시 켜도 유지되도록 저장한다.
+    void setNightModeHours(nextStartHour, nextEndHour).catch(() => {
+      Alert.alert('설정 저장 실패', '야간 모드 시간을 저장하지 못했어요. 다시 시도해주세요.');
+    });
 
     closeNightTimeDropdown();
   };
@@ -216,15 +247,20 @@ export default function SettingsScreen() {
             value="한국어"
             onPress={() => setSettingsSheetType('language')}
           />
-          <SettingRow title="셀룰러 데이터 사용" toggleKey="cellular" toggles={toggles} onToggle={handleToggle} />
+          <SettingRow
+            title="셀룰러 데이터 사용"
+            toggleKey="cellular"
+            toggles={displayedToggles}
+            onToggle={handleToggle}
+          />
         </Section>
-
+        {/* 알림  */}
         <Section title="알림 설정">
           <SettingRow
             title="야간 모드"
             description="설정 시간 동안 알림 끄기"
             toggleKey="nightMode"
-            toggles={toggles}
+            toggles={displayedToggles}
             onToggle={handleToggle}
           />
           <View style={styles.timeRow}>
@@ -248,7 +284,8 @@ export default function SettingsScreen() {
               </Pressable>
             </View>
           </View>
-          <SettingRow
+          {/* API 개발 되면 추가 */}
+          {/* <SettingRow
             title="중요 알림"
             description="측정 결과 알림, 채팅 등"
             toggleKey="importantAlarm"
@@ -268,17 +305,18 @@ export default function SettingsScreen() {
             toggleKey="marketing"
             toggles={toggles}
             onToggle={handleToggle}
-          />
+          /> */}
         </Section>
 
         <Section title="데이터">
-          <SettingRow
+          {/* 나중에 기능 개발하면 추가 */}
+          {/* <SettingRow
             title="클라우드 백업"
             description="마지막 백업: 방금 전"
             toggleKey="cloudBackup"
             toggles={toggles}
             onToggle={handleToggle}
-          />
+          /> */}
           <SettingRow
             title="히스토리 내보내기"
             description="PDF 파일로 저장"
@@ -291,7 +329,8 @@ export default function SettingsScreen() {
           <SettingRow title="버전 정보" value="v.0.0.0" />
           <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
           <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
-          <SettingRow title="데이터 초기화" danger onPress={() => setSettingsSheetType('reset')} />
+          {/* <SettingRow title="데이터 초기화" danger onPress={() => setSettingsSheetType('reset')} /> */}
+          <SettingRow title="데이터 초기화" danger onPress={() => showComingSoon('초기화')} />
         </Section>
       </ScrollView>
 

@@ -3,6 +3,7 @@ import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fo
 // import { useFonts } from 'expo-font';
 import { Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +12,7 @@ import 'react-native-reanimated';
 
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
+import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 
 // const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
 
@@ -79,6 +81,8 @@ applyDefaultFont(TextInput);
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const segments = useSegments();
+  const settingsLoaded = useAppSettingsStore((state) => state.settingsLoaded);
+  const loadSettings = useAppSettingsStore((state) => state.loadSettings);
   const [museoLoaded] = useMuseoFonts({
     MuseoModerno_700Bold,
   });
@@ -87,7 +91,12 @@ export default function RootLayout() {
   // });
   const hideTopSeparator = segments[0] === 'intro' || segments[0] === 'measure';
 
-  if (!museoLoaded) {
+  useEffect(() => {
+    // 앱 시작 시 설정값을 미리 불러와 설정 화면 진입 시 토글 깜빡임을 줄인다.
+    void loadSettings().catch(() => undefined);
+  }, [loadSettings]);
+
+  if (!museoLoaded || !settingsLoaded) {
     return null;
   }
 
