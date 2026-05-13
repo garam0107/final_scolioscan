@@ -1,6 +1,10 @@
 import type { LandmarksApiResponse } from '../types';
 
-const AIS_API_BASE_URL = process.env.EXPO_PUBLIC_AIS_API_BASE_URL || 'http://localhost:8002/ais';
+const AIS_API_BASE_URL = process.env.EXPO_PUBLIC_AIS_API_BASE_URL;
+
+if (!AIS_API_BASE_URL) {
+  throw new Error('EXPO_PUBLIC_AIS_API_BASE_URL이 설정되지 않았습니다.');
+}
 
 export async function detectLandmarks(imageUri: string): Promise<LandmarksApiResponse> {
   const formData = new FormData();

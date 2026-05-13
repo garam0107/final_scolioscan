@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "scolioscan",
-    "slug": "scolioscan",
+    "slug": "scolioscan-expo",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icons/scolioscan_icon.png",
@@ -36,7 +36,8 @@
     "plugins": [
       "expo-router",
       "./plugins/withShortCmakePath.js",
-       "./plugins/withCleartextTraffic.js",
+      "./plugins/withCleartextTraffic.js",
+      "./plugins/withBlockedAndroidPermissions.js",
       [
         "expo-splash-screen",
         {
