@@ -30,6 +30,7 @@ export default function PasswordMessageScreen() {
   }, []);
 
   const handleVerifyPhone = useCallback(async () => {
+    // 문자 앱에서 돌아온 뒤 인증 완료 여부를 확인하고 완료되면 재설정 화면으로 보낸다.
     if (!smsRequested || verifyingPhone) {
       return;
     }
@@ -63,6 +64,7 @@ export default function PasswordMessageScreen() {
   }, [octomoApi, showToast, smsRequested, user?.phone, verifyingPhone]);
 
   useEffect(() => {
+    // 문자 인증을 요청한 뒤 앱이 다시 활성화되면 서버 검증을 자동으로 시도한다.
     if (!smsRequested) {
       return;
     }
@@ -85,6 +87,7 @@ export default function PasswordMessageScreen() {
   }, [handleVerifyPhone, smsRequested]);
 
   const handleMessagePress = async () => {
+    // 서버에서 받은 인증 문구로 문자 앱을 열고, 복귀 후 검증할 수 있게 상태를 남긴다.
     try {
       if (!user?.phone) {
         showToast('현재 사용자 휴대전화 번호를 찾을 수 없습니다.', 'error');

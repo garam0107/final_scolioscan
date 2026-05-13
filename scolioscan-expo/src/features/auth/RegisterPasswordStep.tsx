@@ -14,6 +14,7 @@ export default function RegisterPasswordStep({
   passwordVisible,
   onTogglePasswordVisible,
 }: RegisterPasswordStepProps) {
+  // 비밀번호 조건 충족 여부를 입력 중 바로 보여줘 다음 단계 진입 가능성을 알린다.
   const password = useAuthStore((state) => state.registerDraft.password);
   const updateRegisterDraft = useAuthStore((state) => state.updateRegisterDraft);
   const passwordHasLength = hasPasswordLength(password);

@@ -50,6 +50,7 @@ export default function ContactScreen() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handlePickScreenshots = async () => {
+		// 첨부 이미지는 최대 개수까지만 추가하고 남은 개수만 이미지 선택기에 넘긴다.
 		const remainingCount = MAX_SCREENSHOT_COUNT - screenshots.length;
 
 		if (remainingCount <= 0) {
@@ -79,10 +80,12 @@ export default function ContactScreen() {
 	};
 
 	const handleRemoveScreenshot = (uri: string) => {
+		// 미리보기에서 제거한 이미지는 전송 목록에서도 제외한다.
 		setScreenshots((current) => current.filter((screenshot) => screenshot.uri !== uri));
 	};
 
 	const handleSubmit = async () => {
+		// 문의 유형, 내용, 선택 이메일, 첨부 이미지를 한 번에 서버로 전송한다.
 		if (!contactMessage.trim()) {
 			Alert.alert('문의 내용', '문의 내용을 작성해주세요.');
 			return;

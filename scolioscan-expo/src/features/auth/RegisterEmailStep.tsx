@@ -6,6 +6,7 @@ type RegisterEmailStepProps = {
 };
 
 export default function RegisterEmailStep({ onSubmit }: RegisterEmailStepProps) {
+  // 이메일 입력값은 가입 전체 단계에서 공유되는 임시 저장소에 바로 반영한다.
   const email = useAuthStore((state) => state.registerDraft.email);
   const updateRegisterDraft = useAuthStore((state) => state.updateRegisterDraft);
 

@@ -17,11 +17,13 @@ export default function DataResetSheet({ visible, onClose, onReset }: DataResetS
   const canReset = confirmText.trim() === '초기화';
 
   const closeSheet = () => {
+    // 시트를 닫을 때 확인 입력값을 비워 다음 열림에 이전 값이 남지 않게 한다.
     setConfirmText('');
     onClose();
   };
 
   const handleReset = () => {
+    // 확인 문구가 정확히 입력된 경우에만 초기화 콜백을 실행한다.
     if (!canReset) {
       return;
     }

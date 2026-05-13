@@ -19,6 +19,7 @@ export default function LanguageSettingsSheet({
   onSelect,
   onClose,
 }: LanguageSettingsSheetProps) {
+  // 현재는 한국어만 실제 적용하고 다른 언어는 준비 중 안내만 보여준다.
   return (
     <CommonSettingsSheet
       visible={visible}

@@ -15,6 +15,7 @@ import {
 import styles from '@/src/features/notifications/notifications.styles';
 
 function formatListDate(value: string) {
+  // 알림 목록에서는 연도 없이 월/일만 간단히 표시한다.
   return new Intl.DateTimeFormat('ko-KR', {
     month: 'long',
     day: 'numeric',
@@ -22,6 +23,7 @@ function formatListDate(value: string) {
 }
 
 function getAlarmMeta(alarmType: number) {
+  // 서버 알림 타입을 화면 배지와 분류 문구로 바꾼다.
   switch (alarmType) {
     case 2:
       return { label: '측정', Icon: AlarmMeasurementBadge };
@@ -56,11 +58,13 @@ export default function NotificationsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // 알림 화면에 들어올 때마다 읽지 않은 알림을 새로 불러온다.
       void loadAlarms();
     }, [loadAlarms]),
   );
 
   const handleBack = () => {
+  // 직접 진입한 경우에도 뒤로가기 버튼이 홈으로 안전하게 이동하게 한다.
   if (router.canGoBack()) {
     router.back();
     return;

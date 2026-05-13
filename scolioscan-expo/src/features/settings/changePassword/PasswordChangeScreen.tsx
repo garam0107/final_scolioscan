@@ -25,6 +25,7 @@ export default function PasswordChangeScreen() {
   }
 
   function handleContinue() {
+    // 계정에 등록된 휴대폰 번호와 입력값이 일치할 때만 문자 인증 단계로 이동한다.
     const normalizedInputPhone = normalizePhoneNumber(phone);
     const normalizedUserPhone = normalizePhoneNumber(user?.phone || '');
 

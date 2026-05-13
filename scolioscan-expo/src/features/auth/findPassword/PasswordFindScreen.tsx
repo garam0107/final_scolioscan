@@ -38,6 +38,7 @@ export default function PasswordFindScreen() {
   }
 
   function getApiErrorMessage(error: unknown) {
+    // 비밀번호 찾기 API 오류를 화면 토스트 메시지로 정리한다.
     if (typeof error === 'object' && error !== null && 'response' in error) {
       const response = (error as { response?: { data?: { detail?: string } } }).response;
       const detail = response?.data?.detail;
@@ -54,6 +55,7 @@ export default function PasswordFindScreen() {
   }
 
   async function handleContinue() {
+    // 이름, 이메일, 휴대폰 번호가 모두 맞는 계정만 비밀번호 재설정 인증으로 이동한다.
     if (checkingAccount) {
       return;
     }

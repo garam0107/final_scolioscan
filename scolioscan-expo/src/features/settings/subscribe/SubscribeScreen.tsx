@@ -27,6 +27,7 @@ export default function SubscribeScreen() {
   const scrollViewRef = useRef<ScrollViewType | null>(null);
 
   const toggleNoticeExpanded = () => {
+    // 유의사항을 펼칠 때 사용자가 바로 내용을 볼 수 있도록 스크롤을 하단으로 보낸다.
     setNoticeExpanded((current) => {
       const nextValue = !current;
 

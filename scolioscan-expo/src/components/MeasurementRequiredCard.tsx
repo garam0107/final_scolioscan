@@ -13,6 +13,7 @@ export default function MeasurementRequiredCard({ onPress }: MeasurementRequired
   const router = useRouter();
 
   const handlePress = () => {
+    // 호출 화면에서 이동 동작을 넘기지 않으면 기본적으로 홈으로 이동한다.
     if (onPress) {
       onPress();
       return;

@@ -14,6 +14,7 @@ import styles from '@/src/features/settings/changePassword/resetPassword.styles'
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
 function normalizeApiError(error: unknown) {
+  // 비밀번호 변경 API 오류를 토스트에 보여줄 수 있는 메시지로 정리한다.
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (error as { response?: { data?: { detail?: string } } }).response;
     const detail = response?.data?.detail;
@@ -61,6 +62,7 @@ export default function ResetPasswordScreen() {
   }
 
   async function handleChange() {
+    // 현재 비밀번호와 새 비밀번호 조건이 모두 맞을 때만 변경 요청을 보낸다.
     if (!canSubmit) {
       return;
     }
@@ -97,6 +99,7 @@ export default function ResetPasswordScreen() {
     onToggleVisible: () => void,
     compact = false,
   ) {
+    // 현재, 새 비밀번호, 확인 입력칸을 같은 구조로 렌더링한다.
     return (
       <View style={[styles.passwordFieldBlock, compact ? styles.passwordFieldBlockCompact : null]}>
         <Text style={styles.fieldLabel}>{label}</Text>

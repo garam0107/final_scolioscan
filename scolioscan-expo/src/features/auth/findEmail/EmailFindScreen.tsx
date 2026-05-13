@@ -33,6 +33,7 @@ export default function EmailFindScreen() {
   }
 
   function getApiErrorMessage(error: unknown) {
+    // 계정 찾기 API 오류를 사용자에게 보여줄 안내 문구로 정리한다.
     if (typeof error === 'object' && error !== null && 'response' in error) {
       const response = (error as { response?: { data?: { detail?: string } } }).response;
       const detail = response?.data?.detail;
@@ -49,6 +50,7 @@ export default function EmailFindScreen() {
   }
 
   async function handleContinue() {
+    // 이름과 휴대폰 번호로 가입 계정이 있는지 확인한 뒤 문자 인증 단계로 이동한다.
     if (checkingAccount) {
       return;
     }

@@ -62,6 +62,7 @@ function TabIcon({
   OnIcon: React.ComponentType<SvgProps>;
   OffIcon: React.ComponentType<SvgProps>;
 }) {
+  // 현재 선택된 탭에 맞춰 활성 아이콘과 비활성 아이콘을 바꿔 그린다.
   const Icon = active ? OnIcon : OffIcon;
   return <Icon width={80} height={60} />;
 }
@@ -78,6 +79,7 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
 
         const active = state.index === index;
         const onPress = () => {
+          // 탭 이벤트를 먼저 발행해 상위 네비게이션에서 이동을 막을 수 있게 한다.
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,

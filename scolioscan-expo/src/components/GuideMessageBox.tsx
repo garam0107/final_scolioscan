@@ -8,6 +8,7 @@ type GuideMessageBoxProps = {
 };
 
 export default function GuideMessageBox({ messages }: GuideMessageBoxProps) {
+  // 여러 안내 문구를 같은 박스 스타일로 묶어 입력 화면에서 재사용한다.
   return (
     <View style={styles.guideBox}>
       {messages.map((message) => (
