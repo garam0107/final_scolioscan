@@ -5,7 +5,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
-  ImageBackground,
   Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -37,7 +36,7 @@ import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
-const banner1 = require('../../../assets/images/BannerImage1.png');
+const AD_PLACEHOLDER_SLIDES = ['ad-1', 'ad-2', 'ad-3'];
 
 
 type MeasurementItem = {
@@ -454,7 +453,7 @@ export default function HomeScreen() {
     }
   }, [loading, isAuthenticated, router]);
 
-  const banners = useMemo(() => [banner1, banner1, banner1], []);
+  const banners = useMemo(() => AD_PLACEHOLDER_SLIDES, []);
 
   const handleBannerMomentumEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const nextIndex = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
@@ -554,8 +553,8 @@ export default function HomeScreen() {
             ))}
           </View>
          
-
-          <View style={styles.bannerWrap}>
+          {/* 광고 슬라이드 배너 */}
+          {/* <View style={styles.bannerWrap}>
             <ScrollView
               ref={bannerScrollRef}
               horizontal
@@ -567,23 +566,28 @@ export default function HomeScreen() {
             >
               {[...banners, banners[0]].map((banner, index) => (
                 <View
-                  key={`home-banner-${index}`}
+                  key={`home-banner-${banner}-${index}`}
                   style={[styles.bannerSlide, { width: bannerWidth, height: bannerHeight }]}
                 >
-                  <ImageBackground
-                    source={banner}
-                    style={[styles.banner, { width: bannerWidth, height: bannerHeight }]}
-                    imageStyle={styles.bannerImage}
-                  >
+                  <View style={[styles.banner, { width: bannerWidth, height: bannerHeight }]}> */}
+                    {/* 광고 이미지가 준비되기 전까지 동일한 슬라이드 구조에서 준비중 상태만 보여준다. */}
+                    {/* <Text style={styles.bannerPlaceholderText}>광고 준비중</Text>
                     <View style={styles.bannerBadge}>
                       <Text style={styles.bannerBadgeText}>{(index % banners.length) + 1} / {banners.length}</Text>
                     </View>
-                  </ImageBackground>
+                  </View>
                 </View>
               ))}
             </ScrollView>
+          </View> */}
+          {/* 임시 광고 배너 */}
+          <View style={styles.bannerWrap}>
+            <View style={[styles.bannerPager, { width: bannerWidth, height: bannerHeight }]}>
+              <View style={[styles.banner, { width: bannerWidth, height: bannerHeight }]}>
+                <Text style={styles.bannerPlaceholderText}>광고 준비중</Text>
+              </View>
+            </View>
           </View>
-
           <View style={styles.weeklySection}>
             <Text style={styles.sectionHeading}>최근 1개월 측정 결과</Text>
             <View style={styles.weeklyResultGrid}>

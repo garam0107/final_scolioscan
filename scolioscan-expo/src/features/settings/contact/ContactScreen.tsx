@@ -2,34 +2,39 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, {useState} from "react";
+import type { SvgProps } from 'react-native-svg';
 import { contactAPI } from '@/src/api/contact';
 import styles from '@/src/features/settings/contact/contact.styles';
 import { Alert, View, Image, Text, TextInput, TouchableOpacity, Pressable } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import ContactBugIcon from '../../../../assets/icons/setting/contact_bug.svg';
+import ContactFeatureIcon from '../../../../assets/icons/setting/contact_feature.svg';
+import ContactOtherIcon from '../../../../assets/icons/setting/contact_other.svg';
+import ContactUxIcon from '../../../../assets/icons/setting/contact_ux.svg';
 
 type ContactType = 'bug' | 'feature' | 'ux' | 'etc';
 
-const CONTACT_TYPES: { key: ContactType; label: string; iconUri: string }[] = [
+const CONTACT_TYPES: { key: ContactType; label: string; Icon: React.ComponentType<SvgProps> }[] = [
 	{
 		key: 'bug',
 		label: '버그 신고',
-		iconUri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/whm8gu9b_expires_30_days.png',
+		Icon: ContactBugIcon,
 	},
 	{
 		key: 'feature',
 		label: '기능 제안',
-		iconUri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/ctlxr4df_expires_30_days.png',
+		Icon: ContactFeatureIcon,
 	},
 	{
 		key: 'ux',
 		label: 'UX 개선',
-		iconUri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/ym0x3cjf_expires_30_days.png',
+		Icon: ContactUxIcon,
 	},
 	{
 		key: 'etc',
 		label: '기타 문의',
-		iconUri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/by2ktXXBu3/lmiypq5w_expires_30_days.png',
+		Icon: ContactOtherIcon,
 	},
 ];
 
@@ -136,6 +141,7 @@ export default function ContactScreen() {
 						<View style={styles.row2}>
 							{CONTACT_TYPES.slice(0, 2).map((contactType, index) => {
 								const selected = selectedContactType === contactType.key;
+								const Icon = contactType.Icon;
 
 								return (
 									<TouchableOpacity
@@ -147,7 +153,7 @@ export default function ContactScreen() {
 										]}
 										onPress={() => setSelectedContactType(contactType.key)}
 									>
-										<Image source={{ uri: contactType.iconUri }} resizeMode="stretch" style={styles.image2} />
+										<Icon width={24} height={24} style={styles.image2} />
 										<Text style={styles.text3}>{contactType.label}</Text>
 									</TouchableOpacity>
 								);
@@ -156,6 +162,7 @@ export default function ContactScreen() {
 						<View style={styles.row3}>
 							{CONTACT_TYPES.slice(2).map((contactType, index) => {
 								const selected = selectedContactType === contactType.key;
+								const Icon = contactType.Icon;
 
 								return (
 									<TouchableOpacity
@@ -167,7 +174,7 @@ export default function ContactScreen() {
 										]}
 										onPress={() => setSelectedContactType(contactType.key)}
 									>
-										<Image source={{ uri: contactType.iconUri }} resizeMode="stretch" style={styles.image2} />
+										<Icon width={24} height={24} style={styles.image2} />
 										<Text style={styles.text3}>{contactType.label}</Text>
 									</TouchableOpacity>
 								);

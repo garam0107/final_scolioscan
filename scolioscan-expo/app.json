@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "scolioscan-expo",
-    "slug": "scolioscan-expo",
+    "name": "scolioscan",
+    "slug": "scolioscan",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icons/scolioscan_icon.png",
@@ -26,8 +26,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.garam0107.scolioscanexpo",
-      "usesCleartextTraffic": true
+      "package": "com.nextvine.scolioscan"
+
     },
     "web": {
       "output": "static",
@@ -36,6 +36,7 @@
     "plugins": [
       "expo-router",
       "./plugins/withShortCmakePath.js",
+       "./plugins/withCleartextTraffic.js",
       [
         "expo-splash-screen",
         {

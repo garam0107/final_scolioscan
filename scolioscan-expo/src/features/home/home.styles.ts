@@ -322,14 +322,23 @@ const styles = StyleSheet.create({
   banner: {
     height: 112,
     overflow: 'hidden',
+    backgroundColor: '#EAF7F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bannerImage: {
+  },
+  bannerPlaceholderText: {
+    fontFamily: 'PretendardVariable',
+    color: '#2C9696',
+    fontSize: 18,
+    fontWeight: '700',
   },
   bannerBadge: {
     position: 'absolute',
     right: 11,
     bottom: 9,
-    backgroundColor: 'rgba(255,255,255,0.20)',
+    backgroundColor: 'rgba(44, 150, 150, 0.12)',
     borderRadius: 8,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -338,7 +347,7 @@ const styles = StyleSheet.create({
     fontFamily: 'PretendardVariable',
     fontSize: 10,
     fontWeight: '500',
-    color: '#F5F7FA',
+    color: '#2C9696',
   },
   weeklySection: {
     marginTop: 20,
