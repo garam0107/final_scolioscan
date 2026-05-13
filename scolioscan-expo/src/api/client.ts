@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { assertNetworkRequestAllowed } from '@/src/lib/networkAccessGuard';
 import { getAccessToken } from '@/src/lib/tokenStorage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
@@ -7,7 +8,10 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
+  // 셀룰러 데이터 사용 설정이 꺼진 상태에서 모바일 데이터 요청이 나가지 않도록 공통 차단한다.
+  await assertNetworkRequestAllowed();
+
   const token = getAccessToken();
 
   config.headers = config.headers ?? {};

@@ -10,6 +10,11 @@ import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
 import { CameraGuidelineOverlay } from './components/CameraGuidelineOverlay';
 import { useMeasure2D } from './hooks/useMeasure2D';
 import { styles } from './measure2d.styles';
+import {
+  CELLULAR_DATA_BLOCKED_MESSAGE,
+  guardedFetch,
+  isCellularDataBlockedError,
+} from '@/src/lib/networkAccessGuard';
 import { getAccessToken } from '@/src/lib/tokenStorage';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
@@ -131,7 +136,7 @@ export default function Measure2DScreen() {
         imageUriPrefix: photoUri.slice(0, 48),
       });
 
-      const res = await fetch(`${API_BASE_URL}/curvature/`, {
+      const res = await guardedFetch(`${API_BASE_URL}/curvature/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token ?? ''}`,
@@ -158,7 +163,12 @@ export default function Measure2DScreen() {
       return curvature;
     } catch (error) {
       console.log('[measure2d] curvature 요청 예외', error);
-      showToast('서버 연결에 실패했습니다. 네트워크를 확인해주세요.', 'error');
+      showToast(
+        isCellularDataBlockedError(error)
+          ? CELLULAR_DATA_BLOCKED_MESSAGE
+          : '서버 연결에 실패했습니다. 네트워크를 확인해주세요.',
+        'error',
+      );
       return null;
     }
   }, [API_BASE_URL, markMeasurementChanged, showToast]);

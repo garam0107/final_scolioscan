@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { CELLULAR_DATA_BLOCKED_MESSAGE, isCellularDataBlockedError } from '@/src/lib/networkAccessGuard';
 import type { CameraCaptureSource, CapturedPhoto } from '../camera/cameraAdapter';
 import { evaluateLandmarks } from '../domain/landmarkRules';
 import type { GuideReferencePoints, NormalizedRect } from '../domain/guidelineGeometry';
@@ -133,10 +134,11 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
       return { photo, evaluation: nextEvaluation };
     } catch (error) {
       console.log('[measure2d] 랜드마크 분석 예외', error);
+      const message = isCellularDataBlockedError(error) ? CELLULAR_DATA_BLOCKED_MESSAGE : LANDMARK_ANALYZE_FAIL;
       const nextEvaluation: LandmarkEvaluation = {
         aligned: false,
         score: 0,
-        reasons: [LANDMARK_ANALYZE_FAIL],
+        reasons: [message],
       };
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };

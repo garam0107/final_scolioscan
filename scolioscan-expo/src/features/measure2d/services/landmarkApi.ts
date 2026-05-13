@@ -1,3 +1,4 @@
+import { guardedFetch } from '@/src/lib/networkAccessGuard';
 import type { LandmarksApiResponse } from '../types';
 
 const AIS_API_BASE_URL = process.env.EXPO_PUBLIC_AIS_API_BASE_URL;
@@ -19,7 +20,7 @@ export async function detectLandmarks(imageUri: string): Promise<LandmarksApiRes
     imageUriPrefix: imageUri.slice(0, 48),
   });
 
-  const response = await fetch(`${AIS_API_BASE_URL}/landmarks`, {
+  const response = await guardedFetch(`${AIS_API_BASE_URL}/landmarks`, {
     method: 'POST',
     body: formData,
   });

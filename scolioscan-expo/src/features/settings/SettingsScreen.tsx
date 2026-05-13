@@ -28,7 +28,7 @@ type SettingRowProps = {
 };
 
 const DEFAULT_TOGGLES: Record<ToggleKey, boolean> = {
-  cellular: false,
+  cellular: true,
   nightMode: false,
   importantAlarm: false,
   otherAlarm: false,

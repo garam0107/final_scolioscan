@@ -27,7 +27,11 @@ function parseStoredHour(value: string | null, fallback: number) {
 export async function loadCellularDataAllowed() {
   const savedValue = await SecureStore.getItemAsync(CELLULAR_DATA_ALLOWED_KEY);
 
-  // 저장된 값이 없으면 모바일 데이터 사용은 기본적으로 허용하지 않는다.
+  if (savedValue === null) {
+    // 저장된 값이 없으면 요즘 사용 패턴에 맞춰 모바일 데이터 사용을 기본 허용한다.
+    return true;
+  }
+
   return savedValue === '1';
 }
 

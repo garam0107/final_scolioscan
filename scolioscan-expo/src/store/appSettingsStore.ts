@@ -21,7 +21,7 @@ type AppSettingsState = {
 };
 
 export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
-  cellularDataAllowed: false,
+  cellularDataAllowed: true,
   nightModeEnabled: false,
   nightStartHour: 22,
   nightEndHour: 6,
