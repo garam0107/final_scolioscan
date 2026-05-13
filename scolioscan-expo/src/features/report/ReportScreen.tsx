@@ -30,6 +30,7 @@ import Svg, {
 import { curvatureAPI } from '@/src/api/curvature';
 import { measurementSetAPI } from '@/src/api/measurementSet';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
+import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { Colors } from '@/src/constants/theme';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { CurvatureResponse } from '@/src/types/curvature';
@@ -480,6 +481,7 @@ export default function ReportScreen() {
   const [periodDropdownVisible, setPeriodDropdownVisible] = useState(false);
   const [tabsWidth, setTabsWidth] = useState(0);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
+  const topScrollGradient = useTopScrollGradient();
   const animatedTab = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
@@ -616,6 +618,8 @@ export default function ReportScreen() {
       <SafeAreaView edges={['top', 'left', 'right' , ]} style={{ flex: 1 }}>
         <ScrollView
           style={{ flex: 1 }}
+          onScroll={topScrollGradient.onScroll}
+          scrollEventThrottle={16}
           contentContainerStyle={[
             styles.content,
             shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
@@ -807,6 +811,7 @@ export default function ReportScreen() {
           )}
         </ScrollView>
       </SafeAreaView>
+      <TopScrollGradient visible={topScrollGradient.visible} />
 
     </View>
   );

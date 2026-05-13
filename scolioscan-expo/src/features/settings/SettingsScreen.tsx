@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { useAuth } from '@/src/contexts/AuthContext';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
@@ -103,6 +104,7 @@ export default function SettingsScreen() {
   const [nightTimeTarget, setNightTimeTarget] = useState<NightTimeTarget | null>(null);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
+  const topScrollGradient = useTopScrollGradient();
 
   const profile = useMemo(
     // 세션의 사용자 정보가 없을 때도 설정 화면이 빈 값으로 깨지지 않게 기본값을 둔다.
@@ -157,10 +159,13 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
+    <View style={styles.screen}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: 20 }]}
         showsVerticalScrollIndicator={false}
+        onScroll={topScrollGradient.onScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
@@ -342,6 +347,8 @@ export default function SettingsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+      <TopScrollGradient visible={topScrollGradient.visible} />
+    </View>
   );
 }

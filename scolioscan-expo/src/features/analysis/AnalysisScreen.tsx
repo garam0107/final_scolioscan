@@ -18,6 +18,7 @@ import { curvatureAPI } from '@/src/api/curvature';
 import { measurementSetAPI } from '@/src/api/measurementSet';
 import { rotationAPI } from '@/src/api/rotation';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
+import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { AnalysisResponse } from '@/src/types/analysis';
@@ -442,6 +443,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const [reloadKey, setReloadKey] = useState(0);
   const [angleAnimationKey, setAngleAnimationKey] = useState(0);
   const progress = useRef(new Animated.Value(0)).current;
+  const topScrollGradient = useTopScrollGradient();
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
 
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
@@ -561,6 +563,8 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
         <ScrollView
           style={{ flex: 1 }}
           showsVerticalScrollIndicator
+          onScroll={topScrollGradient.onScroll}
+          scrollEventThrottle={16}
           contentContainerStyle={[
             styles.content,
             shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
@@ -733,6 +737,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
           )}
         </ScrollView>
       </SafeAreaView>
+      <TopScrollGradient visible={topScrollGradient.visible} />
     </View>
   );
 }
