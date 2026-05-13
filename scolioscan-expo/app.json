@@ -38,6 +38,7 @@
       "./plugins/withShortCmakePath.js",
       "./plugins/withCleartextTraffic.js",
       "./plugins/withBlockedAndroidPermissions.js",
+      "./plugins/withFinishBackButtonTask.js",
       [
         "expo-splash-screen",
         {
@@ -98,15 +99,8 @@
             ]
           },
           "ios": [
-            "./assets/fonts/Pretendard-Thin.ttf",
-            "./assets/fonts/Pretendard-ExtraLight.ttf",
-            "./assets/fonts/Pretendard-Light.ttf",
-            "./assets/fonts/Pretendard-Regular.ttf",
-            "./assets/fonts/Pretendard-Medium.ttf",
-            "./assets/fonts/Pretendard-SemiBold.ttf",
-            "./assets/fonts/Pretendard-Bold.ttf",
-            "./assets/fonts/Pretendard-ExtraBold.ttf",
-            "./assets/fonts/Pretendard-Black.ttf"
+            "./assets/fonts/PretendardVariable.ttf"
+
           ]
         }
       ],
@@ -123,7 +117,14 @@
         {
           "locationWhenInUsePermission": "계정 보안을 위해 현재 로그인 기기의 위치를 표시하는 데 위치 정보를 사용합니다."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "2D 측정을 위해 카메라로 자세를 촬영합니다."
+        }
       ]
+
     ],
     "experiments": {
       "typedRoutes": true,

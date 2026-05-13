@@ -17,32 +17,7 @@ import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 // const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
 
 const defaultFontFamily = 'PretendardVariable';
-// 상단바 아래 그라데이션
-// function TopSeparator() {
-//   const insets = useSafeAreaInsets();
 
-//   return (
-//     <View
-//       pointerEvents="none"
-//       style={[
-//         styles.topSeparator,
-//         {
-//           top: insets.top,
-//         },
-//       ]}
-//     >
-//       <Svg width="100%" height="100%" viewBox="0 0 100 12" preserveAspectRatio="none">
-//         <Defs>
-//           <LinearGradient id="topSeparatorGradient" x1="0" y1="0" x2="0" y2="1">
-//             <Stop offset="0%" stopColor="#8ED7D2" stopOpacity={0.35} />
-//             <Stop offset="100%" stopColor="#8ED7D2" stopOpacity={0} />
-//           </LinearGradient>
-//         </Defs>
-//         <Rect x="0" y="0" width="100" height="12" fill="url(#topSeparatorGradient)" />
-//       </Svg>
-//     </View>
-//   );
-// }
 
 function applyDefaultFont(component: typeof Text | typeof TextInput) {
   const defaultRender = (component as typeof Text & { render?: (...args: any[]) => any }).render;
@@ -138,17 +113,3 @@ export default function RootLayout() {
     </KeyboardProvider>
   );
 }
-// 상단바 아래 그라데이션 스타일 
-// const styles = StyleSheet.create({
-//   root: {
-//     flex: 1,
-//     backgroundColor: '#F5F7FB',
-//   },
-//   topSeparator: {
-//     position: 'absolute',
-//     left: 0,
-//     right: 0,
-//     height: 12,
-//     zIndex: 10,
-//   },
-// });
