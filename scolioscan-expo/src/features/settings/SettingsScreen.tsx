@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
@@ -104,7 +105,10 @@ export default function SettingsScreen() {
   const [nightTimeTarget, setNightTimeTarget] = useState<NightTimeTarget | null>(null);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
+  const scrollRef = useRef<ScrollView>(null);
   const topScrollGradient = useTopScrollGradient();
+  // 현재 선택된 설정 탭을 다시 누르면 설정 목록 맨 위로 이동한다.
+  useScrollToTop(scrollRef);
 
   const profile = useMemo(
     // 세션의 사용자 정보가 없을 때도 설정 화면이 빈 값으로 깨지지 않게 기본값을 둔다.
@@ -162,6 +166,7 @@ export default function SettingsScreen() {
     <View style={styles.screen}>
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[styles.content, { paddingBottom: 20 }]}
         showsVerticalScrollIndicator={false}
         onScroll={topScrollGradient.onScroll}

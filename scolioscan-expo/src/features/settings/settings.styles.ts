@@ -161,9 +161,9 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   rowTitle: {
-    color: '#24272C',
+    color: Colors.gray[900],
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: '500',
     lineHeight : 22
   },
   rowDescription: {

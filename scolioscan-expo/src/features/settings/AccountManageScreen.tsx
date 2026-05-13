@@ -689,7 +689,7 @@ export default function AccountManageScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.fixedFooter, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={[styles.fixedFooter, { paddingBottom: Math.max(insets.bottom, 60) }]}>
         <PrimaryButton
           title={saving ? '저장 중...' : '저장'}
           onPress={() => void handleSave()}

@@ -36,7 +36,7 @@ export default function DataResetSheet({ visible, onClose, onReset }: DataResetS
       title="데이터를 초기화할까요?"
       titleTone="danger"
       description="이 작업은 되돌릴 수 없어요"
-      height={380}
+      height={420}
       onClose={closeSheet}
       actions={[
         { label: '취소', onPress: closeSheet },

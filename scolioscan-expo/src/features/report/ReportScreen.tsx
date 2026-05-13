@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, {
@@ -480,9 +481,12 @@ export default function ReportScreen() {
   const [selectedTrendPeriod, setSelectedTrendPeriod] = useState<TrendPeriodKey>('month1');
   const [periodDropdownVisible, setPeriodDropdownVisible] = useState(false);
   const [tabsWidth, setTabsWidth] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
   const topScrollGradient = useTopScrollGradient();
   const animatedTab = useMemo(() => new Animated.Value(0), []);
+  // 현재 선택된 리포트 탭을 다시 누르면 메인 스크롤만 맨 위로 올린다.
+  useScrollToTop(scrollRef);
 
   useEffect(() => {
     let active = true;
@@ -617,6 +621,7 @@ export default function ReportScreen() {
     <View style={styles.screen}>
       <SafeAreaView edges={['top', 'left', 'right' , ]} style={{ flex: 1 }}>
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           onScroll={topScrollGradient.onScroll}
           scrollEventThrottle={16}

@@ -1,7 +1,7 @@
 import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fonts/museomoderno';
 import { useFonts as useExpoFonts } from 'expo-font';
 import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useScrollToTop } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -262,6 +262,7 @@ function MeasurementCard({
 
 export default function HomeScreen() {
   const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
   const bannerScrollRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const { loading, isAuthenticated, user } = useAuth();
@@ -440,6 +441,8 @@ export default function HomeScreen() {
       void loadLatestCurvature();
     }, [loadAlarmCount, loadLatestCurvature]),
   );
+  // 현재 선택된 홈 탭을 다시 누르면 홈 메인 스크롤만 맨 위로 이동한다.
+  useScrollToTop(scrollRef);
 
   useEffect(() => {
     if (pretendardError) {
@@ -522,6 +525,7 @@ export default function HomeScreen() {
         ) : null}
 
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, { paddingBottom:  0 }]}
         >

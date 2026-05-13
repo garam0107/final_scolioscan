@@ -10,7 +10,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
@@ -442,6 +442,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [angleAnimationKey, setAngleAnimationKey] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
   const progress = useRef(new Animated.Value(0)).current;
   const topScrollGradient = useTopScrollGradient();
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
@@ -554,6 +555,8 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
       }
     }, [analysis, startAnalysisAnimation]),
   );
+  // 현재 선택된 분석 탭을 다시 누르면 보던 위치와 상관없이 맨 위로 이동한다.
+  useScrollToTop(scrollRef);
 
   return (
     <View style={styles.screen}>
@@ -561,6 +564,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
         <StatusBar style="dark" backgroundColor="#F4F6F7" translucent={false} />
 
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           showsVerticalScrollIndicator
           onScroll={topScrollGradient.onScroll}
