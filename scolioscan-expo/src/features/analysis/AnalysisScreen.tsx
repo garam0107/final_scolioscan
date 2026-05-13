@@ -13,7 +13,6 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import type { SvgProps } from 'react-native-svg';
 
 import { curvatureAPI } from '@/src/api/curvature';
 import { measurementSetAPI } from '@/src/api/measurementSet';
@@ -25,6 +24,11 @@ import type { AnalysisResponse } from '@/src/types/analysis';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import type { RotationResponse } from '@/src/types/rotation';
+import {
+  getCurvePatternCopy,
+  getInfoCardCopy,
+  type InfoCardLevel,
+} from './analysisCopy';
 import styles from './analysis.styles';
 import { createAnalysisPose, VERTEBRA_COUNT } from './analysisPose';
 import {
@@ -34,10 +38,6 @@ import {
   getSeverityBarPercent,
   type DominantCurveInfo,
 } from './severity';
-import Grade1Image from '../../../assets/images/grade1.svg';
-import Grade2Image from '../../../assets/images/grade2.svg';
-import Grade3Image from '../../../assets/images/grade3.svg';
-import Grade4Image from '../../../assets/images/grade4.svg';
 import VertebraeType from '../../../assets/images/analysis/analysis_type_normal.svg'
 import VertebraeDoubleMajor from '../../../assets/images/analysis/Double_major.svg';
 import VertebraeDoubleThoracic from '../../../assets/images/analysis/Double_Thoracic.svg';
@@ -50,6 +50,14 @@ import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 const spineImage = require('../../../assets/images/spine.png');
 const SPINE_BONE_SIZE = 72;
 const SPINE_BONE_SPACING = 24;
+const SLOT_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const SLOT_REPEAT_COUNT = 3;
+// 슬롯 이동 거리는 digitFrame, digitCell 높이와 같아야 한 자리만 안정적으로 보인다.
+const SLOT_ITEM_HEIGHT = 38;
+const SLOT_DIGIT_ITEMS = Array.from(
+  { length: SLOT_REPEAT_COUNT + 1 },
+  () => SLOT_DIGITS,
+).flat();
 
 type AnalysisScreenProps = {
   analysisId?: string;
@@ -58,19 +66,6 @@ type AnalysisScreenProps = {
 
 // 2D, 3D 토글
 type ViewMode = '2d' | '3d';
-type InfoCardLevel = '정상' | '경도' | '중등도' | '고도';
-
-
-type InfoCardCopy = {
-  title: string;
-  body: string;
-  ImageComponent: React.ComponentType<SvgProps>;
-};
-
-type CurvePatternCopy = {
-  title: string;
-  body: string;
-};
 
 function getMeasurementDate(
   record:
@@ -123,76 +118,6 @@ function toAnalysisFromMeasurementSet(measurementSet: MeasurementSetResponse): A
   }
 
   return null;
-}
-
-// 분기별 척추측만증 표시 함수 — 4단계 (정상/경도/중등도/고도)
-function getInfoCardCopy(infoCardLevel: InfoCardLevel): InfoCardCopy {
-  switch (infoCardLevel) {
-    case '정상':
-      return {
-        title: '정상 범위를 유지한 운동',
-        body: '50분마다 간단한 스트레칭을 하고, 수영, 요가, 필라테스 등을 도전해보세요.',
-        ImageComponent: Grade1Image,
-      };
-    case '경도':
-      return {
-        title: '경도 척추측만증이란?',
-        body: "콥각도(cobb's angle)가 15도 이상으로 측정된 상태예요. 자세 습관을 관리하면서 변화를 확인해 주세요.",
-        ImageComponent: Grade2Image,
-      };
-    case '중등도':
-      return {
-        title: '중등도 척추측만증이란?',
-        body: "콥각도(cobb's angle)가 25도 이상으로 높아진 상태예요. 전문적인 진료와 관리 방향을 함께 확인해 주세요.",
-        ImageComponent: Grade3Image,
-      };
-    case '고도':
-      return {
-        title: '고도 척추측만증이란?',
-        body: "콥각도(cobb's angle)가 45도 이상으로 높아진 상태예요. 눈에 띌 정도로 심한 외관 변형과 심한 경우 흉곽 압박으로 심폐기능 이상을 초래할 수 있습니다.",
-        ImageComponent: Grade4Image,
-      };
-  }
-}
-
-function getCurvePatternCopy(dominantCurve: DominantCurveInfo): CurvePatternCopy {
-  switch (dominantCurve.key) {
-    case 'Normal':
-      return {
-        title: '정상 범위',
-        body: '현재는 뚜렷한 지배 만곡 패턴이 보이지 않아요.',
-      };
-    case 'Thoracic':
-      return {
-        title: '흉추 만곡',
-        body: '등 부위 중심으로 만곡이 나타나는 형태예요.',
-      };
-    case 'Double Thoracic':
-      return {
-        title: '이중 흉추 만곡',
-        body: '상부와 주 흉추에 함께 만곡이 나타나는 형태예요.',
-      };
-    case 'Double major':
-      return {
-        title: '흉추-요추 만곡 (S자형)',
-        body: '등과 허리에 반대 방향의 만곡이 있는 S자 형태예요.',
-      };
-    case 'Triple curve':
-      return {
-        title: '삼중 만곡',
-        body: '상부 흉추, 주 흉추, 요추에 모두 만곡이 나타나는 형태예요.',
-      };
-    case 'Lumbar':
-      return {
-        title: '요추 만곡',
-        body: '허리 부위 중심으로 만곡이 나타나는 형태예요.',
-      };
-    case 'Unknown':
-      return {
-        title: '비표준 만곡',
-        body: '일반적인 분류에 딱 맞지 않는 만곡 패턴이에요.',
-      };
-  }
 }
 
 function getDominantCurveImageComponent(dominantCurve: DominantCurveInfo) {
@@ -256,6 +181,65 @@ function regionDisplayLabel(key: 'upper' | 'main' | 'lumbar'): string {
   }
 }
 
+function SlotDigit({
+  digit,
+  active,
+  animationKey,
+  order,
+}: {
+  digit: number;
+  active: boolean;
+  animationKey: number;
+  order: number;
+}) {
+  const step = useRef(new Animated.Value(0)).current;
+  const maxStep = SLOT_REPEAT_COUNT * SLOT_DIGITS.length + 9;
+  const targetStep = SLOT_REPEAT_COUNT * SLOT_DIGITS.length + digit;
+
+  useEffect(() => {
+    step.stopAnimation();
+
+    if (!active) {
+      step.setValue(targetStep);
+      return;
+    }
+
+    // 숫자 슬롯은 0에서 여러 바퀴를 돈 뒤 목표 숫자에서 멈추게 해서 실제 슬롯머신처럼 보이게 한다.
+    step.setValue(0);
+    const animation = Animated.timing(step, {
+      toValue: targetStep,
+      duration: 980 + order * 120,
+      delay: order * 70,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    });
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [active, animationKey, order, step, targetStep]);
+
+  const translateY = step.interpolate({
+    inputRange: [0, maxStep],
+    outputRange: [0, -maxStep * SLOT_ITEM_HEIGHT],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={styles.digitFrame} pointerEvents="none">
+      <Animated.View style={[styles.digitWheel, { transform: [{ translateY }] }]}>
+        {SLOT_DIGIT_ITEMS.map((item, index) => (
+          <Text key={`${index}-${item}`} style={styles.digitCell}>
+            {item}
+          </Text>
+        ))}
+      </Animated.View>
+    </View>
+  );
+}
+
 function CountUpNumber({
   value,
   active,
@@ -266,38 +250,23 @@ function CountUpNumber({
   animationKey: number;
 }) {
   // 분석 탭 재진입 시 animationKey가 바뀌면 숫자도 다시 0부터 올라간다.
-  const target = Math.max(0, Math.abs(value));
-  const [displayValue, setDisplayValue] = useState(target);
+  const target = Math.max(0, Math.round(Math.abs(value)));
+  const digits = String(target).split('').map((digit) => Number(digit));
 
-  useEffect(() => {
-    if (!active) {
-      setDisplayValue(target);
-      return;
-    }
-
-    const duration = 650;
-    const startTime = Date.now();
-    let rafId = 0;
-
-    const tick = () => {
-      const progress = Math.min(1, (Date.now() - startTime) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayValue(target * eased);
-
-      if (progress < 1) {
-        rafId = requestAnimationFrame(tick);
-      }
-    };
-
-    setDisplayValue(0);
-    rafId = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-    };
-  }, [active, animationKey, target]);
-
-  return <Text style={styles.metricValue}>{formatDegree(displayValue)}</Text>;
+  return (
+    <View style={styles.metricValueSlot} accessibilityLabel={formatDegree(target)}>
+      {digits.map((digit, index) => (
+        <SlotDigit
+          key={`${digits.length}-${index}`}
+          digit={digit}
+          active={active}
+          animationKey={animationKey}
+          order={index}
+        />
+      ))}
+      <Text style={styles.degree}>{'\u00B0'}</Text>
+    </View>
+  );
 }
 
 function ArcMarker({

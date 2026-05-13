@@ -134,8 +134,8 @@ export default function PasswordMessageScreen() {
         <View style={styles.footer}>
           <PrimaryButton
             title="동의 및 휴대전화 번호 확인"
-            // onPress={handleMessagePress}
-            onPress={() => router.push('/settings/password-reset') }
+            onPress={handleMessagePress}
+            // onPress={() => router.push('/settings/password-reset') }
             height={48}
             backgroundColor="#5F9F9D"
             borderRadius={6}

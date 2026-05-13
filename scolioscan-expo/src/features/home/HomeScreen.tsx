@@ -529,7 +529,8 @@ export default function HomeScreen() {
           <View style={styles.greetingBlock}>
             <View style={styles.greetingTitleRow}>
               <Text style={styles.greetingTitle}>{displayName}님 안녕하세요.</Text>
-              <PrimaryButton
+              {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
+              {/* <PrimaryButton
                 title="분석중 보기"
                 onPress={() => router.push('/measure-loading-preview')}
                 width={94}
@@ -537,7 +538,7 @@ export default function HomeScreen() {
                 backgroundColor="#2C9696"
                 borderRadius={6}
                 textStyle={styles.previewButtonText}
-              />
+              /> */}
             </View>
             <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>
