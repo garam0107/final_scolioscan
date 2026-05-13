@@ -242,7 +242,7 @@ function AiDoctorCard() {
 }
 
 function formatDegree(value: number) {
-  return `${Math.abs(value).toFixed(1)}°`;
+    return `${Math.round(Math.abs(value))}°`;
 }
 
 function regionDisplayLabel(key: 'upper' | 'main' | 'lumbar'): string {

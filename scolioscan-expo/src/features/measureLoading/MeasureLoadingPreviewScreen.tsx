@@ -165,7 +165,7 @@ export default function MeasureLoadingPreviewScreen() {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 6500);
+    }, 10000);
 
     return () => clearTimeout(completeTimer);
   }, [buttonOpacity, buttonTranslateY]);
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 16,
+    bottom: 60,
     alignItems: 'center',
   },
   buttonText: {

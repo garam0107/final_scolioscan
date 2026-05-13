@@ -282,9 +282,7 @@ export default function ScoliometerScreen() {
       await rotationAPI.createAnalysis(buildRotationPayload(nextSamples, activeCurvatureMeasurementId));
       markMeasurementChanged();
       resetSession();
-      Alert.alert('측정 완료', '척추측만계 측정이 저장되었습니다.', [
-        { text: '확인', onPress: () => router.replace('/home') },
-      ]);
+      router.replace('/measure-loading-preview');
     } catch {
       Alert.alert('저장 실패', '척추측만계 측정을 저장하지 못했습니다. 다시 시도해주세요.');
     } finally {
