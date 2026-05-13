@@ -32,7 +32,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
 import styles from '@/src/features/home/home.styles';
 import type { CurvatureResponse } from '@/src/types/curvature';
-import ThreeDCameraIcon from '../../../assets/icons/3D_camera.svg';
+import ThreeDCameraIcon from '../../../assets/icons/home/3d_sub.svg';
 import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -713,8 +713,8 @@ export default function HomeScreen() {
 
                 <Pressable
                   onPress={() => {
-                    setIsProModalVisible(false);
-                    Alert.alert('준비중', '구독 페이지는 다음 단계에서 연결할게요.');
+                  router.push('/settings/subscribe')
+                  setIsProModalVisible(false)
                   }}
                   style={({ pressed }) => [styles.proModalButton, pressed && styles.pressed]}
                 >
