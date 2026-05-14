@@ -699,6 +699,11 @@ const styles = StyleSheet.create({
     width: '100%',
     minHeight: 42,
   },
+  measurementValueRowWide: {
+    // 태블릿에서는 카드 폭만 넓어지고 값 묶음은 모바일과 같은 간격으로 보이도록 제한한다.
+    width: 106,
+    alignSelf: 'center',
+  },
   measurementValueBlock: {
     alignItems: 'center',
     justifyContent: 'flex-start',

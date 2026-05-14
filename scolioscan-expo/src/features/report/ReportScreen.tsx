@@ -74,6 +74,7 @@ const FIGMA_MEASUREMENT_SEPARATOR_TOTAL_WIDTH = 2;
 const FIGMA_MEASUREMENT_REGION_GAP_TOTAL = 40;
 const FIGMA_MEASUREMENT_VALUE_GAP = 16;
 const MIN_MEASUREMENT_VALUE_WIDTH = 66;
+const WIDE_LAYOUT_MIN_WIDTH = 600;
 
 const CURVATURE_METRIC_LABELS = [
   '상부 흉추만곡',
@@ -343,6 +344,7 @@ function ReportItem({
 }) {
   const isDisabled = !item.navigationId;
   const { width } = useWindowDimensions();
+  const isWideLayout = width >= WIDE_LAYOUT_MIN_WIDTH;
   const { curvature, rotation } = item.measurementSet;
   const cardInnerWidth = Math.max(
     0,
@@ -411,7 +413,13 @@ function ReportItem({
               />
             </View>
 
-              <View style={[styles.measurementValueRow, { gap: valueGap }]}>
+              <View
+                style={[
+                  styles.measurementValueRow,
+                  isWideLayout ? styles.measurementValueRowWide : null,
+                  { gap: valueGap },
+                ]}
+              >
                 <View style={styles.measurementValueBlock}>
                   <Text style={styles.measurementValueLabel}>만곡도</Text>
                   <Text

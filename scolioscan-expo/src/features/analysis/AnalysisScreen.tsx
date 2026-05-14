@@ -51,6 +51,10 @@ import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 const spineImage = require('../../../assets/images/spine.png');
 const SPINE_BONE_SIZE = 72;
 const SPINE_BONE_SPACING = 24;
+const WIDE_LAYOUT_MIN_WIDTH = 600;
+const BASE_STAGE_WIDTH = 420;
+const BASE_STAGE_HEIGHT = 380;
+const STAGE_HORIZONTAL_PADDING = 20;
 const SLOT_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const SLOT_REPEAT_COUNT = 3;
 // 슬롯 이동 거리는 digitFrame, digitCell 높이와 같아야 한 자리만 안정적으로 보인다.
@@ -67,6 +71,17 @@ type AnalysisScreenProps = {
 
 // 2D, 3D 토글
 type ViewMode = '2d' | '3d';
+
+function getWideStageScale(width: number, height: number) {
+  if (width < WIDE_LAYOUT_MIN_WIDTH) return 1;
+
+  const availableStageWidth = Math.max(1, width - 32 - STAGE_HORIZONTAL_PADDING);
+  const widthScale = availableStageWidth / BASE_STAGE_WIDTH;
+  const heightScale = Math.max(1, (height - 180) / BASE_STAGE_HEIGHT);
+
+  // 태블릿에서는 화면을 꽉 쓰되 첫 화면에서 과하게 커지지 않도록 가로/세로 중 작은 배율을 사용한다.
+  return Math.max(1, Math.min(widthScale, heightScale));
+}
 
 function getMeasurementDate(
   record:
@@ -277,6 +292,8 @@ function ArcMarker({
   progress,
   stageWidth,
   stageHeight,
+  boneSize,
+  spacing,
 }: {
   x: number;
   vertebraIndex: number;
@@ -284,12 +301,14 @@ function ArcMarker({
   progress: Animated.Value;
   stageWidth: number;
   stageHeight: number;
+  boneSize: number;
+  spacing: number;
 }) {
   const size = stageWidth * radiusRatio * 2;
-  const rigHeight = (VERTEBRA_COUNT - 1) * SPINE_BONE_SPACING + SPINE_BONE_SIZE;
+  const rigHeight = (VERTEBRA_COUNT - 1) * spacing + boneSize;
   const rigTop = (stageHeight - rigHeight) / 2;
   // 원의 세로 중심은 척추뼈를 놓는 공식과 같은 기준을 사용해 기본 위치와 움직임을 맞춘다.
-  const centerY = rigTop + vertebraIndex * SPINE_BONE_SPACING + SPINE_BONE_SIZE / 2;
+  const centerY = rigTop + vertebraIndex * spacing + boneSize / 2;
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, x] });
 
   return (
@@ -319,6 +338,8 @@ function MetricBlock({
   side,
   top,
   xOffset,
+  xOffsetScale,
+  sideInset,
   active,
   animationKey,
   progress,
@@ -329,11 +350,13 @@ function MetricBlock({
   side: 'left' | 'right';
   top: number;
   xOffset: number;
+  xOffsetScale: number;
+  sideInset: number;
   active: boolean;
   animationKey: number;
   progress: Animated.Value;
 }) {
-  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, xOffset] });
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, xOffset * xOffsetScale] });
 
   return (
     <Animated.View
@@ -341,8 +364,8 @@ function MetricBlock({
         styles.metric,
         {
           top,
-          left: side === 'left' ? 52 : undefined,
-          right: side === 'right' ? 52 : undefined,
+          left: side === 'left' ? sideInset : undefined,
+          right: side === 'right' ? sideInset : undefined,
           transform: [{ translateX }],
         },
       ]}
@@ -352,8 +375,8 @@ function MetricBlock({
         <View
   style={[
     styles.valueRow,
-    metricKey === 'main' && { transform: [{ translateX: 8 }] },
-    metricKey === 'lumbar' && { transform: [{ translateX: 20 }] },
+    metricKey === 'main' && { transform: [{ translateX: 8 * xOffsetScale }] },
+    metricKey === 'lumbar' && { transform: [{ translateX: 20 * xOffsetScale }] },
   ]}
 >
   <CountUpNumber value={value} active={active} animationKey={animationKey} />
@@ -407,13 +430,15 @@ function SpineRig({
   progress,
   slices,
   stageWidth,
+  boneSize,
+  spacing,
 }: {
   progress: Animated.Value;
   slices: { x: number; rotation: number }[];
   stageWidth: number;
+  boneSize: number;
+  spacing: number;
 }) {
-  const boneSize = SPINE_BONE_SIZE;
-  const spacing = SPINE_BONE_SPACING;
   const rigHeight = (VERTEBRA_COUNT - 1) * spacing + boneSize;
   const left = (stageWidth - boneSize) / 2;
 
@@ -435,7 +460,7 @@ function SpineRig({
 }
 
 export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { user } = useAuth();
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -448,9 +473,14 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
 
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
+  const wideStageScale = getWideStageScale(width, height);
+  const isWideLayout = width >= WIDE_LAYOUT_MIN_WIDTH;
   const cardWidth = Math.min(width - 24, 440);
-  const stageWidth = cardWidth - 20;
-  const stageHeight = 380;
+  const stageWidth = isWideLayout ? BASE_STAGE_WIDTH * wideStageScale : cardWidth - 20;
+  const stageHeight = isWideLayout ? BASE_STAGE_HEIGHT * wideStageScale : BASE_STAGE_HEIGHT;
+  const stageBoneSize = SPINE_BONE_SIZE * wideStageScale;
+  const stageBoneSpacing = SPINE_BONE_SPACING * wideStageScale;
+  const metricSideInset = isWideLayout ? 52 * wideStageScale : 52;
   const summaryName = user?.name?.trim() || '회원';
   const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
   const mainValue = pose.metrics.find((metric) => metric.key === 'main')?.value ?? 0;
@@ -588,21 +618,47 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
 
           <View style={[styles.stage, { height: stageHeight }]}>
             <View style={styles.spineLayer}>
-              <SpineRig progress={progress} slices={pose.vertebrae} stageWidth={stageWidth} />
+              <SpineRig
+                progress={progress}
+                slices={pose.vertebrae}
+                stageWidth={stageWidth}
+                boneSize={stageBoneSize}
+                spacing={stageBoneSpacing}
+              />
             </View>
 
             <View style={styles.overlayLayer} pointerEvents="none">
-              {pose.arcs.map((arc) => (
-                <ArcMarker
-                  key={arc.key}
-                  x={arc.x}
-                  vertebraIndex={arc.vertebraIndex}
-                  radiusRatio={arc.radiusRatio}
-                  progress={progress}
-                  stageWidth={stageWidth}
-                  stageHeight={stageHeight}
-                />
-              ))}
+              {isWideLayout ? (
+                <View style={[styles.overlayStage, { width: stageWidth }]}>
+                  {pose.arcs.map((arc) => (
+                    <ArcMarker
+                      key={arc.key}
+                      x={arc.x * wideStageScale}
+                      vertebraIndex={arc.vertebraIndex}
+                      radiusRatio={arc.radiusRatio}
+                      progress={progress}
+                      stageWidth={stageWidth}
+                      stageHeight={stageHeight}
+                      boneSize={stageBoneSize}
+                      spacing={stageBoneSpacing}
+                    />
+                  ))}
+                </View>
+              ) : (
+                pose.arcs.map((arc) => (
+                  <ArcMarker
+                    key={arc.key}
+                    x={arc.x}
+                    vertebraIndex={arc.vertebraIndex}
+                    radiusRatio={arc.radiusRatio}
+                    progress={progress}
+                    stageWidth={stageWidth}
+                    stageHeight={stageHeight}
+                    boneSize={stageBoneSize}
+                    spacing={stageBoneSpacing}
+                  />
+                ))
+              )}
             </View>
 
             <View style={styles.textLayer}>
@@ -615,6 +671,8 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
                   side={metric.side}
                   top={metric.topRatio * stageHeight}
                   xOffset={metric.xOffset}
+                  xOffsetScale={wideStageScale}
+                  sideInset={metricSideInset}
                   active={Boolean(analysis)}
                   animationKey={angleAnimationKey}
                   progress={progress}
@@ -712,7 +770,19 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             </View>
           </View>
 
-          <View style={styles.dominantCurveCard}>
+          <View
+            style={[
+              styles.dominantCurveCard,
+              isWideLayout
+                ? {
+                    minHeight: 136 * wideStageScale,
+                    paddingLeft: 14 * wideStageScale,
+                    paddingRight: 10 * wideStageScale,
+                    paddingVertical: 8 * wideStageScale,
+                  }
+                : null,
+            ]}
+          >
             <View style={styles.dominantCurveText}>
               <Text style={styles.dominantCurveTitle}>척추 지배만곡 유형</Text>
 
@@ -729,7 +799,18 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
               </Pressable>
             </View>
 
-            <View style={styles.dominantCurveImageWrap}>
+            <View
+              style={[
+                styles.dominantCurveImageWrap,
+                isWideLayout
+                  ? {
+                      width: 120 * wideStageScale,
+                      height: 140 * wideStageScale,
+                      marginRight: -14 * wideStageScale,
+                    }
+                  : null,
+              ]}
+            >
               <DominantCurveImageComponent preserveAspectRatio="xMidYMid meet" />
             </View>
           </View>
