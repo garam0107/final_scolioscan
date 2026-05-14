@@ -755,6 +755,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
+  screenLoadingBox: {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 12,
+},
+
+screenLoadingText: {
+  color: '#6B7280',
+  fontFamily: 'PretendardVariable',
+  fontSize: 14,
+  fontWeight: '500',
+},
 });
 
 export default styles;

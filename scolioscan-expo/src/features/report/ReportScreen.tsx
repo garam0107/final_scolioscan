@@ -623,6 +623,18 @@ export default function ReportScreen() {
 
   const hasCurvatureData = curvatures.length > 0;
   const shouldShowMeasurementRequired = !loading && !hasCurvatureData;
+  if (loading) {
+  return (
+    <View style={styles.screen}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+        <View style={styles.screenLoadingBox}>
+          <ActivityIndicator color="#69B7BC" />
+          <Text style={styles.screenLoadingText}>리포트를 불러오는 중입니다...</Text>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+}
 
   return (
     <View style={styles.screen}>

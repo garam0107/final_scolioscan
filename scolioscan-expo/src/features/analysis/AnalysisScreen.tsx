@@ -9,6 +9,7 @@ import {
   Text,
   View,
   useWindowDimensions,
+  ActivityIndicator
 } from 'react-native';
 import { useFocusEffect, useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -587,6 +588,19 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   );
   // 현재 선택된 분석 탭을 다시 누르면 보던 위치와 상관없이 맨 위로 이동한다.
   useScrollToTop(scrollRef);
+  if (loading) {
+    return (
+      <View style={styles.screen}>
+        <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+          <StatusBar style="dark" backgroundColor="#F4F6F7" translucent={false} />
+          <View style={styles.loadingBox}>
+            <ActivityIndicator color="#69B7BC" />
+            <Text style={styles.loadingText}>분석 결과를 불러오는 중입니다...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
