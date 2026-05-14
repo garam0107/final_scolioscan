@@ -517,6 +517,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     overflow: 'hidden',
   },
+  aiExerciseThumbImage: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.76,
+  },
   aiExerciseTextWrap: {
     flex: 1,
     minWidth: 0,
