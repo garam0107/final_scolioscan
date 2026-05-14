@@ -1,0 +1,26 @@
+# EAS archive 기준이 Git 루트라 백엔드와 로컬 산출물을 제외한다.
+scolioscan-pro-fastapi/
+
+# Expo 앱의 로컬 설치/네이티브 빌드 산출물은 EAS 서버에서 다시 생성된다.
+scolioscan-expo/node_modules/
+scolioscan-expo/android/
+scolioscan-expo/ios/
+scolioscan-expo/.expo/
+scolioscan-expo/.idea/
+scolioscan-expo/.vscode/
+scolioscan-expo/eas-archive-check/
+
+# 루트 로컬 파일
+.git/
+.idea/
+.vscode/
+.env
+.env.*
+
+# 로그/OS 파일
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db

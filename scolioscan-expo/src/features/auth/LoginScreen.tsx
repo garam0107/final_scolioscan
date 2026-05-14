@@ -374,7 +374,7 @@ export default function LoginScreen() {
                 disabled={loading || authLoading}
                 hitSlop={8}
               >
-                <Text style={styles.findAccountText}>아이디 찾기</Text>
+                <Text style={styles.findAccountText}>이메일 찾기</Text>
               </Pressable>
               <Text style={styles.findAccountDivider}>|</Text>
               <Pressable

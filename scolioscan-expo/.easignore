@@ -1,0 +1,32 @@
+# Git 저장소 루트가 상위 폴더라 EAS archive에 백엔드가 함께 들어가지 않도록 제외한다.
+scolioscan-pro-fastapi/
+
+# EAS 빌드에는 설치 산출물과 로컬 빌드 산출물이 필요하지 않다.
+scolioscan-expo/node_modules/
+scolioscan-expo/android/
+scolioscan-expo/ios/
+scolioscan-expo/.expo/
+scolioscan-expo/.idea/
+scolioscan-expo/.vscode/
+scolioscan-expo/eas-archive-check/
+
+# 앱 폴더를 프로젝트 루트로 인식하는 경우에도 같은 로컬 산출물을 제외한다.
+node_modules/
+android/
+ios/
+.expo/
+.idea/
+.vscode/
+eas-archive-check/
+
+# 로컬 환경변수와 로그 파일은 EAS 환경변수/빌드 로그로 대체한다.
+.env
+.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor 파일
+.DS_Store
+Thumbs.db

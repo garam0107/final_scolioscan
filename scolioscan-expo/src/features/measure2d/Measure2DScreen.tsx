@@ -27,6 +27,8 @@ export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
   const permissionRequestingRef = useRef(false);
   const router = useRouter();
+  // 카메라 준비 상태
+  const [cameraReady, setCameraReady] = useState(false);
   const [permission, requestPermission, getPermission] = useCameraPermissions();
   const [showGuideText, setShowGuideText] = useState(true);
   const [stageLayout, setStageLayout] = useState({ width: 0, height: 0 });
@@ -65,6 +67,7 @@ export default function Measure2DScreen() {
     camera,
     guidePoints: guidelineGeometry?.referencePoints ?? null,
     guideRect: guidelineGeometry?.rect ?? null,
+    cameraReady
   });
 
   const showToast = useCallback((message: string, tone: ToastTone = 'info') => {
@@ -298,7 +301,16 @@ export default function Measure2DScreen() {
           setStageLayout({ width, height });
         }}
       >
-        <CameraView ref={cameraRef} style={styles.camera} facing="back" animateShutter={false} />
+        <CameraView ref={cameraRef} style={styles.camera} facing="back" animateShutter={false} 
+          onCameraReady={() => {
+            setCameraReady(true);
+          }}
+          onMountError={(event) => {
+            setCameraReady(false);
+            console.error('[measure2d] 카메라 시작 실패', event.message);
+            showToast('카메라를 시작하지 못했습니다. 앱을 다시 열어주세요.', 'error');
+          }}
+        />
         {guidelineGeometry ? (
           <CameraGuidelineOverlay
             width={stageLayout.width}
@@ -329,9 +341,9 @@ export default function Measure2DScreen() {
 
         <View style={styles.bottomBar}>
           <Pressable
-            style={[styles.shutterButton, (loading || manualSubmitting) && styles.shutterButtonDisabled]}
+            style={[styles.shutterButton, (!cameraReady || loading || manualSubmitting) && styles.shutterButtonDisabled]}
             onPress={handlePressCapture}
-            disabled={loading || manualSubmitting}
+            disabled={!cameraReady || loading || manualSubmitting}
           >
             <View style={styles.shutterInner} />
           </Pressable>

@@ -11,6 +11,7 @@ type UseMeasure2DParams = {
   camera: CameraCaptureSource;
   guidePoints: GuideReferencePoints | null;
   guideRect: NormalizedRect | null;
+  cameraReady: boolean;
 };
 
 type ManualCaptureResult = {
@@ -28,6 +29,36 @@ const AUTO_CHECK_INTERVAL_MS = 1500;
 const COUNTDOWN_TICK_MS = 250;
 const AUTO_HOLD_MS = 3000;
 const MANUAL_WAIT_TIMEOUT_MS = 1500;
+// 촬영 타임아웃 상수
+const CAMERA_CAPTURE_TIMEOUT_MS = 5000;
+
+
+// 타임아웃 헬퍼
+async function capturePhotoWithTimeout(
+  camera: CameraCaptureSource,
+  options: Parameters<CameraCaptureSource['capturePhoto']>[0],
+): Promise<CapturedPhoto | null> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      camera.capturePhoto(options),
+      new Promise<CapturedPhoto | null>((resolve) => {
+        timeoutId = setTimeout(() => {
+          console.error('[measure2d] 카메라 촬영 시간 초과', {
+            timeoutMs: CAMERA_CAPTURE_TIMEOUT_MS,
+          });
+          resolve(null);
+        }, CAMERA_CAPTURE_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 // 자동 체크는 서버 부하를 줄이기 위해 낮은 화질로 보내고, 실제 분석용 사진은 더 높은 화질로 촬영한다.
 const AUTO_CHECK_QUALITY = 0.35;
 const MANUAL_CHECK_QUALITY = 0.8;
@@ -37,7 +68,7 @@ const LANDMARK_NOT_FOUND = '사람을 찾지 못했습니다.';
 const LANDMARK_ANALYZE_FAIL = '랜드마크 분석에 실패했습니다.';
 const AUTO_CAPTURE_SUCCESS = '좋아요. 이 자세로 촬영할게요!';
 
-export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DParams) {
+export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: UseMeasure2DParams) {
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<LandmarkEvaluation | null>(null);
   const [autoAligned, setAutoAligned] = useState(false);
@@ -87,7 +118,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
   const analyzeCapture = useCallback(async (quality: number, skipProcessing: boolean): Promise<ManualCaptureResult | null> => {
     // 촬영한 사진을 랜드마크 서버에 보내고, 가이드 기준 안에 들어왔는지 같은 평가 규칙으로 판정한다.
     // 수동 촬영과 자동 체크가 같은 분석 경로를 쓰도록 촬영과 랜드마크 판정을 한곳에서 처리한다.
-    const photo = await camera.capturePhoto({
+  const photo = await capturePhotoWithTimeout(camera, {
       quality,
       skipProcessing,
     });
@@ -150,7 +181,11 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
     // 사용자가 직접 촬영하면 자동 체크 루프와 겹치지 않도록 잠시 기다린 뒤 수동 촬영을 우선한다.
     manualInProgressRef.current = true;
     resetAutoAlignment();
-
+    if (!cameraReady) {
+      console.error('[measure2d] 수동 촬영 중단: 카메라가 아직 준비되지 않음');
+      manualInProgressRef.current = false;
+      return null;
+    }
     const waitStart = Date.now();
     while (captureInFlightRef.current && Date.now() - waitStart < MANUAL_WAIT_TIMEOUT_MS) {
       await new Promise((resolve) => setTimeout(resolve, 60));
@@ -170,10 +205,10 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
       setLoading(false);
       manualInProgressRef.current = false;
     }
-  }, [analyzeCapture, loading, resetAutoAlignment]);
+  }, [analyzeCapture, cameraReady, loading, resetAutoAlignment]);
 
   useEffect(() => {
-    if (!guidePoints || !guideRect) {
+    if (!cameraReady || !guidePoints || !guideRect) {
       resetAutoAlignment();
       lastAutoReasonRef.current = null;
       return;
@@ -228,19 +263,22 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
           // 정렬 상태가 충분히 유지된 순간에만 고품질 최종 사진을 촬영해 다음 분석 단계로 넘긴다.
           // 3초 동안 기준을 유지했을 때만 최종 사진을 다시 촬영해서 실제 척추측만 분석으로 넘긴다.
           autoCaptureCompletedRef.current = true;
-          const finalPhoto = await camera.capturePhoto({
+          const finalPhoto = await capturePhotoWithTimeout(camera, {
             quality: AUTO_FINAL_QUALITY,
             skipProcessing: true,
             shutterSound: false,
           });
 
           if (finalPhoto?.uri && !disposed) {
-            setAutoCaptureResult({
-              photo: finalPhoto,
-              evaluation: result.evaluation,
-            });
-            emitAutoToast(AUTO_CAPTURE_SUCCESS, 'success');
-          }
+              setAutoCaptureResult({
+                photo: finalPhoto,
+                evaluation: result.evaluation,
+              });
+              emitAutoToast(AUTO_CAPTURE_SUCCESS, 'success');
+            } else {
+              autoCaptureCompletedRef.current = false;
+            }
+
 
           resetAutoAlignment();
         }
@@ -261,7 +299,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect }: UseMeasure2DPar
       disposed = true;
       clearInterval(timer);
     };
-  }, [analyzeCapture, camera, emitAutoToast, guidePoints, guideRect, resetAutoAlignment]);
+  }, [analyzeCapture, camera,cameraReady, emitAutoToast, guidePoints, guideRect, resetAutoAlignment]);
 
   useEffect(() => {
     if (!autoAligned) {

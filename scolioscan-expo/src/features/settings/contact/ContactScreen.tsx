@@ -245,7 +245,7 @@ export default function ContactScreen() {
 					</View>
 				</View>
 			</KeyboardAwareScrollView>
-			<View style={[styles.fixedFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+			<View style={[styles.fixedFooter, { paddingBottom: 60 }]}>
 				<TouchableOpacity
 					disabled={isSubmitting}
 					style={[styles.button, isSubmitting && styles.buttonDisabled]}
