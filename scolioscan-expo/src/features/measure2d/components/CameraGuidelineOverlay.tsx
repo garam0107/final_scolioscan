@@ -29,6 +29,7 @@ export function CameraGuidelineOverlay({
   aligned = false,
 }: CameraGuidelineOverlayProps) {
   const { guideX, guideY, guideWidth, guideHeight } = geometry;
+  // geometry는 화면 픽셀 좌표이고, 내부 사람 실루엣은 원본 SVG 비율에 맞춰 스케일한다.
 
   // 부모가 넘긴 stage 크기를 기준으로 가이드라인의 실제 화면 위치를 계산한다.
   // const guideWidth = width * 0.62;

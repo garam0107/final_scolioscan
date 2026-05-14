@@ -15,6 +15,7 @@ export type StoredNightModeSettings = {
 };
 
 function parseStoredHour(value: string | null, fallback: number) {
+  // 저장소에 잘못된 시간이 남아 있어도 설정 화면이 깨지지 않게 기본값으로 보정한다.
   const parsedHour = Number(value);
 
   if (!Number.isInteger(parsedHour) || parsedHour < 0 || parsedHour > 23) {

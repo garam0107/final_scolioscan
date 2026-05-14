@@ -92,6 +92,7 @@ function buildSpineTrack(upper: number, main: number, lumbar: number): VertebraP
   const spine10X = -(lumbar * 0.82 + main * 0.08 * 0.85) * visualScale; 
 
   const xPositions = Array.from({ length: VERTEBRA_COUNT }, (_, index) => {
+    // 0, 4, 9, 마지막 마디를 기준점으로 두고 각 구간을 부드럽게 이어 척추 곡선을 만든다.
     if (index === 0 || index === lastIndex) return 0;
     if (index <= 4) return smoothLerp(0, spine5X, index / 4);
     if (index <= 9) return smoothLerp(spine5X, spine10X, (index - 4) / 5);
@@ -118,6 +119,7 @@ export function createAnalysisPose(analysis: AnalysisResponse | null): AnalysisP
   const upper = clampDegree(analysis?.main_thoracic);
   const main = clampDegree(analysis?.second_thoracic ?? upper * 0.72);
   const lumbar = clampDegree(analysis?.lumbar);
+  // 서버 필드명이 화면 부위명과 완전히 같지 않아 여기서 상부, 주흉추, 요추 값으로 정규화한다.
   const vertebrae = buildSpineTrack(upper, main, lumbar);
 
   return {

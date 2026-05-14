@@ -71,6 +71,7 @@ export default function Measure2DScreen() {
   });
 
   const showToast = useCallback((message: string, tone: ToastTone = 'info') => {
+    // 같은 문구가 연속으로 와도 ToastAlert가 다시 나타나도록 key를 증가시킨다.
     setToastKey((current) => current + 1);
     setToastTone(tone);
     setToastMessage(message);
@@ -126,6 +127,7 @@ export default function Measure2DScreen() {
 
     try {
       const fd = new FormData();
+      // React Native FormData는 웹 File 객체가 없어 uri, name, type 형태로 이미지를 전달한다.
       fd.append('image', {
         uri: photoUri,
         name: 'upload.jpg',
@@ -220,6 +222,7 @@ export default function Measure2DScreen() {
       const firstReason = nextEvaluation.reasons[0] ?? '';
 
       if (nextEvaluation.aligned) {
+        // 수동 촬영도 자동 촬영과 같은 최종 분석 API를 거쳐 스콜리오미터 단계로 이어진다.
         showToast('좋아요. 이 자세로 촬영할게요!', 'success');
         // console.log('2D카메라 촬영', result);
         const curvature = await submitCurvature(result.photo.uri);

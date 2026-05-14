@@ -79,6 +79,7 @@ function midpointGuide(a: { x: number; y: number }, b: { x: number; y: number })
 }
 
 function visibilityScore(points: (LandmarkPoint | null)[]) {
+  // 얼굴 랜드마크의 평균 visibility로 앞모습인지 뒷모습인지 판단하는 보조 점수를 만든다.
   const visible = points.filter((point): point is LandmarkPoint => Boolean(point));
   if (!visible.length) return 0;
   const total = visible.reduce((acc, point) => acc + point.visibility, 0);
@@ -296,6 +297,7 @@ export function evaluateLandmarks(
     reasons.push(REASON_GUIDE_AREA_ALIGN);
   }
 
+  // 방향, 거리, 가이드 영역 조건이 모두 통과해야 자동 또는 수동 촬영 성공으로 본다.
   const aligned = reasons.length === 0 && score >= GUIDE_AREA_SCORE_THRESHOLD;
 
   logGuideComparison(detected, guidePoints, directionResult, distanceResult, areaResult, aligned);

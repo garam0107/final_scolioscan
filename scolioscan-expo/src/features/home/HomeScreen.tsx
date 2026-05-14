@@ -333,6 +333,7 @@ export default function HomeScreen() {
     [],
   );
   const trendPoints = useMemo(() => {
+    // 최근 30일 범위 안에서 측정 시각은 x좌표, 만곡 각도는 y좌표로 변환한다.
     const startTime = trendPeriodRange.startDate.getTime();
     const endTime = trendPeriodRange.endDate.getTime();
     const rangeTime = Math.max(1, endTime - startTime);
@@ -358,12 +359,14 @@ export default function HomeScreen() {
       return '';
     }
 
+    // 추세선 아래쪽을 닫힌 path로 만들어 그래프 면적 그라데이션을 채운다.
     const firstPoint = trendPoints[0];
     const lastPoint = trendPoints[trendPoints.length - 1];
 
     return `${trendPath} L ${lastPoint.x} ${TREND_CHART_HEIGHT} L ${firstPoint.x} ${TREND_CHART_HEIGHT} Z`;
   }, [trendPath, trendPoints]);
   const recentChange = useMemo(() => {
+    // 최근 변화량은 원본 최신 두 측정값의 차이를 사용해 하루 대표값 집계 영향을 줄인다.
     if (rawTrendValues.length < 2) {
       return 0;
     }
@@ -374,6 +377,7 @@ export default function HomeScreen() {
     return Number((latestTrendValue - previousTrendValue).toFixed(1));
   }, [rawTrendValues]);
   const averageChange = useMemo(() => {
+    // 평균 변화량은 인접 측정값 사이의 절대 변화 폭을 평균낸 값이다.
     const values = trendValues.length >= 2 ? trendValues : rawTrendValues;
 
     if (values.length < 2) {

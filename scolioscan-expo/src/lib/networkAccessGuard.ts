@@ -18,6 +18,7 @@ function loadNetworkModule() {
 function showCellularDataBlockedAlert() {
   const now = Date.now();
 
+  // API 요청이 여러 번 실패해도 같은 경고가 짧은 시간에 반복해서 뜨지 않게 제한한다.
   if (now - lastCellularBlockedAlertAt < 60000) {
     return;
   }
@@ -69,6 +70,7 @@ export async function assertNetworkRequestAllowed() {
 }
 
 export async function guardedFetch(...args: Parameters<typeof fetch>) {
+  // fetch 호출 전에 사용자 설정과 실제 네트워크 상태를 확인하는 공용 진입점이다.
   await assertNetworkRequestAllowed();
   return fetch(...args);
 }

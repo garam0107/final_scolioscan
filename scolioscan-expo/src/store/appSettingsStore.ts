@@ -32,6 +32,7 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
     }
 
     try {
+      // 앱 시작 시 필요한 설정을 병렬로 읽어 화면 설정과 네트워크 차단 로직이 같은 값을 보게 한다.
       const [cellularDataAllowed, nightModeSettings] = await Promise.all([
         loadCellularDataAllowed(),
         loadNightModeSettings(),
@@ -52,6 +53,7 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
   },
   setCellularDataAllowed: async (allowed) => {
     const previousValue = get().cellularDataAllowed;
+    // API 요청 차단 여부와 설정 스위치가 즉시 맞물리도록 먼저 상태를 바꾼다.
 
     // 토글 반응은 즉시 보여주고, 저장 실패 시 이전 값으로 되돌린다.
     set({ cellularDataAllowed: allowed });

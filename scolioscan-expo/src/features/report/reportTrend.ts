@@ -167,6 +167,7 @@ function getBucketResolution(period: TrendPeriodKey) {
 }
 
 function getBucketKey(date: Date, period: TrendPeriodKey) {
+  // 같은 기간 묶음에 들어갈 측정값들이 같은 key를 갖도록 기간별 버킷 키를 만든다.
   const resolution = getBucketResolution(period);
 
   if (resolution === 'raw') {
@@ -237,6 +238,7 @@ export function aggregateTrendPoints(
     }
   });
 
+  // 일 단위는 최신값을 쓰고, 더 긴 기간은 평균값을 써서 장기 그래프를 완만하게 만든다.
   return Array.from(buckets.values())
     .map<TrendBucketPoint>((bucket) => ({
       timestamp: bucket.latestTimestamp,

@@ -51,6 +51,7 @@ export function getInfoCardCopy(infoCardLevel: InfoCardLevel): InfoCardCopy {
 }
 
 export function getCurvePatternCopy(dominantCurve: DominantCurveInfo): CurvePatternCopy {
+  // dominant curve 분류 결과를 사용자에게 보여줄 제목과 설명 문구로 바꾼다.
   switch (dominantCurve.key) {
     case 'Normal':
       return {

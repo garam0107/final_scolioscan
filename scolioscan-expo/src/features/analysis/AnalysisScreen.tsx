@@ -268,6 +268,7 @@ function CountUpNumber({
 }) {
   // 분석 탭 재진입 시 animationKey가 바뀌면 숫자도 다시 0부터 올라간다.
   const target = Math.max(0, Math.round(Math.abs(value)));
+  // 각도를 정수 문자열로 쪼개 자리수마다 독립적인 슬롯 애니메이션을 적용한다.
   const digits = String(target).split('').map((digit) => Number(digit));
 
   return (
@@ -357,6 +358,7 @@ function MetricBlock({
   animationKey: number;
   progress: Animated.Value;
 }) {
+  // 척추가 휘는 진행도와 같은 progress 값으로 각도 라벨도 목표 위치까지 같이 이동한다.
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, xOffset * xOffsetScale] });
 
   return (
@@ -509,6 +511,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
 
   // back_type 우선, 없으면 클라이언트 분류 — 인자 순서: (secondary, main, lumbar) = (upper, main, lumbar)
   const dominantCurve = useMemo(() => {
+    // 서버가 제공한 back_type을 우선 사용하고, 없을 때만 현재 각도로 클라이언트 분류를 수행한다.
     if (analysis?.back_type) return getDominantCurveInfo(analysis.back_type);
     return classifyDominantCurve(upperValue, mainValue, lumbarValue);
   }, [analysis?.back_type, upperValue, mainValue, lumbarValue]);
@@ -532,6 +535,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     let mounted = true;
 
     async function loadLatest() {
+      // 상세 진입이면 해당 id를, 탭 진입이면 최신 2D 기준 측정 세트를 불러와 분석 모델로 변환한다.
       setLoading(true);
       setError(null);
 

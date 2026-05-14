@@ -127,6 +127,7 @@ export function classifyDominantCurve(
     Math.abs(value) <= CURVE_THRESHOLD ? 'Straight' : 'Bent',
   );
   const pattern = labels.join('-');
+  // 세 부위가 임계값을 넘었는지 조합해 서버 분류명과 같은 dominant curve 키로 매핑한다.
   const mapping: Record<string, DominantCurveKey> = {
     'Straight-Straight-Straight': 'Normal',
     'Straight-Bent-Straight': 'Thoracic',

@@ -124,6 +124,7 @@ export default function ReportTrendChart({
   const trendAreaPath = useMemo(() => {
     if (!trendPath || chartPoints.length === 0) return '';
 
+    // 선 그래프 아래 영역을 닫아 SVG fill 그라데이션으로 채울 수 있게 한다.
     const firstPoint = chartPoints[0];
     const lastPoint = chartPoints[chartPoints.length - 1];
 

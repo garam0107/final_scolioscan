@@ -90,6 +90,7 @@ export function createGuidelineGeometry(
   // 기준 SVG 비율을 유지하면서 카메라 프리뷰 아래쪽에 가이드 박스를 배치한다.
   const guideWidth = previewWidth * GUIDE_WIDTH_RATIO;
   const guideHeight = guideWidth * (BASE_H / BASE_W);
+  // 가이드는 화면 하단에 붙여 전신이 프레임 안에 들어오도록 유도한다.
   const guideX = (previewWidth - guideWidth) / 2;
   const guideY = previewHeight - guideHeight;
   const rect = buildGuideRect(guideX, guideY, guideWidth, guideHeight, previewWidth, previewHeight);
