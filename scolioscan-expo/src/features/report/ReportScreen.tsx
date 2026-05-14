@@ -637,7 +637,7 @@ export default function ReportScreen() {
             shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
             {
               paddingTop: 8,
-              paddingBottom: 0,
+              paddingBottom: 16,
             },
           ]}
           showsVerticalScrollIndicator={false}

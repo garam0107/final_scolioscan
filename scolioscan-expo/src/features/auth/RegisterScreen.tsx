@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
+import { Platform, BackHandler } from 'react-native';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   AppState,
@@ -129,7 +130,21 @@ export default function RegisterScreen() {
     subscription.remove();
   };
 }, [handleVerifyPhone]);
+  
+useEffect(() => {
+  if (Platform.OS !== 'android' || step !== 'complete') {
+    return undefined;
+  }
 
+  const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+    router.replace('/login');
+    return true;
+  });
+
+  return () => {
+    subscription.remove();
+  };
+}, [router, step]);
 
   useEffect(() => {
     // 회원가입 화면에 들어올 때마다 임시 입력값을 초기화합니다.
@@ -437,6 +452,13 @@ export default function RegisterScreen() {
   };
 
   const handleBack = () => {
+    if (step === 'complete') {
+      router.replace('/login');
+      return;
+    }
+
+
+
     // 가입 순서의 역방향으로 이동해 사용자가 이전 입력을 수정할 수 있게 한다.
     if (step === 'agreement') {
       router.back();
@@ -476,7 +498,7 @@ export default function RegisterScreen() {
 
     setStep('birthday');
   };
-
+  
   return (
     <SafeAreaView style={styles.page}>
       <ToastAlert
