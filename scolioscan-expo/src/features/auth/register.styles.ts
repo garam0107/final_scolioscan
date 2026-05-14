@@ -338,4 +338,11 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+  // 완료 박수 gif 스타일
+  completeGif: {
+  width: 350,
+  height: 220,
+  marginTop: 64,
+},
+
 });

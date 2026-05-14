@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { styles } from './register.styles';
 
 export default function RegisterCompleteStep() {
@@ -7,9 +7,12 @@ export default function RegisterCompleteStep() {
       <Text style={styles.completeTitle}>
         축하합니다!{'\n'}이제 ScolioScan을 사용할{'\n'}준비가 되었어요!
       </Text>
-      <View>
-        
-      </View>
+    <Image
+      source={require('../../../assets/gifs/register_success.gif')}
+      resizeMode="contain"
+      style = {styles.completeGif}
+    />
     </View>
   );
 }
+
