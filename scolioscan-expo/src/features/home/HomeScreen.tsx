@@ -390,10 +390,10 @@ export default function HomeScreen() {
   const loadAlarmCount = useCallback(async () => {
     try {
       const response = await alarmAPI.getUnreadCount();
-      console.log('[Home] unread alarm count from API:', response.data.count);
+
       setAlarmCount(response.data.count);
     } catch (error) {
-      console.error('Failed to load alarm count:', error);
+      
     }
   }, []);
 
@@ -422,7 +422,7 @@ export default function HomeScreen() {
         lumbar: formatAngleValue(latestCurvature.lumbar_cobb),
       });
     } catch (error) {
-      console.error('Failed to load latest curvature:', error);
+
       setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
       setRawCurvatureTrendRecords([]);
       setCurvatureTrendRecords([]);
@@ -430,7 +430,6 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    console.log('[Home] unread alarm count from user:', user?.alarm_count ?? 0);
     setAlarmCount(user?.alarm_count ?? 0);
   }, [user?.alarm_count]);
 

@@ -103,7 +103,7 @@ export default function Measure2DScreen() {
 
   const goToNextMeasurement = useCallback((curvatureMeasurementId: number) => {
     // 2D 분석 결과 id를 저장해 측만계 측정과 같은 세트로 묶는다.
-    console.log('[measure2d] 척추측만계 화면으로 이동', NEXT_MEASUREMENT_ROUTE);
+    // console.log('[measure2d] 척추측만계 화면으로 이동', NEXT_MEASUREMENT_ROUTE);
     setCurvatureMeasurementId(curvatureMeasurementId);
     router.push({
       pathname: NEXT_MEASUREMENT_ROUTE,
@@ -130,11 +130,11 @@ export default function Measure2DScreen() {
       } as any);
 
       const token = getAccessToken(); // tokenStorage에서
-      console.log('[measure2d] curvature 요청 시작', {
-        url: `${API_BASE_URL}/curvature/`,
-        hasToken: Boolean(token),
-        imageUriPrefix: photoUri.slice(0, 48),
-      });
+      // console.log('[measure2d] curvature 요청 시작', {
+      //   url: `${API_BASE_URL}/curvature/`,
+      //   hasToken: Boolean(token),
+      //   imageUriPrefix: photoUri.slice(0, 48),
+      // });
 
       const res = await guardedFetch(`${API_BASE_URL}/curvature/`, {
         method: 'POST',
@@ -145,7 +145,7 @@ export default function Measure2DScreen() {
       });
 
       const text = await res.text();
-      console.log('curvature fetch status', res.status, text);
+      // console.log('curvature fetch status', res.status, text);
 
       if (!res.ok) {
         showToast('척추측만 분석 요청에 실패했습니다.', 'error');
@@ -185,7 +185,7 @@ export default function Measure2DScreen() {
     // 자동 촬영이 완료되면 사용자 입력 없이 바로 2D 분석 요청과 다음 측정 이동을 진행한다.
     // 자동 촬영이 완료되면 사용자가 버튼을 누르지 않아도 바로 척추측만 분석 요청을 시작한다.
     if (!autoCaptureResult) return;
-    console.log('[measure2d] 자동 촬영 완료', autoCaptureResult);
+    // console.log('[measure2d] 자동 촬영 완료', autoCaptureResult);
     const submitAndNavigate = async () => {
       const curvature = await submitCurvature(autoCaptureResult.photo.uri);
 
@@ -218,7 +218,7 @@ export default function Measure2DScreen() {
 
       if (nextEvaluation.aligned) {
         showToast('좋아요. 이 자세로 촬영할게요!', 'success');
-        console.log('2D카메라 촬영', result);
+        // console.log('2D카메라 촬영', result);
         const curvature = await submitCurvature(result.photo.uri);
 
         if (curvature) {
