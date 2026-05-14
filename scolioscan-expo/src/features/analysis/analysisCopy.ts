@@ -59,27 +59,27 @@ export function getCurvePatternCopy(dominantCurve: DominantCurveInfo): CurvePatt
       };
     case 'Thoracic':
       return {
-        title: '흉추 만곡',
+        title: '흉추 만곡 (S자형)',
         body: '등 부위 중심으로 만곡이 나타나는 형태예요.',
       };
     case 'Double Thoracic':
-      return {
-        title: '이중 흉추 만곡',
+      return { 
+        title: '이중 흉추 만곡 (C자형)',
         body: '상부와 주 흉추에 함께 만곡이 나타나는 형태예요.',
       };
     case 'Double major':
       return {
-        title: '흉추-요추 만곡 (S자형)',
+        title: '흉추-요추 만곡 (C자형)',
         body: '등과 허리에 반대 방향의 만곡이 있는 S자 형태예요.',
       };
     case 'Triple curve':
       return {
-        title: '삼중 만곡',
+        title: '삼중 만곡 (C자형)',
         body: '상부 흉추, 주 흉추, 요추에 모두 만곡이 나타나는 형태예요.',
       };
     case 'Lumbar':
       return {
-        title: '요추 만곡',
+        title: '요추 만곡 (S자형)',
         body: '허리 부위 중심으로 만곡이 나타나는 형태예요.',
       };
     case 'Unknown':

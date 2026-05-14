@@ -721,7 +721,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
                 <Text style={styles.dominantCurveDiagnosis}>
                   {dominantCurve.diagnosisName}
                 </Text>{' '}
-                {dominantCurve.key === 'Normal' ? '예요' : '이에요'}
+                {dominantCurve.key === 'Normal' ? '이에요' : '이에요'}
               </Text>
 
               <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
