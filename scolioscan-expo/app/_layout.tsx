@@ -39,7 +39,9 @@ function applyDefaultFont(component: typeof Text | typeof TextInput) {
     }, ref);
   };
 }
-
+// allowFontScaling 설정으로 폰트 사이즈 고정
+// 휴대폰 설정에서 텍스트 크기를 키우는 것에 따라 앱의 폰트 크기가 달라지게 할 경우 false -> true로 변경
+// maxFontSizeMultiplier -> 최대 몇배율까지 보여질 지 결정
 const textDefaultProps = (Text as typeof Text & { defaultProps?: { allowFontScaling?: boolean; maxFontSizeMultiplier?: number } }).defaultProps ?? {};
 textDefaultProps.allowFontScaling = false;
 textDefaultProps.maxFontSizeMultiplier = 1;

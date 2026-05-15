@@ -5,6 +5,8 @@ import {
   Animated,
   Easing,
   LayoutChangeEvent,
+    NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -492,7 +494,16 @@ export default function ReportScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
   const topScrollGradient = useTopScrollGradient();
-  const animatedTab = useMemo(() => new Animated.Value(0), []);
+   const animatedTab = useMemo(() => new Animated.Value(0), []);
+  // 외부 스크롤 위치 감지하여, 끝에 도달하기 전까지 측정 목록 스크롤 비활성화
+  const [canScrollList, setCanScrollList] = useState(false);
+  const canScrollListRef = useRef(false);
+
+
+
+
+
+
   // 현재 선택된 리포트 탭을 다시 누르면 메인 스크롤만 맨 위로 올린다.
   useScrollToTop(scrollRef);
 
@@ -600,6 +611,19 @@ export default function ReportScreen() {
     setTabsWidth(event.nativeEvent.layout.width);
   };
 
+  const handleOuterScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    topScrollGradient.onScroll(event);
+
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isNearBottom =
+      layoutMeasurement.height + contentOffset.y >= contentSize.height - 8;
+
+    if (canScrollListRef.current !== isNearBottom) {
+      canScrollListRef.current = isNearBottom;
+      setCanScrollList(isNearBottom);
+    }
+    };
+
   const handleAnalysisPress = (item: MeasurementListItem) => {
     // 상세 화면은 현재 만곡 결과 아이디를 경로 파라미터로 받아 다시 조회한다.
     if (!item.navigationId) return;
@@ -642,7 +666,7 @@ export default function ReportScreen() {
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
-          onScroll={topScrollGradient.onScroll}
+          onScroll={handleOuterScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.content,
@@ -811,7 +835,8 @@ export default function ReportScreen() {
                 </View>
               ) : filteredItems.length > 0 ? (
                 <ScrollView
-                  nestedScrollEnabled
+                  scrollEnabled={canScrollList}
+                  nestedScrollEnabled={canScrollList}
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.listScrollContent}
                 >
