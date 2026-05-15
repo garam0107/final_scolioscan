@@ -266,17 +266,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  sectionBlock: {
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    ...textFont,
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#30333B',
-    marginBottom: 12,
-  },
   infoRow: {
     flexDirection: 'row',
     gap: 10,
@@ -352,7 +341,7 @@ const styles = StyleSheet.create({
     color: '#2C9696',
   },
   weeklySection: {
-    marginTop: 20,
+    marginTop: 16,
   },
   weeklyResultGrid: {
     flexDirection: 'row',

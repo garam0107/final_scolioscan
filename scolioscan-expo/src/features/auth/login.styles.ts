@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
   brandArea: {
     alignItems: 'center',
@@ -48,7 +48,6 @@ const styles = StyleSheet.create({
   formArea: {
     marginTop: 44,
     width: '100%',
-    maxWidth: 296,
   },
   fieldGroup: {
     marginBottom: 16,
