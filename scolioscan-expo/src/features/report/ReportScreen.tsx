@@ -5,6 +5,7 @@ import {
   Animated,
   Easing,
   LayoutChangeEvent,
+  Modal,
     NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -17,7 +18,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, {
   Circle,
   Defs,
@@ -40,7 +41,7 @@ import type { CurvatureResponse } from '@/src/types/curvature';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
 import ReportTrendChart from '@/src/features/report/components/ReportTrendChart';
-import styles, { getReportMeasurementListLayout } from '@/src/features/report/report.styles';
+import styles, { getReportMeasurementListLayout, getReportMonthSheetLayout } from '@/src/features/report/report.styles';
 import {
   getMeasurementDate,
   getPeriodOption,
@@ -55,6 +56,7 @@ import KoreanRectangle from '../../../assets/icons/korean_rectangle.svg';
 import TwoDCamera from '../../../assets/icons/2D_camera.svg';
 
 type FilterKey = 'all' | '2d' | '3d';
+type MonthSelectionMode = 'all' | 'specific';
 
 type MeasurementListItem = {
   id: string;
@@ -71,6 +73,7 @@ const MEASUREMENT_FILTERS: { key: FilterKey; label: string }[] = [
 ];
 
 const WIDE_LAYOUT_MIN_WIDTH = 600;
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1);
 
 const CURVATURE_METRIC_LABELS = [
   '상부 흉추만곡',
@@ -87,6 +90,18 @@ function formatDate(value: string) {
     month: 'long',
     day: 'numeric',
   }).format(date);
+}
+
+function getMonthSelectionYears(date: Date) {
+  const currentYear = date.getFullYear();
+  return Array.from({ length: 4 }, (_, index) => currentYear - 3 + index);
+}
+
+function isFutureMonth(year: number, month: number, currentDate: Date) {
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+
+  return year > currentYear || (year === currentYear && month > currentMonth);
 }
 
 function formatRoundedDegree(value?: number | null) {
@@ -590,6 +605,9 @@ function SummaryCard({
 
 export default function ReportScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const currentMonthDate = useMemo(() => new Date(), []);
   const [curvatures, setCurvatures] = useState<CurvatureResponse[]>([]);
   const [measurementSets, setMeasurementSets] = useState<MeasurementSetResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -597,6 +615,10 @@ export default function ReportScreen() {
   const [selectedReportAngle, setSelectedReportAngle] = useState<TrendAngleKey>('proximal');
   const [selectedTrendPeriod, setSelectedTrendPeriod] = useState<TrendPeriodKey>('month1');
   const [periodDropdownVisible, setPeriodDropdownVisible] = useState(false);
+  const [monthSheetVisible, setMonthSheetVisible] = useState(false);
+  const [measurementListMonthMode, setMeasurementListMonthMode] = useState<MonthSelectionMode>('specific');
+  const [selectedMeasurementListYear, setSelectedMeasurementListYear] = useState(() => currentMonthDate.getFullYear());
+  const [selectedMeasurementListMonth, setSelectedMeasurementListMonth] = useState(() => currentMonthDate.getMonth() + 1);
   const [tabsWidth, setTabsWidth] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
@@ -607,8 +629,21 @@ export default function ReportScreen() {
   const canScrollListRef = useRef(false);
 
 
+  // 탭 색깔
+  const activeTabColor =
+  selectedFilter === '3d'
+    ? '#456EFF'
+    : selectedFilter === '2d'
+      ? '#2C9696'
+      : '#2C9696';
 
 
+  const activeIndicatorColor =
+    selectedFilter === '3d'
+      ? '#456EFF'
+      : selectedFilter === '2d'
+        ? '#2C9696'
+        : '#2C9696';
 
 
   // 현재 선택된 리포트 탭을 다시 누르면 메인 스크롤만 맨 위로 올린다.
@@ -705,6 +740,12 @@ export default function ReportScreen() {
     { key: 'lumbar' as const, label: CURVATURE_METRIC_LABELS[2], value: formatRoundedDegree(latestCurvature?.lumbar_cobb) },
   ];
   const selectedPeriodLabel = getPeriodOption(selectedTrendPeriod).label;
+  const monthSheetLayout = useMemo(() => getReportMonthSheetLayout(screenWidth), [screenWidth]);
+  const monthSelectionYears = useMemo(() => getMonthSelectionYears(currentMonthDate), [currentMonthDate]);
+  const measurementListMonthLabel =
+    measurementListMonthMode === 'all'
+      ? '전체'
+      : `${selectedMeasurementListYear}년 ${selectedMeasurementListMonth}월`;
 
   const tabWidth = tabsWidth > 0 ? tabsWidth / MEASUREMENT_FILTERS.length : 0;
   const translateX = tabWidth
@@ -750,6 +791,32 @@ export default function ReportScreen() {
   const handlePeriodSelect = (period: TrendPeriodKey) => {
     setSelectedTrendPeriod(period);
     setPeriodDropdownVisible(false);
+  };
+
+  const handleSelectAllMonths = () => {
+    setMeasurementListMonthMode('all');
+  };
+
+  const handleSelectSpecificMonthMode = () => {
+    setMeasurementListMonthMode('specific');
+  };
+
+  const handleSelectMeasurementListYear = (year: number) => {
+    setMeasurementListMonthMode('specific');
+    setSelectedMeasurementListYear(year);
+
+    if (isFutureMonth(year, selectedMeasurementListMonth, currentMonthDate)) {
+      setSelectedMeasurementListMonth(currentMonthDate.getMonth() + 1);
+    }
+  };
+
+  const handleSelectMeasurementListMonth = (month: number) => {
+    if (isFutureMonth(selectedMeasurementListYear, month, currentMonthDate)) {
+      return;
+    }
+
+    setMeasurementListMonthMode('specific');
+    setSelectedMeasurementListMonth(month);
   };
 
   const hasCurvatureData = curvatures.length > 0;
@@ -891,7 +958,15 @@ export default function ReportScreen() {
           <ReportAiDoctorCard latestCurvature={latestCurvature} />
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>측정 목록</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>측정 목록</Text>
+              <Pressable
+                style={({ pressed }) => [styles.monthSelectButton, pressed && styles.pressed]}
+                onPress={() => setMonthSheetVisible(true)}
+              >
+                <Text style={styles.monthSelectText}>{measurementListMonthLabel}</Text>
+              </Pressable>
+            </View>
 
             <View style={styles.tabsWrap} onLayout={handleTabsLayout}>
               <View style={styles.tabs}>
@@ -899,7 +974,7 @@ export default function ReportScreen() {
                   const tabIndex = MEASUREMENT_FILTERS.findIndex((item) => item.key === filter.key);
                   const color = animatedTab.interpolate({
                     inputRange: [tabIndex - 1, tabIndex, tabIndex + 1],
-                    outputRange: ['#000000', '#2C9696', '#000000'],
+                    outputRange: ['#000000', activeTabColor, '#000000'],
                     extrapolate: 'clamp',
                   });
 
@@ -923,6 +998,7 @@ export default function ReportScreen() {
                     styles.tabIndicator,
                     {
                       width: tabWidth,
+                      backgroundColor : activeIndicatorColor,
                       transform: [{ translateX: translateX as never }],
                     },
                   ]}
@@ -967,6 +1043,217 @@ export default function ReportScreen() {
           )}
         </ScrollView>
       </SafeAreaView>
+      <Modal
+        visible={monthSheetVisible}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={() => setMonthSheetVisible(false)}
+      >
+        <View style={styles.monthSheetOverlay}>
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setMonthSheetVisible(false)} />
+          <View
+            style={[
+              styles.monthSheetCard,
+              {
+                marginBottom: insets.bottom,
+                paddingHorizontal: monthSheetLayout.cardPaddingHorizontal,
+                paddingTop: monthSheetLayout.cardPaddingTop,
+                paddingBottom: monthSheetLayout.cardPaddingBottom,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.monthSheetTitle,
+                {
+                  fontSize: monthSheetLayout.titleFontSize,
+                  lineHeight: monthSheetLayout.titleLineHeight,
+                },
+              ]}
+            >
+              날짜 선택
+            </Text>
+            <Text
+              style={[
+                styles.monthSheetDescription,
+                {
+                  fontSize: monthSheetLayout.descriptionFontSize,
+                  lineHeight: monthSheetLayout.descriptionLineHeight,
+                },
+              ]}
+            >
+              보고싶은 리포트의 연월을 설정해주세요
+            </Text>
+
+            <View
+              style={[
+                styles.monthPickerRow,
+                {
+                  marginTop: monthSheetLayout.rowMarginTop,
+                  width: monthSheetLayout.rowWidth,
+                  minHeight: monthSheetLayout.rowMinHeight,
+                  gap: monthSheetLayout.rowGap,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.monthPickerColumn,
+                  styles.monthPickerSideColumn,
+                  { width: monthSheetLayout.sideColumnWidth },
+                ]}
+              >
+                <Pressable
+                  style={[
+                    styles.monthPickerOption,
+                    {
+                      width: monthSheetLayout.sideColumnWidth,
+                      minHeight: monthSheetLayout.optionMinHeight,
+                    },
+                    measurementListMonthMode === 'all' ? styles.monthPickerOptionSelected : null,
+                  ]}
+                  onPress={handleSelectAllMonths}
+                >
+                  <Text
+                    style={[
+                      styles.monthPickerOptionText,
+                      {
+                        fontSize: monthSheetLayout.optionFontSize,
+                        lineHeight: monthSheetLayout.optionLineHeight,
+                      },
+                      measurementListMonthMode === 'all' ? styles.monthPickerOptionTextSelected : null,
+                      measurementListMonthMode === 'specific' ? styles.monthPickerOptionTextMuted : null,
+                    ]}
+                  >
+                    전체
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.monthPickerOption,
+                    {
+                      width: monthSheetLayout.sideColumnWidth,
+                      minHeight: monthSheetLayout.optionMinHeight,
+                    },
+                    measurementListMonthMode === 'specific' ? styles.monthPickerOptionSelected : null,
+                  ]}
+                  onPress={handleSelectSpecificMonthMode}
+                >
+                  <Text
+                    style={[
+                      styles.monthPickerOptionText,
+                      {
+                        fontSize: monthSheetLayout.optionFontSize,
+                        lineHeight: monthSheetLayout.optionLineHeight,
+                      },
+                      measurementListMonthMode === 'specific' ? styles.monthPickerOptionTextSelected : null,
+                      measurementListMonthMode === 'all' ? styles.monthPickerOptionTextMuted : null,
+                    ]}
+                  >
+                    지정
+                  </Text>
+                </Pressable>
+              </View>
+
+              <View
+                style={[
+                  styles.monthPickerColumn,
+                  styles.monthPickerYearColumn,
+                  { width: monthSheetLayout.yearColumnWidth },
+                ]}
+              >
+                {monthSelectionYears.map((year) => {
+                  const selected = measurementListMonthMode === 'specific' && selectedMeasurementListYear === year;
+
+                  return (
+                    <Pressable
+                      key={year}
+                      style={[
+                        styles.monthPickerOption,
+                        {
+                          width: monthSheetLayout.yearColumnWidth,
+                          minHeight: monthSheetLayout.optionMinHeight,
+                        },
+                        selected ? styles.monthPickerOptionSelected : null,
+                      ]}
+                      onPress={() => handleSelectMeasurementListYear(year)}
+                    >
+                      <Text
+                        style={[
+                          styles.monthPickerOptionText,
+                          {
+                            fontSize: monthSheetLayout.optionFontSize,
+                            lineHeight: monthSheetLayout.optionLineHeight,
+                          },
+                          selected ? styles.monthPickerOptionTextSelected : null,
+                          measurementListMonthMode === 'all' ? styles.monthPickerOptionTextMuted : null,
+                        ]}
+                      >
+                        {year}년
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <ScrollView
+                style={[
+                  styles.monthPickerScrollColumn,
+                  styles.monthPickerSideColumn,
+                  {
+                    width: monthSheetLayout.sideColumnWidth,
+                    maxHeight: monthSheetLayout.scrollMaxHeight,
+                  },
+                ]}
+                contentContainerStyle={[
+                  styles.monthPickerScrollContent,
+                  { paddingVertical: monthSheetLayout.scrollPaddingVertical },
+                ]}
+                showsVerticalScrollIndicator={false}
+              >
+                {MONTH_OPTIONS.map((month) => {
+                  const disabled = isFutureMonth(selectedMeasurementListYear, month, currentMonthDate);
+                  const selected =
+                    measurementListMonthMode === 'specific' &&
+                    selectedMeasurementListMonth === month &&
+                    !disabled;
+
+                  return (
+                    <Pressable
+                      key={month}
+                      disabled={disabled}
+                      style={[
+                        styles.monthPickerOption,
+                        {
+                          width: monthSheetLayout.sideColumnWidth,
+                          minHeight: monthSheetLayout.optionMinHeight,
+                        },
+                        selected ? styles.monthPickerOptionSelected : null,
+                      ]}
+                      onPress={() => handleSelectMeasurementListMonth(month)}
+                    >
+                      <Text
+                        style={[
+                          styles.monthPickerOptionText,
+                          {
+                            fontSize: monthSheetLayout.optionFontSize,
+                            lineHeight: monthSheetLayout.optionLineHeight,
+                          },
+                          selected ? styles.monthPickerOptionTextSelected : null,
+                          measurementListMonthMode === 'all' || disabled ? styles.monthPickerOptionTextMuted : null,
+                        ]}
+                      >
+                        {month}월
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <TopScrollGradient visible={topScrollGradient.visible} />
 
     </View>
