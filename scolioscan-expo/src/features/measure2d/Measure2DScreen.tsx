@@ -75,7 +75,6 @@ export default function Measure2DScreen() {
     handleManualCapture,
     loading,
     autoAligned,
-    countdown,
     autoToast,
     autoCaptureResult,
     pauseAutoCapture,
@@ -243,7 +242,7 @@ export default function Measure2DScreen() {
 
       if (nextEvaluation.aligned) {
         // 수동 촬영도 자동 촬영과 같은 최종 분석 API를 거쳐 스콜리오미터 단계로 이어진다.
-        showToast('좋아요. 이 자세로 촬영할게요!', 'success');
+        showToast('좋아요. 이 자세로 분석을 시작합니다!', 'success');
         // console.log('2D카메라 촬영', result);
         const curvature = await submitCurvature(result.photo.uri);
 
@@ -355,13 +354,7 @@ export default function Measure2DScreen() {
           </View>
         ) : null}
 
-        {autoAligned && countdown !== null && countdown > 0 ? (
-          // 기준에 들어온 상태를 유지하는 동안 남은 자동 촬영 대기 시간을 보여준다.
-          <View style={styles.countdownWrap}>
-            <Text style={styles.countdownText}>{countdown}</Text>
-          </View>
-        ) : null}
-        {autoCaptureLottieLayout ? (
+        {autoAligned && autoCaptureLottieLayout ? (
           <View style={[styles.testLottieWrap, autoCaptureLottieLayout]} pointerEvents="none">
             <LottieView
               source={LoadgingLottie}

@@ -25,11 +25,13 @@ type AutoToast = {
   key: number;
 };
 
-const AUTO_CHECK_INTERVAL_MS = 1500;
-const COUNTDOWN_TICK_MS = 250;
-const AUTO_HOLD_MS = 3000;
+// 자동 촬영 조건을 확인 용 서버에 사진 보내는 주기
+const AUTO_CHECK_INTERVAL_MS = 750;
+// 자동 촬영 시간
+const AUTO_HOLD_MS = 1600;
+// 수동 촬영 클릭 후, 이미 자동 체크 촬영 진행 중이면 얼마까지 기다릴지 정하는 시간
 const MANUAL_WAIT_TIMEOUT_MS = 1500;
-// 촬영 타임아웃 상수
+// 촬영 타임아웃 상수 (카메라 촬영 요청에 걸리는 최대 시간)
 const CAMERA_CAPTURE_TIMEOUT_MS = 5000;
 
 
@@ -72,7 +74,6 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<LandmarkEvaluation | null>(null);
   const [autoAligned, setAutoAligned] = useState(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
   const [autoToast, setAutoToast] = useState<AutoToast | null>(null);
   const [autoCaptureResult, setAutoCaptureResult] = useState<ManualCaptureResult | null>(null);
 
@@ -90,7 +91,6 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
     // 자세가 흐트러지면 자동 촬영 대기 시간과 화면 카운트다운을 함께 초기화한다.
     alignedSinceRef.current = null;
     setAutoAligned(false);
-    setCountdown(null);
   }, []);
 
   const pauseAutoCapture = useCallback(() => {
@@ -206,14 +206,14 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
       manualInProgressRef.current = false;
     }
   }, [analyzeCapture, cameraReady, loading, resetAutoAlignment]);
-  // 자동 촬영 프
+  // 자동 촬영
   useEffect(() => {
     if (!cameraReady || !guidePoints || !guideRect) {
       resetAutoAlignment();
       lastAutoReasonRef.current = null;
       return;
     }
-    return;
+    // return;
     let disposed = false;
 
     // 자동 촬영 루프는 일정 간격으로 저화질 사진을 보내 현재 자세가 기준 안에 있는지 확인한다.
@@ -251,7 +251,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
         lastAutoReasonRef.current = null;
 
         if (!alignedSinceRef.current) {
-          // 처음으로 기준에 들어온 시점을 저장하고, 이 시점부터 3초 유지 여부를 계산한다.
+          // 처음으로 기준에 들어온 시점을 저장하고, 이 시점부터 1.5초 유지 여부를 계산한다.
           alignedSinceRef.current = Date.now();
         }
 
@@ -261,7 +261,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
 
         if (elapsed >= AUTO_HOLD_MS) {
           // 정렬 상태가 충분히 유지된 순간에만 고품질 최종 사진을 촬영해 다음 분석 단계로 넘긴다.
-          // 3초 동안 기준을 유지했을 때만 최종 사진을 다시 촬영해서 실제 척추측만 분석으로 넘긴다.
+          // 1.5초 동안 기준을 유지했을 때만 최종 사진을 다시 촬영해서 실제 척추측만 분석으로 넘긴다.
           autoCaptureCompletedRef.current = true;
           const finalPhoto = await capturePhotoWithTimeout(camera, {
             quality: AUTO_FINAL_QUALITY,
@@ -301,38 +301,12 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
     };
   }, [analyzeCapture, camera,cameraReady, emitAutoToast, guidePoints, guideRect, resetAutoAlignment]);
 
-  useEffect(() => {
-    if (!autoAligned) {
-      return;
-    }
-
-    // 서버 체크 주기와 별도로 카운트다운은 더 자주 갱신해서 숫자가 자연스럽게 바뀌게 한다.
-    const updateCountdown = () => {
-      // 서버 검사 주기와 별도로 남은 시간을 자주 갱신해 카운트다운이 끊겨 보이지 않게 한다.
-      if (!alignedSinceRef.current) {
-        setCountdown(null);
-        return;
-      }
-
-      const elapsed = Date.now() - alignedSinceRef.current;
-      const remainingMs = Math.max(0, AUTO_HOLD_MS - elapsed);
-      setCountdown(remainingMs <= 0 ? 0 : Math.max(1, Math.ceil(remainingMs / 1000)));
-    };
-
-    updateCountdown();
-    const timer = setInterval(updateCountdown, COUNTDOWN_TICK_MS);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, [autoAligned]);
 
   return {
     evaluation,
     handleManualCapture,
     loading,
     autoAligned,
-    countdown,
     autoToast,
     autoCaptureResult,
     pauseAutoCapture,

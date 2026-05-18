@@ -115,27 +115,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 34,
   },
-  // 자동 촬영 조건을 만족했을 때 카메라 화면 중앙에 카운트다운 숫자를 띄우는 영역이다.
-  countdownWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '42%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // 카메라 프리뷰 위에서도 숫자가 잘 보이도록 큰 글자와 그림자를 사용한다.
-  countdownText: {
-    ...textFont,
-    color: '#fff',
-    fontSize: 76,
-    fontWeight: '800',
-    lineHeight: 86,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.36)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 10,
-  },
   shutterButton: {
     width: 78,
     height: 78,
