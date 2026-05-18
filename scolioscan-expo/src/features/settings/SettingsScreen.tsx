@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { useAuth } from '@/src/contexts/AuthContext';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
+import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
@@ -14,7 +15,7 @@ import ProfileIcon from '../../../assets/images/basic_profile_image.svg'
 
 type ToggleKey = 'cellular' | 'nightMode' | 'importantAlarm' | 'otherAlarm' | 'marketing' | 'cloudBackup';
 type NightTimeTarget = 'start' | 'end';
-type SettingsSheetType = 'language' | 'reset' | null;
+type SettingsSheetType = 'language' | 'reset' | 'guide' | null;
 
 type SettingRowProps = {
   title: string;
@@ -325,7 +326,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="정보">
-          <SettingRow title="가이드 다시보기" onPress={() => showComingSoon('가이드 다시보기')} />
+          <SettingRow title="가이드 다시보기" onPress={() => setSettingsSheetType('guide')} />
           <SettingRow title="버전 정보" value="v.0.0.0" />
           <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
           <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
@@ -343,6 +344,11 @@ export default function SettingsScreen() {
 
       <DataResetSheet
         visible={settingsSheetType === 'reset'}
+        onClose={closeSettingsSheet}
+      />
+
+      <GuideReplaySheet
+        visible={settingsSheetType === 'guide'}
         onClose={closeSettingsSheet}
       />
 

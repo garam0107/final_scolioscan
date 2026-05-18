@@ -22,6 +22,13 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 20,
   },
+  guideOptionRow: {
+    justifyContent: 'center',
+    minHeight: 58,
+  },
+  guideOptionRowPressed: {
+    opacity: 0.65,
+  },
   resetDeleteBox: {
     backgroundColor: Colors.gray[50],
     borderRadius: 8,
