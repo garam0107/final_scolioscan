@@ -37,6 +37,7 @@ import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { Colors } from '@/src/constants/theme';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
+import { useReportMeasurementListFilterStore } from '@/src/store/reportMeasurementListFilterStore';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
@@ -46,6 +47,7 @@ import {
   getMeasurementDate,
   getPeriodOption,
   getRecentDateRange,
+  formatDateParam,
   REPORT_CURVATURE_DAYS,
   TREND_PERIOD_OPTIONS,
   type TrendAngleKey,
@@ -56,8 +58,6 @@ import KoreanRectangle from '../../../assets/icons/korean_rectangle.svg';
 import TwoDCamera from '../../../assets/icons/2D_camera.svg';
 
 type FilterKey = 'all' | '2d' | '3d';
-type MonthSelectionMode = 'all' | 'specific';
-
 type MeasurementListItem = {
   id: string;
   createdAt: string;
@@ -102,6 +102,16 @@ function isFutureMonth(year: number, month: number, currentDate: Date) {
   const currentMonth = currentDate.getMonth() + 1;
 
   return year > currentYear || (year === currentYear && month > currentMonth);
+}
+
+function getMonthDateRange(year: number, month: number) {
+  const fromDate = new Date(year, month - 1, 1);
+  const toDate = new Date(year, month, 0);
+
+  return {
+    from_date: formatDateParam(fromDate),
+    to_date: formatDateParam(toDate),
+  };
 }
 
 function formatRoundedDegree(value?: number | null) {
@@ -616,12 +626,16 @@ export default function ReportScreen() {
   const [selectedTrendPeriod, setSelectedTrendPeriod] = useState<TrendPeriodKey>('month1');
   const [periodDropdownVisible, setPeriodDropdownVisible] = useState(false);
   const [monthSheetVisible, setMonthSheetVisible] = useState(false);
-  const [measurementListMonthMode, setMeasurementListMonthMode] = useState<MonthSelectionMode>('specific');
-  const [selectedMeasurementListYear, setSelectedMeasurementListYear] = useState(() => currentMonthDate.getFullYear());
-  const [selectedMeasurementListMonth, setSelectedMeasurementListMonth] = useState(() => currentMonthDate.getMonth() + 1);
+  const [measurementListLoading, setMeasurementListLoading] = useState(true);
   const [tabsWidth, setTabsWidth] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
+  const measurementListMonthMode = useReportMeasurementListFilterStore((state) => state.monthMode);
+  const selectedMeasurementListYear = useReportMeasurementListFilterStore((state) => state.selectedYear);
+  const selectedMeasurementListMonth = useReportMeasurementListFilterStore((state) => state.selectedMonth);
+  const setMeasurementListMonthMode = useReportMeasurementListFilterStore((state) => state.setMonthMode);
+  const setSelectedMeasurementListYear = useReportMeasurementListFilterStore((state) => state.setSelectedYear);
+  const setSelectedMeasurementListMonth = useReportMeasurementListFilterStore((state) => state.setSelectedMonth);
   const topScrollGradient = useTopScrollGradient();
    const animatedTab = useMemo(() => new Animated.Value(0), []);
   // 외부 스크롤 위치 감지하여, 끝에 도달하기 전까지 측정 목록 스크롤 비활성화
@@ -654,37 +668,22 @@ export default function ReportScreen() {
 
     const load = async () => {
       try {
-        // 만곡과 측정 세트는 서로 독립적이므로 한쪽 실패가 전체 화면 실패로 번지지 않게 분리해서 처리한다.
-        const [curvatureResult, measurementSetResult] = await Promise.allSettled([
-          curvatureAPI.getAnalyses({
-            limit: 1000,
-            ...getRecentDateRange(REPORT_CURVATURE_DAYS),
-          }),
-          measurementSetAPI.getAnalyses({
-            limit: 1000,
-            ...getRecentDateRange(REPORT_CURVATURE_DAYS),
-          }),
-        ]);
+        // 리포트 상단 데이터는 측정 목록의 월 선택과 별개로 기존 기간 기준을 유지한다.
+        const response = await curvatureAPI.getAnalyses({
+          limit: 1000,
+          ...getRecentDateRange(REPORT_CURVATURE_DAYS),
+        });
 
         if (!active) return;
 
-        if (curvatureResult.status === 'fulfilled') {
-          const sortedCurvatures = [...curvatureResult.value.data].sort(
-            (left, right) =>
-              new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),
-          );
-          setCurvatures(sortedCurvatures);
-        } else {
-          console.error('Failed to load curvatures:', curvatureResult.reason);
-          setCurvatures([]);
-        }
-
-        if (measurementSetResult.status === 'fulfilled') {
-          setMeasurementSets(measurementSetResult.value.data);
-        } else {
-          console.error('Failed to load measurement sets:', measurementSetResult.reason);
-          setMeasurementSets([]);
-        }
+        const sortedCurvatures = [...response.data].sort(
+          (left, right) =>
+            new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),
+        );
+        setCurvatures(sortedCurvatures);
+      } catch (error) {
+        console.error('Failed to load curvatures:', error);
+        setCurvatures([]);
       } finally {
         if (active) setLoading(false);
       }
@@ -696,6 +695,43 @@ export default function ReportScreen() {
       active = false;
     };
   }, [measurementVersion]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadMeasurementSets = async () => {
+      try {
+        setMeasurementListLoading(true);
+        // 전체는 날짜 파라미터를 보내지 않고, 지정 월은 해당 월의 시작일과 마지막일만 조회한다.
+        const response = await measurementSetAPI.getAnalyses({
+          limit: 1000,
+          ...(measurementListMonthMode === 'specific'
+            ? getMonthDateRange(selectedMeasurementListYear, selectedMeasurementListMonth)
+            : {}),
+        });
+
+        if (!active) return;
+
+        setMeasurementSets(response.data);
+      } catch (error) {
+        console.error('Failed to load measurement sets:', error);
+        setMeasurementSets([]);
+      } finally {
+        if (active) setMeasurementListLoading(false);
+      }
+    };
+
+    void loadMeasurementSets();
+
+    return () => {
+      active = false;
+    };
+  }, [
+    measurementListMonthMode,
+    measurementVersion,
+    selectedMeasurementListMonth,
+    selectedMeasurementListYear,
+  ]);
 
   useEffect(() => {
     const targetIndex = MEASUREMENT_FILTERS.findIndex((item) => item.key === selectedFilter);
@@ -795,6 +831,7 @@ export default function ReportScreen() {
 
   const handleSelectAllMonths = () => {
     setMeasurementListMonthMode('all');
+    setMonthSheetVisible(false);
   };
 
   const handleSelectSpecificMonthMode = () => {
@@ -817,6 +854,7 @@ export default function ReportScreen() {
 
     setMeasurementListMonthMode('specific');
     setSelectedMeasurementListMonth(month);
+    setMonthSheetVisible(false);
   };
 
   const hasCurvatureData = curvatures.length > 0;
@@ -1009,10 +1047,10 @@ export default function ReportScreen() {
             <View
               style={[
                 styles.listArea,
-                !loading && filteredItems.length === 0 ? styles.listAreaEmpty : null,
+                !measurementListLoading && filteredItems.length === 0 ? styles.listAreaEmpty : null,
               ]}
             >
-              {loading ? (
+              {measurementListLoading ? (
                 <View style={styles.loadingBox}>
                   <ActivityIndicator color="#69B7BC" />
                 </View>
