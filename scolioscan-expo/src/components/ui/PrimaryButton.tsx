@@ -5,13 +5,14 @@ import { textFont } from '@/src/constants/fonts';
 type PrimaryButtonProps = {
   title: string;
   onPress: () => void;
-  width?: number;
-  height?: number;
+  width?: ViewStyle['width'];
+  height?: ViewStyle['height'];
   backgroundColor?: string;
   borderRadius?: number;
   style?: ViewStyle;
   textStyle?: TextStyle;
   disabled?: boolean;
+  disabledBackgroundColor?: string;
 };
 
 export default function PrimaryButton({
@@ -24,6 +25,7 @@ export default function PrimaryButton({
   style,
   textStyle,
   disabled = false,
+  disabledBackgroundColor = '#AAB8C3',
 }: PrimaryButtonProps) {
   // 화면별 크기와 색상은 props로 바꾸되 눌림과 비활성 상태는 공통으로 처리한다.
   return (
@@ -35,7 +37,7 @@ export default function PrimaryButton({
         {
           width,
           height,
-          backgroundColor: disabled ? '#AAB8C3' : backgroundColor,
+          backgroundColor: disabled ? disabledBackgroundColor : backgroundColor,
           borderRadius,
         },
         pressed && !disabled && styles.pressed,

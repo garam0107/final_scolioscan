@@ -98,6 +98,10 @@ export default function RootLayout() {
             <Stack.Screen name="notifications" />
             <Stack.Screen name="analysis-detail/[id]" />
             <Stack.Screen name="measure-loading-preview" />
+            <Stack.Screen name="measure/guide" />
+            <Stack.Screen name="measure/guide-2d-camera" />
+            <Stack.Screen name="measure/guide-3d-camera" />
+            <Stack.Screen name="measure/guide-spine" />
             <Stack.Screen name="measure/2d" />
             <Stack.Screen name="measure/scoliometer" />
             <Stack.Screen name="settings" />
