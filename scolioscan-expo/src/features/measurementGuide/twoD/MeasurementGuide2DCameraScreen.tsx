@@ -25,10 +25,12 @@ const guidePages = [
 export default function MeasurementGuide2DCameraScreen() {
   const router = useRouter();
   const [pageIndex, setPageIndex] = useState(0);
+  const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
   const currentPage = guidePages[pageIndex];
 
   function handleBack() {
     if (pageIndex > 0) {
+      setTransitionDirection(-1);
       setPageIndex((value) => value - 1);
       return;
     }
@@ -39,6 +41,7 @@ export default function MeasurementGuide2DCameraScreen() {
   function handleNext() {
     // 마지막 페이지 전까지는 같은 라우트 안에서 다음 안내 페이지로만 전환한다.
     if (pageIndex < guidePages.length - 1) {
+      setTransitionDirection(1);
       setPageIndex((value) => value + 1);
       return;
     }
@@ -48,6 +51,8 @@ export default function MeasurementGuide2DCameraScreen() {
 
   return (
     <MeasurementGuideStepScreen
+      pageKey={pageIndex}
+      transitionDirection={transitionDirection}
       title={currentPage.title}
       description={currentPage.description}
       subDescription={currentPage.subDescription}

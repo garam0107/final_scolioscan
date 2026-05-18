@@ -72,6 +72,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
+  },
+  animatedContent: {
+    width: '100%',
     gap: 32,
     alignItems: 'center',
   },
