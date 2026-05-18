@@ -4,6 +4,7 @@ import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { Colors } from '@/src/constants/theme';
+import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import styles, { getMeasurementGuideIntroLayout } from '@/src/features/measurementGuide/intro/measurementGuideIntro.styles';
 
 export default function MeasurementGuideIntroScreen() {
@@ -11,6 +12,10 @@ export default function MeasurementGuideIntroScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const layout = getMeasurementGuideIntroLayout(width, height, insets.bottom);
+  const twoDGuideSeen = useMeasurementGuideStore((state) => state.twoDGuideSeen);
+  const spineGuideSeen = useMeasurementGuideStore((state) => state.spineGuideSeen);
+  const canStartMeasure = twoDGuideSeen && spineGuideSeen;
+  
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right', 'bottom']}>
@@ -51,24 +56,24 @@ export default function MeasurementGuideIntroScreen() {
 
         <View style={[styles.actionGroup, { top: layout.actionTop, width: layout.contentWidth }]}>
           <PrimaryButton
-            title="2D 카메라 촬영 가이드 보기"
+            title={twoDGuideSeen ? '✓ 2D 카메라 촬영 가이드 보기' : '2D 카메라 촬영 가이드 보기'}
             onPress={() => router.push('/measure/guide-2d-camera')}
             width="100%"
             height={layout.buttonHeight}
-            backgroundColor={Colors.gray[50]}
+            backgroundColor={twoDGuideSeen ? Colors.mint[25] : Colors.gray[50]}
             borderRadius={6}
-            style={styles.outlineButton}
-            textStyle={styles.outlineButtonText}
+            style={twoDGuideSeen ? styles.completedGuideButton : styles.outlineButton} 
+            textStyle={twoDGuideSeen ? styles.completedGuideButtonText : styles.outlineButtonText}  
           />
           <PrimaryButton
-            title="척추측만계 가이드 보기"
+            title={spineGuideSeen ? '✓ 척추측만계 가이드 보기' : '척추측만계 가이드 보기'}
             onPress={() => router.push('/measure/guide-spine')}
             width="100%"
             height={layout.buttonHeight}
-            backgroundColor={Colors.gray[50]}
+            backgroundColor={spineGuideSeen ? Colors.mint[25] : Colors.gray[50]}
             borderRadius={6}
-            style={styles.outlineButton}
-            textStyle={styles.outlineButtonText}
+            style={spineGuideSeen ? styles.completedGuideButton : styles.outlineButton} 
+            textStyle={spineGuideSeen ? styles.completedGuideButtonText : styles.outlineButtonText} 
           />
 
           <Pressable
@@ -103,8 +108,8 @@ export default function MeasurementGuideIntroScreen() {
           onPress={() => undefined}
           width="100%"
           height={layout.buttonHeight}
-          backgroundColor={Colors.gray[100]}
-          disabled
+          disabled={!canStartMeasure}
+          backgroundColor={canStartMeasure ? Colors.primary[500] : Colors.gray[100]}
           disabledBackgroundColor={Colors.gray[100]}
           borderRadius={6}
           textStyle={styles.measureButtonText}

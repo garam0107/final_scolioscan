@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import MeasurementGuideStepScreen from '@/src/features/measurementGuide/shared/MeasurementGuideStepScreen';
 
 const guidePages = [
@@ -33,7 +34,8 @@ export default function MeasurementGuideSpineScreen() {
   const [pageIndex, setPageIndex] = useState(0);
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
   const currentPage = guidePages[pageIndex];
-  
+  const markSpineGuideSeen = useMeasurementGuideStore((state) => state.markSpineGuideSeen);
+
     function handleBack() {
     if (pageIndex > 0) {
       setTransitionDirection(-1);
@@ -44,16 +46,16 @@ export default function MeasurementGuideSpineScreen() {
     router.back();
   }
 
-  function handleNext() {
-    // 마지막 페이지 전까지는 같은 라우트 안에서 다음 안내 페이지로만 전환한다.
-    if (pageIndex < guidePages.length - 1) {
-      setTransitionDirection(1);
-      setPageIndex((value) => value + 1);
-      return;
-    }
+    function handleNext() {
+      if (pageIndex < guidePages.length - 1) {
+        setTransitionDirection(1);
+        setPageIndex((value) => value + 1);
+        return;
+      }
 
-    router.back();
-  }
+      markSpineGuideSeen();
+      router.back();
+    }
   return (
     <MeasurementGuideStepScreen
       pageKey={pageIndex}

@@ -131,6 +131,17 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: '500',
   },
+  completedGuideButton : {
+    borderWidth: 1,
+    borderColor: Colors.mint[300],
+  },
+  completedGuideButtonText : {
+        ...textFont,
+    color: Colors.mint[600],
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '500',
+  },
   skipButton: {
     marginTop: 2,
     padding: 12,
