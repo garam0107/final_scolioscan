@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { type Href, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -52,7 +52,7 @@ export default function MeasurementGuideIntroScreen() {
         <View style={[styles.actionGroup, { top: layout.actionTop, width: layout.contentWidth }]}>
           <PrimaryButton
             title="2D 카메라 촬영 가이드 보기"
-            onPress={() => router.push('/measure/guide-2d-camera' as Href)}
+            onPress={() => router.push('/measure/guide-2d-camera')}
             width="100%"
             height={layout.buttonHeight}
             backgroundColor={Colors.gray[50]}
@@ -62,7 +62,7 @@ export default function MeasurementGuideIntroScreen() {
           />
           <PrimaryButton
             title="척추측만계 가이드 보기"
-            onPress={() => undefined}
+            onPress={() => router.push('/measure/guide-spine')}
             width="100%"
             height={layout.buttonHeight}
             backgroundColor={Colors.gray[50]}
