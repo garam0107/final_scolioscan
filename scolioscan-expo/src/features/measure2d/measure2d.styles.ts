@@ -164,4 +164,13 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     pointerEvents: 'none',
   },
+  testLottieWrap: {
+    position: 'absolute',
+    zIndex: 20,
+    pointerEvents: 'none',
+  },
+  testLottie: {
+    width: '100%',
+    height: '100%',
+  },
 });

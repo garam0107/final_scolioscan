@@ -15,6 +15,7 @@ import {
   guardedFetch,
   isCellularDataBlockedError,
 } from '@/src/lib/networkAccessGuard';
+import LottieView from 'lottie-react-native'
 import { getAccessToken } from '@/src/lib/tokenStorage';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
@@ -22,6 +23,8 @@ import type { CurvatureResponse } from '@/src/types/curvature';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
 const NEXT_MEASUREMENT_ROUTE = '/measure/scoliometer';
+
+const LoadgingLottie = require('../../../assets/lottie/autocapture_progress_rad.json')
 
 export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
@@ -39,7 +42,6 @@ export default function Measure2DScreen() {
   const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
   const [toastKey, setToastKey] = useState(0);
-
   const camera = useMemo(() => createExpoCameraAdapter(cameraRef), []);
   const guidelineGeometry = useMemo(() => {
     // 실제 카메라 영역 크기가 잡힌 뒤에만 가이드 기준 좌표를 계산한다.
@@ -50,6 +52,24 @@ export default function Measure2DScreen() {
 
     return createGuidelineGeometry(stageLayout.width, stageLayout.height);
   }, [stageLayout]);
+  const autoCaptureLottieLayout = useMemo(() => {
+    if (!guidelineGeometry) {
+      return null;
+    }
+
+    const { guideX, guideY, guideWidth, guideHeight } = guidelineGeometry.display;
+    // 가이드라인의 실제 화면 좌표를 기준으로 성공 체크 애니메이션을 가슴 중앙에 고정한다.
+    const size = Math.min(Math.max(guideWidth * 2.65, 620), 900);
+    const centerX = guideX + guideWidth / 2;
+    const centerY = guideY + guideHeight * 0.36;
+
+    return {
+      left: centerX - size / 2,
+      top: centerY - size / 2,
+      width: size,
+      height: size,
+    };
+  }, [guidelineGeometry]);
 
   const {
     handleManualCapture,
@@ -339,6 +359,17 @@ export default function Measure2DScreen() {
           // 기준에 들어온 상태를 유지하는 동안 남은 자동 촬영 대기 시간을 보여준다.
           <View style={styles.countdownWrap}>
             <Text style={styles.countdownText}>{countdown}</Text>
+          </View>
+        ) : null}
+        {autoCaptureLottieLayout ? (
+          <View style={[styles.testLottieWrap, autoCaptureLottieLayout]} pointerEvents="none">
+            <LottieView
+              source={LoadgingLottie}
+              autoPlay
+              loop
+              resizeMode="contain"
+              style={styles.testLottie}
+            />
           </View>
         ) : null}
 
