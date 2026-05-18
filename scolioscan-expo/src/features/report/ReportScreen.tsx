@@ -40,7 +40,7 @@ import type { CurvatureResponse } from '@/src/types/curvature';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
 import ReportTrendChart from '@/src/features/report/components/ReportTrendChart';
-import styles from '@/src/features/report/report.styles';
+import styles, { getReportMeasurementListLayout } from '@/src/features/report/report.styles';
 import {
   getMeasurementDate,
   getPeriodOption,
@@ -70,12 +70,6 @@ const MEASUREMENT_FILTERS: { key: FilterKey; label: string }[] = [
   { key: '3d', label: '3D 스캔' },
 ];
 
-const REPORT_SCREEN_HORIZONTAL_PADDING = 16;
-const MEASUREMENT_CARD_HORIZONTAL_PADDING = 20;
-const FIGMA_MEASUREMENT_SEPARATOR_TOTAL_WIDTH = 2;
-const FIGMA_MEASUREMENT_REGION_GAP_TOTAL = 40;
-const FIGMA_MEASUREMENT_VALUE_GAP = 16;
-const MIN_MEASUREMENT_VALUE_WIDTH = 66;
 const WIDE_LAYOUT_MIN_WIDTH = 600;
 
 const CURVATURE_METRIC_LABELS = [
@@ -348,20 +342,7 @@ function ReportItem({
   const { width } = useWindowDimensions();
   const isWideLayout = width >= WIDE_LAYOUT_MIN_WIDTH;
   const { curvature, rotation } = item.measurementSet;
-  const cardInnerWidth = Math.max(
-    0,
-    width - REPORT_SCREEN_HORIZONTAL_PADDING * 2 - MEASUREMENT_CARD_HORIZONTAL_PADDING * 2,
-  );
-  // 피그마 기준 여백을 유지하면서 작은 화면에서도 값 영역이 겹치지 않도록 폭을 계산한다.
-  const regionWidth = (
-    cardInnerWidth -
-    FIGMA_MEASUREMENT_SEPARATOR_TOTAL_WIDTH -
-    FIGMA_MEASUREMENT_REGION_GAP_TOTAL
-  ) / 3;
-  const valueGap = Math.max(
-    0,
-    Math.min(FIGMA_MEASUREMENT_VALUE_GAP, regionWidth - MIN_MEASUREMENT_VALUE_WIDTH),
-  );
+  const measurementListLayout = getReportMeasurementListLayout(width);
 
   if (!curvature) {
     return null;
@@ -390,27 +371,110 @@ function ReportItem({
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.measurementCard, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.measurementCard,
+        {
+          minHeight: measurementListLayout.cardMinHeight,
+          paddingHorizontal: measurementListLayout.cardPaddingHorizontal,
+          paddingVertical: measurementListLayout.cardPaddingVertical,
+          borderRadius: measurementListLayout.cardRadius,
+        },
+        pressed && styles.pressed,
+      ]}
       disabled={isDisabled}
       onPress={() => onPress(item)}
     >
-      <View style={styles.measurementCardHeader}>
-        <Text style={styles.measurementDate}>{formatDate(item.createdAt)}</Text>
-        <View style={styles.measurementBadge}>
-          <Text style={styles.measurementBadgeText}>2D 측정</Text>
+      <View
+        style={[
+          styles.measurementCardHeader,
+          {
+            minHeight: measurementListLayout.headerMinHeight,
+            gap: measurementListLayout.headerGap,
+            marginBottom: measurementListLayout.headerMarginBottom,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.measurementDate,
+            {
+              fontSize: measurementListLayout.dateFontSize,
+              lineHeight: measurementListLayout.dateLineHeight,
+            },
+          ]}
+        >
+          {formatDate(item.createdAt)}
+        </Text>
+        <View
+          style={[
+            styles.measurementBadge,
+            {
+              minWidth: measurementListLayout.measureBadgeMinWidth,
+              minHeight: measurementListLayout.measureBadgeMinHeight,
+              paddingHorizontal: measurementListLayout.measureBadgePaddingHorizontal,
+              paddingVertical: measurementListLayout.measureBadgePaddingVertical,
+              borderRadius: measurementListLayout.measureBadgeRadius,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.measurementBadgeText,
+              {
+                fontSize: measurementListLayout.measureBadgeTextFontSize,
+                lineHeight: measurementListLayout.measureBadgeTextLineHeight,
+              },
+            ]}
+          >
+            2D 측정
+          </Text>
         </View>
       </View>
 
-      <View style={styles.measurementRegionRow}>
+      <View
+        style={[
+          styles.measurementRegionRow,
+          {
+            gap: measurementListLayout.regionGap,
+            minHeight: measurementListLayout.regionRowMinHeight,
+          },
+        ]}
+      >
         {regions.map((region, index) => (
           <Fragment key={region.key}>
             <View style={styles.measurementRegion}>
-            <View style={styles.measurementRegionPill}>
-              <Text style={styles.measurementRegionLabel}>{region.label}</Text>
+            <View
+              style={[
+                styles.measurementRegionPill,
+                {
+                  minHeight: measurementListLayout.regionPillMinHeight,
+                  gap: measurementListLayout.regionPillGap,
+                  paddingHorizontal: measurementListLayout.regionPillPaddingHorizontal,
+                  paddingVertical: measurementListLayout.regionPillPaddingVertical,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.measurementRegionLabel,
+                  {
+                    fontSize: measurementListLayout.regionLabelFontSize,
+                    lineHeight: measurementListLayout.regionLabelLineHeight,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                {region.label}
+              </Text>
               <View
                 style={[
                   styles.measurementRegionDot,
-                  { backgroundColor: getCurvatureDotColor(region.curvatureValue) },
+                  {
+                    width: measurementListLayout.regionDotSize,
+                    height: measurementListLayout.regionDotSize,
+                    borderRadius: measurementListLayout.regionDotRadius,
+                    backgroundColor: getCurvatureDotColor(region.curvatureValue),
+                  },
                 ]}
               />
             </View>
@@ -419,13 +483,33 @@ function ReportItem({
                 style={[
                   styles.measurementValueRow,
                   isWideLayout ? styles.measurementValueRowWide : null,
-                  { gap: valueGap },
+                  {
+                    gap: measurementListLayout.valueGap,
+                    marginTop: measurementListLayout.valueRowMarginTop,
+                    minHeight: measurementListLayout.valueRowMinHeight,
+                  },
                 ]}
               >
-                <View style={styles.measurementValueBlock}>
-                  <Text style={styles.measurementValueLabel}>만곡도</Text>
+                <View style={[styles.measurementValueBlock, { width: measurementListLayout.valueBlockWidth }]}>
                   <Text
-                    style={styles.measurementCurvatureValue}
+                    style={[
+                      styles.measurementValueLabel,
+                      {
+                        fontSize: measurementListLayout.valueLabelFontSize,
+                        lineHeight: measurementListLayout.valueLabelLineHeight,
+                      },
+                    ]}
+                  >
+                    만곡도
+                  </Text>
+                  <Text
+                    style={[
+                      styles.measurementCurvatureValue,
+                      {
+                        fontSize: measurementListLayout.valueFontSize,
+                        lineHeight: measurementListLayout.valueLineHeight,
+                      },
+                    ]}
                     numberOfLines={1}
                     adjustsFontSizeToFit
                     minimumFontScale={0.82}
@@ -434,10 +518,26 @@ function ReportItem({
                   </Text>
                 </View>
 
-                <View style={styles.measurementValueBlock}>
-                  <Text style={styles.measurementValueLabel}>비틀림</Text>
+                <View style={[styles.measurementValueBlock, { width: measurementListLayout.valueBlockWidth }]}>
                   <Text
-                    style={styles.measurementRotationValue}
+                    style={[
+                      styles.measurementValueLabel,
+                      {
+                        fontSize: measurementListLayout.valueLabelFontSize,
+                        lineHeight: measurementListLayout.valueLabelLineHeight,
+                      },
+                    ]}
+                  >
+                    비틀림
+                  </Text>
+                  <Text
+                    style={[
+                      styles.measurementRotationValue,
+                      {
+                        fontSize: measurementListLayout.valueFontSize,
+                        lineHeight: measurementListLayout.valueLineHeight,
+                      },
+                    ]}
                     numberOfLines={1}
                     adjustsFontSizeToFit
                     minimumFontScale={0.82}
@@ -447,7 +547,14 @@ function ReportItem({
                 </View>
               </View>
             </View>
-            {index < regions.length - 1 ? <View style={styles.measurementRegionSeparator} /> : null}
+            {index < regions.length - 1 ? (
+              <View
+                style={[
+                  styles.measurementRegionSeparator,
+                  { height: measurementListLayout.regionSeparatorHeight },
+                ]}
+              />
+            ) : null}
           </Fragment>
         ))}
       </View>

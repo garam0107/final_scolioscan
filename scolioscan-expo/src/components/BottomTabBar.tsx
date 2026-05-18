@@ -3,15 +3,6 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SvgProps } from 'react-native-svg';
 
-// import SelectOffAnalysis from '../../assets/icons/select_off_analysis.svg';
-// import SelectOffHome from '../../assets/icons/select_off_home.svg';
-// import SelectOffMy from '../../assets/icons/select_off_my.svg';
-// import SelectOffReport from '../../assets/icons/select_off_report.svg';
-// import SelectOnAnalysis from '../../assets/icons/select_on_analysis.svg';
-// import SelectOnHome from '../../assets/icons/select_on_home.svg';
-// import SelectOnMy from '../../assets/icons/select_on_my.svg';
-// import SelectOnReport from '../../assets/icons/select_on_report.svg';
-
 // 새로운 바텀 탭 아이콘
 import NewSelectOffHome from '../../assets/icons/BottomTab/new_home_2.svg'
 import NewSelectOffAnalysis from '../../assets/icons/BottomTab/new_analysis_2.svg'

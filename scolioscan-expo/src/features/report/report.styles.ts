@@ -2,6 +2,116 @@ import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
 import { textFont } from '@/src/constants/fonts';
 
+export type ReportMeasurementListLayout = {
+  cardMinHeight: number;
+  cardPaddingHorizontal: number;
+  cardPaddingVertical: number;
+  cardRadius: number;
+  headerMinHeight: number;
+  headerGap: number;
+  headerMarginBottom: number;
+  dateFontSize: number;
+  dateLineHeight: number;
+  measureBadgeMinWidth: number;
+  measureBadgeMinHeight: number;
+  measureBadgePaddingHorizontal: number;
+  measureBadgePaddingVertical: number;
+  measureBadgeRadius: number;
+  measureBadgeTextFontSize: number;
+  measureBadgeTextLineHeight: number;
+  regionGap: number;
+  regionRowMinHeight: number;
+  regionSeparatorHeight: number;
+  regionPillMinHeight: number;
+  regionPillGap: number;
+  regionPillPaddingHorizontal: number;
+  regionPillPaddingVertical: number;
+  regionLabelFontSize: number;
+  regionLabelLineHeight: number;
+  regionDotSize: number;
+  regionDotRadius: number;
+  valueGap: number;
+  valueRowMarginTop: number;
+  valueRowMinHeight: number;
+  valueBlockWidth: number;
+  valueLabelFontSize: number;
+  valueLabelLineHeight: number;
+  valueFontSize: number;
+  valueLineHeight: number;
+};
+
+const REPORT_BASE_SCREEN_WIDTH = 360;
+const REPORT_LARGE_BASE_SCREEN_WIDTH = 400;
+const REPORT_SCREEN_HORIZONTAL_PADDING = 16;
+const REPORT_MEASUREMENT_SEPARATOR_TOTAL_WIDTH = 2;
+
+function roundReportLayoutValue(value: number) {
+  return Math.round(value * 10) / 10;
+}
+
+function getReportMeasurementListScale(screenWidth: number) {
+  // 일반 폰에서는 현재 피그마 기준 수치를 유지하고, 작은/큰 폰에서만 목록 내부 비율을 보정한다.
+  if (screenWidth < REPORT_BASE_SCREEN_WIDTH) {
+    return Math.max(0.88, screenWidth / REPORT_BASE_SCREEN_WIDTH);
+  }
+
+  if (screenWidth > REPORT_LARGE_BASE_SCREEN_WIDTH) {
+    return Math.min(1.08, screenWidth / REPORT_LARGE_BASE_SCREEN_WIDTH);
+  }
+
+  return 1;
+}
+
+export function getReportMeasurementListLayout(screenWidth: number): ReportMeasurementListLayout {
+  const scale = getReportMeasurementListScale(screenWidth);
+  const cardPaddingHorizontal = roundReportLayoutValue(20 * scale);
+  const regionGap = roundReportLayoutValue(10 * scale);
+  const cardInnerWidth = Math.max(
+    0,
+    screenWidth - REPORT_SCREEN_HORIZONTAL_PADDING * 2 - cardPaddingHorizontal * 2,
+  );
+  const regionWidth = (cardInnerWidth - REPORT_MEASUREMENT_SEPARATOR_TOTAL_WIDTH - regionGap * 4) / 3;
+  const valueGap = Math.max(0, Math.min(16 * scale, regionWidth - 66 * scale));
+
+  return {
+    cardMinHeight: roundReportLayoutValue(138 * scale),
+    cardPaddingHorizontal,
+    cardPaddingVertical: roundReportLayoutValue(16 * scale),
+    cardRadius: roundReportLayoutValue(12 * scale),
+    headerMinHeight: roundReportLayoutValue(22 * scale),
+    headerGap: roundReportLayoutValue(12 * scale),
+    headerMarginBottom: roundReportLayoutValue(20 * scale),
+    dateFontSize: roundReportLayoutValue(14 * scale),
+    dateLineHeight: roundReportLayoutValue(20 * scale),
+    measureBadgeMinWidth: roundReportLayoutValue(51 * scale),
+    measureBadgeMinHeight: roundReportLayoutValue(22 * scale),
+    measureBadgePaddingHorizontal: roundReportLayoutValue(8 * scale),
+    measureBadgePaddingVertical: roundReportLayoutValue(4 * scale),
+    measureBadgeRadius: roundReportLayoutValue(5 * scale),
+    measureBadgeTextFontSize: roundReportLayoutValue(10 * scale),
+    measureBadgeTextLineHeight: roundReportLayoutValue(14 * scale),
+    regionGap,
+    regionRowMinHeight: roundReportLayoutValue(64 * scale),
+    regionSeparatorHeight: roundReportLayoutValue(56 * scale),
+    regionPillMinHeight: roundReportLayoutValue(18 * scale),
+    regionPillGap: roundReportLayoutValue(10 * scale),
+    regionPillPaddingHorizontal: roundReportLayoutValue(8 * scale),
+    regionPillPaddingVertical: roundReportLayoutValue(2 * scale),
+    regionLabelFontSize: roundReportLayoutValue(10 * scale),
+    regionLabelLineHeight: roundReportLayoutValue(14 * scale),
+    regionDotSize: roundReportLayoutValue(6 * scale),
+    regionDotRadius: roundReportLayoutValue(3 * scale),
+    valueGap: roundReportLayoutValue(valueGap),
+    valueRowMarginTop: roundReportLayoutValue(8 * scale),
+    valueRowMinHeight: roundReportLayoutValue(42 * scale),
+    valueBlockWidth: roundReportLayoutValue(38 * scale),
+    valueLabelFontSize: roundReportLayoutValue(10 * scale),
+    valueLabelLineHeight: roundReportLayoutValue(14 * scale),
+    valueFontSize: roundReportLayoutValue(18 * scale),
+    valueLineHeight: roundReportLayoutValue(24 * scale),
+  };
+}
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,

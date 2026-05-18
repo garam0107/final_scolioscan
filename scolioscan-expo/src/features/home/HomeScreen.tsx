@@ -29,7 +29,7 @@ import { alarmAPI } from '@/src/api/alarm';
 import { curvatureAPI } from '@/src/api/curvature';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
-import styles from '@/src/features/home/home.styles';
+import styles, { type HomeMeasurementCardLayout, getHomeMeasurementCardLayout } from '@/src/features/home/home.styles';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import ThreeDCameraIcon from '../../../assets/icons/home/3d_sub.svg';
 import TwoIcon from '../../../assets/home/test.svg'
@@ -51,7 +51,7 @@ type MeasurementItem = {
 };
 
 type MeasurementCardProps = MeasurementItem & {
-  cardWidth: number;
+  layout: HomeMeasurementCardLayout;
 };
 
 type WeeklyResultItem = {
@@ -236,24 +236,102 @@ function MeasurementCard({
   pro,
   subtitleColor,
   subtitleBackgroundColor,
-  cardWidth,
+  layout,
 }: MeasurementCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.measurementCard, { width: cardWidth }, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.measurementCard,
+        {
+          width: layout.cardWidth,
+          height: layout.cardHeight,
+          padding: layout.cardPadding,
+          borderRadius: layout.cardRadius,
+        },
+        pressed && styles.pressed,
+      ]}
     >
       {pro && (
-        <View style={styles.proBadge}>
-                 <CrownIcon width={10} height={10} />
-          <Text style={styles.proBadgeText}>Pro</Text>
+        <View
+          style={[
+            styles.proBadge,
+            {
+              left: layout.proBadgeLeft,
+              top: layout.proBadgeTop,
+              height: layout.proBadgeHeight,
+              gap: layout.proBadgeGap,
+              paddingHorizontal: layout.proBadgePaddingHorizontal,
+            },
+          ]}
+        >
+          <CrownIcon width={layout.proBadgeIconSize} height={layout.proBadgeIconSize} />
+          <Text
+            style={[
+              styles.proBadgeText,
+              {
+                fontSize: layout.proBadgeTextFontSize,
+                lineHeight: layout.proBadgeTextLineHeight,
+              },
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+          >
+            Pro
+          </Text>
         </View>
       )}
-      <View style={styles.measurementIconWrap}>{icon}</View>
-      <View style={styles.measurementCardContent}>
-        <Text style={styles.measurementTitle}>{title}</Text>
-        <View style={[styles.measurementBadge, subtitleBackgroundColor ? { backgroundColor: subtitleBackgroundColor } : null]}>
-          <Text style={[styles.measurementBadgeText, subtitleColor ? { color: subtitleColor } : null]}>{subtitle}</Text>
+      <View
+        style={[
+          styles.measurementIconWrap,
+          {
+            width: layout.iconSize,
+            height: layout.iconSize,
+            marginBottom: layout.iconMarginBottom,
+          },
+        ]}
+      >
+        {icon}
+      </View>
+      <View style={[styles.measurementCardContent, { gap: layout.contentGap }]}>
+        <Text
+          style={[
+            styles.measurementTitle,
+            {
+              fontSize: layout.titleTextFontSize,
+              lineHeight: layout.titleTextLineHeight,
+            },
+          ]}
+          numberOfLines={1}
+          ellipsizeMode="clip"
+        >
+          {title}
+        </Text>
+        <View
+          style={[
+            styles.measurementBadge,
+            {
+              paddingHorizontal: layout.badgePaddingHorizontal,
+              paddingVertical: layout.badgePaddingVertical,
+              borderRadius: layout.badgeRadius,
+            },
+            subtitleBackgroundColor ? { backgroundColor: subtitleBackgroundColor } : null,
+          ]}
+        >
+          <Text
+            style={[
+              styles.measurementBadgeText,
+              {
+                fontSize: layout.badgeTextFontSize,
+                lineHeight: layout.badgeTextLineHeight,
+              },
+              subtitleColor ? { color: subtitleColor } : null,
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+          >
+            {subtitle}
+          </Text>
         </View>
       </View>
     </Pressable>
@@ -278,7 +356,7 @@ export default function HomeScreen() {
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
   const bannerWidth = width - 40;
-  const measurementCardWidth = (width - 40 - 8) / 2;
+  const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || '회원';
 
@@ -289,14 +367,14 @@ export default function HomeScreen() {
     id: '2d',
     title: '2D 측정하기',
     subtitle: '집에서 간편하게 측정',
-    icon: <TwoIcon width={60} height={60} />,
+    icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
     onPress: () => router.push('/measure/2d'),
   },
   {
     id: '3d',
     title: '3D 동영상 측정',
     subtitle: '영상을 통한 정밀 측정',
-    icon: <ThreeIcon width={60} height={60} />,
+    icon: <ThreeIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
     pro: true,
     subtitleColor: '#2E96FF',
     subtitleBackgroundColor: '#EBF5FF',
@@ -549,12 +627,12 @@ export default function HomeScreen() {
             <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>
 
-          <View style={styles.measurementGrid}>
+          <View style={[styles.measurementGrid, { height: measurementCardLayout.cardHeight }]}>
             {measurementItems.map((item) => (
               <MeasurementCard
                 key={item.id}
                 {...item}
-                cardWidth={measurementCardWidth}
+                layout={measurementCardLayout}
                 onPress={item.id === '3d' ? () => setIsProModalVisible(true) : item.onPress}
               />
             ))}
