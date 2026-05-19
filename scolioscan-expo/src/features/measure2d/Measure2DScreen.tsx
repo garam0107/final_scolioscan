@@ -1,34 +1,30 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
-import { BlurView } from 'expo-blur';
 import { useFocusEffect } from '@react-navigation/native';
 import ToastAlert from '@/src/components/ui/ToastAlert';
 import { createGuidelineGeometry } from './domain/guidelineGeometry';
 import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
-import { CameraGuidelineOverlay } from './components/CameraGuidelineOverlay';
 import { useMeasure2D } from './hooks/useMeasure2D';
+import { useCaptureCompletionFlow } from './hooks/useCaptureCompletionFlow';
+import { CaptureProgressOverlay } from './components/CaptureProgressOverlay';
+import { Measure2DCameraStage } from './components/Measure2DCameraStage';
+import { Measure2DPermissionView } from './components/Measure2DPermissionView';
 import { styles } from './measure2d.styles';
 import {
   CELLULAR_DATA_BLOCKED_MESSAGE,
   guardedFetch,
   isCellularDataBlockedError,
 } from '@/src/lib/networkAccessGuard';
-import LottieView from 'lottie-react-native'
 import { getAccessToken } from '@/src/lib/tokenStorage';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
 import type { CurvatureResponse } from '@/src/types/curvature';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
-type CaptureLottieType = 'auto' | 'manual';
 
 const NEXT_MEASUREMENT_ROUTE = '/measure/scoliometer';
-const CAPTURE_COMPLETE_DELAY_MS = 1000;
-
-const AutoCaptureLottie = require('../../../assets/lottie/autocapture_progress_rad.json');
-const ManualCaptureLottie = require('../../../assets/lottie/manualcapture_progress_rad.json');
 
 export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
@@ -46,13 +42,6 @@ export default function Measure2DScreen() {
   const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
   const [toastKey, setToastKey] = useState(0);
-  const captureLottieRef = useRef<LottieView>(null);
-  const lottieCompletedRef = useRef(false);
-  const captureSubmitInFlightRef = useRef(false);
-  const [activeCaptureLottieType, setActiveCaptureLottieType] = useState<CaptureLottieType | null>(null);
-  const [manualCaptureProgressVisible, setManualCaptureProgressVisible] = useState(false);
-  const [captureCompleteVisible, setCaptureCompleteVisible] = useState(false);
-  const [pendingCapturePhotoUri, setPendingCapturePhotoUri] = useState<string | null>(null);
   const camera = useMemo(() => createExpoCameraAdapter(cameraRef), []);
   const guidelineGeometry = useMemo(() => {
     // 실제 카메라 영역 크기가 잡힌 뒤에만 가이드 기준 좌표를 계산한다.
@@ -216,91 +205,20 @@ export default function Measure2DScreen() {
     clearAutoToast();
   }, [autoToast, clearAutoToast, showToast]);
 
-  useEffect(() => {
-    // 자동 촬영은 가이드에 맞는 순간부터 Lottie를 보여주고, 성공 사진이 생기기 전에는 벗어나면 숨긴다.
-    if (manualCaptureProgressVisible) {
-      return;
-    }
-
-    if (autoAligned) {
-      lottieCompletedRef.current = false;
-      setCaptureCompleteVisible(false);
-      setActiveCaptureLottieType('auto');
-      return;
-    }
-
-    if (!autoCaptureResult && !pendingCapturePhotoUri) {
-      lottieCompletedRef.current = false;
-      setCaptureCompleteVisible(false);
-      setActiveCaptureLottieType((current) => (current === 'auto' ? null : current));
-    }
-  }, [autoAligned, autoCaptureResult, manualCaptureProgressVisible, pendingCapturePhotoUri]);
-
-  useEffect(() => {
-    // 자동 촬영 성공 사진은 완료 Lottie와 토스트가 끝난 뒤 제출하기 위해 잠시 보관한다.
-    if (!autoCaptureResult) return;
-    setPendingCapturePhotoUri(autoCaptureResult.photo.uri);
-    setActiveCaptureLottieType('auto');
-    if (lottieCompletedRef.current) {
-      setCaptureCompleteVisible(true);
-    }
-    clearAutoCaptureResult();
-  }, [autoCaptureResult, clearAutoCaptureResult]);
-
-  useEffect(() => {
-    // 자동/수동 모두 완료 UI가 표시된 뒤 1초 기다렸다가 척추측만 분석 API를 호출한다.
-    if (!captureCompleteVisible || !pendingCapturePhotoUri || captureSubmitInFlightRef.current) {
-      return;
-    }
-
-    let cancelled = false;
-    captureSubmitInFlightRef.current = true;
-
-    const submitAfterComplete = async () => {
-      await new Promise((resolve) => setTimeout(resolve, CAPTURE_COMPLETE_DELAY_MS));
-
-      if (cancelled) {
-        return;
-      }
-
-      const curvature = await submitCurvature(pendingCapturePhotoUri);
-
-      if (cancelled) {
-        return;
-      }
-
-      captureSubmitInFlightRef.current = false;
-
-      if (curvature) {
-        setPendingCapturePhotoUri(null);
-        setManualCaptureProgressVisible(false);
-        setActiveCaptureLottieType(null);
-        setCaptureCompleteVisible(false);
-        goToNextMeasurement(curvature.id);
-        return;
-      }
-
-      lottieCompletedRef.current = false;
-      setPendingCapturePhotoUri(null);
-      setManualCaptureProgressVisible(false);
-      setActiveCaptureLottieType(null);
-      setCaptureCompleteVisible(false);
-      resumeAutoCapture();
-    };
-
-    void submitAfterComplete();
-
-    return () => {
-      cancelled = true;
-      captureSubmitInFlightRef.current = false;
-    };
-  }, [
+  const {
+    activeCaptureLottieType,
     captureCompleteVisible,
-    goToNextMeasurement,
-    pendingCapturePhotoUri,
-    resumeAutoCapture,
+    isCaptureFlowBusy,
+    startManualCaptureFlow,
+    handleCaptureLottieFinish,
+  } = useCaptureCompletionFlow({
+    autoAligned,
+    autoCaptureResult,
+    clearAutoCaptureResult,
     submitCurvature,
-  ]);
+    goToNextMeasurement,
+    resumeAutoCapture,
+  });
 
   const handlePressCapture = async () => {
     // 수동 촬영은 자동 촬영을 잠시 멈추고, 현재 사진이 가이드 조건을 만족할 때만 분석 요청으로 이어진다.
@@ -325,11 +243,7 @@ export default function Measure2DScreen() {
         showToast('좋아요. 이 자세로 촬영할게요!', 'success');
         // console.log('2D카메라 촬영', result);
         shouldResumeAuto = false;
-        lottieCompletedRef.current = false;
-        setCaptureCompleteVisible(false);
-        setManualCaptureProgressVisible(true);
-        setPendingCapturePhotoUri(result.photo.uri);
-        setActiveCaptureLottieType('manual');
+        startManualCaptureFlow(result.photo.uri);
 
         return;
       }
@@ -367,20 +281,10 @@ export default function Measure2DScreen() {
     const canAskAgain = permission.canAskAgain;
 
     return (
-      <SafeAreaView style={styles.permissionScreen}>
-        <View style={styles.permissionContent}>
-          <Text style={styles.permissionTitle}>카메라 권한이 필요합니다</Text>
-          <Text style={styles.permissionMessage}>
-            2D 측정을 진행하려면 카메라 접근 권한을 허용해주세요.
-          </Text>
-          <Pressable
-            style={styles.permissionButton}
-            onPress={canAskAgain ? requestCameraPermission : () => Linking.openSettings()}
-          >
-            <Text style={styles.permissionButtonText}>{canAskAgain ? '권한 허용하기' : '설정으로 이동'}</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      <Measure2DPermissionView
+        canAskAgain={canAskAgain}
+        onPress={canAskAgain ? requestCameraPermission : () => Linking.openSettings()}
+      />
     );
   }
 
@@ -388,9 +292,7 @@ export default function Measure2DScreen() {
     !cameraReady ||
     loading ||
     manualSubmitting ||
-    manualCaptureProgressVisible ||
-    captureCompleteVisible ||
-    Boolean(pendingCapturePhotoUri);
+    isCaptureFlowBusy;
 
   return (
     <View style={styles.screen}>
@@ -402,35 +304,21 @@ export default function Measure2DScreen() {
         onDismiss={() => setToastMessage('')}
       />
 
-      <View
-        style={styles.cameraStage}
-        onLayout={(event) => {
-          const { width, height } = event.nativeEvent.layout;
-          // 레이아웃이 확정된 뒤에만 가이드 비율 계산이 가능하므로 stage 크기를 상태로 보관한다.
-          // 레이아웃이 잡힌 뒤에야 가이드 비율 계산이 가능하므로 stage 크기를 상태로 보관한다.
-          setStageLayout({ width, height });
+      <Measure2DCameraStage
+        cameraRef={cameraRef}
+        stageLayout={stageLayout}
+        guidelineGeometry={guidelineGeometry}
+        autoAligned={autoAligned}
+        onStageLayoutChange={setStageLayout}
+        onCameraReady={() => {
+          setCameraReady(true);
         }}
-      >
-        <CameraView ref={cameraRef} style={styles.camera} facing="back" animateShutter={false} 
-          onCameraReady={() => {
-            setCameraReady(true);
-          }}
-          onMountError={(event) => {
-            setCameraReady(false);
-            console.error('[measure2d] 카메라 시작 실패', event.message);
-            showToast('카메라를 시작하지 못했습니다. 앱을 다시 열어주세요.', 'error');
-          }}
-        />
-        {guidelineGeometry ? (
-          <CameraGuidelineOverlay
-            width={stageLayout.width}
-            height={stageLayout.height}
-            geometry={guidelineGeometry.display}
-            // 판정 성공 상태를 넘겨 가이드 색상과 카운트다운 표시를 화면에 맞춰준다.
-            aligned={autoAligned}
-          />
-        ) : null}
-      </View>
+        onCameraMountError={(message) => {
+          setCameraReady(false);
+          console.error('[measure2d] 카메라 시작 실패', message);
+          showToast('카메라를 시작하지 못했습니다. 앱을 다시 열어주세요.', 'error');
+        }}
+      />
 
       <SafeAreaView style={styles.safeArea} pointerEvents="box-none">
         {showGuideText ? (
@@ -442,55 +330,12 @@ export default function Measure2DScreen() {
           </View>
         ) : null}
 
-        {captureCompleteVisible ? (
-          <View style={styles.captureCompleteBackdrop} pointerEvents="none">
-            <BlurView
-              intensity={60}
-              tint="light"
-              experimentalBlurMethod="dimezisBlurView"
-              style={styles.captureCompleteBlur}
-            />
-            <View style={styles.captureCompleteTint} />
-          </View>
-        ) : null}
-
-        {activeCaptureLottieType && autoCaptureLottieLayout ? (
-          <View style={[styles.testLottieWrap, autoCaptureLottieLayout]} pointerEvents="none">
-            <LottieView
-              key={activeCaptureLottieType}
-              ref={captureLottieRef}
-              source={activeCaptureLottieType === 'manual' ? ManualCaptureLottie : AutoCaptureLottie}
-              loop={false}
-              resizeMode="contain"
-              style={styles.testLottie}
-              onLayout={() => {
-                requestAnimationFrame(() => {
-                  captureLottieRef.current?.play(32, 150);
-                });
-              }}
-              onAnimationFinish={() => {
-                if (lottieCompletedRef.current) {
-                  return;
-                }
-
-                lottieCompletedRef.current = true;
-                requestAnimationFrame(() => {
-                  captureLottieRef.current?.play(150, 150);
-                });
-
-                if (pendingCapturePhotoUri) {
-                  setCaptureCompleteVisible(true);
-                }
-              }}
-            />
-          </View>
-        ) : null}
-
-        {captureCompleteVisible ? (
-          <View style={styles.captureCompleteToast} pointerEvents="none">
-            <Text style={styles.captureCompleteToastText}>촬영이 완료되었어요!</Text>
-          </View>
-        ) : null}
+        <CaptureProgressOverlay
+          activeType={activeCaptureLottieType}
+          completeVisible={captureCompleteVisible}
+          layout={autoCaptureLottieLayout}
+          onLottieFinish={handleCaptureLottieFinish}
+        />
 
         <View style={styles.bottomBar}>
           <Pressable
