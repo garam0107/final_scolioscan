@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import styles from '../analysisCards.styles';
+import styles from '../styles/analysisCards.styles';
 import type { AnalysisPose } from '../analysisPose';
 import { getRegionalSeverity, getSeverityBarPercent } from '../severity';
 import { formatDegree, regionDisplayLabel } from '../utils/analysisFormat';

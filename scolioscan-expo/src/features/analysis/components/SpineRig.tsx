@@ -1,6 +1,6 @@
 import { Animated, Image, View } from 'react-native';
 
-import styles from '../analysisStage.styles';
+import styles from '../styles/analysisStage.styles';
 import { VERTEBRA_COUNT } from '../analysisPose';
 
 const spineImage = require('../../../../assets/images/spine.png');

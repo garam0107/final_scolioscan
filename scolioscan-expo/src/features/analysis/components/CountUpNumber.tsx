@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 
-import styles from '../analysisStage.styles';
+import styles from '../styles/analysisStage.styles';
 import { formatDegree } from '../utils/analysisFormat';
 
 const SLOT_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];

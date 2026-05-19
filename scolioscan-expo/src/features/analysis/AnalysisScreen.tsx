@@ -13,7 +13,7 @@ import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { useAuth } from '@/src/contexts/AuthContext';
 import type { InfoCardLevel } from './analysisCopy';
-import styles from './analysis.styles';
+import styles from './styles/analysis.styles';
 import { createAnalysisPose } from './analysisPose';
 import AiDoctorCard from './components/AiDoctorCard';
 import AnalysisStage from './components/AnalysisStage';

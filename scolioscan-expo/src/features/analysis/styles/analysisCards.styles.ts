@@ -28,7 +28,7 @@ const cardStyles = StyleSheet.create({
   },
   infoCardTitle: {
     ...textFont,
-    color: '#2B2F36',
+    color: Colors.gray[900],
     fontSize: 14,
     fontWeight: '800',
     marginBottom: 16,

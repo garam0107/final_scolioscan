@@ -1,7 +1,7 @@
 import { Linking, Pressable, Text, View } from 'react-native';
 
 import { getInfoCardCopy, type InfoCardLevel } from '../analysisCopy';
-import styles from '../analysisCards.styles';
+import styles from '../styles/analysisCards.styles';
 
 type InfoCardProps = {
   level: InfoCardLevel;
