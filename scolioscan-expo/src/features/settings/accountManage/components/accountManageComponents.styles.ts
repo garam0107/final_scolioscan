@@ -1,223 +1,20 @@
-import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
+
 import { textFont } from '@/src/constants/fonts';
+import { Colors } from '@/src/constants/theme';
 
 const styles = StyleSheet.create({
-  screen: {
-    backgroundColor: Colors.gray[25],
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    height: 80,
-    paddingHorizontal: 16,
-    backgroundColor: Colors.gray[25],
-  },
-  backButton: {
-    alignItems: 'center',
-    height: 36,
-    justifyContent: 'center',
-    width: 36,
-  },
-  headerTitle: {
-    ...textFont,
-    color: '#20242C',
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  headerSide: {
-    width: 36,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 0,
-  },
-  sectionTitle: {
-    ...textFont,
-    color: '#000000',
-    fontSize: 14,
-    fontWeight: '400',
-    marginBottom: 12,
-  },
   accountSection: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
+    elevation: 1,
+    paddingBottom: 10,
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 10,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.03,
     shadowRadius: 14,
-    elevation: 1,
-  },
-  sectionSpacing: {
-    marginTop: 20,
-  },
-  loginSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.03,
-    shadowRadius: 14,
-    elevation: 1,
-  },
-  loginMethodRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 14,
-    minHeight: 46,
-  },
-  loginMethodIcon: {
-    alignItems: 'center',
-    height: 28,
-    justifyContent: 'center',
-    width: 28,
-  },
-  loginMethodContent: {
-    flex: 1,
-  },
-  loginMethodTitleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  loginMethodTitle: {
-    ...textFont,
-    color: Colors.gray[800],
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  loginMethodEmail: {
-    ...textFont,
-    color: Colors.gray[500],
-    fontSize: 11,
-    fontWeight: '400',
-    lineHeight: 15,
-    marginTop: 3,
-  },
-  infoBadge: {
-    alignItems: 'center',
-    backgroundColor: Colors.mint[25],
-    borderRadius: 999,
-    justifyContent: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-  },
-  infoBadgeText: {
-    ...textFont,
-    color: Colors.mint[600],
-    fontSize: 10,
-    fontWeight: '600',
-    lineHeight: 14,
-  },
-  deviceSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.03,
-    shadowRadius: 14,
-    elevation: 1,
-  },
-  deviceRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    minHeight: 46,
-  },
-  deviceContent: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  deviceTitleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  deviceTitle: {
-    ...textFont,
-    color: '#000000',
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 20,
-  },
-  deviceMeta: {
-    ...textFont,
-    color: Colors.gray[500],
-    fontSize: 10,
-    fontWeight: '400',
-    lineHeight: 14,
-    marginTop: 3,
-  },
-  activeBadge: {
-    alignItems: 'center',
-    backgroundColor: Colors.mint[25],
-    borderRadius: 999,
-    justifyContent: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-  },
-  activeBadgeText: {
-    ...textFont,
-    color: Colors.mint[600],
-    fontSize: 10,
-    fontWeight: '600',
-    lineHeight: 14,
-  },
-  deviceLogoutText: {
-    ...textFont,
-    color: Colors.gray[400],
-    fontSize: 13,
-    fontWeight: '500',
-    lineHeight: 18,
-  },
-  actionArea: {
-    marginTop: 20,
-    paddingBottom: 12,
-    paddingHorizontal: 0,
-  },
-  actionLinkRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  actionLinkText: {
-    ...textFont,
-    color: Colors.gray[500],
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight : 20
-  },
-  actionDivider: {
-    backgroundColor: '#D8DDE5',
-    height: 11,
-    marginHorizontal: 14,
-    width: 1,
-  },
-  saveButton: {
-    alignSelf: 'stretch',
-    width: '100%',
-    height : 48
-  },
-  saveButtonText: {
-    ...textFont,
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
   },
   fieldGroup: {
     marginBottom: 22,
@@ -270,12 +67,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
   },
-  birthInputText: {
-    ...textFont,
-    color: '#2B2F36',
-    fontSize: 13,
-    fontWeight: '700',
-  },
   genderRow: {
     flexDirection: 'row',
     gap: 10,
@@ -303,6 +94,136 @@ const styles = StyleSheet.create({
   genderTextActive: {
     color: '#5EAAA8',
   },
+  sectionSpacing: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    ...textFont,
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '400',
+    marginBottom: 12,
+  },
+  cardSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    elevation: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.03,
+    shadowRadius: 14,
+  },
+  infoRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 14,
+    justifyContent: 'space-between',
+    minHeight: 46,
+  },
+  infoIcon: {
+    alignItems: 'center',
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoContentWithRight: {
+    paddingRight: 12,
+  },
+  infoTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  infoTitle: {
+    ...textFont,
+    color: Colors.gray[800],
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  infoTitleDevice: {
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  infoSubtitle: {
+    ...textFont,
+    color: Colors.gray[500],
+    fontSize: 11,
+    fontWeight: '400',
+    lineHeight: 15,
+    marginTop: 3,
+  },
+  infoSubtitleDevice: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  infoBadge: {
+    alignItems: 'center',
+    backgroundColor: Colors.mint[25],
+    borderRadius: 999,
+    justifyContent: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  infoBadgeText: {
+    ...textFont,
+    color: Colors.mint[600],
+    fontSize: 10,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  actionArea: {
+    marginTop: 20,
+    paddingBottom: 12,
+    paddingHorizontal: 0,
+  },
+  actionLinkRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  actionLinkText: {
+    ...textFont,
+    color: Colors.gray[500],
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  deviceLogoutText: {
+    ...textFont,
+    color: Colors.gray[400],
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+  },
+  actionDivider: {
+    backgroundColor: '#D8DDE5',
+    height: 11,
+    marginHorizontal: 14,
+    width: 1,
+  },
+  fixedFooter: {
+    backgroundColor: Colors.gray[25],
+    paddingHorizontal: 16,
+  },
+  saveButton: {
+    alignSelf: 'stretch',
+    height: 48,
+    width: '100%',
+  },
+  saveButtonText: {
+    ...textFont,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   withdrawModalOverlay: {
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
@@ -313,11 +234,11 @@ const styles = StyleSheet.create({
   withdrawModalCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
+    maxWidth: 360,
+    paddingBottom: 0,
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 0,
     width: '100%',
-    maxWidth: 360,
   },
   withdrawModalTitle: {
     ...textFont,
@@ -325,8 +246,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     lineHeight: 20,
-    marginLeft: 8,
     marginBottom: 4,
+    marginLeft: 8,
   },
   withdrawModalDescription: {
     ...textFont,
@@ -334,16 +255,16 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '400',
     lineHeight: 14,
-    marginLeft: 8,
     marginBottom: 16,
+    marginLeft: 8,
   },
   withdrawDeleteBox: {
     alignSelf: 'stretch',
     backgroundColor: '#F3F4F7',
     borderRadius: 8,
+    marginBottom: 15,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    marginBottom: 15,
   },
   withdrawDeleteTitle: {
     ...textFont,
@@ -367,8 +288,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     lineHeight: 20,
-    marginLeft: 8,
     marginBottom: 9,
+    marginLeft: 8,
   },
   withdrawPasswordWrap: {
     alignItems: 'center',
@@ -378,9 +299,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     flexDirection: 'row',
+    marginBottom: 16,
     minHeight: 46,
     paddingHorizontal: 12,
-    marginBottom: 16,
   },
   withdrawPasswordInput: {
     ...textFont,
@@ -397,9 +318,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
-    marginTop: -8,
     marginBottom: 12,
     marginLeft: 8,
+    marginTop: -8,
   },
   withdrawButtonRow: {
     flexDirection: 'row',
@@ -448,9 +369,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     maxWidth: 320,
+    paddingBottom: 16,
     paddingHorizontal: 20,
     paddingTop: 24,
-    paddingBottom: 16,
     width: '100%',
   },
   withdrawCompleteTitle: {
@@ -476,13 +397,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
-  },
-  fixedFooter: {
-    backgroundColor: Colors.gray[25],
-    // borderTopColor: Colors.gray[25],
-
-    paddingHorizontal: 16,
-  
   },
 });
 
