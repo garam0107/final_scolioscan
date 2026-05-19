@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  Linking,
-  Pressable,
   ScrollView,
   Text,
   View,
@@ -22,15 +20,14 @@ import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScr
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { AnalysisResponse } from '@/src/types/analysis';
-import {
-  getCurvePatternCopy,
-  getInfoCardCopy,
-  type InfoCardLevel,
-} from './analysisCopy';
+import type { InfoCardLevel } from './analysisCopy';
 import styles from './analysis.styles';
 import { createAnalysisPose } from './analysisPose';
+import AiDoctorCard from './components/AiDoctorCard';
 import AnalysisStage from './components/AnalysisStage';
+import CurvePatternCard from './components/CurvePatternCard';
 import DominantCurveCard from './components/DominantCurveCard';
+import InfoCard from './components/InfoCard';
 import SeverityCard from './components/SeverityCard';
 import {
   toAnalysisFromCurvature,
@@ -40,10 +37,7 @@ import {
 import {
   classifyDominantCurve,
   getDominantCurveInfo,
-  type DominantCurveInfo,
 } from './severity';
-import CurvePatternIcon from '../../../assets/icons/heroicons-outline_chart-bar.svg';
-import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 
 const SPINE_BONE_SIZE = 72;
 const SPINE_BONE_SPACING = 24;
@@ -69,33 +63,6 @@ function getWideStageScale(width: number, height: number) {
 
   // 태블릿에서는 화면을 꽉 쓰되 첫 화면에서 과하게 커지지 않도록 가로/세로 중 작은 배율을 사용한다.
   return Math.max(1, Math.min(widthScale, heightScale));
-}
-
-function CurvePatternCard({ dominantCurve }: { dominantCurve: DominantCurveInfo }) {
-  const copy = getCurvePatternCopy(dominantCurve);
-
-  return (
-    <View style={styles.curvePatternCard}>
-      <Text style={styles.curvePatternTitle}>곡선 패턴</Text>
-      <View style={styles.curvePatternContent}>
-        <View style={styles.curvePatternIconBox}>
-          <CurvePatternIcon width={30} height={30} />
-        </View>
-        <View style={styles.curvePatternText}>
-          <Text style={styles.curvePatternName}>{copy.title}</Text>
-          <Text style={styles.curvePatternBody}>{copy.body}</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function AiDoctorCard() {
-  return (
-    <View style={styles.aiDoctorSvgWrap}>
-      <AnalysisSubImage width="100%" height="100%" preserveAspectRatio="xMidYMid meet" />
-    </View>
-  );
 }
 
 export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
@@ -133,8 +100,6 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
 
   const infoCardLevel = getInfoCardLevel(maxCobbValue);
   const severityLabel = infoCardLevel;
-  const infoCardCopy = getInfoCardCopy(infoCardLevel);
-  const InfoCardImageComponent = infoCardCopy.ImageComponent;
   const shouldShowMeasurementRequired = !loading && !analysis && !error;
 
   function getInfoCardLevel(value: number): InfoCardLevel {
@@ -285,19 +250,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             onRetry={() => setReloadKey((value) => value + 1)}
           />
 
-          <View style={styles.infoCard}>
-            <View style={styles.infoCardText}>
-              <Text style={styles.infoCardTitle}>{infoCardCopy.title}</Text>
-              <Text style={styles.infoCardBody}>{infoCardCopy.body}</Text>
-              <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
-                <Text style={styles.infoCardLink}>더 알아보기</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.infoCardImageWrap}>
-              <InfoCardImageComponent preserveAspectRatio="xMidYMid meet" />
-            </View>
-          </View>
+          <InfoCard level={infoCardLevel} />
 
           <SeverityCard metrics={pose.metrics} />
 
