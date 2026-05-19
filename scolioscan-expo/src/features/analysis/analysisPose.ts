@@ -22,7 +22,6 @@ export type MetricPose = {
 // 원호 표시용 위치/ 크기 정보 구조, 지금은 잠시 사용 안함. 추후 넣을 예정
 export type ArcPose = {
   key: 'upper' | 'main' | 'lumbar';
-  x: number;
   vertebraIndex: number;
   radiusRatio: number;
 };
@@ -131,9 +130,9 @@ export function createAnalysisPose(analysis: AnalysisResponse | null): AnalysisP
     vertebrae,
     // 원은 각 영역을 대표하는 척추뼈 index를 기준으로 배치해 뼈의 움직임과 같은 기준을 사용한다.
     arcs: [
-      { key: 'upper', x: (vertebrae[3]?.x ?? 0) + 5, vertebraIndex: 3, radiusRatio: 0.15 },
-      { key: 'main', x: (vertebrae[7]?.x ?? 0) + 5, vertebraIndex: 7, radiusRatio: 0.15 },
-      { key: 'lumbar', x: (vertebrae[11]?.x ?? 0) + 5, vertebraIndex: 11, radiusRatio: 0.15 },
+      { key: 'upper', vertebraIndex: 3, radiusRatio: 0.15 },
+      { key: 'main', vertebraIndex: 7, radiusRatio: 0.15 },
+      { key: 'lumbar', vertebraIndex: 11, radiusRatio: 0.15 },
     ],
   };
 }

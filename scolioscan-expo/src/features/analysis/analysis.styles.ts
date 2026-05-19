@@ -66,18 +66,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  overlayLayer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: 'center',
-  },
-  overlayStage: {
-    position: 'relative',
-    height: '100%',
-  },
   arcMarker: {
     position: 'absolute',
     borderWidth: 2,

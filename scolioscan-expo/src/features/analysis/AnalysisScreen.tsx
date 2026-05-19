@@ -288,48 +288,29 @@ function CountUpNumber({
 }
 
 function ArcMarker({
-  x,
-  vertebraIndex,
-  radiusRatio,
-  progress,
-  stageWidth,
-  stageHeight,
+  size,
   boneSize,
-  spacing,
 }: {
-  x: number;
-  vertebraIndex: number;
-  radiusRatio: number;
-  progress: Animated.Value;
-  stageWidth: number;
-  stageHeight: number;
+  size: number;
   boneSize: number;
-  spacing: number;
 }) {
-  const size = stageWidth * radiusRatio * 2;
-  const rigHeight = (VERTEBRA_COUNT - 1) * spacing + boneSize;
-  const rigTop = (stageHeight - rigHeight) / 2;
-  // 원의 세로 중심은 척추뼈를 놓는 공식과 같은 기준을 사용해 기본 위치와 움직임을 맞춘다.
-  const centerY = rigTop + vertebraIndex * spacing + boneSize / 2;
-  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, x] });
-
+  // 뼈 내부 중앙에 원을 올려 부모 뼈의 이동과 회전을 그대로 따라가게 합니다.
   return (
-    <Animated.View
+    <View
       style={[
         styles.arcMarker,
         {
           width: size,
           height: size,
           borderRadius: size / 2,
-          left: (stageWidth - size) / 2,
-          top: centerY - size / 2,
-          transform: [{ translateX }],
+          left: (boneSize - size) / 2,
+          top: (boneSize - size) / 2,
         },
       ]}
       pointerEvents="none"
     >
       <View style={[styles.arcMarkerCenter, { width: size * 0.42, height: size * 0.42, borderRadius: size * 0.21 }]} />
-    </Animated.View>
+    </View>
   );
 }
 
@@ -429,15 +410,58 @@ function SpineBone({
   );
 }
 
+function SpineMarker({
+  x,
+  rotation,
+  progress,
+  left,
+  top,
+  boneSize,
+  markerSize,
+}: {
+  x: number;
+  rotation: number;
+  progress: Animated.Value;
+  left: number;
+  top: number;
+  boneSize: number;
+  markerSize: number;
+}) {
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, x] });
+  const rotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${rotation}deg`] });
+
+  // 뼈와 같은 위치/회전 값을 쓰되 뼈 렌더링 이후에 그려 원이 항상 위에 보이게 합니다.
+  return (
+    <Animated.View
+      style={[
+        styles.spineBone,
+        {
+          left,
+          top,
+          width: boneSize,
+          height: boneSize,
+          zIndex: 20,
+          transform: [{ translateX }, { rotate }],
+        },
+      ]}
+      pointerEvents="none"
+    >
+      <ArcMarker size={markerSize} boneSize={boneSize} />
+    </Animated.View>
+  );
+}
+
 function SpineRig({
   progress,
   slices,
+  markers,
   stageWidth,
   boneSize,
   spacing,
 }: {
   progress: Animated.Value;
   slices: { x: number; rotation: number }[];
+  markers: { vertebraIndex: number; radiusRatio: number }[];
   stageWidth: number;
   boneSize: number;
   spacing: number;
@@ -449,7 +473,7 @@ function SpineRig({
     <View style={{ width: stageWidth, height: rigHeight, position: 'relative' }} pointerEvents="none">
       {slices.map((slice, index) => (
         <SpineBone
-          key={index}
+          key={`bone-${index}`}
           x={slice.x}
           rotation={slice.rotation}
           progress={progress}
@@ -458,6 +482,27 @@ function SpineRig({
           boneSize={boneSize}
         />
       ))}
+
+      {markers.map((marker) => {
+        const slice = slices[marker.vertebraIndex];
+
+        if (!slice) {
+          return null;
+        }
+
+        return (
+          <SpineMarker
+            key={`marker-${marker.vertebraIndex}`}
+            x={slice.x}
+            rotation={slice.rotation}
+            progress={progress}
+            left={left}
+            top={marker.vertebraIndex * spacing}
+            boneSize={boneSize}
+            markerSize={stageWidth * marker.radiusRatio * 2}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -639,44 +684,11 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
               <SpineRig
                 progress={progress}
                 slices={pose.vertebrae}
+                markers={pose.arcs}
                 stageWidth={stageWidth}
                 boneSize={stageBoneSize}
                 spacing={stageBoneSpacing}
               />
-            </View>
-
-            <View style={styles.overlayLayer} pointerEvents="none">
-              {isWideLayout ? (
-                <View style={[styles.overlayStage, { width: stageWidth }]}>
-                  {pose.arcs.map((arc) => (
-                    <ArcMarker
-                      key={arc.key}
-                      x={arc.x * wideStageScale}
-                      vertebraIndex={arc.vertebraIndex}
-                      radiusRatio={arc.radiusRatio}
-                      progress={progress}
-                      stageWidth={stageWidth}
-                      stageHeight={stageHeight}
-                      boneSize={stageBoneSize}
-                      spacing={stageBoneSpacing}
-                    />
-                  ))}
-                </View>
-              ) : (
-                pose.arcs.map((arc) => (
-                  <ArcMarker
-                    key={arc.key}
-                    x={arc.x}
-                    vertebraIndex={arc.vertebraIndex}
-                    radiusRatio={arc.radiusRatio}
-                    progress={progress}
-                    stageWidth={stageWidth}
-                    stageHeight={stageHeight}
-                    boneSize={stageBoneSize}
-                    spacing={stageBoneSpacing}
-                  />
-                ))
-              )}
             </View>
 
             <View style={styles.textLayer}>
