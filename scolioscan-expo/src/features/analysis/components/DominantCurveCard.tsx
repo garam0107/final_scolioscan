@@ -1,6 +1,6 @@
 import { Linking, Pressable, Text, View } from 'react-native';
 
-import styles from '../analysis.styles';
+import styles from '../analysisCards.styles';
 import type { DominantCurveInfo } from '../severity';
 import VertebraeType from '../../../../assets/images/analysis/analysis_type_normal.svg';
 import VertebraeDoubleMajor from '../../../../assets/images/analysis/Double_major.svg';

@@ -1,6 +1,6 @@
 import { Animated, Image, View } from 'react-native';
 
-import styles from '../analysis.styles';
+import styles from '../analysisStage.styles';
 import { VERTEBRA_COUNT } from '../analysisPose';
 
 const spineImage = require('../../../../assets/images/spine.png');
@@ -85,7 +85,7 @@ function SpineBone({
       ]}
       pointerEvents="none"
     >
-      <Image source={spineImage} style={{ width: boneSize, height: boneSize }} resizeMode="contain" />
+      <Image source={spineImage} style={[styles.spineImage, { width: boneSize, height: boneSize }]} />
     </Animated.View>
   );
 }
@@ -143,7 +143,7 @@ export default function SpineRig({
   const left = (stageWidth - boneSize) / 2;
 
   return (
-    <View style={{ width: stageWidth, height: rigHeight, position: 'relative' }} pointerEvents="none">
+    <View style={[styles.spineRig, { width: stageWidth, height: rigHeight }]} pointerEvents="none">
       {slices.map((slice, index) => (
         <SpineBone
           key={`bone-${index}`}

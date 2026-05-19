@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import styles from '../analysis.styles';
+import styles from '../analysisCards.styles';
 import AnalysisSubImage from '../../../../assets/images/analysis_sub.svg';
 
 export default function AiDoctorCard() {

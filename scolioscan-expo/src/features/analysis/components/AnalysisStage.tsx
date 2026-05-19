@@ -1,6 +1,6 @@
 import { Animated, Pressable, Text, View } from 'react-native';
 
-import styles from '../analysis.styles';
+import styles from '../analysisStage.styles';
 import type { AnalysisPose } from '../analysisPose';
 import MetricBlock from './MetricBlock';
 import SpineRig from './SpineRig';

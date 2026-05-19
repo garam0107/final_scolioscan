@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 
 import { getCurvePatternCopy } from '../analysisCopy';
-import styles from '../analysis.styles';
+import styles from '../analysisCards.styles';
 import type { DominantCurveInfo } from '../severity';
 import CurvePatternIcon from '../../../../assets/icons/heroicons-outline_chart-bar.svg';
 

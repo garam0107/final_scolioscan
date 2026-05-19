@@ -118,7 +118,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   if (loading) {
     return (
       <View style={styles.screen}>
-        <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+        <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
           <StatusBar style="dark" backgroundColor="#F4F6F7" translucent={false} />
           <View style={styles.loadingBox}>
             <ActivityIndicator color="#69B7BC" />
@@ -131,19 +131,19 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
 
   return (
     <View style={styles.screen}>
-      <SafeAreaView edges={['top', 'left', 'right', ]} style={{ flex: 1 }}>
+      <SafeAreaView edges={['top', 'left', 'right', ]} style={styles.safeArea}>
         <StatusBar style="dark" backgroundColor="#F4F6F7" translucent={false} />
 
         <ScrollView
           ref={scrollRef}
-          style={{ flex: 1 }}
+          style={styles.scroll}
           showsVerticalScrollIndicator
           onScroll={topScrollGradient.onScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.content,
             shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
-            { paddingTop: 8, paddingBottom: 16  },
+            styles.contentInset,
           ]}
         >
           {shouldShowMeasurementRequired ? (

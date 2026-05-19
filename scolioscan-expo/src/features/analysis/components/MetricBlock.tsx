@@ -1,6 +1,6 @@
 import { Animated, Text, View } from 'react-native';
 
-import styles from '../analysis.styles';
+import styles from '../analysisStage.styles';
 import CountUpNumber from './CountUpNumber';
 
 type MetricBlockProps = {

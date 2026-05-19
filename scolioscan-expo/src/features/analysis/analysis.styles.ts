@@ -7,9 +7,19 @@ const styles = StyleSheet.create({
     flex: 1,
       backgroundColor: Colors.gray[25],
   },
+  safeArea: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
   content: {
     flexGrow: 1,
     paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  contentInset: {
+    paddingTop: 8,
     paddingBottom: 16,
   },
   measurementRequiredContent: {
@@ -497,6 +507,12 @@ const styles = StyleSheet.create({
   spineBone: {
     position: 'absolute',
     overflow: 'visible',
+  },
+  spineRig: {
+    position: 'relative',
+  },
+  spineImage: {
+    resizeMode: 'contain',
   },
   loadingBox : {
   flex: 1,
