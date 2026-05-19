@@ -30,6 +30,7 @@ import {
 } from './analysisCopy';
 import styles from './analysis.styles';
 import { createAnalysisPose, VERTEBRA_COUNT } from './analysisPose';
+import CountUpNumber from './components/CountUpNumber';
 import {
   toAnalysisFromCurvature,
   toAnalysisFromMeasurementSet,
@@ -59,14 +60,6 @@ const WIDE_LAYOUT_MIN_WIDTH = 600;
 const BASE_STAGE_WIDTH = 420;
 const BASE_STAGE_HEIGHT = 380;
 const STAGE_HORIZONTAL_PADDING = 20;
-const SLOT_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const SLOT_REPEAT_COUNT = 3;
-// 슬롯 이동 거리는 digitFrame, digitCell 높이와 같아야 한 자리만 안정적으로 보인다.
-const SLOT_ITEM_HEIGHT = 38;
-const SLOT_DIGIT_ITEMS = Array.from(
-  { length: SLOT_REPEAT_COUNT + 1 },
-  () => SLOT_DIGITS,
-).flat();
 
 type AnalysisScreenProps = {
   analysisId?: string;
@@ -129,95 +122,6 @@ function AiDoctorCard() {
   return (
     <View style={styles.aiDoctorSvgWrap}>
       <AnalysisSubImage width="100%" height="100%" preserveAspectRatio="xMidYMid meet" />
-    </View>
-  );
-}
-
-function SlotDigit({
-  digit,
-  active,
-  animationKey,
-  order,
-}: {
-  digit: number;
-  active: boolean;
-  animationKey: number;
-  order: number;
-}) {
-  const step = useRef(new Animated.Value(0)).current;
-  const maxStep = SLOT_REPEAT_COUNT * SLOT_DIGITS.length + 9;
-  const targetStep = SLOT_REPEAT_COUNT * SLOT_DIGITS.length + digit;
-
-  useEffect(() => {
-    step.stopAnimation();
-
-    if (!active) {
-      step.setValue(targetStep);
-      return;
-    }
-
-    // 숫자 슬롯은 0에서 여러 바퀴를 돈 뒤 목표 숫자에서 멈추게 해서 실제 슬롯머신처럼 보이게 한다.
-    step.setValue(0);
-    const animation = Animated.timing(step, {
-      toValue: targetStep,
-      duration: 980 + order * 120,
-      delay: order * 70,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    });
-
-    animation.start();
-
-    return () => {
-      animation.stop();
-    };
-  }, [active, animationKey, order, step, targetStep]);
-
-  const translateY = step.interpolate({
-    inputRange: [0, maxStep],
-    outputRange: [0, -maxStep * SLOT_ITEM_HEIGHT],
-    extrapolate: 'clamp',
-  });
-
-  return (
-    <View style={styles.digitFrame} pointerEvents="none">
-      <Animated.View style={[styles.digitWheel, { transform: [{ translateY }] }]}>
-        {SLOT_DIGIT_ITEMS.map((item, index) => (
-          <Text key={`${index}-${item}`} style={styles.digitCell}>
-            {item}
-          </Text>
-        ))}
-      </Animated.View>
-    </View>
-  );
-}
-
-function CountUpNumber({
-  value,
-  active,
-  animationKey,
-}: {
-  value: number;
-  active: boolean;
-  animationKey: number;
-}) {
-  // 분석 탭 재진입 시 animationKey가 바뀌면 숫자도 다시 0부터 올라간다.
-  const target = Math.max(0, Math.round(Math.abs(value)));
-  // 각도를 정수 문자열로 쪼개 자리수마다 독립적인 슬롯 애니메이션을 적용한다.
-  const digits = String(target).split('').map((digit) => Number(digit));
-
-  return (
-    <View style={styles.metricValueSlot} accessibilityLabel={formatDegree(target)}>
-      {digits.map((digit, index) => (
-        <SlotDigit
-          key={`${digits.length}-${index}`}
-          digit={digit}
-          active={active}
-          animationKey={animationKey}
-          order={index}
-        />
-      ))}
-      <Text style={styles.degree}>{'\u00B0'}</Text>
     </View>
   );
 }
