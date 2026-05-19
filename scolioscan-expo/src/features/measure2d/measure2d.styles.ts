@@ -143,13 +143,44 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     pointerEvents: 'none',
   },
+  captureCompleteBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 15,
+  },
+  captureCompleteBlur: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  captureCompleteTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  },
   testLottieWrap: {
     position: 'absolute',
-    zIndex: 20,
+    zIndex: 25,
     pointerEvents: 'none',
   },
   testLottie: {
     width: '100%',
     height: '100%',
+  },
+  captureCompleteToast: {
+    position: 'absolute',
+    alignSelf: 'center',
+    bottom: '13%',
+    zIndex: 30,
+    minHeight: 48,
+    borderRadius: 30,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  captureCompleteToastText: {
+    ...textFont,
+    color: '#20C99C',
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 28,
   },
 });

@@ -368,7 +368,8 @@ export default function HomeScreen() {
     title: '2D 측정하기',
     subtitle: '집에서 간편하게 측정',
     icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
-    onPress: () => router.push('/measure/guide'),
+    // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
+    onPress: () => router.push('/measure/2d'),
   },
   {
     id: '3d',
