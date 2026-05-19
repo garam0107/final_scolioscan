@@ -1,34 +1,24 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { useAuth } from '@/src/contexts/AuthContext';
+import ProfileCard from '@/src/features/settings/components/ProfileCard';
+import SettingRow, { type SettingsToggleKey } from '@/src/features/settings/components/SettingRow';
+import SettingsSection from '@/src/features/settings/components/SettingsSection';
+import SettingsTimeRow, { type SettingsTimeTarget } from '@/src/features/settings/components/SettingsTimeRow';
+import SubscriptionCard from '@/src/features/settings/components/SubscriptionCard';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
 import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
-import ProfileIcon from '../../../assets/images/basic_profile_image.svg'
 
-type ToggleKey = 'cellular' | 'nightMode' | 'importantAlarm' | 'otherAlarm' | 'marketing' | 'cloudBackup';
-type NightTimeTarget = 'start' | 'end';
 type SettingsSheetType = 'language' | 'reset' | 'guide' | null;
 
-type SettingRowProps = {
-  title: string;
-  description?: string;
-  value?: string;
-  danger?: boolean;
-  onPress?: () => void;
-  toggleKey?: ToggleKey;
-  toggles?: Record<ToggleKey, boolean>;
-  onToggle?: (key: ToggleKey) => void;
-};
-
-const DEFAULT_TOGGLES: Record<ToggleKey, boolean> = {
+const DEFAULT_TOGGLES: Record<SettingsToggleKey, boolean> = {
   cellular: true,
   nightMode: false,
   importantAlarm: false,
@@ -47,57 +37,6 @@ function formatHourLabel(hour: number) {
   return `${period} ${displayHour}시`;
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.sectionBody}>{children}</View>
-    </View>
-  );
-}
-
-function SettingRow({
-  title,
-  description,
-  value,
-  danger = false,
-  onPress,
-  toggleKey,
-  toggles,
-  onToggle,
-}: SettingRowProps) {
-  // 같은 행 컴포넌트에서 스위치형 설정과 이동형 설정을 함께 처리한다.
-  const hasSwitch = Boolean(toggleKey && toggles && onToggle);
-  const isOn = toggleKey ? toggles?.[toggleKey] : false;
-
-  return (
-    <Pressable
-      disabled={!onPress && !hasSwitch}
-      onPress={hasSwitch && toggleKey ? () => onToggle?.(toggleKey) : onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-    >
-      <View style={styles.rowText}>
-        <Text style={[styles.rowTitle, danger && styles.dangerText]}>{title}</Text>
-        {description ? <Text style={styles.rowDescription}>{description}</Text> : null}
-      </View>
-      {hasSwitch && toggleKey ? (
-        <Switch
-          value={isOn}
-          onValueChange={() => onToggle?.(toggleKey)}
-          trackColor={{ false: '#D4D9E2', true: '#2C9696' }}
-          thumbColor="#FFFFFF"
-          ios_backgroundColor="#D4D9E2"
-        />
-      ) : (
-        <View style={styles.rowMeta}>
-          {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-          {onPress ? <Ionicons name="chevron-forward" size={16} color="#B9C1CC" /> : null}
-        </View>
-      )}
-    </Pressable>
-  );
-}
-
 export default function SettingsScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -109,7 +48,7 @@ export default function SettingsScreen() {
   const setNightModeEnabled = useAppSettingsStore((state) => state.setNightModeEnabled);
   const setNightModeHours = useAppSettingsStore((state) => state.setNightModeHours);
   const [toggles, setToggles] = useState(DEFAULT_TOGGLES);
-  const [nightTimeTarget, setNightTimeTarget] = useState<NightTimeTarget | null>(null);
+  const [nightTimeTarget, setNightTimeTarget] = useState<SettingsTimeTarget | null>(null);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
   const scrollRef = useRef<ScrollView>(null);
@@ -135,7 +74,7 @@ export default function SettingsScreen() {
     [cellularDataAllowed, nightModeEnabled, toggles],
   );
 
-  const handleToggle = (key: ToggleKey) => {
+  const handleToggle = (key: SettingsToggleKey) => {
     if (key === 'cellular') {
       // 모바일 데이터 허용 여부는 앱을 다시 켜도 유지되도록 저장소에 반영한다.
       void setCellularDataAllowed(!cellularDataAllowed).catch(() => {
@@ -204,44 +143,14 @@ export default function SettingsScreen() {
         onScroll={topScrollGradient.onScroll}
         scrollEventThrottle={16}
       >
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <ProfileIcon/>
-          </View>
-          <View style={styles.profileText}>
-            <View style={styles.nameLine}>
-              <Text style={styles.profileName}>{profile.name}</Text>
-              {/* 구독한 사람만 뱃지 나오도록 수정 */}
-              {/* <View style={styles.proBadge}>
-                <Text style={styles.proBadgeText}>Pro</Text>
-              </View> */}
-            </View>
-            <Text style={styles.profileEmail}>{profile.email}</Text>
-          </View>
-          <Pressable
-            hitSlop={8}
-            onPress={() => router.push('/settings/account')}
-            style={({ pressed }) => [styles.accountManagePill, pressed && styles.accountManagePillPressed]}
-          >
-            <Text style={styles.accountManageText}>계정 관리</Text>
-            <Ionicons name="chevron-forward" size={12} color="#B8C0CA" />
-          </Pressable>
-        </View>
-        <Text style={styles.subscriptionLabel}>구독 정보</Text>
-        <View style={styles.subscriptionCard}>
-          <View style={styles.subscriptionLeft}>
-            
-            <View style={styles.subscriptionStatus}>
-              {/* 구독 상태에 따라 표시하도록 수정 현재는 하드코딩 */}
-              <Text style={styles.subscriptionText}>구독 상태에 따라 변경</Text>
-            </View>
-          </View>
-          <Pressable onPress={() => router.push('/settings/subscribe')} hitSlop={10}>
-            <Text style={styles.linkText}>구독 관리</Text>
-          </Pressable>
-        </View>
+        <ProfileCard
+          name={profile.name}
+          email={profile.email}
+          onAccountPress={() => router.push('/settings/account')}
+        />
+        <SubscriptionCard onManagePress={() => router.push('/settings/subscribe')} />
 
-        <Section title="앱 설정">
+        <SettingsSection title="앱 설정">
           <SettingRow
             title="언어 설정"
             description="앱 표시 언어"
@@ -254,9 +163,9 @@ export default function SettingsScreen() {
             toggles={displayedToggles}
             onToggle={handleToggle}
           />
-        </Section>
+        </SettingsSection>
         {/* 알림  */}
-        <Section title="알림 설정">
+        <SettingsSection title="알림 설정">
           <SettingRow
             title="야간 모드"
             description="설정 시간 동안 알림 끄기"
@@ -264,27 +173,12 @@ export default function SettingsScreen() {
             toggles={displayedToggles}
             onToggle={handleToggle}
           />
-          <View style={styles.timeRow}>
-            <View style={styles.timeField}>
-              <Text style={styles.timeLabel}>시작</Text>
-              <Pressable
-                style={({ pressed }) => [styles.timePill, pressed && styles.timePillPressed]}
-                onPress={() => setNightTimeTarget('start')}
-              >
-                <Text numberOfLines={1} style={styles.timePillText}>{formatHourLabel(nightStartHour)}</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.timeSeparator}>~</Text>
-            <View style={styles.timeField}>
-              <Text style={styles.timeLabel}>종료</Text>
-              <Pressable
-                style={({ pressed }) => [styles.timePill, pressed && styles.timePillPressed]}
-                onPress={() => setNightTimeTarget('end')}
-              >
-                <Text numberOfLines={1} style={styles.timePillText}>{formatHourLabel(nightEndHour)}</Text>
-              </Pressable>
-            </View>
-          </View>
+          <SettingsTimeRow
+            startHour={nightStartHour}
+            endHour={nightEndHour}
+            formatHourLabel={formatHourLabel}
+            onSelectTarget={setNightTimeTarget}
+          />
           {/* API 개발 되면 추가 */}
           {/* <SettingRow
             title="중요 알림"
@@ -307,9 +201,9 @@ export default function SettingsScreen() {
             toggles={toggles}
             onToggle={handleToggle}
           /> */}
-        </Section>
+        </SettingsSection>
 
-        <Section title="데이터">
+        <SettingsSection title="데이터">
           {/* 나중에 기능 개발하면 추가 */}
           {/* <SettingRow
             title="클라우드 백업"
@@ -323,16 +217,16 @@ export default function SettingsScreen() {
             description="PDF 파일로 저장"
             onPress={() => showComingSoon('히스토리 내보내기')}
           />
-        </Section>
+        </SettingsSection>
 
-        <Section title="정보">
+        <SettingsSection title="정보">
           <SettingRow title="가이드 다시보기" onPress={() => setSettingsSheetType('guide')} />
           <SettingRow title="버전 정보" value="v.0.0.0" />
           <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
           <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
           {/* <SettingRow title="데이터 초기화" danger onPress={() => setSettingsSheetType('reset')} /> */}
           <SettingRow title="데이터 초기화" danger onPress={() => showComingSoon('초기화')} />
-        </Section>
+        </SettingsSection>
       </ScrollView>
 
       <LanguageSettingsSheet
