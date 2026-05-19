@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
@@ -14,7 +15,15 @@ export default function MeasurementGuideIntroScreen() {
   const layout = getMeasurementGuideIntroLayout(width, height, insets.bottom);
   const twoDGuideSeen = useMeasurementGuideStore((state) => state.twoDGuideSeen);
   const spineGuideSeen = useMeasurementGuideStore((state) => state.spineGuideSeen);
+  const resetGuideSeen = useMeasurementGuideStore((state) => state.resetGuideSeen);
   const canStartMeasure = twoDGuideSeen && spineGuideSeen;
+
+  useEffect(() => {
+    return () => {
+      // 인트로 화면을 벗어나면 다시 진입할 때 새로 가이드를 확인하도록 임시 체크 상태를 초기화한다.
+      resetGuideSeen();
+    };
+  }, [resetGuideSeen]);
   
 
   return (

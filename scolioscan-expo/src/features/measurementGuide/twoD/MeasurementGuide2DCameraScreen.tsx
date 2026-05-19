@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import MeasurementGuideStepScreen from '@/src/features/measurementGuide/shared/MeasurementGuideStepScreen';
 
@@ -25,10 +25,12 @@ const guidePages = [
 
 export default function MeasurementGuide2DCameraScreen() {
   const router = useRouter();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
   const [pageIndex, setPageIndex] = useState(0);
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
   const currentPage = guidePages[pageIndex];
   const markTwoDGuideSeen = useMeasurementGuideStore((state) => state.markTwoDGuideSeen);
+  const isReplayMode = mode === 'replay';
   function handleBack() {
     if (pageIndex > 0) {
       setTransitionDirection(-1);
@@ -46,7 +48,10 @@ export default function MeasurementGuide2DCameraScreen() {
     return;
   }
 
-  markTwoDGuideSeen();
+  // 설정의 가이드 다시보기에서는 인트로의 임시 체크 상태를 바꾸지 않고 화면만 닫는다.
+  if (!isReplayMode) {
+    markTwoDGuideSeen();
+  }
   router.back();
 }
 
@@ -57,7 +62,7 @@ export default function MeasurementGuide2DCameraScreen() {
       title={currentPage.title}
       description={currentPage.description}
       subDescription={currentPage.subDescription}
-      nextLabel={currentPage.buttonLabel}
+      nextLabel={pageIndex === guidePages.length - 1 && isReplayMode ? '닫기' : currentPage.buttonLabel}
       onBack={handleBack}
       onNext={handleNext}
     />
