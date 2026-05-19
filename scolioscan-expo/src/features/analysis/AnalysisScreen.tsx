@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
-  Easing,
   ScrollView,
   Text,
   View,
   useWindowDimensions,
   ActivityIndicator
 } from 'react-native';
-import { useFocusEffect, useScrollToTop } from '@react-navigation/native';
+import { useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
@@ -38,6 +36,7 @@ import {
   classifyDominantCurve,
   getDominantCurveInfo,
 } from './severity';
+import { useAnalysisAnimation } from './hooks/useAnalysisAnimation';
 
 const SPINE_BONE_SIZE = 72;
 const SPINE_BONE_SPACING = 24;
@@ -72,9 +71,13 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [angleAnimationKey, setAngleAnimationKey] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
-  const progress = useRef(new Animated.Value(0)).current;
+  const {
+    progress,
+    angleAnimationKey,
+    startAnalysisAnimation,
+    resetAnalysisAnimation,
+  } = useAnalysisAnimation(Boolean(analysis));
   const topScrollGradient = useTopScrollGradient();
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
 
@@ -117,20 +120,6 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     return classifyDominantCurve(upperValue, mainValue, lumbarValue);
   }, [analysis?.back_type, upperValue, mainValue, lumbarValue]);
 
-  const startAnalysisAnimation = useCallback((duration: number) => {
-    // 척추 뼈, 표시 원, 각도 숫자를 같은 타이밍으로 처음 상태에서 다시 재생한다.
-    // 분석 탭에 다시 들어올 때마다 곧은 척추에서 측정 각도까지 같은 애니메이션을 반복한다.
-    progress.stopAnimation();
-    progress.setValue(0);
-    setAngleAnimationKey((value) => value + 1);
-    Animated.timing(progress, {
-      toValue: 1,
-      duration,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [progress]);
-
   useEffect(() => {
     let mounted = true;
 
@@ -170,7 +159,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
         if (!mounted) return;
         setAnalysis(null);
         setError('최신 분석 결과를 불러오지 못했어요.');
-        progress.setValue(0);
+        resetAnalysisAnimation();
       } finally {
         if (mounted) setLoading(false);
       }
@@ -181,15 +170,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     return () => {
       mounted = false;
     };
-  }, [analysisId, measurementVersion, progress, reloadKey, sourceType, startAnalysisAnimation]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (analysis) {
-        startAnalysisAnimation(1600);
-      }
-    }, [analysis, startAnalysisAnimation]),
-  );
+  }, [analysisId, measurementVersion, reloadKey, resetAnalysisAnimation, sourceType, startAnalysisAnimation]);
   // 현재 선택된 분석 탭을 다시 누르면 보던 위치와 상관없이 맨 위로 이동한다.
   useScrollToTop(scrollRef);
   if (loading) {
