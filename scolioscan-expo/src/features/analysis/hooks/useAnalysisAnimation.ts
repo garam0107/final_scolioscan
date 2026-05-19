@@ -1,15 +1,23 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+
+type UseAnalysisAnimationParams = {
+  hasAnalysis: boolean;
+  loading: boolean;
+  error: string | null;
+};
 
 type UseAnalysisAnimationResult = {
   progress: Animated.Value;
   angleAnimationKey: number;
-  startAnalysisAnimation: (duration: number) => void;
-  resetAnalysisAnimation: () => void;
 };
 
-export function useAnalysisAnimation(shouldReplayOnFocus: boolean): UseAnalysisAnimationResult {
+export function useAnalysisAnimation({
+  hasAnalysis,
+  loading,
+  error,
+}: UseAnalysisAnimationParams): UseAnalysisAnimationResult {
   const [angleAnimationKey, setAngleAnimationKey] = useState(0);
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -31,18 +39,27 @@ export function useAnalysisAnimation(shouldReplayOnFocus: boolean): UseAnalysisA
     progress.setValue(0);
   }, [progress]);
 
+  useEffect(() => {
+    if (loading) return;
+
+    if (error) {
+      resetAnalysisAnimation();
+      return;
+    }
+
+    startAnalysisAnimation(hasAnalysis ? 1600 : 0);
+  }, [error, hasAnalysis, loading, resetAnalysisAnimation, startAnalysisAnimation]);
+
   useFocusEffect(
     useCallback(() => {
-      if (shouldReplayOnFocus) {
+      if (hasAnalysis) {
         startAnalysisAnimation(1600);
       }
-    }, [shouldReplayOnFocus, startAnalysisAnimation]),
+    }, [hasAnalysis, startAnalysisAnimation]),
   );
 
   return {
     progress,
     angleAnimationKey,
-    startAnalysisAnimation,
-    resetAnalysisAnimation,
   };
 }
