@@ -14,6 +14,7 @@ import {
   AgreementState,
   isAllAgreed,
 } from './agreements';
+import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { agreementStyles as s } from './registerAgreement.styles';
 
 type Props = {
@@ -26,6 +27,19 @@ export default function RegisterAgreementStep({ state, onToggle, onToggleAll }: 
   const [openKey, setOpenKey] = useState<AgreementKey | null>(null);
   const allChecked = isAllAgreed(state);
   const openItem = openKey ? AGREEMENTS.find((item) => item.key === openKey) ?? null : null;
+
+  const handleAgreeFromModal = () => {
+    if (!openKey) {
+      return;
+    }
+
+    // 이미 동의한 약관은 다시 누르더라도 체크가 해제되지 않도록 유지합니다.
+    if (!state[openKey]) {
+      onToggle(openKey);
+    }
+
+    setOpenKey(null);
+  };
 
   return (
     <View style={s.wrap}>
@@ -93,6 +107,17 @@ export default function RegisterAgreementStep({ state, onToggle, onToggleAll }: 
           <ScrollView contentContainerStyle={s.modalBody}>
             <Text style={s.modalText}>{openItem?.body ?? ''}</Text>
           </ScrollView>
+          <View style={s.modalFooter}>
+            <PrimaryButton
+              title="동의하기"
+              onPress={handleAgreeFromModal}
+              width="100%"
+              height={48}
+              backgroundColor="#2C9696"
+              borderRadius={6}
+              textStyle={s.modalAgreeButtonText}
+            />
+          </View>
         </SafeAreaView>
       </Modal>
     </View>
