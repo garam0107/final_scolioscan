@@ -29,27 +29,19 @@ import {
 } from './analysisCopy';
 import styles from './analysis.styles';
 import { createAnalysisPose } from './analysisPose';
-import MetricBlock from './components/MetricBlock';
-import SpineRig from './components/SpineRig';
+import AnalysisStage from './components/AnalysisStage';
+import DominantCurveCard from './components/DominantCurveCard';
+import SeverityCard from './components/SeverityCard';
 import {
   toAnalysisFromCurvature,
   toAnalysisFromMeasurementSet,
   toAnalysisFromRotation,
 } from './utils/analysisMappers';
-import { formatDegree, regionDisplayLabel } from './utils/analysisFormat';
 import {
   classifyDominantCurve,
   getDominantCurveInfo,
-  getRegionalSeverity,
-  getSeverityBarPercent,
   type DominantCurveInfo,
 } from './severity';
-import VertebraeType from '../../../assets/images/analysis/analysis_type_normal.svg'
-import VertebraeDoubleMajor from '../../../assets/images/analysis/Double_major.svg';
-import VertebraeDoubleThoracic from '../../../assets/images/analysis/Double_Thoracic.svg';
-import VertebraeLumbar from '../../../assets/images/analysis/Lumbar.svg';
-import VertebraeThoracic from '../../../assets/images/analysis/Thoracic.svg';
-import VertebraeTripleCurve from '../../../assets/images/analysis/Triple_curve.svg';
 import CurvePatternIcon from '../../../assets/icons/heroicons-outline_chart-bar.svg';
 import AnalysisSubImage from '../../../assets/images/analysis_sub.svg';
 
@@ -77,25 +69,6 @@ function getWideStageScale(width: number, height: number) {
 
   // 태블릿에서는 화면을 꽉 쓰되 첫 화면에서 과하게 커지지 않도록 가로/세로 중 작은 배율을 사용한다.
   return Math.max(1, Math.min(widthScale, heightScale));
-}
-
-function getDominantCurveImageComponent(dominantCurve: DominantCurveInfo) {
-  // 서버가 내려준 back_type 또는 로컬 분류 결과에 맞는 척추 유형 이미지를 고른다.
-  switch (dominantCurve.key) {
-    case 'Thoracic':
-      return VertebraeThoracic;
-    case 'Double Thoracic':
-      return VertebraeDoubleThoracic;
-    case 'Double major':
-      return VertebraeDoubleMajor;
-    case 'Triple curve':
-      return VertebraeTripleCurve;
-    case 'Lumbar':
-      return VertebraeLumbar;
-    case 'Normal':
-    case 'Unknown':
-      return VertebraeType;
-  }
 }
 
 function CurvePatternCard({ dominantCurve }: { dominantCurve: DominantCurveInfo }) {
@@ -178,7 +151,6 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     if (analysis?.back_type) return getDominantCurveInfo(analysis.back_type);
     return classifyDominantCurve(upperValue, mainValue, lumbarValue);
   }, [analysis?.back_type, upperValue, mainValue, lumbarValue]);
-  const DominantCurveImageComponent = getDominantCurveImageComponent(dominantCurve);
 
   const startAnalysisAnimation = useCallback((duration: number) => {
     // 척추 뼈, 표시 원, 각도 숫자를 같은 타이밍으로 처음 상태에서 다시 재생한다.
@@ -297,51 +269,21 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             </Text>
           </View>
 
-          <View style={[styles.stage, { height: stageHeight }]}>
-            <View style={styles.spineLayer}>
-              <SpineRig
-                progress={progress}
-                slices={pose.vertebrae}
-                markers={pose.arcs}
-                stageWidth={stageWidth}
-                boneSize={stageBoneSize}
-                spacing={stageBoneSpacing}
-              />
-            </View>
-
-            <View style={styles.textLayer}>
-              {pose.metrics.map((metric) => (
-                <MetricBlock
-                  key={metric.key}
-                  metricKey={metric.key}
-                  label={metric.label}
-                  value={metric.value}
-                  side={metric.side}
-                  top={metric.topRatio * stageHeight}
-                  xOffset={metric.xOffset}
-                  xOffsetScale={wideStageScale}
-                  sideInset={metricSideInset}
-                  active={Boolean(analysis)}
-                  animationKey={angleAnimationKey}
-                  progress={progress}
-                />
-
-              ))}
-
-              {!analysis && !loading ? (
-                <Text style={styles.emptyText}>최근 측정 결과가 없어요. 먼저 측정을 진행해 주세요.</Text>
-              ) : null}
-
-              {error ? (
-                <>
-                  <Text style={styles.errorText}>{error}</Text>
-                  <Pressable style={styles.retryButton} onPress={() => setReloadKey((value) => value + 1)}>
-                    <Text style={styles.retryText}>다시 시도</Text>
-                  </Pressable>
-                </>
-              ) : null}
-            </View>
-          </View>
+          <AnalysisStage
+            pose={pose}
+            stageHeight={stageHeight}
+            stageWidth={stageWidth}
+            stageBoneSize={stageBoneSize}
+            stageBoneSpacing={stageBoneSpacing}
+            wideStageScale={wideStageScale}
+            metricSideInset={metricSideInset}
+            hasAnalysis={Boolean(analysis)}
+            loading={loading}
+            error={error}
+            angleAnimationKey={angleAnimationKey}
+            progress={progress}
+            onRetry={() => setReloadKey((value) => value + 1)}
+          />
 
           <View style={styles.infoCard}>
             <View style={styles.infoCardText}>
@@ -357,111 +299,14 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             </View>
           </View>
 
-          <View style={styles.severityCard}>
-            <Text style={styles.severityCardTitle}>심각도 분석</Text>
+          <SeverityCard metrics={pose.metrics} />
 
-            <View style={styles.severityCardInner}>
-              {pose.metrics.map((metric, index) => {
-                const severity = getRegionalSeverity(metric.value);
-                const isLast = index === pose.metrics.length - 1;
-
-                return (
-                  <View key={metric.key} style={styles.severityRow}>
-                    <Text style={styles.severityRegionLabel}>
-                      {regionDisplayLabel(metric.key)}
-                    </Text>
-
-                    <View style={styles.severityValueRow}>
-                      <Text style={styles.severityCurvatureLabel}>만곡도</Text>
-                      <Text style={styles.severityValue}>{formatDegree(metric.value)}</Text>
-
-                      <View
-                        style={[
-                          styles.severityBadge,
-                          { backgroundColor: severity.badgeBackground },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.severityBadgeText,
-                            { color: severity.badgeTextColor },
-                          ]}
-                        >
-                          {severity.label}
-                        </Text>
-                      </View>
-
-                      <View style={styles.severityBarWrap}>
-                        <View
-                          style={[
-                            styles.severityTrack,
-                            { backgroundColor: severity.trackColor },
-                          ]}
-                        >
-                          <View
-                            style={[
-                              styles.severityFill,
-                              {
-                                width: `${getSeverityBarPercent(metric.value)}%`,
-                                backgroundColor: severity.barColor,
-                              },
-                            ]}
-                          />
-                        </View>
-                      </View>
-                    </View>
-
-                    {!isLast ? <View style={styles.severityDivider} /> : null}
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.dominantCurveCard,
-              isWideLayout
-                ? {
-                    minHeight: 136 * wideStageScale,
-                    paddingLeft: 14 * wideStageScale,
-                    paddingRight: 10 * wideStageScale,
-                    paddingVertical: 8 * wideStageScale,
-                  }
-                : null,
-            ]}
-          >
-            <View style={styles.dominantCurveText}>
-              <Text style={styles.dominantCurveTitle}>척추 지배만곡 유형</Text>
-
-              <Text style={styles.dominantCurveBody}>
-                {summaryName} 님의 척추 지배만곡 유형은 {'\n'}
-                <Text style={styles.dominantCurveDiagnosis}>
-                  {dominantCurve.diagnosisName}
-                </Text>{' '}
-                {dominantCurve.key === 'Normal' ? '이에요' : '이에요'}
-              </Text>
-
-              <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
-                <Text style={styles.dominantCurveLink}>더 알아보기</Text>
-              </Pressable>
-            </View>
-
-            <View
-              style={[
-                styles.dominantCurveImageWrap,
-                isWideLayout
-                  ? {
-                      width: 120 * wideStageScale,
-                      height: 140 * wideStageScale,
-                      marginRight: -14 * wideStageScale,
-                    }
-                  : null,
-              ]}
-            >
-              <DominantCurveImageComponent preserveAspectRatio="xMidYMid meet" />
-            </View>
-          </View>
+          <DominantCurveCard
+            dominantCurve={dominantCurve}
+            summaryName={summaryName}
+            isWideLayout={isWideLayout}
+            wideStageScale={wideStageScale}
+          />
 
           <CurvePatternCard dominantCurve={dominantCurve} />
 
