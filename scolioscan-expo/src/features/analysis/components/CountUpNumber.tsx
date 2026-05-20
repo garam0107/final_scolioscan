@@ -40,7 +40,7 @@ function SlotDigit({ digit, active, animationKey, order }: SlotDigitProps) {
       duration: 980 + order * 120,
       delay: order * 70,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
+      useNativeDriver: true,
     });
 
     animation.start();
