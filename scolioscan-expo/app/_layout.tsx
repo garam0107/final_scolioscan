@@ -1,13 +1,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fonts/museomoderno';
-// import { useFonts } from 'expo-font';
 import { Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/src/contexts/AuthContext';
@@ -83,7 +80,11 @@ export default function RootLayout() {
       <AuthProvider>
         {/* View, TopSeparator 추가해서 상단바 밑으로 표시 */}
         {/* <View style={styles.root}> */}
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack screenOptions={{ headerShown: false,
+               contentStyle: {
+              backgroundColor: '#FFFFFF',
+    },
+           }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="intro" />

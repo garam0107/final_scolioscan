@@ -43,6 +43,9 @@ export async function detectLandmarks(imageUri: string): Promise<LandmarksApiRes
   console.log('[measure2d] /ais/landmarks 분석 결과', {
     detected: payload.detected,
     landmarkCount: payload.landmarks?.length ?? 0,
+    faceDetected: payload.face_detected,
+    faceScore: payload.face_score,
+    faceCount: payload.face_count,
   });
   return payload;
 }

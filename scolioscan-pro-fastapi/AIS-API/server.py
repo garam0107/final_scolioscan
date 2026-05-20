@@ -234,7 +234,11 @@ _pose = _mp_pose.Pose(
     model_complexity=0,
     min_detection_confidence=0.5,
 )
-
+_mp_face_detection = mp.solutions.face_detection
+_face_detection = _mp_face_detection.FaceDetection(
+    model_selection=1,
+    min_detection_confidence=0.5,
+)
 
 @app.post("/ais/landmarks")
 async def detect_landmarks(file: UploadFile = File(...)):
@@ -247,7 +251,7 @@ async def detect_landmarks(file: UploadFile = File(...)):
         raw_exif = raw_img.getexif()
         orientation = raw_exif.get(ExifTags.Base.Orientation, 1)
 
-        logger.info(
+        logger.debug(
             "[landmarks] raw_size=%s orientation=%s content_type=%s",
             raw_img.size,
             orientation,
@@ -255,20 +259,47 @@ async def detect_landmarks(file: UploadFile = File(...)):
         )
         # EXIF 회전을 실제 픽셀에 반영해 앱 화면 기준과 좌표계 일치
         img = ImageOps.exif_transpose(raw_img).convert("RGB")
-        logger.info("[landmarks] rgb_size=%s mode=%s", img.size, img.mode)
+        logger.debug("[landmarks] rgb_size=%s mode=%s", img.size, img.mode)
         # MediaPipe 입력용 numpy 배열(H, W, C)로 변환
         img_np = np.array(img)
-        logger.info("[landmarks] np_shape=%s", img_np.shape)
+        logger.debug("[landmarks] np_shape=%s", img_np.shape)
+        face_results = _face_detection.process(img_np)
+        face_detections = face_results.detections or []
+        face_scores = [
+            detection.score[0]
+            for detection in face_detections
+            if detection.score
+        ]
+        face_score = float(max(face_scores)) if face_scores else 0.0
+        face_detected = face_score >= 0.7
 
+        logger.debug(
+            "[landmarks] face_detected=%s face_score=%.4f face_count=%s",
+            face_detected,
+            face_score,
+            len(face_detections),
+        )
         results = _pose.process(img_np)
         if not results.pose_landmarks:
-            return JSONResponse({"detected": False, "landmarks": None})
+            return JSONResponse({
+                "detected": False,
+                "landmarks": None,
+                "face_detected": face_detected,
+                "face_score": face_score,
+                "face_count": len(face_detections),
+            })
 
         landmarks = [
-            {"x": lm.x, "y": lm.y, "visibility": lm.visibility}
+            {"x": lm.x, "y": lm.y, "z": lm.z, "visibility": lm.visibility}
             for lm in results.pose_landmarks.landmark
         ]
-        return JSONResponse({"detected": True, "landmarks": landmarks})
+        return JSONResponse({
+            "detected": True,
+            "landmarks": landmarks,
+            "face_detected": face_detected,
+            "face_score": face_score,
+            "face_count": len(face_detections),
+        })
     except Exception as e:
         logger.exception("landmarks detection failed")
         raise HTTPException(status_code=500, detail=str(e))

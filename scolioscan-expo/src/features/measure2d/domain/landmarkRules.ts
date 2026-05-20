@@ -1,4 +1,4 @@
-import type { LandmarkEvaluation, LandmarkPoint } from '../types';
+import type { LandmarkEvaluation, LandmarkPoint, FaceDetectionInfo } from '../types';
 import type { GuideReferencePoints, NormalizedRect } from './guidelineGeometry';
 
 // MediaPipe Pose landmark 인덱스
@@ -22,9 +22,7 @@ const GUIDE_AREA_SCORE_THRESHOLD = 75;
 
 // 후면/전면 판정 임계치
 const BEHIND_SHOULDER_DELTA = 0.02;
-const FACE_VISIBLE_FRONT_THRESHOLD = 0.55;
-const FACE_VISIBLE_BACK_THRESHOLD = 0.3;
-
+const FACE_DETECTION_FRONT_THRESHOLD = 0.7;
 // 거리 판정 임계치 (감지 스케일 / 가이드 스케일)
 const DIST_TOO_CLOSE = 1.45;
 const DIST_TOO_FAR = 0.58;
@@ -78,13 +76,6 @@ function midpointGuide(a: { x: number; y: number }, b: { x: number; y: number })
   };
 }
 
-function visibilityScore(points: (LandmarkPoint | null)[]) {
-  // 얼굴 랜드마크의 평균 visibility로 앞모습인지 뒷모습인지 판단하는 보조 점수를 만든다.
-  const visible = points.filter((point): point is LandmarkPoint => Boolean(point));
-  if (!visible.length) return 0;
-  const total = visible.reduce((acc, point) => acc + point.visibility, 0);
-  return total / visible.length;
-}
 
 function buildDetectedPoints(landmarks: LandmarkPoint[]): NamedDetectedPoints {
   // MediaPipe Pose 인덱스를 화면에서 쓰는 이름 있는 관절 포인트로 바꾼다.
@@ -107,34 +98,26 @@ function buildDetectedPoints(landmarks: LandmarkPoint[]): NamedDetectedPoints {
  * - faceScore: 얼굴 랜드마크 visibility 평균값
  * - 두 값을 함께 사용해 전면/후면/판정불가로 분류
  */
-function computeDirection(detected: NamedDetectedPoints) {
-  // 어깨 좌우 순서와 얼굴 랜드마크 노출 정도를 함께 보고 전면/후면을 판단한다.
+function computeDirection(detected: NamedDetectedPoints, faceInfo?: FaceDetectionInfo) {
   const shoulderOrderBack = (() => {
     if (!detected.leftShoulder || !detected.rightShoulder) return false;
     return detected.rightShoulder.x - detected.leftShoulder.x > BEHIND_SHOULDER_DELTA;
   })();
 
-  const faceScore = visibilityScore([
-    detected.nose,
-    detected.leftEye,
-    detected.rightEye,
-    detected.leftEar,
-    detected.rightEar,
-  ]);
+  const faceScore = faceInfo?.faceScore ?? 0;
+  const faceCount = faceInfo?.faceCount ?? 0;
+  const faceDetected =
+    Boolean(faceInfo?.faceDetected) ||
+    (faceCount > 0 && faceScore >= FACE_DETECTION_FRONT_THRESHOLD);
 
-  let direction: DirectionLabel = '판정불가';
-  if (shoulderOrderBack && faceScore <= FACE_VISIBLE_BACK_THRESHOLD) {
-    direction = '후면';
-  } else if (!shoulderOrderBack && faceScore >= FACE_VISIBLE_FRONT_THRESHOLD) {
-    direction = '전면';
-  } else if (shoulderOrderBack && faceScore < FACE_VISIBLE_FRONT_THRESHOLD) {
-    direction = '후면';
-  }
+  const direction: DirectionLabel = faceDetected ? '전면' : '후면';
 
   return {
     direction,
     shoulderOrderBack,
     faceScore,
+    faceCount,
+    faceDetected,
   };
 }
 
@@ -245,7 +228,9 @@ function logGuideComparison(
     direction: directionResult.direction,
     distance: distanceResult.distanceState,
     shoulderOrderBack: directionResult.shoulderOrderBack,
-    faceVisibilityScore: Number(directionResult.faceScore.toFixed(3)),
+    faceDetected: directionResult.faceDetected,
+    faceScore: Number(directionResult.faceScore.toFixed(3)),
+    faceCount: directionResult.faceCount,
     distanceScale: Number(distanceResult.scale.toFixed(3)),
     guideAreaScore: areaResult.score,
     guideAreaInsideCount: areaResult.insideCount,
@@ -263,14 +248,15 @@ export function evaluateLandmarks(
   landmarks: LandmarkPoint[],
   guidePoints: GuideReferencePoints,
   guideRect: NormalizedRect,
+  faceInfo?: FaceDetectionInfo,
 ): LandmarkEvaluation {
   // 후면 여부, 거리, 가이드 내부 위치를 차례대로 검사해 사용자 안내 문구를 만든다.
   const reasons: string[] = [];
   const detected = buildDetectedPoints(landmarks);
-
+  
   const shouldersVisible = isVisible(detected.leftShoulder) && isVisible(detected.rightShoulder);
   const hipsVisible = isVisible(detected.leftHip) && isVisible(detected.rightHip);
-  const directionResult = computeDirection(detected);
+  const directionResult = computeDirection(detected, faceInfo);
   const distanceResult = computeDistanceState(detected, guidePoints);
   const areaResult = computeGuideAreaScore(detected, guideRect);
 

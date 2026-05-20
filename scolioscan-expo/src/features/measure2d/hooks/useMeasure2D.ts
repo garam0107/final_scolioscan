@@ -159,7 +159,11 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
         return { photo, evaluation: nextEvaluation };
       }
 
-      const nextEvaluation = evaluateLandmarks(response.landmarks, guidePoints, guideRect);
+      const nextEvaluation = evaluateLandmarks(response.landmarks, guidePoints, guideRect, {
+        faceDetected: response.face_detected,
+        faceScore: response.face_score,
+        faceCount: response.face_count,
+      });
       console.log('[measure2d] 최종 판정 결과', nextEvaluation);
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };
