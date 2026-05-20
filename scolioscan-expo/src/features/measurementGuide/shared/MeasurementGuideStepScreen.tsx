@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import LottieView, { type AnimationObject } from 'lottie-react-native';
 import { Animated, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -10,6 +11,7 @@ type MeasurementGuideStepScreenProps = {
   pageKey: number;
   transitionDirection: 1 | -1;
   title: string;
+  lottieSource?: AnimationObject;
   description: string;
   subDescription?: string;
   nextLabel: string;
@@ -21,6 +23,7 @@ export default function MeasurementGuideStepScreen({
   pageKey,
   transitionDirection,
   title,
+  lottieSource,
   description,
   subDescription,
   nextLabel,
@@ -79,6 +82,15 @@ export default function MeasurementGuideStepScreen({
           <Text style={styles.guideTitle}>{title}</Text>
           <View style={[styles.mediaCard, { height: layout.mediaHeight }]}>
             {/* Lottie 파일만 바꾸어 2D, 3D, 척추측만계 가이드를 같은 레이아웃으로 재사용한다. */}
+              {lottieSource ? (
+                <LottieView
+                  source={lottieSource}
+                  autoPlay
+                  loop
+                  resizeMode="cover"
+                  style={styles.guideLottie}
+                />
+              ) : null}
           </View>
           <View style={styles.descriptionGroup}>
             <Text style={styles.description}>{description}</Text>

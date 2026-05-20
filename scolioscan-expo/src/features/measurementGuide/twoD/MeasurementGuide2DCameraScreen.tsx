@@ -3,11 +3,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import MeasurementGuideStepScreen from '@/src/features/measurementGuide/shared/MeasurementGuideStepScreen';
 
+const TwoDguideFirstPageLottie = require('../../../../assets/lottie/2dGuide_firstPage.json')
+
 const guidePages = [
   {
     title: '2D 카메라 촬영 방법',
     description: '화면 속 가이드라인에 맞춰 등을 찍어주세요.',
     buttonLabel: '다음',
+    lottieSource : TwoDguideFirstPageLottie,
   },
   {
     title: '2D 카메라 촬영 방법',
@@ -62,6 +65,7 @@ export default function MeasurementGuide2DCameraScreen() {
       title={currentPage.title}
       description={currentPage.description}
       subDescription={currentPage.subDescription}
+      lottieSource={currentPage.lottieSource}
       nextLabel={pageIndex === guidePages.length - 1 && isReplayMode ? '닫기' : currentPage.buttonLabel}
       onBack={handleBack}
       onNext={handleNext}

@@ -96,6 +96,10 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 2,
   },
+  guideLottie :{
+    width :'100%',
+    height :'100%'
+  },
   descriptionGroup: {
     width: '100%',
     gap: 12,
