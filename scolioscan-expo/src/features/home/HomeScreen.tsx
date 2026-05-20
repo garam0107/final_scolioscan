@@ -35,6 +35,7 @@ import ThreeDCameraIcon from '../../../assets/icons/home/3d_sub.svg';
 import TwoIcon from '../../../assets/home/test.svg'
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
+import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 const AD_PLACEHOLDER_SLIDES = ['ad-1', 'ad-2', 'ad-3'];
 
@@ -359,6 +360,14 @@ export default function HomeScreen() {
   const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || '회원';
+  // measure-guide store 가이드 상태 
+  const measurementGuideCompleted = useMeasurementGuideStore(
+  (state) => state.measurementGuideCompleted,
+);
+  const clearMeasurementGuideCompleted = useMeasurementGuideStore(
+  (state) => state.clearMeasurementGuideCompleted,
+);
+const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
 
 
 
@@ -369,7 +378,10 @@ export default function HomeScreen() {
     subtitle: '집에서 간편하게 측정',
     icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
     // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
-    onPress: () => router.push('/measure/2d'),
+    onPress: () => {
+      if (!guideHydrated) return;
+      router.push(measurementGuideCompleted ? '/measure/2d' : '/measure/guide');
+    }
   },
   {
     id: '3d',
@@ -624,6 +636,15 @@ export default function HomeScreen() {
                 borderRadius={6}
                 textStyle={styles.previewButtonText}
               /> */}
+                            { <PrimaryButton
+                title="가이드 삭제"
+                onPress={clearMeasurementGuideCompleted}
+                width={94}
+                height={32}
+                backgroundColor="#2C9696"
+                borderRadius={6}
+                textStyle={styles.previewButtonText}
+              /> }
             </View>
             <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>

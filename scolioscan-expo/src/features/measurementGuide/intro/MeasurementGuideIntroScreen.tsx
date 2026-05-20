@@ -17,7 +17,10 @@ export default function MeasurementGuideIntroScreen() {
   const spineGuideSeen = useMeasurementGuideStore((state) => state.spineGuideSeen);
   const resetGuideSeen = useMeasurementGuideStore((state) => state.resetGuideSeen);
   const canStartMeasure = twoDGuideSeen && spineGuideSeen;
-
+  // 가이드를 봤다고 store에 상태 저장하는 함수
+  const completeMeasurementGuide = useMeasurementGuideStore(
+  (state) => state.completeMeasurementGuide,
+  );
   useEffect(() => {
     return () => {
       // 인트로 화면을 벗어나면 다시 진입할 때 새로 가이드를 확인하도록 임시 체크 상태를 초기화한다.
@@ -87,7 +90,10 @@ export default function MeasurementGuideIntroScreen() {
 
           <Pressable
             style={({ pressed }) => [styles.skipButton, pressed && styles.pressed]}
-            onPress={() => router.back()}
+            onPress={() => {
+              completeMeasurementGuide();
+              router.replace('/measure/2d');
+            }}
           >
             <Text style={styles.skipText}>이미 사용해봤어요</Text>
             <Ionicons name="chevron-forward" size={16} color={Colors.mint[600]} />
@@ -114,7 +120,10 @@ export default function MeasurementGuideIntroScreen() {
       >
         <PrimaryButton
           title="측정하기"
-          onPress={() => undefined}
+          onPress={() => {
+            completeMeasurementGuide();
+            router.replace('/measure/2d');
+          }}
           width="100%"
           height={layout.buttonHeight}
           disabled={!canStartMeasure}
