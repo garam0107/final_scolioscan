@@ -30,7 +30,7 @@ UMAX = 0.36221122112211224
 VMIN = -0.2185929648241206
 VMAX = 0.4490084985835694
 
-SCREENING_THRESHOLD = 4.0  # degrees - below this, no scoliosis detected
+SCREENING_THRESHOLD = 2.0  # degrees - below this, no scoliosis detected
 CLASSIFICATION_THRESHOLD = 8  # degrees - for scoliosis type classification
 
 logging.basicConfig(level=logging.INFO)
