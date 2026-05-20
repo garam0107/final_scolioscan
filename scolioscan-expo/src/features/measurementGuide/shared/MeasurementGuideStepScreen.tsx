@@ -87,7 +87,7 @@ export default function MeasurementGuideStepScreen({
                   source={lottieSource}
                   autoPlay
                   loop
-                  resizeMode="cover"
+                  resizeMode="contain"
                   style={styles.guideLottie}
                 />
               ) : null}
