@@ -48,7 +48,7 @@ export default function IndexPage() {
 
         // 99%에서 바로 넘어가지 않고 100% 완료 상태를 잠깐 보여준 뒤 다음 화면으로 이동한다.
         routeTimer = setTimeout(() => {
-          router.replace(isAuthenticated ? '/home' : '/intro');
+          router.replace(isAuthenticated ? '/home' : '/login');
         }, COMPLETE_VISIBLE_MS);
       }, remainingTime);
 
