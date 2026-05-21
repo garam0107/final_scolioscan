@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState,useCallback } from 'react';
 import { curvatureAPI } from '@/src/api/curvature';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { CurvatureResponse } from '@/src/types/curvature';
@@ -9,17 +9,27 @@ import {
   REPORT_CURVATURE_DAYS,
   type TrendAngleKey,
 } from '@/src/features/report/reportTrend';
+import { isNetworkError } from '@/src/lib/apiError';
 
 export function useReportCurvatureData() {
-  const [curvatures, setCurvatures] = useState<CurvatureResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [networkError, setNetworkError] = useState(false);
+  const [curvatures, setCurvatures] = useState<CurvatureResponse[]>([]);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
+
+
+  const reload = useCallback(() => {
+    setReloadKey((value) => value + 1);
+  }, []);
 
   useEffect(() => {
     let active = true;
 
     const load = async () => {
       try {
+
+        setNetworkError(false);
         // 리포트 상단 그래프는 측정 목록 필터와 별개로 최근 기간 기준 데이터를 사용한다.
         const response = await curvatureAPI.getAnalyses({
           limit: 1000,
@@ -34,7 +44,9 @@ export function useReportCurvatureData() {
         );
         setCurvatures(sortedCurvatures);
       } catch (error) {
-        console.error('Failed to load curvatures:', error);
+        if (isNetworkError(error)) {
+          setNetworkError(true);
+        }  
         setCurvatures([]);
       } finally {
         if (active) setLoading(false);
@@ -46,7 +58,7 @@ export function useReportCurvatureData() {
     return () => {
       active = false;
     };
-  }, [measurementVersion]);
+  }, [measurementVersion, reloadKey]);
 
   const latestCurvature = useMemo(() => curvatures[0] ?? null, [curvatures]);
 
@@ -79,6 +91,8 @@ export function useReportCurvatureData() {
   return {
     curvatures,
     loading,
+    networkError,
+    reload,
     latestCurvature,
     hasCurvatureData: curvatures.length > 0,
     myValues,

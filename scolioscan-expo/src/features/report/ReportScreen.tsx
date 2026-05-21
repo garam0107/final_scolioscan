@@ -37,6 +37,7 @@ import {
   type TrendAngleKey,
   type TrendPeriodKey,
 } from '@/src/features/report/reportTrend';
+import NetworkErrorView from '@/src/components/NetworkErrorView';
 
 // 측정 목록 제목이 화면 상단에 걸리는 기준점이다. SafeAreaView 안쪽 기준이라 값을 키우면 상단에서 더 떨어진다.
 const MEASUREMENT_LIST_STICKY_TOP = 12;
@@ -57,6 +58,8 @@ export default function ReportScreen() {
     myValues,
     avgValues,
     summaryCards,
+    networkError: curvatureNetworkError,
+    reload: reloadCurvatureData,
   } = useReportCurvatureData();
   const [selectedFilter, setSelectedFilter] = useState<ReportMeasurementFilterKey>('all');
   const [selectedReportAngle, setSelectedReportAngle] = useState<TrendAngleKey>('proximal');
@@ -73,12 +76,21 @@ export default function ReportScreen() {
   const {
     loading: measurementListLoading,
     filteredItems,
+    networkError: measurementListNetworkError,
+    reload: reloadMeasurementList,
   } = useReportMeasurementList({
     monthMode: measurementListMonthMode,
     selectedYear: selectedMeasurementListYear,
     selectedMonth: selectedMeasurementListMonth,
     selectedFilter,
   });
+  // 네트워크 오류 통합
+  const hasNetworkError = curvatureNetworkError || measurementListNetworkError;
+  // 네트워크 오류 시 재시도 함수
+  const handleNetworkRetry = () => {
+    reloadCurvatureData();
+    reloadMeasurementList();
+  };
   const topScrollGradient = useTopScrollGradient();
   const [canScrollList, setCanScrollList] = useState(false);
   const canScrollListRef = useRef(false);
@@ -229,6 +241,15 @@ export default function ReportScreen() {
             <ActivityIndicator color="#69B7BC" />
             <Text style={styles.screenLoadingText}>리포트를 불러오는 중입니다...</Text>
           </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+  if (hasNetworkError) {
+    return (
+      <View style={styles.screen}>
+        <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+          <NetworkErrorView onRetry={handleNetworkRetry} />
         </SafeAreaView>
       </View>
     );
