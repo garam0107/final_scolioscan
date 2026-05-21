@@ -644,7 +644,7 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
         >
           <View style={styles.greetingBlock}>
             <View style={styles.greetingTitleRow}>
-              <Text style={styles.greetingTitle}>{displayName} 님 안녕하세요!.</Text>
+              <Text style={styles.greetingTitle}>{displayName} 님 안녕하세요.</Text>
                  {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
               {/* <PrimaryButton
                 title="분석중 보기"
