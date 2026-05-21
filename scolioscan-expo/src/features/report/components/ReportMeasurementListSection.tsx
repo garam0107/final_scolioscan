@@ -23,6 +23,10 @@ type ReportMeasurementListSectionProps = {
   monthLabel: string;
   loading: boolean;
   canScrollList: boolean;
+  listAreaHeight?: number;
+  onSectionLayout?: (event: LayoutChangeEvent) => void;
+  onListAreaLayout?: (event: LayoutChangeEvent) => void;
+  onListContentHeightChange?: (height: number) => void;
   onFilterChange: (filter: ReportMeasurementFilterKey) => void;
   onMonthPress: () => void;
   onItemPress: (item: ReportMeasurementListItem) => void;
@@ -34,6 +38,10 @@ export default function ReportMeasurementListSection({
   monthLabel,
   loading,
   canScrollList,
+  listAreaHeight,
+  onSectionLayout,
+  onListAreaLayout,
+  onListContentHeightChange,
   onFilterChange,
   onMonthPress,
   onItemPress,
@@ -72,12 +80,30 @@ export default function ReportMeasurementListSection({
     }).start();
   }, [animatedTab, selectedFilter]);
 
+  useEffect(() => {
+    if (loading || items.length === 0) {
+      onListContentHeightChange?.(0);
+    }
+  }, [items.length, loading, onListContentHeightChange]);
+
   const handleTabsLayout = (event: LayoutChangeEvent) => {
     setTabsWidth(event.nativeEvent.layout.width);
   };
 
+  const handleListContentLayout = (event: LayoutChangeEvent) => {
+    onListContentHeightChange?.(event.nativeEvent.layout.height);
+  };
+
+  const listContent = (
+    <View style={styles.list} onLayout={handleListContentLayout}>
+      {items.map((item) => (
+        <ReportMeasurementCard key={item.id} item={item} onPress={onItemPress} />
+      ))}
+    </View>
+  );
+
   return (
-    <View style={styles.section}>
+    <View style={styles.section} onLayout={onSectionLayout}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>측정 목록</Text>
         <Pressable
@@ -129,26 +155,26 @@ export default function ReportMeasurementListSection({
       <View
         style={[
           styles.listArea,
+          listAreaHeight ? { height: listAreaHeight } : null,
           !loading && items.length === 0 ? styles.listAreaEmpty : null,
         ]}
+        onLayout={onListAreaLayout}
       >
         {loading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator color="#69B7BC" />
           </View>
-        ) : items.length > 0 ? (
+        ) : items.length > 0 && listAreaHeight ? (
           <ScrollView
             scrollEnabled={canScrollList}
             nestedScrollEnabled={canScrollList}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listScrollContent}
           >
-            <View style={styles.list}>
-              {items.map((item) => (
-                <ReportMeasurementCard key={item.id} item={item} onPress={onItemPress} />
-              ))}
-            </View>
+            {listContent}
           </ScrollView>
+        ) : items.length > 0 ? (
+          <View style={styles.listScrollContent}>{listContent}</View>
         ) : (
           <View style={styles.emptyBox}>
       

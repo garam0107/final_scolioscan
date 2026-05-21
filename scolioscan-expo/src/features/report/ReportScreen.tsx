@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -36,6 +37,10 @@ import {
   type TrendAngleKey,
   type TrendPeriodKey,
 } from '@/src/features/report/reportTrend';
+
+const MEASUREMENT_LIST_STICKY_TOP = 12;
+const MEASUREMENT_LIST_BOTTOM_RESERVED = 20;
+const MIN_MEASUREMENT_LIST_AREA_HEIGHT = 120;
 
 export default function ReportScreen() {
   const router = useRouter();
@@ -72,9 +77,16 @@ export default function ReportScreen() {
     selectedFilter,
   });
   const topScrollGradient = useTopScrollGradient();
-  // 외부 스크롤 위치 감지하여, 끝에 도달하기 전까지 측정 목록 스크롤 비활성화
   const [canScrollList, setCanScrollList] = useState(false);
   const canScrollListRef = useRef(false);
+  const outerScrollYRef = useRef(0);
+  const [measurementListY, setMeasurementListY] = useState(0);
+  const [listAreaOffsetY, setListAreaOffsetY] = useState(0);
+  const [listContentHeight, setListContentHeight] = useState(0);
+  const [outerScrollMetrics, setOuterScrollMetrics] = useState({
+    viewportHeight: 0,
+    contentHeight: 0,
+  });
 
   // 현재 선택된 리포트 탭을 다시 누르면 메인 스크롤만 맨 위로 올린다.
   useScrollToTop(scrollRef);
@@ -84,18 +96,62 @@ export default function ReportScreen() {
     measurementListMonthMode === 'all'
       ? '전체'
       : `${selectedMeasurementListYear}년 ${selectedMeasurementListMonth}월`;
+  const measurementListLockY = Math.max(0, measurementListY - MEASUREMENT_LIST_STICKY_TOP);
+  const availableListAreaHeight = Math.max(
+    MIN_MEASUREMENT_LIST_AREA_HEIGHT,
+    outerScrollMetrics.viewportHeight -
+      MEASUREMENT_LIST_STICKY_TOP -
+      listAreaOffsetY -
+      MEASUREMENT_LIST_BOTTOM_RESERVED,
+  );
+  const canReachMeasurementListTop =
+    outerScrollMetrics.contentHeight - outerScrollMetrics.viewportHeight >= measurementListLockY - 1;
+  const shouldUseInnerListScroll =
+    listContentHeight > availableListAreaHeight + 1 && canReachMeasurementListTop;
+  const measurementListAreaHeight = shouldUseInnerListScroll ? availableListAreaHeight : undefined;
+
+  const updateCanScrollList = useCallback((scrollY: number) => {
+    // 측정 목록이 상단 기준까지 올라갈 수 있고, 카드가 남은 화면보다 많을 때만 내부 스크롤을 켠다.
+    const nextCanScrollList = shouldUseInnerListScroll && scrollY >= measurementListLockY - 1;
+
+    if (canScrollListRef.current !== nextCanScrollList) {
+      canScrollListRef.current = nextCanScrollList;
+      setCanScrollList(nextCanScrollList);
+    }
+  }, [measurementListLockY, shouldUseInnerListScroll]);
+
+  useEffect(() => {
+    updateCanScrollList(outerScrollYRef.current);
+  }, [updateCanScrollList]);
 
   const handleOuterScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     topScrollGradient.onScroll(event);
 
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const isNearBottom =
-      layoutMeasurement.height + contentOffset.y >= contentSize.height - 8;
+    outerScrollYRef.current = contentOffset.y;
 
-    if (canScrollListRef.current !== isNearBottom) {
-      canScrollListRef.current = isNearBottom;
-      setCanScrollList(isNearBottom);
-    }
+    setOuterScrollMetrics((current) => {
+      if (
+        Math.abs(current.viewportHeight - layoutMeasurement.height) < 1 &&
+        Math.abs(current.contentHeight - contentSize.height) < 1
+      ) {
+        return current;
+      }
+
+      return {
+        viewportHeight: layoutMeasurement.height,
+        contentHeight: contentSize.height,
+      };
+    });
+    updateCanScrollList(contentOffset.y);
+  };
+
+  const handleMeasurementListLayout = (event: LayoutChangeEvent) => {
+    setMeasurementListY(event.nativeEvent.layout.y);
+  };
+
+  const handleListAreaLayout = (event: LayoutChangeEvent) => {
+    setListAreaOffsetY(event.nativeEvent.layout.y);
   };
 
   const handleAnalysisPress = (item: ReportMeasurementListItem) => {
@@ -256,6 +312,10 @@ export default function ReportScreen() {
             monthLabel={measurementListMonthLabel}
             loading={measurementListLoading}
             canScrollList={canScrollList}
+            listAreaHeight={measurementListAreaHeight}
+            onSectionLayout={handleMeasurementListLayout}
+            onListAreaLayout={handleListAreaLayout}
+            onListContentHeightChange={setListContentHeight}
             onFilterChange={setSelectedFilter}
             onMonthPress={() => setMonthSheetVisible(true)}
             onItemPress={handleAnalysisPress}

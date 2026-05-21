@@ -190,7 +190,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listArea: {
-    maxHeight: 580,
     marginBottom: 4,
   },
   listAreaEmpty: {
