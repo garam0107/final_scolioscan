@@ -37,6 +37,20 @@ function normalizeApiError(error: unknown) {
   return '요청 처리 중 오류가 발생했습니다.';
 }
 
+function getApiStatus(error: unknown) {
+  if (typeof error !== 'object' || error === null || !('response' in error)) {
+    return undefined;
+  }
+
+  const response = (error as { response?: { status?: number } }).response;
+  return response?.status;
+}
+
+function isAuthExpiredError(error: unknown) {
+  const status = getApiStatus(error);
+  return status === 401 || status === 403;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
@@ -57,10 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const response = await userAPI.getCurrentUser();
       setUser(response.data);
-    } catch {
-      await clearAccessToken();
-      setAccessToken(null);
-      setAccessTokenState(null);
+    } catch (error) {
+      if (isAuthExpiredError(error)) {
+        // 서버가 명확하게 인증 실패를 응답한 경우에만 저장된 토큰을 삭제한다.
+        await clearAccessToken();
+        setAccessToken(null);
+        setAccessTokenState(null);
+        setUser(null);
+        return;
+      }
+
+      // 네트워크 끊김이나 서버 일시 오류는 로그아웃으로 보지 않고 저장된 토큰을 유지한다.
       setUser(null);
     } finally {
       setLoading(false);
@@ -151,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       accessToken,
       loading,
-      isAuthenticated: Boolean(user && accessToken),
+      isAuthenticated: Boolean(accessToken),
       login,
       checkEmail,
       checkPhone,

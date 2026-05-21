@@ -364,9 +364,6 @@ export default function HomeScreen() {
   const measurementGuideCompleted = useMeasurementGuideStore(
   (state) => state.measurementGuideCompleted,
 );
-  const clearMeasurementGuideCompleted = useMeasurementGuideStore(
-  (state) => state.clearMeasurementGuideCompleted,
-);
 const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
 
 
@@ -636,15 +633,6 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
                 borderRadius={6}
                 textStyle={styles.previewButtonText}
               /> */}
-                            { <PrimaryButton
-                title="가이드 삭제"
-                onPress={clearMeasurementGuideCompleted}
-                width={94}
-                height={32}
-                backgroundColor="#2C9696"
-                borderRadius={6}
-                textStyle={styles.previewButtonText}
-              /> }
             </View>
             <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>
