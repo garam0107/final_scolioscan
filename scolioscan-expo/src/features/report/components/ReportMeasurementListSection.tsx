@@ -23,9 +23,13 @@ type ReportMeasurementListSectionProps = {
   monthLabel: string;
   loading: boolean;
   canScrollList: boolean;
+  // 값이 있으면 카드 영역을 고정 높이로 만들고 내부 ScrollView를 사용한다.
   listAreaHeight?: number;
+  // 부모 화면에서 측정 목록 제목이 전체 콘텐츠의 어디에 있는지 계산할 때 사용한다.
   onSectionLayout?: (event: LayoutChangeEvent) => void;
+  // 제목과 탭을 제외한 카드 영역의 시작 위치를 부모 화면에 전달한다.
   onListAreaLayout?: (event: LayoutChangeEvent) => void;
+  // 카드 묶음의 실제 높이를 부모 화면에 전달해서 내부 스크롤 필요 여부를 판단한다.
   onListContentHeightChange?: (height: number) => void;
   onFilterChange: (filter: ReportMeasurementFilterKey) => void;
   onMonthPress: () => void;
@@ -82,6 +86,7 @@ export default function ReportMeasurementListSection({
 
   useEffect(() => {
     if (loading || items.length === 0) {
+      // 로딩 중이거나 목록이 비어 있으면 이전 카드 높이가 남아 내부 스크롤이 켜지지 않도록 초기화한다.
       onListContentHeightChange?.(0);
     }
   }, [items.length, loading, onListContentHeightChange]);
@@ -91,6 +96,7 @@ export default function ReportMeasurementListSection({
   };
 
   const handleListContentLayout = (event: LayoutChangeEvent) => {
+    // 카드 개수나 카드 높이가 바뀌면 실제 콘텐츠 높이를 다시 부모 화면에 알려준다.
     onListContentHeightChange?.(event.nativeEvent.layout.height);
   };
 
@@ -165,6 +171,7 @@ export default function ReportMeasurementListSection({
             <ActivityIndicator color="#69B7BC" />
           </View>
         ) : items.length > 0 && listAreaHeight ? (
+          // 카드가 화면에 다 들어가지 않을 때만 내부 ScrollView를 사용한다.
           <ScrollView
             scrollEnabled={canScrollList}
             nestedScrollEnabled={canScrollList}
@@ -174,6 +181,7 @@ export default function ReportMeasurementListSection({
             {listContent}
           </ScrollView>
         ) : items.length > 0 ? (
+          // 카드가 적을 때는 내부 스크롤을 만들지 않고 전체 화면 스크롤에 맡긴다.
           <View style={styles.listScrollContent}>{listContent}</View>
         ) : (
           <View style={styles.emptyBox}>

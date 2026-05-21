@@ -38,8 +38,11 @@ import {
   type TrendPeriodKey,
 } from '@/src/features/report/reportTrend';
 
+// 측정 목록 제목이 화면 상단에 걸리는 기준점이다. SafeAreaView 안쪽 기준이라 값을 키우면 상단에서 더 떨어진다.
 const MEASUREMENT_LIST_STICKY_TOP = 12;
+// 내부 카드 스크롤 영역이 하단 탭바와 너무 붙지 않도록 남겨두는 여백이다.
 const MEASUREMENT_LIST_BOTTOM_RESERVED = 20;
+// 화면이 작거나 측정 중인 높이가 아직 0일 때도 목록 영역이 너무 작아지지 않게 하는 최소 높이다.
 const MIN_MEASUREMENT_LIST_AREA_HEIGHT = 120;
 
 export default function ReportScreen() {
@@ -79,10 +82,15 @@ export default function ReportScreen() {
   const topScrollGradient = useTopScrollGradient();
   const [canScrollList, setCanScrollList] = useState(false);
   const canScrollListRef = useRef(false);
+  // 외부 ScrollView의 현재 위치를 저장해서 레이아웃 재계산 후에도 내부 스크롤 상태를 다시 판단한다.
   const outerScrollYRef = useRef(0);
+  // 측정 목록 섹션이 전체 리포트 콘텐츠 안에서 시작되는 y 위치다.
   const [measurementListY, setMeasurementListY] = useState(0);
+  // 측정 목록 섹션 안에서 카드 리스트 영역이 시작되는 y 위치다. 제목과 탭 높이를 제외한 남은 높이 계산에 쓴다.
   const [listAreaOffsetY, setListAreaOffsetY] = useState(0);
+  // 실제 카드 묶음의 전체 높이다. 이 값이 남은 화면보다 클 때만 내부 스크롤이 필요하다.
   const [listContentHeight, setListContentHeight] = useState(0);
+  // 외부 ScrollView의 화면 높이와 전체 콘텐츠 높이다. 측정 목록 제목이 상단까지 올라갈 수 있는지 판단한다.
   const [outerScrollMetrics, setOuterScrollMetrics] = useState({
     viewportHeight: 0,
     contentHeight: 0,
@@ -96,7 +104,9 @@ export default function ReportScreen() {
     measurementListMonthMode === 'all'
       ? '전체'
       : `${selectedMeasurementListYear}년 ${selectedMeasurementListMonth}월`;
+  // 측정 목록 제목이 상단 기준점까지 올라오는 외부 스크롤 위치다.
   const measurementListLockY = Math.max(0, measurementListY - MEASUREMENT_LIST_STICKY_TOP);
+  // 측정 목록 제목과 탭이 위쪽에 자리 잡은 뒤, 실제 카드 리스트가 사용할 수 있는 화면 높이다.
   const availableListAreaHeight = Math.max(
     MIN_MEASUREMENT_LIST_AREA_HEIGHT,
     outerScrollMetrics.viewportHeight -
@@ -104,10 +114,13 @@ export default function ReportScreen() {
       listAreaOffsetY -
       MEASUREMENT_LIST_BOTTOM_RESERVED,
   );
+  // 카드가 적으면 외부 스크롤 자체가 lock 위치까지 도달하지 못하므로 내부 스크롤을 켜면 안 된다.
   const canReachMeasurementListTop =
     outerScrollMetrics.contentHeight - outerScrollMetrics.viewportHeight >= measurementListLockY - 1;
+  // 카드 묶음이 남은 화면보다 길고, 측정 목록 제목도 상단 기준점까지 도달 가능할 때만 내부 스크롤을 사용한다.
   const shouldUseInnerListScroll =
     listContentHeight > availableListAreaHeight + 1 && canReachMeasurementListTop;
+  // 내부 스크롤이 필요할 때만 높이를 고정한다. 필요 없으면 undefined로 두어 전체 스크롤이 자연스럽게 처리한다.
   const measurementListAreaHeight = shouldUseInnerListScroll ? availableListAreaHeight : undefined;
 
   const updateCanScrollList = useCallback((scrollY: number) => {
@@ -121,6 +134,7 @@ export default function ReportScreen() {
   }, [measurementListLockY, shouldUseInnerListScroll]);
 
   useEffect(() => {
+    // 측정 목록 카드 수나 화면 높이가 바뀌면 현재 스크롤 위치 기준으로 내부 스크롤 가능 여부를 다시 맞춘다.
     updateCanScrollList(outerScrollYRef.current);
   }, [updateCanScrollList]);
 
@@ -131,6 +145,7 @@ export default function ReportScreen() {
     outerScrollYRef.current = contentOffset.y;
 
     setOuterScrollMetrics((current) => {
+      // 높이가 실질적으로 변하지 않았으면 상태 업데이트를 막아 불필요한 렌더링을 줄인다.
       if (
         Math.abs(current.viewportHeight - layoutMeasurement.height) < 1 &&
         Math.abs(current.contentHeight - contentSize.height) < 1
@@ -147,10 +162,12 @@ export default function ReportScreen() {
   };
 
   const handleMeasurementListLayout = (event: LayoutChangeEvent) => {
+    // 전체 콘텐츠 안에서 측정 목록 제목이 어디서 시작되는지 저장한다.
     setMeasurementListY(event.nativeEvent.layout.y);
   };
 
   const handleListAreaLayout = (event: LayoutChangeEvent) => {
+    // 측정 목록 제목과 탭을 제외한 카드 영역의 시작 위치를 저장한다.
     setListAreaOffsetY(event.nativeEvent.layout.y);
   };
 
