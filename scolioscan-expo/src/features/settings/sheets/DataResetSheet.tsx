@@ -39,6 +39,7 @@ export default function DataResetSheet({ visible, onClose, onReset }: DataResetS
       titleTone="danger"
       description="이 작업은 되돌릴 수 없어요"
       height={420}
+      avoidKeyboard
       onClose={closeSheet}
       actions={[
         { label: '취소', onPress: closeSheet },

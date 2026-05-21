@@ -5,7 +5,7 @@ import os
 import uuid
 from pathlib import Path
 from ..database import get_db
-from ..models import User
+from ..models import User, CurvatureMeasurement, RotationMeasurement
 from sqlalchemy.exc import IntegrityError,SQLAlchemyError
 from ..schemas import UserResponse, UserUpdate, PasswordChange, UserDeleteRequest
 from ..utils import get_current_user, get_password_hash, verify_password
@@ -181,3 +181,34 @@ async def delete_my_account(
         )
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/data/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_data(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+): 
+    """유저 데이터 초기화"""
+    user_id = str(current_user.id)
+
+    try:
+         # rotation 데이터 먼저 삭제
+        db.query(RotationMeasurement).filter(
+             RotationMeasurement.user_id == user_id
+         ).delete(synchronize_session=False)
+
+         # rotation 삭제 후 curvature 데이터 삭제 
+        db.query(CurvatureMeasurement).filter(
+            CurvatureMeasurement.user_id == user_id
+        ).delete(synchronize_session=False)
+
+        db.commit()
+        
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="유저 데이터 초기화 처리 중 오류가 발생했습니다.",
+        )
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)    
+
+    

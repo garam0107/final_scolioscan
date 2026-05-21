@@ -6,4 +6,5 @@ export const userAPI = {
   updateUserProfile: (data: PutUserRequest) => api.put<UserResponse>('/users/me', data),
   changeUserPassword: (data: ChangePasswordRequest) => api.put('/users/me/password', data),
   deleteCurrentUser: (data: DeleteUserRequest) => api.post('/users/me/delete', data),
+  deleteUserData: () => api.delete('/users/data/delete')
 };

@@ -17,6 +17,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
   },
+  keyboardStickySheet: {
+    width: '100%',
+  },
   header: {
     marginBottom: 12,
     paddingHorizontal: 8,
