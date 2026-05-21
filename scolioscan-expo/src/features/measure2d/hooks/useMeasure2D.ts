@@ -217,7 +217,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
       lastAutoReasonRef.current = null;
       return;
     }
-    // return;
+    return;
     let disposed = false;
 
     // 자동 촬영 루프는 일정 간격으로 저화질 사진을 보내 현재 자세가 기준 안에 있는지 확인한다.

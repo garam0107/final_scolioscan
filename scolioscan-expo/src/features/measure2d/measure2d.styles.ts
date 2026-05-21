@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { textFont } from '@/src/constants/fonts';
+import { Colors } from '@/src/constants/theme';
 
 export const styles = StyleSheet.create({
   screen: {
@@ -77,7 +78,7 @@ export const styles = StyleSheet.create({
   },
   closeText: {
     ...textFont,
-    color: '#fff',
+    color: Colors.primary['white'],
     fontSize: 13,
     fontWeight: '700',
     lineHeight: 18,

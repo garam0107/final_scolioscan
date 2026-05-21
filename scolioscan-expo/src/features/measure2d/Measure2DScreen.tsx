@@ -8,6 +8,7 @@ import ToastAlert from '@/src/components/ui/ToastAlert';
 import { createGuidelineGeometry } from './domain/guidelineGeometry';
 import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
 import { useMeasure2D } from './hooks/useMeasure2D';
+import CloseIcon from '../../../assets/icons/close.svg'
 import { useCaptureCompletionFlow } from './hooks/useCaptureCompletionFlow';
 import { CaptureProgressOverlay } from './components/CaptureProgressOverlay';
 import { Measure2DCameraStage } from './components/Measure2DCameraStage';
@@ -154,11 +155,7 @@ export default function Measure2DScreen() {
       } as any);
 
       const token = getAccessToken(); // tokenStorage에서
-      // console.log('[measure2d] curvature 요청 시작', {
-      //   url: `${API_BASE_URL}/curvature/`,
-      //   hasToken: Boolean(token),
-      //   imageUriPrefix: photoUri.slice(0, 48),
-      // });
+
 
       const res = await guardedFetch(`${API_BASE_URL}/curvature/`, {
         method: 'POST',
@@ -324,7 +321,7 @@ export default function Measure2DScreen() {
         {showGuideText ? (
           <View style={styles.topBar}>
             <Pressable onPress={() => setShowGuideText(false)} hitSlop={12}>
-              <Text style={styles.topText}>X</Text>
+              <CloseIcon width={24} height={24} />
             </Pressable>
             <Text style={styles.closeText}>가이드에 맞추면 자동으로 촬영이 진행됩니다</Text>
           </View>
