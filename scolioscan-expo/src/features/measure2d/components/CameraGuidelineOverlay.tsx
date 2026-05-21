@@ -64,7 +64,7 @@ export function CameraGuidelineOverlay({
           width={width}
           height={height}
           // 바깥 영역만 dimmed 처리해서 사용자가 가이드라인 밖을 인식하기 쉽도록 한다.
-          fill="rgba(59, 64, 73, 0.25)"
+          fill="rgba(59, 64, 73, 0.6)"
           mask="url(#camera-cutout)"
         />
       </Svg>

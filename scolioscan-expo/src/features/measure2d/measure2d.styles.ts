@@ -61,28 +61,39 @@ export const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 2,
   },
-  topBar: {
-    minHeight: 56,
-    paddingHorizontal: 40,
-    paddingTop: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    zIndex: 10,
-  },
-  topText: {
-    ...textFont,
-    color: '#fff',
-    fontSize: 15,
-
-  },
+ topBar: {
+  height: 116,
+  paddingHorizontal: 20,
+  paddingTop: 76,
+  paddingBottom: 20,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'flex-start',
+  gap: 20,
+  backgroundColor: Colors.primary['black'],
+  zIndex: 10,
+},
+  topIconButton: {
+  width: 24,
+  height: 24,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
   closeText: {
     ...textFont,
     color: Colors.primary['white'],
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
     lineHeight: 18,
+    flexShrink: 1,
   },
+  closeTextBold: {
+  ...textFont,
+  color: Colors.primary.white,
+  fontSize: 13,
+  fontWeight: '700',
+  lineHeight: 18,
+},
   guideCard: {
     alignSelf: 'center',
     marginHorizontal: 20,
@@ -184,4 +195,6 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 28,
   },
+
+
 });

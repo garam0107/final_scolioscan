@@ -318,14 +318,26 @@ export default function Measure2DScreen() {
       />
 
       <SafeAreaView style={styles.safeArea} pointerEvents="box-none">
-        {showGuideText ? (
-          <View style={styles.topBar}>
-            <Pressable onPress={() => setShowGuideText(false)} hitSlop={12}>
-              <CloseIcon width={24} height={24} />
-            </Pressable>
-            <Text style={styles.closeText}>가이드에 맞추면 자동으로 촬영이 진행됩니다</Text>
-          </View>
-        ) : null}
+   
+            <View style={styles.topBar}>
+                   {showGuideText ? (
+                    <>
+              <Pressable
+                style={styles.topIconButton}
+                onPress={() => setShowGuideText(false)}
+                hitSlop={12}
+              >
+                <CloseIcon width={24} height={24} />
+              </Pressable>
+              <Text style={styles.closeText}>
+                가이드라인에 맞추면{' '}
+                <Text style={styles.closeTextBold}>자동으로 촬영이 진행</Text>
+                됩니다
+              </Text>
+              </>
+               ) : null}
+      </View>
+       
 
         <CaptureProgressOverlay
           activeType={activeCaptureLottieType}
