@@ -15,7 +15,7 @@ import {
   REPORT_MEASUREMENT_FILTERS,
   type ReportMeasurementFilterKey,
   type ReportMeasurementListItem,
-} from '@/src/features/report/reportMeasurementListTypes';
+} from '@/src/features/report/utils/reportMeasurementListTypes';
 
 type ReportMeasurementListSectionProps = {
   items: ReportMeasurementListItem[];

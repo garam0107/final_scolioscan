@@ -1,5 +1,5 @@
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
-import type { ReportMeasurementListItem } from '@/src/features/report/reportMeasurementListTypes';
+import type { ReportMeasurementListItem } from '@/src/features/report/utils/reportMeasurementListTypes';
 import { getMeasurementDate } from '@/src/features/report/reportTrend';
 
 export function toMeasurementListItem(measurementSet: MeasurementSetResponse): ReportMeasurementListItem | null {

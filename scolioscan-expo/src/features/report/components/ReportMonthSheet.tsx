@@ -13,7 +13,7 @@ import {
   MONTH_OPTIONS,
   getMonthSelectionYears,
   isFutureMonth,
-} from '@/src/features/report/reportMonthFilter';
+} from '@/src/features/report/utils/reportMonthFilter';
 import styles, { getReportMonthSheetLayout } from '@/src/features/report/components/reportMonthSheet.styles';
 
 type ReportMonthSheetProps = {

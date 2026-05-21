@@ -25,11 +25,11 @@ import ReportTriangleChart from '@/src/features/report/components/ReportTriangle
 import { useReportCurvatureData } from '@/src/features/report/hooks/useReportCurvatureData';
 import { useReportMeasurementList } from '@/src/features/report/hooks/useReportMeasurementList';
 import styles from '@/src/features/report/report.styles';
-import { isFutureMonth } from '@/src/features/report/reportMonthFilter';
+import { isFutureMonth } from '@/src/features/report/utils/reportMonthFilter';
 import type {
   ReportMeasurementFilterKey,
   ReportMeasurementListItem,
-} from '@/src/features/report/reportMeasurementListTypes';
+} from '@/src/features/report/utils/reportMeasurementListTypes';
 import {
   getPeriodOption,
   TREND_PERIOD_OPTIONS,
