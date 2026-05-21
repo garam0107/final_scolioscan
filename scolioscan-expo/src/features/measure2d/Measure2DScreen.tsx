@@ -127,7 +127,6 @@ export default function Measure2DScreen() {
 
   const goToNextMeasurement = useCallback((curvatureMeasurementId: number) => {
     // 2D 분석 결과 id를 저장해 측만계 측정과 같은 세트로 묶는다.
-    // console.log('[measure2d] 척추측만계 화면으로 이동', NEXT_MEASUREMENT_ROUTE);
     setCurvatureMeasurementId(curvatureMeasurementId);
     router.push({
       pathname: NEXT_MEASUREMENT_ROUTE,
@@ -166,7 +165,6 @@ export default function Measure2DScreen() {
       });
 
       const text = await res.text();
-      // console.log('curvature fetch status', res.status, text);
 
       if (!res.ok) {
         showToast('척추측만 분석 요청에 실패했습니다.', 'error');
@@ -183,7 +181,6 @@ export default function Measure2DScreen() {
       markMeasurementChanged();
       return curvature;
     } catch (error) {
-      console.log('[measure2d] curvature 요청 예외', error);
       showToast(
         isCellularDataBlockedError(error)
           ? CELLULAR_DATA_BLOCKED_MESSAGE
@@ -238,7 +235,6 @@ export default function Measure2DScreen() {
       if (nextEvaluation.aligned) {
         // 수동 촬영이 통과하면 자동 촬영과 같은 위치에 Lottie를 띄우고 완료 UI 이후 제출한다.
         showToast('좋아요. 이 자세로 촬영할게요!', 'success');
-        // console.log('2D카메라 촬영', result);
         shouldResumeAuto = false;
         startManualCaptureFlow(result.photo.uri);
 
@@ -312,7 +308,6 @@ export default function Measure2DScreen() {
         }}
         onCameraMountError={(message) => {
           setCameraReady(false);
-          console.error('[measure2d] 카메라 시작 실패', message);
           showToast('카메라를 시작하지 못했습니다. 앱을 다시 열어주세요.', 'error');
         }}
       />

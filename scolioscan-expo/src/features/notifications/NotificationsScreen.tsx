@@ -50,7 +50,6 @@ export default function NotificationsScreen() {
       // 읽지 않은 알림만 가져오기
       setAlarms(response.data.filter((alarm) => alarm.read_at == null));
     } catch (error) {
-      console.error('Failed to load alarms:', error);
     } finally {
       setLoading(false);
     }
@@ -83,7 +82,6 @@ export default function NotificationsScreen() {
     await alarmAPI.markAllAsRead();
     setAlarms([]);
   } catch (error) {
-    console.error('Failed to mark all alarms as read:', error);
   }
 };
   // 개별 알림 클릭 시 페이지에 표시 안되도록 하는 함수
@@ -96,7 +94,6 @@ export default function NotificationsScreen() {
     await alarmAPI.markAsRead(alarm.id);
     setAlarms((current) => current.filter((item) => item.id !== alarm.id));
   } catch (error) {
-    console.error('Failed to mark alarm as read:', error);
   }
 };
 

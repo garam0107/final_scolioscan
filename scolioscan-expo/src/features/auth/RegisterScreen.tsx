@@ -294,15 +294,6 @@ useEffect(() => {
       return;
     }
 
-    // if (step === 'message') {
-    //   const OctomoApiResponse = octomoApi(draft.phone);
-    //   console.log("OCTOMO API 리스폰스 : ", OctomoApiResponse);
-    //   setStep('email');
-    // }
-    // if (step === 'message') {
-    //   setStep('email');
-    //   return;
-    // }
     if (step === 'email') {
       const trimmedEmail = draft.email.trim();
       if (!trimmedEmail) {

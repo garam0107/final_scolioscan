@@ -552,7 +552,6 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
 
   useEffect(() => {
     if (pretendardError) {
-      console.error('Pretendard font failed to load:', pretendardError);
     }
   }, [pretendardError]);
 

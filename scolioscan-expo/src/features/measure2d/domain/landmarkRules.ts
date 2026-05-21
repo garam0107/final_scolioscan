@@ -201,42 +201,7 @@ function toFixedGuide(point: { x: number; y: number }) {
   };
 }
 
-function logGuideComparison(
-  detected: NamedDetectedPoints,
-  guide: GuideReferencePoints,
-  directionResult: ReturnType<typeof computeDirection>,
-  distanceResult: ReturnType<typeof computeDistanceState>,
-  areaResult: GuideAreaResult,
-  aligned: boolean,
-) {
-  console.log('[measure2d] 감지 랜드마크 (11,12,23,24)', {
-    p11_leftShoulder: toFixedPoint(detected.leftShoulder),
-    p12_rightShoulder: toFixedPoint(detected.rightShoulder),
-    p23_leftHip: toFixedPoint(detected.leftHip),
-    p24_rightHip: toFixedPoint(detected.rightHip),
-  });
 
-  console.log('[measure2d] 가이드 기준 좌표', {
-    leftShoulder: toFixedGuide(guide.leftShoulder),
-    rightShoulder: toFixedGuide(guide.rightShoulder),
-    leftHip: toFixedGuide(guide.leftHip),
-    rightHip: toFixedGuide(guide.rightHip),
-  });
-
-  console.log('[measure2d] 자세 판정 요약', {
-    guideAligned: aligned ? '일치' : '불일치',
-    direction: directionResult.direction,
-    distance: distanceResult.distanceState,
-    shoulderOrderBack: directionResult.shoulderOrderBack,
-    faceDetected: directionResult.faceDetected,
-    faceScore: Number(directionResult.faceScore.toFixed(3)),
-    faceCount: directionResult.faceCount,
-    distanceScale: Number(distanceResult.scale.toFixed(3)),
-    guideAreaScore: areaResult.score,
-    guideAreaInsideCount: areaResult.insideCount,
-    guideAreaTotalCount: areaResult.totalCount,
-  });
-}
 
 /**
  * 최종 판정 순서
@@ -261,7 +226,7 @@ export function evaluateLandmarks(
   const areaResult = computeGuideAreaScore(detected, guideRect);
 
   if (!shouldersVisible || !hipsVisible) {
-    logGuideComparison(detected, guidePoints, directionResult, distanceResult, areaResult, false);
+
     return {
       aligned: false,
       score: 0,
@@ -286,7 +251,6 @@ export function evaluateLandmarks(
   // 방향, 거리, 가이드 영역 조건이 모두 통과해야 자동 또는 수동 촬영 성공으로 본다.
   const aligned = reasons.length === 0 && score >= GUIDE_AREA_SCORE_THRESHOLD;
 
-  logGuideComparison(detected, guidePoints, directionResult, distanceResult, areaResult, aligned);
 
   return {
     aligned,
