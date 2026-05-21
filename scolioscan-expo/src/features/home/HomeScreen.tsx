@@ -27,9 +27,11 @@ import Svg, {
 import CrownIcon from '../../../assets/home/crown.svg';
 import { alarmAPI } from '@/src/api/alarm';
 import { curvatureAPI } from '@/src/api/curvature';
+import NetworkErrorView from '@/src/components/NetworkErrorView';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
 import styles, { type HomeMeasurementCardLayout, getHomeMeasurementCardLayout } from '@/src/features/home/home.styles';
+import { isNetworkError } from '@/src/lib/apiError';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import ThreeDCameraIcon from '../../../assets/icons/home/3d_sub.svg';
 import TwoIcon from '../../../assets/home/test.svg'
@@ -354,6 +356,7 @@ export default function HomeScreen() {
   const [weeklyResultValues, setWeeklyResultValues] = useState<WeeklyResultValues>(INITIAL_WEEKLY_RESULT_VALUES);
   const [curvatureTrendRecords, setCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
   const [rawCurvatureTrendRecords, setRawCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
+  const [networkError, setNetworkError] = useState(false);
   const isCompactWidth = width < 390;
   const bannerHeight = isCompactWidth ? 104 : 112;
   const bannerWidth = width - 40;
@@ -485,12 +488,16 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
 
       setAlarmCount(response.data.count);
     } catch (error) {
-      
+      if (isNetworkError(error)) {
+        setNetworkError(true);
+      }
     }
   }, []);
 
   const loadLatestCurvature = useCallback(async () => {
     try {
+      // 네트워크가 복구된 뒤 재시도할 때 오류 화면을 내리고 최신 홈 데이터를 다시 채웁니다.
+      setNetworkError(false);
       // 최근 측정값과 원본 기록을 함께 보관해 카드, 변화량, 차트가 같은 응답을 기준으로 갱신되게 한다.
       const response = await curvatureAPI.getAnalyses({
         limit: 1000,
@@ -514,12 +521,20 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
         lumbar: formatAngleValue(latestCurvature.lumbar_cobb),
       });
     } catch (error) {
+      if (isNetworkError(error)) {
+        setNetworkError(true);
+      }
 
       setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
       setRawCurvatureTrendRecords([]);
       setCurvatureTrendRecords([]);
     }
   }, []);
+
+  const handleNetworkRetry = useCallback(() => {
+    void loadAlarmCount();
+    void loadLatestCurvature();
+  }, [loadAlarmCount, loadLatestCurvature]);
 
   useEffect(() => {
     setAlarmCount(user?.alarm_count ?? 0);
@@ -591,6 +606,14 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
         <View style={styles.loadingBox}>
           <Text style={styles.loadingText}>화면을 불러오는 중입니다...</Text>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (networkError) {
+    return (
+      <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+        <NetworkErrorView onRetry={handleNetworkRetry} />
       </SafeAreaView>
     );
   }

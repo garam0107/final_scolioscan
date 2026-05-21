@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { curvatureAPI } from '@/src/api/curvature';
 import { measurementSetAPI } from '@/src/api/measurementSet';
 import { rotationAPI } from '@/src/api/rotation';
+import { isNetworkError } from '@/src/lib/apiError';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { AnalysisResponse } from '@/src/types/analysis';
 import {
@@ -20,6 +21,7 @@ type UseAnalysisDataResult = {
   analysis: AnalysisResponse | null;
   loading: boolean;
   error: string | null;
+  networkError: boolean;
   reloadAnalysisData: () => void;
 };
 
@@ -30,6 +32,7 @@ export function useAnalysisData({
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [networkError, setNetworkError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
 
@@ -44,6 +47,8 @@ export function useAnalysisData({
       // 상세 진입이면 해당 id를, 탭 진입이면 최신 2D 기준 측정 세트를 불러와 분석 모델로 변환합니다.
       setLoading(true);
       setError(null);
+      // 재시도할 때 이전 네트워크 오류 화면이 남지 않도록 요청 직전에 초기화합니다.
+      setNetworkError(false);
 
       try {
         let targetAnalysis: AnalysisResponse | null = null;
@@ -71,9 +76,12 @@ export function useAnalysisData({
         if (!mounted) return;
 
         setAnalysis(targetAnalysis ?? null);
-      } catch {
+      } catch (loadError) {
         if (!mounted) return;
         setAnalysis(null);
+        if (isNetworkError(loadError)) {
+          setNetworkError(true);
+        }
         setError('최신 분석 결과를 불러오지 못했어요.');
       } finally {
         if (mounted) setLoading(false);
@@ -91,6 +99,7 @@ export function useAnalysisData({
     analysis,
     loading,
     error,
+    networkError,
     reloadAnalysisData,
   };
 }

@@ -10,6 +10,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
+import NetworkErrorView from '@/src/components/NetworkErrorView';
 import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { useAuth } from '@/src/contexts/AuthContext';
 import type { InfoCardLevel } from './analysisCopy';
@@ -62,6 +63,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
     analysis,
     loading,
     error,
+    networkError,
     reloadAnalysisData,
   } = useAnalysisData({ analysisId, sourceType });
   const {
@@ -96,7 +98,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
 
   const infoCardLevel = getInfoCardLevel(maxCobbValue);
   const severityLabel = infoCardLevel;
-  const shouldShowMeasurementRequired = !loading && !analysis && !error;
+  const shouldShowMeasurementRequired = !loading && !analysis && !error && !networkError;
 
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);
@@ -124,6 +126,17 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             <ActivityIndicator color="#69B7BC" />
             <Text style={styles.loadingText}>분석 결과를 불러오는 중입니다...</Text>
           </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (networkError) {
+    return (
+      <View style={styles.screen}>
+        <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+          <StatusBar style="dark" backgroundColor="#F4F6F7" translucent={false} />
+          <NetworkErrorView onRetry={reloadAnalysisData} />
         </SafeAreaView>
       </View>
     );
