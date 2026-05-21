@@ -151,8 +151,8 @@ export default function ReportMeasurementListSection({
           </ScrollView>
         ) : (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyTitle}>아직 측정 기록이 없어요</Text>
-            <Text style={styles.emptyText}>측정을 진행한 뒤 이곳에서 기록을 확인할 수 있어요</Text>
+      
+            <Text style={styles.emptyText}>측정 결과가 없어요.</Text>
           </View>
         )}
       </View>

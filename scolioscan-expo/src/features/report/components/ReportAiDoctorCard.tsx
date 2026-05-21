@@ -150,7 +150,7 @@ export default function ReportAiDoctorCard({ latestCurvature }: ReportAiDoctorCa
 
   return (
     <View style={styles.aiDoctorCard}>
-      <Text style={styles.aiDoctorTitle}>AI 의사 소견</Text>
+      <Text style={styles.aiDoctorTitle}>종합 리포트</Text>
 
       <View style={styles.aiRiskRow}>
         <View style={styles.aiRiskIconBox}>

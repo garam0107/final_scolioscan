@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   listScrollContent: {
-    paddingBottom: 16,
+    paddingBottom: 0,
   },
   list: {
     gap: 16,
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   emptyBox: {
-    minHeight: 120,
+    minHeight: 200,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -348,9 +348,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...textFont,
-    color: '#A6AFC4',
+    color: Colors.gray[300],
     fontSize: 14,
     textAlign: 'center',
+    fontWeight: 400,
+    lineHeight : 20,
     marginTop: 8,
   },
   pressed: {
