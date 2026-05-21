@@ -4,7 +4,7 @@ import Svg, { Defs, LinearGradient, Line, Path, Stop } from 'react-native-svg';
 
 // 평균 변화량 그래프 UI
 import type { CurvatureResponse } from '@/src/types/curvature';
-import styles from '@/src/features/report/report.styles';
+import styles from '@/src/features/report/styles/reportTrendChart.styles';
 import {
   aggregateTrendPoints,
   buildTrendPath,

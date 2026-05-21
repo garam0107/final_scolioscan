@@ -1,7 +1,7 @@
 import { Image, Linking, Pressable, Text, View } from 'react-native';
 
 import type { CurvatureResponse } from '@/src/types/curvature';
-import styles from '@/src/features/report/report.styles';
+import styles from '@/src/features/report/styles/reportAiDoctorCard.styles';
 import PlayCircleIcon from '../../../../assets/icons/report/play_circle.svg';
 import DangerHardIcon from '../../../../assets/icons/report/report_danger_hard.svg';
 import DangerNormalIcon from '../../../../assets/icons/report/report_danger_noraml.svg';
