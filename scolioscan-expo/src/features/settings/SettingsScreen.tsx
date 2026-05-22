@@ -15,6 +15,8 @@ import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
+import { userAPI } from '@/src/api/user';
+import ToastAlert, { type ToastTone } from '@/src/components/ui/ToastAlert';
 
 type SettingsSheetType = 'language' | 'reset' | 'guide' | null;
 
@@ -53,9 +55,28 @@ export default function SettingsScreen() {
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
   const scrollRef = useRef<ScrollView>(null);
   const topScrollGradient = useTopScrollGradient();
+  // 토스트 알림 상태 
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastTone, setToastTone] = useState<ToastTone>('info');
+  const [toastKey, setToastKey] = useState(0);
   // 현재 선택된 설정 탭을 다시 누르면 설정 목록 맨 위로 이동한다.
   useScrollToTop(scrollRef);
 
+  // 토스트 알림 보여주는 함수 
+  function showToast(message: string, tone: ToastTone = 'info') {
+  setToastKey((current) => current + 1);
+  setToastTone(tone);
+  setToastMessage(message);
+  }
+  // 데이터 초기화 API 호출 함수 
+  async function handleDataReset() {
+  try {
+    await userAPI.deleteUserData();
+    showToast('데이터가 초기화되었습니다.', 'success');
+  } catch {
+    showToast('데이터 초기화에 실패했습니다. 다시 시도해주세요.', 'error');
+  }
+  }
   const profile = useMemo(
     // 세션의 사용자 정보가 없을 때도 설정 화면이 빈 값으로 깨지지 않게 기본값을 둔다.
     () => ({
@@ -134,7 +155,15 @@ export default function SettingsScreen() {
   };
 
   return (
+    
     <View style={styles.screen}>
+      <ToastAlert
+        visible={Boolean(toastMessage)}
+        message={toastMessage}
+        tone={toastTone}
+        toastKey={toastKey}
+        onDismiss={() => setToastMessage('')}
+      />
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
       <ScrollView
         ref={scrollRef}
@@ -239,6 +268,7 @@ export default function SettingsScreen() {
       <DataResetSheet
         visible={settingsSheetType === 'reset'}
         onClose={closeSettingsSheet}
+        onReset={handleDataReset}
       />
 
       <GuideReplaySheet

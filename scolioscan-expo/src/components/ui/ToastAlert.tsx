@@ -4,7 +4,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { textFont } from '@/src/constants/fonts';
 
-type ToastTone = 'info' | 'success' | 'warning' | 'error';
+export type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
 type ToastAlertProps = {
   visible: boolean;
