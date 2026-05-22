@@ -21,12 +21,14 @@ type CommonSettingsSheetProps = {
   description?: string;
   titleTone?: 'default' | 'danger';
   presentation?: 'default' | 'centerConfirm';
+  bottomPlacement?: 'safeArea' | 'screen';
   height?: number;
   onClose: () => void;
   children?: ReactNode;
   actions?: SheetAction[];
   contentStyle?: ViewStyle;
   actionBottomPadding?: number;
+  pinActionsToBottom?: boolean;
   avoidKeyboard?: boolean;
 };
 
@@ -36,20 +38,32 @@ export default function CommonSettingsSheet({
   description,
   titleTone = 'default',
   presentation = 'default',
+  bottomPlacement = 'safeArea',
   height,
   onClose,
   children,
   actions,
   contentStyle,
   actionBottomPadding,
+  pinActionsToBottom = false,
   avoidKeyboard = false,
 }: CommonSettingsSheetProps) {
   const insets = useSafeAreaInsets();
   const isCenterConfirm = presentation === 'centerConfirm';
+  // 기기별 네비바 높이를 그대로 반영해 시트가 네비바 바로 위에서 끝나게 한다.
+  const sheetBottomOffset = bottomPlacement === 'safeArea' ? insets.bottom : 0;
+  const resolvedActionBottomPadding =
+    actionBottomPadding ?? (bottomPlacement === 'safeArea' ? 16 : Math.max(insets.bottom, 16));
 
   const sheetContent = (
     <Pressable
-      style={[styles.sheet, height ? { height } : null, contentStyle]}
+      style={[
+        styles.sheet,
+        height ? { height } : null,
+        // 설정 시트는 네비바 위에서 끝나도록 safe area를 내부 여백이 아닌 바깥 여백으로 처리한다.
+        sheetBottomOffset ? { marginBottom: sheetBottomOffset } : null,
+        contentStyle,
+      ]}
       onPress={(event) => event.stopPropagation()}
     >
       <View style={[styles.header, isCenterConfirm && styles.centerConfirmHeader]}>
@@ -69,14 +83,15 @@ export default function CommonSettingsSheet({
         ) : null}
       </View>
 
-      {children}
+      {pinActionsToBottom ? <View style={styles.pinnedContent}>{children}</View> : children}
 
       {actions?.length ? (
         <View
           style={[
             styles.actionRow,
+            pinActionsToBottom && styles.pinnedActionRow,
             isCenterConfirm && styles.centerConfirmActionRow,
-            { paddingBottom: actionBottomPadding ?? Math.max(insets.bottom, 16) },
+            { paddingBottom: resolvedActionBottomPadding },
           ]}
         >
           {actions.map((action) => {

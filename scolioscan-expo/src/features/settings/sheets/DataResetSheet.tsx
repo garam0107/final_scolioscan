@@ -35,10 +35,10 @@ export default function DataResetSheet({ visible, onClose, onReset }: DataResetS
   return (
     <CommonSettingsSheet
       visible={visible}
-      title="데이터를 초기화할까요?"
+      title="데이터를 초기화할까요!?"
       titleTone="danger"
       description="이 작업은 되돌릴 수 없어요"
-      height={420}
+      bottomPlacement="safeArea"
       avoidKeyboard
       onClose={closeSheet}
       actions={[

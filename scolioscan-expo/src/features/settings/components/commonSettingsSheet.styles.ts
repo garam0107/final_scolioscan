@@ -60,9 +60,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
+  pinnedContent: {
+    flex: 1,
+  },
   actionRow: {
     flexDirection: 'row',
     gap: 10,
+  },
+  pinnedActionRow: {
+    // Figma의 하단 버튼 영역처럼 시트 바닥에 고정한다.
+    bottom: 0,
+    left: 16,
+    position: 'absolute',
+    right: 16,
   },
   centerConfirmActionRow: {
     // Figma 버튼 영역의 위쪽 16px 간격을 맞춘다.

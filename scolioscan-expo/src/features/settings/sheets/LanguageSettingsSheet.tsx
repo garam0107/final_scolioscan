@@ -25,7 +25,8 @@ export default function LanguageSettingsSheet({
       visible={visible}
       title="언어 설정"
       description="앱에 표시할 언어를 선택해주세요"
-      height={360}
+      height={302}
+      bottomPlacement="safeArea"
       onClose={onClose}
     >
       <View style={styles.languageOptionList}>

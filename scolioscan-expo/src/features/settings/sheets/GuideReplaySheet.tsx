@@ -1,6 +1,5 @@
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import CommonSettingsSheet from '@/src/features/settings/components/CommonSettingsSheet';
 import styles from '@/src/features/settings/sheets/settingsSheets.styles';
@@ -24,7 +23,6 @@ const GUIDE_OPTIONS = [
 
 export default function GuideReplaySheet({ visible, onClose }: GuideReplaySheetProps) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const handleSelectGuide = (route: (typeof GUIDE_OPTIONS)[number]['route']) => {
     onClose();
@@ -37,7 +35,7 @@ export default function GuideReplaySheet({ visible, onClose }: GuideReplaySheetP
       title="가이드 다시보기"
       description="다시 보고 싶으신 가이드를 눌러주세요"
       onClose={onClose}
-      contentStyle={{ marginBottom: insets.bottom }}
+      bottomPlacement="safeArea"
     >
       <View style={styles.languageOptionList}>
         {GUIDE_OPTIONS.map((option) => (
