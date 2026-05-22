@@ -17,7 +17,7 @@ import styles from '@/src/features/settings/settings.styles';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 import { userAPI } from '@/src/api/user';
 import ToastAlert, { type ToastTone } from '@/src/components/ui/ToastAlert';
-
+import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 type SettingsSheetType = 'language' | 'reset' | 'guide' | null;
 
 const DEFAULT_TOGGLES: Record<SettingsToggleKey, boolean> = {
@@ -49,6 +49,8 @@ export default function SettingsScreen() {
   const setCellularDataAllowed = useAppSettingsStore((state) => state.setCellularDataAllowed);
   const setNightModeEnabled = useAppSettingsStore((state) => state.setNightModeEnabled);
   const setNightModeHours = useAppSettingsStore((state) => state.setNightModeHours);
+   // 앱 설정 리셋
+  const resetSettings = useAppSettingsStore((state) => state.resetSettings);
   const [toggles, setToggles] = useState(DEFAULT_TOGGLES);
   const [nightTimeTarget, setNightTimeTarget] = useState<SettingsTimeTarget | null>(null);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
@@ -59,6 +61,9 @@ export default function SettingsScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
   const [toastKey, setToastKey] = useState(0);
+  // 데이터 초기화 후 분석,리포트 재조회
+  const markMeasurementChanged = useMeasurementRefreshStore((state) => state.markMeasurementChanged);
+ 
   // 현재 선택된 설정 탭을 다시 누르면 설정 목록 맨 위로 이동한다.
   useScrollToTop(scrollRef);
 
@@ -72,6 +77,8 @@ export default function SettingsScreen() {
   async function handleDataReset() {
   try {
     await userAPI.deleteUserData();
+    markMeasurementChanged();
+    await resetSettings();
     showToast('데이터가 초기화되었습니다.', 'success');
   } catch {
     showToast('데이터 초기화에 실패했습니다. 다시 시도해주세요.', 'error');

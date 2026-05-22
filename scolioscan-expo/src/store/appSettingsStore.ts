@@ -18,6 +18,7 @@ type AppSettingsState = {
   setCellularDataAllowed: (allowed: boolean) => Promise<void>;
   setNightModeEnabled: (enabled: boolean) => Promise<void>;
   setNightModeHours: (startHour: number, endHour: number) => Promise<void>;
+  resetSettings: () => Promise<void>;
 };
 
 export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
@@ -98,4 +99,23 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
       throw error;
     }
   },
+  resetSettings: async () => {
+  const defaultCellularDataAllowed = true;
+  const defaultNightModeEnabled = false;
+  const defaultNightStartHour = 22;
+  const defaultNightEndHour = 6;
+
+  set({
+    cellularDataAllowed: defaultCellularDataAllowed,
+    nightModeEnabled: defaultNightModeEnabled,
+    nightStartHour: defaultNightStartHour,
+    nightEndHour: defaultNightEndHour,
+  });
+
+  await Promise.all([
+    saveCellularDataAllowed(defaultCellularDataAllowed),
+    saveNightModeEnabled(defaultNightModeEnabled),
+    saveNightModeHours(defaultNightStartHour, defaultNightEndHour),
+  ]);
+},
 }));
