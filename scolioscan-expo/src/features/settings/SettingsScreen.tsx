@@ -1,4 +1,6 @@
 import { useScrollToTop } from '@react-navigation/native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
@@ -15,7 +17,9 @@ import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
 import HistoryExportSheet from '@/src/features/settings/sheets/HistoryExportSheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
+import { createHistoryReportPdfHtml } from '@/src/features/settings/utils/historyReportPdfHtml';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
+import { measurementSetAPI } from '@/src/api/measurementSet';
 import { userAPI } from '@/src/api/user';
 import ToastAlert, { type ToastTone } from '@/src/components/ui/ToastAlert';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
@@ -56,6 +60,9 @@ export default function SettingsScreen() {
   const [nightTimeTarget, setNightTimeTarget] = useState<SettingsTimeTarget | null>(null);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
+  const [historyExporting, setHistoryExporting] = useState(false);
+  const [historyPdfUri, setHistoryPdfUri] = useState<string | null>(null);
+  const [historySharing, setHistorySharing] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const topScrollGradient = useTopScrollGradient();
   // 토스트 알림 상태 
@@ -131,9 +138,73 @@ export default function SettingsScreen() {
     Alert.alert(label, '아직 준비중이에요.');
   };
 
-  const handleHistoryExportPress = () => {
-    // PDF 생성 연결 전 단계에서는 완료 시트가 Figma처럼 뜨는지 먼저 확인한다.
-    setSettingsSheetType('historyExport');
+  const handleHistoryExportPress = async () => {
+    if (historyExporting) {
+      return;
+    }
+
+    setHistoryExporting(true);
+    let failureTitle = '히스토리 내보내기 실패';
+    let failureMessage = '측정 결과를 불러오지 못했어요. 다시 시도해주세요.';
+
+    try {
+      // PDF 생성 전 최신 측정 결과가 있는지 먼저 확인한다.
+      const response = await measurementSetAPI.getAnalyses({ limit: 5 });
+      const measurementSets = response.data;
+
+      if (measurementSets.length === 0) {
+        Alert.alert('측정 결과 없음', '내보낼 측정 결과가 없습니다.');
+        return;
+      }
+
+      failureTitle = 'PDF 생성 실패';
+      failureMessage = 'PDF 파일을 생성하지 못했어요. 다시 시도해주세요.';
+      setHistoryPdfUri(null);
+      const html = createHistoryReportPdfHtml({
+        userName: user?.name?.trim() || '회원',
+        measurementSets,
+      });
+      // expo-print는 HTML 문자열을 앱 캐시의 PDF 파일로 저장하고 uri를 돌려준다.
+      const result = await Print.printToFileAsync({ html });
+      setHistoryPdfUri(result.uri);
+      setSettingsSheetType('historyExport');
+    } catch {
+      Alert.alert(failureTitle, failureMessage);
+    } finally {
+      setHistoryExporting(false);
+    }
+  };
+
+  const handleHistorySharePress = async () => {
+    if (historySharing) {
+      return;
+    }
+
+    if (!historyPdfUri) {
+      Alert.alert('PDF 파일 없음', '공유할 PDF 파일이 없습니다. 다시 시도해주세요.');
+      return;
+    }
+
+    try {
+      setHistorySharing(true);
+      const available = await Sharing.isAvailableAsync();
+
+      if (!available) {
+        Alert.alert('공유 기능 사용 불가', '이 기기에서는 파일 공유 기능을 사용할 수 없습니다.');
+        return;
+      }
+
+      // 생성된 PDF 파일 uri를 OS 기본 공유 시트로 전달한다.
+      await Sharing.shareAsync(historyPdfUri, {
+        mimeType: 'application/pdf',
+        UTI: 'com.adobe.pdf',
+        dialogTitle: '측정 리포트 공유',
+      });
+    } catch {
+      Alert.alert('공유 실패', 'PDF 파일을 공유하지 못했어요. 다시 시도해주세요.');
+    } finally {
+      setHistorySharing(false);
+    }
   };
 
   const closeSettingsSheet = () => {
@@ -292,7 +363,7 @@ export default function SettingsScreen() {
       <HistoryExportSheet
         visible={settingsSheetType === 'historyExport'}
         onClose={closeSettingsSheet}
-        onShare={() => showComingSoon('공유하기')}
+        onShare={handleHistorySharePress}
       />
 
       <Modal
