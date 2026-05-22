@@ -20,11 +20,13 @@ type CommonSettingsSheetProps = {
   title: string;
   description?: string;
   titleTone?: 'default' | 'danger';
+  presentation?: 'default' | 'centerConfirm';
   height?: number;
   onClose: () => void;
   children?: ReactNode;
   actions?: SheetAction[];
   contentStyle?: ViewStyle;
+  actionBottomPadding?: number;
   avoidKeyboard?: boolean;
 };
 
@@ -33,29 +35,50 @@ export default function CommonSettingsSheet({
   title,
   description,
   titleTone = 'default',
+  presentation = 'default',
   height,
   onClose,
   children,
   actions,
   contentStyle,
+  actionBottomPadding,
   avoidKeyboard = false,
 }: CommonSettingsSheetProps) {
   const insets = useSafeAreaInsets();
+  const isCenterConfirm = presentation === 'centerConfirm';
 
   const sheetContent = (
     <Pressable
       style={[styles.sheet, height ? { height } : null, contentStyle]}
       onPress={(event) => event.stopPropagation()}
     >
-      <View style={styles.header}>
-        <Text style={[styles.title, titleTone === 'danger' && styles.dangerTitle]}>{title}</Text>
-        {description ? <Text style={styles.description}>{description}</Text> : null}
+      <View style={[styles.header, isCenterConfirm && styles.centerConfirmHeader]}>
+        <Text
+          style={[
+            styles.title,
+            isCenterConfirm && styles.centerConfirmTitle,
+            titleTone === 'danger' && styles.dangerTitle,
+          ]}
+        >
+          {title}
+        </Text>
+        {description ? (
+          <Text style={[styles.description, isCenterConfirm && styles.centerConfirmDescription]}>
+            {description}
+          </Text>
+        ) : null}
       </View>
 
       {children}
 
       {actions?.length ? (
-        <View style={[styles.actionRow, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View
+          style={[
+            styles.actionRow,
+            isCenterConfirm && styles.centerConfirmActionRow,
+            { paddingBottom: actionBottomPadding ?? Math.max(insets.bottom, 16) },
+          ]}
+        >
           {actions.map((action) => {
             const isPrimary = action.variant === 'primary';
             const isDanger = action.variant === 'danger';
@@ -67,6 +90,7 @@ export default function CommonSettingsSheet({
                 onPress={action.onPress}
                 style={[
                   styles.actionButton,
+                  isCenterConfirm && styles.centerConfirmActionButton,
                   isPrimary && styles.primaryButton,
                   isDanger && styles.dangerButton,
                   action.disabled && styles.disabledButton,

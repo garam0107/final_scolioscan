@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingHorizontal: 16,
     paddingTop: 16,
+    width: '100%',
   },
   keyboardStickySheet: {
     width: '100%',
@@ -23,6 +24,11 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 12,
     paddingHorizontal: 8,
+  },
+  centerConfirmHeader: {
+    // PDF 저장 완료 시트는 Figma처럼 제목과 설명을 가운데에 둔다.
+    alignItems: 'center',
+    paddingHorizontal: 0,
   },
   title: {
     ...textFont,
@@ -34,6 +40,12 @@ const styles = StyleSheet.create({
   dangerTitle: {
     color: '#FF4B3C',
   },
+  centerConfirmTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 24,
+    textAlign: 'center',
+  },
   description: {
     ...textFont,
     color: Colors.gray[500],
@@ -42,9 +54,19 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     marginTop: 4,
   },
+  centerConfirmDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+    textAlign: 'center',
+  },
   actionRow: {
     flexDirection: 'row',
     gap: 10,
+  },
+  centerConfirmActionRow: {
+    // Figma 버튼 영역의 위쪽 16px 간격을 맞춘다.
+    paddingTop: 16,
   },
   actionButton: {
     alignItems: 'center',
@@ -53,9 +75,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     flex: 1,
-    height: 46,
+    height: 42,
     justifyContent: 'center',
     paddingHorizontal: 14,
+  },
+  centerConfirmActionButton: {
+    height: 40,
   },
   primaryButton: {
     backgroundColor: Colors.primary[500],

@@ -12,13 +12,14 @@ import SettingsTimeRow, { type SettingsTimeTarget } from '@/src/features/setting
 import SubscriptionCard from '@/src/features/settings/components/SubscriptionCard';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
 import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
+import HistoryExportSheet from '@/src/features/settings/sheets/HistoryExportSheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 import { userAPI } from '@/src/api/user';
 import ToastAlert, { type ToastTone } from '@/src/components/ui/ToastAlert';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
-type SettingsSheetType = 'language' | 'reset' | 'guide' | null;
+type SettingsSheetType = 'language' | 'reset' | 'guide' | 'historyExport' | null;
 
 const DEFAULT_TOGGLES: Record<SettingsToggleKey, boolean> = {
   cellular: true,
@@ -128,6 +129,11 @@ export default function SettingsScreen() {
 
   const showComingSoon = (label: string) => {
     Alert.alert(label, '아직 준비중이에요.');
+  };
+
+  const handleHistoryExportPress = () => {
+    // PDF 생성 연결 전 단계에서는 완료 시트가 Figma처럼 뜨는지 먼저 확인한다.
+    setSettingsSheetType('historyExport');
   };
 
   const closeSettingsSheet = () => {
@@ -251,7 +257,7 @@ export default function SettingsScreen() {
           <SettingRow
             title="히스토리 내보내기"
             description="PDF 파일로 저장"
-            onPress={() => showComingSoon('히스토리 내보내기')}
+            onPress={handleHistoryExportPress}
           />
         </SettingsSection>
 
@@ -281,6 +287,12 @@ export default function SettingsScreen() {
       <GuideReplaySheet
         visible={settingsSheetType === 'guide'}
         onClose={closeSettingsSheet}
+      />
+
+      <HistoryExportSheet
+        visible={settingsSheetType === 'historyExport'}
+        onClose={closeSettingsSheet}
+        onShare={() => showComingSoon('공유하기')}
       />
 
       <Modal
