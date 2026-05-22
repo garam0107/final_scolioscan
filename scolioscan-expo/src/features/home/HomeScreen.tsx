@@ -378,10 +378,11 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
     subtitle: '집에서 간편하게 측정',
     icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
     // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
-    onPress: () => {
-      if (!guideHydrated) return;
-      router.push(measurementGuideCompleted ? '/measure/2d' : '/measure/guide');
-    }
+    // onPress: () => {
+    //   if (!guideHydrated) return;
+    //   router.push(measurementGuideCompleted ? '/measure/2d' : '/measure/guide');
+    // }
+    onPress: () => { router.push('/measure/2d')}
   },
   {
     id: '3d',

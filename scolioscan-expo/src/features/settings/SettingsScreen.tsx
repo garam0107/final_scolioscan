@@ -220,7 +220,7 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         <SettingsSection title="정보">
-          <SettingRow title="가이드 다시보기" onPress={() => setSettingsSheetType('guide')} />
+          <SettingRow title="가이드 다시보기" onPress={() => showComingSoon('가이드')} />
           <SettingRow title="버전 정보" value="v.0.0.0" />
           <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
           <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
