@@ -200,8 +200,8 @@ export default function ContactScreen() {
 						/>
 					</View>
 					<View style={styles.column2}>
-						<Text style={styles.text5}>
-							{"답변 받으실 이메일 (선택)"}
+						<Text style={styles.text2}>
+							답변 받으실 이메일 <Text style={styles.text4}>(선택)</Text>
 						</Text>
 						<TextInput
 							underlineColorAndroid="transparent"
@@ -214,7 +214,7 @@ export default function ContactScreen() {
 					</View>
 					<View >
 						<Text style={styles.text6}>
-							{"스크린샷 (선택)"}
+							스크린샷 <Text style={styles.text4}>(선택)</Text>
 						</Text>
 						<View style={styles.row4}>
 							{screenshots.map((screenshot) => (

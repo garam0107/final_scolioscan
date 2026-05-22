@@ -230,8 +230,10 @@ const styles = StyleSheet.create({
 	},
 	text2: {
 		...textFont,
-		color: "#2B2E35",
+		color: Colors.gray[800],
 		fontSize: 15,
+		fontWeight : 500,
+		lineHeight : 20,
 		marginBottom: 8,
 		marginLeft: 4,
 	},
@@ -239,13 +241,15 @@ const styles = StyleSheet.create({
 		...textFont,
 		color: "#000000",
 		fontSize: 10,
+		fontWeight : 500,
+		lineHeight : 14,
 	},
 	text4: {
 		...textFont,
-		color: "#B5BDCE",
-		fontSize: 15,
-		lineHeight: 20,
-		minHeight: 188,
+		color: Colors.gray[300],
+		fontSize: 12,
+		lineHeight: 16,
+		fontWeight : 400
 	},
 	messageInput: {
 		...textFont,
@@ -268,7 +272,9 @@ const styles = StyleSheet.create({
 	},
 	text6: {
 		color: "#000000",
-		marginBottom: 2,
+		fontSize : 15,
+		fontWeight : 500,
+		lineHeight : 20,
 		marginLeft: 8,
 	},
 	text7: {
