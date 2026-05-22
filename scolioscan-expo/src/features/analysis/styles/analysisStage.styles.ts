@@ -9,6 +9,17 @@ const stageStyles = StyleSheet.create({
     position: 'relative',
     minHeight: 390,
   },
+  // 측정 때 사용한 이미지 
+  stageBackgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(28, 72, 74, 0.1)',
+  },
+  stageBackgroundPhoto: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    transform: [{ scale: 2.3 }],
+  },
   spineLayer: {
     position: 'absolute',
     left: 0,

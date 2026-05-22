@@ -21,4 +21,5 @@ export const curvatureAPI = {
     } as any);
     return api.post<CurvatureResponse>('/curvature/', formData);
   },
+  getUserCurvatureImg:  (fileName: string) => api.get(`/curvature/images/${fileName}`),
 };
