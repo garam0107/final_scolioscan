@@ -1,3 +1,4 @@
+import { Colors } from '@/src/constants/theme';
 import { StyleSheet } from 'react-native';
 import { textFont } from '@/src/constants/fonts';
 
@@ -169,6 +170,18 @@ const stageStyles = StyleSheet.create({
   },
   spineImage: {
     resizeMode: 'contain',
+  },
+  stage3D: {
+  backgroundColor: Colors.gray[900],
+},
+  stage3DModelSlot: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: '62%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
