@@ -90,15 +90,28 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 12,
     backgroundColor: Colors.primary.white,
-    shadowColor: Colors.primary.black,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 2,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
+  },
+    mediaClip: {
+    flex: 1,
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary.white,
   },
   guideLottie :{
     width :'100%',
     height :'100%'
+  },
+  guideVideo : {
+    width: '100%',
+    height: '100%'
   },
   descriptionGroup: {
     width: '100%',
