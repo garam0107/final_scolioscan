@@ -12,6 +12,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.nextvine.scolioscan",
       "supportsTablet": false,
       "infoPlist": {
         "NSMotionUsageDescription": "척추측만계 측정을 위해 기기의 움직임 센서를 사용합니다.",

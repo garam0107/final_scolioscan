@@ -8,10 +8,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 16,
     shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 0.04,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
   },
   trendHeader: {
     flexDirection: 'row',

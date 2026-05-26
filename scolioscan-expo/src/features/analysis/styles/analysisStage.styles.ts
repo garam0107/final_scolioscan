@@ -8,6 +8,7 @@ const stageStyles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     minHeight: 390,
+    
   },
   // 측정 때 사용한 이미지 
   stageBackgroundOverlay: {

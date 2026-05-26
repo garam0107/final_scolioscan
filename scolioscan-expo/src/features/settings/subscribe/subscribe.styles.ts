@@ -47,7 +47,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 2,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
+
   },
   professionalCard: {
     backgroundColor: '#22BCB7',

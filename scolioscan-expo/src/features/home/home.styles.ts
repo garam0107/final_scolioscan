@@ -211,7 +211,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 0.04,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
+    
   },
   measurementCardContent: {
     width: '100%',
@@ -285,10 +286,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.14,
-    shadowRadius: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
     elevation: 0.04,
   },
   proModalHeader: {
@@ -372,6 +373,11 @@ const styles = StyleSheet.create({
   bannerWrap: {
     width: '100%',
     marginTop : 16,
+        shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
   },
   bannerPager: {
     borderRadius: 12,
@@ -433,8 +439,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 0.04,
+    shadowRadius: 16,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
   },
   weeklyResultCardActive: {
     backgroundColor: '#EDFDFC',
@@ -470,7 +476,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
-    elevation: 0.04,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
   },
   trendHeader: {
     flexDirection: 'row',
