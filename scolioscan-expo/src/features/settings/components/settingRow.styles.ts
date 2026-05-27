@@ -44,6 +44,23 @@ const styles = StyleSheet.create({
     color: '#96A2B9',
     fontSize: 12,
   },
+  switchTrack: {
+    borderRadius: 12,
+    height: 24,
+    justifyContent: 'center',
+    width: 38,
+  },
+  switchThumb: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    elevation: 2,
+    height: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+    width: 20,
+  },
   dangerText: {
     color: '#E15B58',
   },
