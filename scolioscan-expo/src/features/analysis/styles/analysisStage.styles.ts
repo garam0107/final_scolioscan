@@ -5,7 +5,7 @@ import { textFont } from '@/src/constants/fonts';
 const stageStyles = StyleSheet.create({
   stage: {
     backgroundColor: '#5E9E9F',
-    borderRadius: 18,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
     minHeight: 390,
@@ -172,8 +172,9 @@ const stageStyles = StyleSheet.create({
     resizeMode: 'contain',
   },
   stage3D: {
-  backgroundColor: Colors.gray[900],
-},
+    backgroundColor: Colors.gray[900],
+    borderRadius: 12,
+  },
   stage3DModelSlot: {
     position: 'absolute',
     top: 0,
@@ -182,6 +183,66 @@ const stageStyles = StyleSheet.create({
     width: '62%',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
+  },
+  stage3DOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
+    elevation: 20,
+  },
+  stage3DMetricGroup: {
+    position: 'absolute',
+    left: 24,
+    right: 28,
+  },
+  stage3DMetricBadge: {
+    alignSelf: 'flex-start',
+    minHeight: 18,
+    justifyContent: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: Colors.gray[600],
+  },
+  stage3DMetricBadgeText: {
+    ...textFont,
+    color: Colors.primary.white,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '500',
+    letterSpacing: 0,
+  },
+  stage3DMetricValues: {
+    width: 118,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  stage3DMetricColumn: {
+    width: 50,
+    alignItems: 'flex-start',
+  },
+  stage3DMetricLabel: {
+    ...textFont,
+    color: Colors.primary.white,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '400',
+    letterSpacing: 0,
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
+  },
+  stage3DMetricValue: {
+    ...textFont,
+    color: Colors.primary.white,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700',
+    letterSpacing: 0,
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
   },
 });
 

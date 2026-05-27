@@ -1,24 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { curvatureAPI } from '@/src/api/curvature';
 import { measurementSetAPI } from '@/src/api/measurementSet';
-import { rotationAPI } from '@/src/api/rotation';
 import { isNetworkError } from '@/src/lib/apiError';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { AnalysisResponse } from '@/src/types/analysis';
+import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import {
-  toAnalysisFromCurvature,
   toAnalysisFromMeasurementSet,
-  toAnalysisFromRotation,
 } from '../utils/analysisMappers';
 
 type UseAnalysisDataParams = {
   analysisId?: string;
-  sourceType?: string;
 };
 
 type UseAnalysisDataResult = {
   analysis: AnalysisResponse | null;
+  measurementSet: MeasurementSetResponse | null;
   loading: boolean;
   error: string | null;
   networkError: boolean;
@@ -27,9 +24,9 @@ type UseAnalysisDataResult = {
 
 export function useAnalysisData({
   analysisId,
-  sourceType,
 }: UseAnalysisDataParams): UseAnalysisDataResult {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+  const [measurementSet, setMeasurementSet] = useState<MeasurementSetResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [networkError, setNetworkError] = useState(false);
@@ -51,33 +48,31 @@ export function useAnalysisData({
       setNetworkError(false);
 
       try {
-        let targetAnalysis: AnalysisResponse | null = null;
+        let targetMeasurementSet: MeasurementSetResponse | null = null;
 
         if (analysisId) {
-          // 상세 화면은 전달받은 id와 sourceType 기준으로 정확한 분석 한 건을 불러옵니다.
-          if (sourceType === 'rotation') {
-            const response = await rotationAPI.getAnalysis(analysisId);
-            targetAnalysis = toAnalysisFromRotation(response.data);
-          } else {
-            const response = await curvatureAPI.getAnalysis(analysisId);
-            targetAnalysis = toAnalysisFromCurvature(response.data);
-          }
+          // 상세 화면은 전달받은 만곡도 id로 연결된 측정 세트를 불러옵니다.
+          // 상세 화면도 만곡도와 비틀림이 묶인 측정 세트를 기준으로 조회합니다.
+          const response = await measurementSetAPI.getByCurvature(analysisId);
+          targetMeasurementSet = response.data;
         } else {
           // 탭 화면은 최신 2D 결과를 기준으로 연결된 측정 세트를 찾아 보여줍니다.
-          const response = await curvatureAPI.getAnalyses({ limit: 1 });
-          const latestCurvature = response.data[0] ?? null;
-
-          if (latestCurvature) {
-            const measurementSetResponse = await measurementSetAPI.getByCurvature(latestCurvature.id);
-            targetAnalysis = toAnalysisFromMeasurementSet(measurementSetResponse.data);
-          }
+          // 분석 탭은 최신 측정 세트를 그대로 가져와 2D와 3D가 같은 원본 값을 쓰게 합니다.
+          const response = await measurementSetAPI.getAnalyses({ limit: 1 });
+          targetMeasurementSet = response.data[0] ?? null;
         }
 
         if (!mounted) return;
 
+        const targetAnalysis = targetMeasurementSet
+          ? toAnalysisFromMeasurementSet(targetMeasurementSet)
+          : null;
+
+        setMeasurementSet(targetMeasurementSet);
         setAnalysis(targetAnalysis ?? null);
       } catch (loadError) {
         if (!mounted) return;
+        setMeasurementSet(null);
         setAnalysis(null);
         if (isNetworkError(loadError)) {
           setNetworkError(true);
@@ -93,10 +88,11 @@ export function useAnalysisData({
     return () => {
       mounted = false;
     };
-  }, [analysisId, measurementVersion, reloadKey, sourceType]);
+  }, [analysisId, measurementVersion, reloadKey]);
 
   return {
     analysis,
+    measurementSet,
     loading,
     error,
     networkError,

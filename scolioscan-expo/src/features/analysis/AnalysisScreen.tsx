@@ -42,7 +42,6 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 type AnalysisScreenProps = {
   analysisId?: string;
-  sourceType?: string;
 };
 
 function getWideStageScale(width: number, height: number) {
@@ -73,17 +72,18 @@ function getCurvatureImageSource(imagePath?: string | null) {
   };
 }
 
-export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
+export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const { width, height } = useWindowDimensions();
   const { user } = useAuth();
   const scrollRef = useRef<ScrollView>(null);
   const {
     analysis,
+    measurementSet,
     loading,
     error,
     networkError,
     reloadAnalysisData,
-  } = useAnalysisData({ analysisId, sourceType });
+  } = useAnalysisData({ analysisId });
   const {
     progress,
     angleAnimationKey,
@@ -210,6 +210,7 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             progress={progress}
             // 측정 시 찍은 이미지 
             viewMode={viewMode}
+            measurementSet={measurementSet}
             backgroundImageSource={is3DView ? null : stageBackgroundSource}
             onRetry={reloadAnalysisData}
           />

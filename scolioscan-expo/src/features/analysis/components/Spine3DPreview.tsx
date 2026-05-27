@@ -13,35 +13,37 @@ type ExpoGL = WebGLRenderingContext & {
   endFrameEXP: () => void;
 };
 
+type NavigatorWithUserAgent = Navigator & {
+  userAgent?: string;
+};
+
+function ensureThreeNavigatorUserAgent() {
+  const fallbackUserAgent = 'ReactNative';
+  const currentNavigator = globalThis.navigator as NavigatorWithUserAgent | undefined;
+
+  if (!currentNavigator) {
+    Object.defineProperty(globalThis, 'navigator', {
+      value: { userAgent: fallbackUserAgent },
+      configurable: true,
+    });
+    return;
+  }
+
+  if (typeof currentNavigator.userAgent !== 'string') {
+    Object.defineProperty(currentNavigator, 'userAgent', {
+      value: fallbackUserAgent,
+      configurable: true,
+    });
+  }
+}
+
 export default function Spine3DPreview() {
   const aliveRef = useRef(true);
   const frameRef = useRef<number | null>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const startRotationRef = useRef(0);
   const targetRotationRef = useRef(0);
-  type NavigatorWithUserAgent = Navigator & {
-    userAgent?: string;
-    };
 
-  function ensureThreeNavigatorUserAgent() {
-  const fallbackUserAgent = 'ReactNative';
-  const currentNavigator = globalThis.navigator as NavigatorWithUserAgent | undefined;
-
-    if (!currentNavigator) {
-        Object.defineProperty(globalThis, 'navigator', {
-        value: { userAgent: fallbackUserAgent },
-        configurable: true,
-        });
-        return;
-    }
-
-    if (typeof currentNavigator.userAgent !== 'string') {
-        Object.defineProperty(currentNavigator, 'userAgent', {
-        value: fallbackUserAgent,
-        configurable: true,
-        });
-    }
-    }
   useEffect(() => {
     return () => {
       aliveRef.current = false;
@@ -85,7 +87,7 @@ export default function Spine3DPreview() {
     });
 
     renderer.setSize(width, height);
-    renderer.setClearColor(0x24272e, 0);
+    renderer.setClearColor(0x25272d, 0);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, width / height, 0.01, 100);
@@ -109,19 +111,19 @@ export default function Spine3DPreview() {
     const size = box.getSize(new THREE.Vector3());
     const maxSize = Math.max(size.x, size.y, size.z);
 
-    // 모델을 먼저 보기 좋은 크기로 맞춘 뒤, 다시 중심을 계산해서 화면 중앙에 둡니다.
+    // 오른쪽 모델 영역 안에서 척추가 중앙에 오도록 크기와 중심을 맞춥니다.
     root.scale.setScalar(2.6 / maxSize);
 
     const scaledBox = new THREE.Box3().setFromObject(root);
     const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
 
     root.position.set(
-    -scaledCenter.x,
-    -scaledCenter.y,
-    -scaledCenter.z,
+      -scaledCenter.x,
+      -scaledCenter.y,
+      -scaledCenter.z,
     );
 
-    root.traverse((child : THREE.Object3D) => {
+    root.traverse((child: THREE.Object3D) => {
       if (child instanceof THREE.Mesh) {
         child.material = new THREE.MeshStandardMaterial({
           color: '#F1F0EA',
@@ -161,6 +163,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: '100%',
+    overflow: 'hidden',
   },
   glView: {
     flex: 1,
