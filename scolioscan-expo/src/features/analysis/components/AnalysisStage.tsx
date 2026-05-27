@@ -130,8 +130,10 @@ export default function AnalysisStage({
             <View style={styles.stageBackgroundOverlay} />
           </ImageBackground>
         ) : null}
-      {!is3DView ? (
-        <View style={styles.spineLayer}>
+        <View
+          pointerEvents={is3DView ? 'none' : 'auto'}
+          style={[styles.spineLayer, is3DView && styles.stage2DHidden]}
+        >
           <SpineRig
             progress={progress}
             slices={pose.vertebrae}
@@ -141,12 +143,15 @@ export default function AnalysisStage({
             spacing={stageBoneSpacing}
           />
         </View>
-      ) : null}
-        {is3DView ? (
-      <View style={styles.stage3DModelSlot}>
-        <Spine3DPreview measurementSet={measurementSet} />
+      <View
+        style={[
+          styles.stage3DModelSlot,
+          !is3DView ? styles.stage3DModelSlotHidden : null,
+        ]}
+        pointerEvents={is3DView ? 'auto' : 'none'}
+      >
+        <Spine3DPreview measurementSet={measurementSet} active={is3DView} />
       </View>
-    ) : null}
         {is3DView ? (
       <View style={styles.stage3DOverlay} pointerEvents="none">
         {stage3DMetrics.map((metric) => (
@@ -154,8 +159,10 @@ export default function AnalysisStage({
         ))}
       </View>
     ) : null}
-        <View style={styles.textLayer}>
-        {!is3DView ? (
+      <View
+        pointerEvents={is3DView ? 'none' : 'auto'}
+        style={[styles.textLayer, is3DView && styles.stage2DHidden]}
+      >
           <>
             {pose.metrics.map((metric) => (
               <MetricBlock
@@ -180,7 +187,7 @@ export default function AnalysisStage({
               </Text>
             ) : null}
           </>
-        ) : null}
+      
 
         {error ? (
           <>

@@ -171,6 +171,9 @@ const stageStyles = StyleSheet.create({
   spineImage: {
     resizeMode: 'contain',
   },
+  stage2DHidden : {
+    opacity : 0
+  },
   stage3D: {
     backgroundColor: Colors.gray[900],
     borderRadius: 12,
@@ -184,6 +187,9 @@ const stageStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
+  },
+  stage3DModelSlotHidden: {
+    opacity: 0,
   },
   stage3DOverlay: {
     ...StyleSheet.absoluteFillObject,

@@ -9,6 +9,7 @@ import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import { SpineDeformer, type SpineDeformerMetrics } from '../3d/SpineDeformer';
 
 const SPINE_MODEL = require('../../../../assets/glb/spine.glb');
+const INACTIVE_RENDER_DELAY_MS = 250;
 
 type ExpoGL = WebGLRenderingContext & {
   drawingBufferWidth: number;
@@ -22,6 +23,7 @@ type NavigatorWithUserAgent = Navigator & {
 
 type Spine3DPreviewProps = {
   measurementSet: MeasurementSetResponse | null;
+  active: boolean;
 };
 
 const EMPTY_DEFORMER_METRICS: SpineDeformerMetrics = {
@@ -67,24 +69,84 @@ function ensureThreeNavigatorUserAgent() {
   }
 }
 
-export default function Spine3DPreview({ measurementSet }: Spine3DPreviewProps) {
+function disposeObject3D(object: THREE.Object3D | null) {
+  if (!object) return;
+
+  object.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+
+    child.geometry?.dispose();
+
+    if (Array.isArray(child.material)) {
+      child.material.forEach((material) => material.dispose());
+    } else {
+      child.material?.dispose();
+    }
+  });
+}
+
+export default function Spine3DPreview({ measurementSet, active }: Spine3DPreviewProps) {
   const aliveRef = useRef(true);
   const frameRef = useRef<number | null>(null);
+  const inactiveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const renderRef = useRef<(() => void) | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const deformerRef = useRef<SpineDeformer | null>(null);
   const metricsRef = useRef<SpineDeformerMetrics>(EMPTY_DEFORMER_METRICS);
   const lastFrameTimeRef = useRef<number | null>(null);
+  const contextIdRef = useRef(0);
+  const activeRef = useRef(active);
   const startRotationRef = useRef(0);
   const targetRotationRef = useRef(0);
 
-  useEffect(() => {
-    return () => {
-      aliveRef.current = false;
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-      deformerRef.current?.reset();
-      deformerRef.current = null;
-    };
+  const stopCurrentContext = useCallback(() => {
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+
+    if (inactiveTimeoutRef.current !== null) {
+      clearTimeout(inactiveTimeoutRef.current);
+      inactiveTimeoutRef.current = null;
+    }
+
+    renderRef.current = null;
+    deformerRef.current?.reset();
+    deformerRef.current = null;
+    disposeObject3D(modelRef.current);
+    modelRef.current = null;
+    rendererRef.current?.dispose();
+    rendererRef.current = null;
+    lastFrameTimeRef.current = null;
   }, []);
+
+  useEffect(() => {
+    console.log('Spine3DPreview mounted');
+    return () => {
+      console.log('Spine3DPreview umounted');
+      aliveRef.current = false;
+      contextIdRef.current += 1;
+      stopCurrentContext();
+    };
+  }, [stopCurrentContext]);
+
+  useEffect(() => {
+    activeRef.current = active;
+
+    if (active) {
+      lastFrameTimeRef.current = null;
+
+      if (inactiveTimeoutRef.current !== null) {
+        clearTimeout(inactiveTimeoutRef.current);
+        inactiveTimeoutRef.current = null;
+      }
+
+      if (renderRef.current) {
+        frameRef.current = requestAnimationFrame(renderRef.current);
+      }
+    }
+  }, [active]);
 
   useEffect(() => {
     const metrics = getDeformerMetrics(measurementSet);
@@ -107,6 +169,11 @@ export default function Spine3DPreview({ measurementSet }: Spine3DPreviewProps) 
   ).current;
 
   const onContextCreate = useCallback(async (gl: ExpoGL) => {
+    console.log('GLView context created');
+    const contextId = contextIdRef.current + 1;
+    contextIdRef.current = contextId;
+    stopCurrentContext();
+
     const width = gl.drawingBufferWidth;
     const height = gl.drawingBufferHeight;
 
@@ -127,6 +194,7 @@ export default function Spine3DPreview({ measurementSet }: Spine3DPreviewProps) 
       antialias: true,
       alpha: true,
     });
+    rendererRef.current = renderer;
 
     renderer.setSize(width, height);
     renderer.setClearColor(0x25272d, 0);
@@ -147,6 +215,12 @@ export default function Spine3DPreview({ measurementSet }: Spine3DPreviewProps) 
     ensureThreeNavigatorUserAgent();
     const loader = new GLTFLoader();
     const gltf = await loader.loadAsync(asset.localUri ?? asset.uri);
+
+    if (!aliveRef.current || contextIdRef.current !== contextId) {
+      renderer.dispose();
+      disposeObject3D(gltf.scene);
+      return;
+    }
 
     const root = gltf.scene;
     const box = new THREE.Box3().setFromObject(root);
@@ -184,7 +258,7 @@ export default function Spine3DPreview({ measurementSet }: Spine3DPreviewProps) 
     console.log('[SpineDeformer] nodes', debugInfo.count, debugInfo.names);
 
     const render = () => {
-      if (!aliveRef.current) return;
+      if (!aliveRef.current || contextIdRef.current !== contextId) return;
 
       const now = globalThis.performance?.now?.() ?? Date.now();
       const deltaSeconds = lastFrameTimeRef.current === null
@@ -192,19 +266,40 @@ export default function Spine3DPreview({ measurementSet }: Spine3DPreviewProps) 
         : Math.min(0.05, (now - lastFrameTimeRef.current) / 1000);
       lastFrameTimeRef.current = now;
 
+      if (!activeRef.current) {
+        inactiveTimeoutRef.current = setTimeout(() => {
+          inactiveTimeoutRef.current = null;
+          if (aliveRef.current && contextIdRef.current === contextId) {
+            frameRef.current = requestAnimationFrame(render);
+          }
+        }, INACTIVE_RENDER_DELAY_MS);
+        return;
+      }
+
       if (modelRef.current) {
         modelRef.current.rotation.y +=
           (targetRotationRef.current - modelRef.current.rotation.y) * 0.18;
       }
 
       deformerRef.current?.update(deltaSeconds);
-      renderer.render(scene, camera);
-      gl.endFrameEXP();
-      frameRef.current = requestAnimationFrame(render);
+      try {
+        renderer.render(scene, camera);
+        gl.endFrameEXP();
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('[Spine3DPreview] render skipped after GL context change', error);
+        }
+        return;
+      }
+
+      if (aliveRef.current && contextIdRef.current === contextId) {
+        frameRef.current = requestAnimationFrame(render);
+      }
     };
 
+    renderRef.current = render;
     render();
-  }, []);
+  }, [stopCurrentContext]);
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
