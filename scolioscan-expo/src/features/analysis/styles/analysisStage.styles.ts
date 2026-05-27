@@ -219,7 +219,7 @@ const stageStyles = StyleSheet.create({
     marginTop: 4,
   },
   stage3DMetricColumn: {
-    width: 50,
+    width: 70,
     alignItems: 'flex-start',
   },
   stage3DMetricLabel: {

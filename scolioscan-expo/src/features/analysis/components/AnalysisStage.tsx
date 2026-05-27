@@ -64,7 +64,7 @@ function Spine3DMetricOverlay({ metric }: { metric: Spine3DMetric }) {
 
         <View style={styles.stage3DMetricColumn}>
           <Text style={styles.stage3DMetricLabel}>비틀림</Text>
-          <Text style={styles.stage3DMetricValue}>{formatDegree(metric.rotationValue, true)}</Text>
+          <Text style={styles.stage3DMetricValue} >{formatDegree(metric.rotationValue, true)}</Text>
         </View>
       </View>
     </View>
@@ -144,7 +144,7 @@ export default function AnalysisStage({
       ) : null}
         {is3DView ? (
       <View style={styles.stage3DModelSlot}>
-        <Spine3DPreview />
+        <Spine3DPreview measurementSet={measurementSet} />
       </View>
     ) : null}
         {is3DView ? (

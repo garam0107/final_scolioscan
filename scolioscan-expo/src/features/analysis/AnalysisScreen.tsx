@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
   Switch,
@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   ActivityIndicator
 } from 'react-native';
-import { useScrollToTop } from '@react-navigation/native';
+import { useFocusEffect ,useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
@@ -124,6 +124,11 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const shouldShowMeasurementRequired = !loading && !analysis && !error && !networkError;
   // 2D,3D 토글
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');  
+  useFocusEffect(
+  useCallback(() => {
+    setViewMode('2d');
+    }, []),
+  );
   const is3DView = viewMode === '3d';
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);

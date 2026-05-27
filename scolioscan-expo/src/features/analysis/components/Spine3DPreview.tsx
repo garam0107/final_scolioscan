@@ -5,6 +5,9 @@ import { GLView } from 'expo-gl';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
+import type { MeasurementSetResponse } from '@/src/types/measurementSet';
+import { SpineDeformer, type SpineDeformerMetrics } from '../3d/SpineDeformer';
+
 const SPINE_MODEL = require('../../../../assets/glb/spine.glb');
 
 type ExpoGL = WebGLRenderingContext & {
@@ -16,6 +19,33 @@ type ExpoGL = WebGLRenderingContext & {
 type NavigatorWithUserAgent = Navigator & {
   userAgent?: string;
 };
+
+type Spine3DPreviewProps = {
+  measurementSet: MeasurementSetResponse | null;
+};
+
+const EMPTY_DEFORMER_METRICS: SpineDeformerMetrics = {
+  upperCurvatureDeg: 0,
+  mainCurvatureDeg: 0,
+  lumbarCurvatureDeg: 0,
+  upperTwistDeg: 0,
+  mainTwistDeg: 0,
+  lumbarTwistDeg: 0,
+};
+
+function getDeformerMetrics(measurementSet: MeasurementSetResponse | null): SpineDeformerMetrics {
+  const curvature = measurementSet?.curvature;
+  const rotation = measurementSet?.rotation;
+
+  return {
+    upperCurvatureDeg: curvature?.secondary_thoracic_cobb ?? 0,
+    mainCurvatureDeg: curvature?.main_thoracic_cobb ?? 0,
+    lumbarCurvatureDeg: curvature?.lumbar_cobb ?? 0,
+    upperTwistDeg: rotation?.upper_thoracic_atr ?? 0,
+    mainTwistDeg: rotation?.thoracic_atr ?? 0,
+    lumbarTwistDeg: rotation?.lumbar_atr ?? 0,
+  };
+}
 
 function ensureThreeNavigatorUserAgent() {
   const fallbackUserAgent = 'ReactNative';
@@ -37,10 +67,13 @@ function ensureThreeNavigatorUserAgent() {
   }
 }
 
-export default function Spine3DPreview() {
+export default function Spine3DPreview({ measurementSet }: Spine3DPreviewProps) {
   const aliveRef = useRef(true);
   const frameRef = useRef<number | null>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
+  const deformerRef = useRef<SpineDeformer | null>(null);
+  const metricsRef = useRef<SpineDeformerMetrics>(EMPTY_DEFORMER_METRICS);
+  const lastFrameTimeRef = useRef<number | null>(null);
   const startRotationRef = useRef(0);
   const targetRotationRef = useRef(0);
 
@@ -48,8 +81,17 @@ export default function Spine3DPreview() {
     return () => {
       aliveRef.current = false;
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      deformerRef.current?.reset();
+      deformerRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const metrics = getDeformerMetrics(measurementSet);
+
+    metricsRef.current = metrics;
+    deformerRef.current?.setMetrics(metrics);
+  }, [measurementSet]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -135,15 +177,27 @@ export default function Spine3DPreview() {
 
     scene.add(root);
     modelRef.current = root;
+    deformerRef.current = new SpineDeformer(root);
+    deformerRef.current.setMetrics(metricsRef.current);
+
+    const debugInfo = deformerRef.current.getDebugInfo();
+    console.log('[SpineDeformer] nodes', debugInfo.count, debugInfo.names);
 
     const render = () => {
       if (!aliveRef.current) return;
+
+      const now = globalThis.performance?.now?.() ?? Date.now();
+      const deltaSeconds = lastFrameTimeRef.current === null
+        ? 1 / 60
+        : Math.min(0.05, (now - lastFrameTimeRef.current) / 1000);
+      lastFrameTimeRef.current = now;
 
       if (modelRef.current) {
         modelRef.current.rotation.y +=
           (targetRotationRef.current - modelRef.current.rotation.y) * 0.18;
       }
 
+      deformerRef.current?.update(deltaSeconds);
       renderer.render(scene, camera);
       gl.endFrameEXP();
       frameRef.current = requestAnimationFrame(render);
