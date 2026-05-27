@@ -190,7 +190,6 @@ export default function ReportScreen() {
       pathname: '/analysis-detail/[id]',
       params: {
         id: item.navigationId,
-        source: 'curvature',
       },
     });
   };

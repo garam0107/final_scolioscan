@@ -1,12 +1,13 @@
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
+  Switch,
   Text,
   View,
   useWindowDimensions,
   ActivityIndicator
 } from 'react-native';
-import { useScrollToTop } from '@react-navigation/native';
+import { useFocusEffect ,useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
@@ -38,13 +39,10 @@ const BASE_STAGE_HEIGHT = 380;
 const STAGE_HORIZONTAL_PADDING = 20;
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
+
 type AnalysisScreenProps = {
   analysisId?: string;
-  sourceType?: string;
 };
-
-// 2D, 3D 토글
-type ViewMode = '2d' | '3d';
 
 function getWideStageScale(width: number, height: number) {
   if (width < WIDE_LAYOUT_MIN_WIDTH) return 1;
@@ -52,6 +50,7 @@ function getWideStageScale(width: number, height: number) {
   const availableStageWidth = Math.max(1, width - 32 - STAGE_HORIZONTAL_PADDING);
   const widthScale = availableStageWidth / BASE_STAGE_WIDTH;
   const heightScale = Math.max(1, (height - 180) / BASE_STAGE_HEIGHT);
+  
 
   // 태블릿에서는 화면을 꽉 쓰되 첫 화면에서 과하게 커지지 않도록 가로/세로 중 작은 배율을 사용한다.
   return Math.max(1, Math.min(widthScale, heightScale));
@@ -73,17 +72,18 @@ function getCurvatureImageSource(imagePath?: string | null) {
   };
 }
 
-export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScreenProps) {
+export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const { width, height } = useWindowDimensions();
   const { user } = useAuth();
   const scrollRef = useRef<ScrollView>(null);
   const {
     analysis,
+    measurementSet,
     loading,
     error,
     networkError,
     reloadAnalysisData,
-  } = useAnalysisData({ analysisId, sourceType });
+  } = useAnalysisData({ analysisId });
   const {
     progress,
     angleAnimationKey,
@@ -122,7 +122,14 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
   const infoCardLevel = getInfoCardLevel(maxCobbValue);
   const severityLabel = infoCardLevel;
   const shouldShowMeasurementRequired = !loading && !analysis && !error && !networkError;
-
+  // 2D,3D 토글
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');  
+  useFocusEffect(
+  useCallback(() => {
+    setViewMode('2d');
+    }, []),
+  );
+  const is3DView = viewMode === '3d';
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);
     if (maxValue < 15) return '정상';
@@ -207,10 +214,25 @@ export default function AnalysisScreen({ analysisId, sourceType }: AnalysisScree
             angleAnimationKey={angleAnimationKey}
             progress={progress}
             // 측정 시 찍은 이미지 
-            backgroundImageSource={stageBackgroundSource}
+            viewMode={viewMode}
+            measurementSet={measurementSet}
+            backgroundImageSource={is3DView ? null : stageBackgroundSource}
             onRetry={reloadAnalysisData}
           />
-
+          <View style={styles.viewModeToggleRow}>
+            <Text style={[styles.viewModeLabel, !is3DView && styles.viewModeLabelActive]}>
+              2D
+            </Text>
+            <Switch
+              value={is3DView}
+              onValueChange={(value) => setViewMode(value ? '3d' : '2d')}
+              trackColor={{ false: '#C9D1D3', true: '#69B7BC' }}
+              thumbColor="#FFFFFF"
+            />
+            <Text style={[styles.viewModeLabel, is3DView && styles.viewModeLabelActive]}>
+              3D
+            </Text>
+          </View>
           <InfoCard level={infoCardLevel} />
 
           <SeverityCard metrics={pose.metrics} />

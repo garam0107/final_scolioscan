@@ -88,7 +88,7 @@ function buildRotationPayload(
   curvatureMeasurementId?: number | null,
 ): RotationCreatePayload {
   // 측정 순서는 화면 가이드 순서와 API 필드 순서가 같아야 하므로 배열 인덱스로 매핑한다.
-  const values = samples.map((sample) => Math.abs(sample.angle));
+  const values = samples.map((sample) => sample.angle);
 
   return {
     upper_thoracic_atr: values[0] ?? 0,
@@ -256,7 +256,7 @@ export default function ScoliometerScreen() {
     // 필요한 샘플 수가 모이면 회전 측정값을 저장하고, 부족하면 현재 각도만 세션에 누적한다.
     if (submitting) return;
 
-    const currentAngle = Math.abs(angle);
+    const currentAngle = angle;
     const nextSamples =
       samples.length >= SCOLIOMETER_REQUIRED_SAMPLE_COUNT
         ? samples
