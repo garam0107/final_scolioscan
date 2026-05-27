@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { VideoView, useVideoPlayer, type VideoSource } from 'expo-video';
+// import { VideoView, useVideoPlayer, type VideoSource } from 'expo-video';
 import LottieView, { type AnimationObject } from 'lottie-react-native';
 import { Animated, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ type MeasurementGuideStepScreenProps = {
   transitionDirection: 1 | -1;
   title: string;
   lottieSource?: AnimationObject;
-  videoSource?: VideoSource;
+  // videoSource?: VideoSource;
   description: string;
   subDescription?: string;
   nextLabel: string;
@@ -26,7 +26,7 @@ export default function MeasurementGuideStepScreen({
   transitionDirection,
   title,
   lottieSource,
-  videoSource,
+  // videoSource,
   description,
   subDescription,
   nextLabel,
@@ -52,23 +52,23 @@ export default function MeasurementGuideStepScreen({
       }),
     ]).start();
   }, [contentTranslateX, pageKey, transitionDirection]);
-  function GuideVideo({ source }: { source: VideoSource }) {
-  const player = useVideoPlayer(source, (player) => {
-    // 가이드 영상은 사용자가 조작하지 않아도 반복 재생되도록 설정한다.
-    player.loop = true;
-    player.muted = true;
-    player.play();
-  });
+//   function GuideVideo({ source }: { source: VideoSource }) {
+//   const player = useVideoPlayer(source, (player) => {
+//     // 가이드 영상은 사용자가 조작하지 않아도 반복 재생되도록 설정한다.
+//     player.loop = true;
+//     player.muted = true;
+//     player.play();
+//   });
 
-  return (
-    <VideoView
-      player={player}
-      style={styles.guideVideo}
-      contentFit="contain"
-      nativeControls={false}
-    />
-  );
-}
+//   return (
+//     <VideoView
+//       player={player}
+//       style={styles.guideVideo}
+//       contentFit="contain"
+//       nativeControls={false}
+//     />
+//   );
+// }
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right', 'bottom']}>
       <View style={styles.header}>
@@ -100,7 +100,7 @@ export default function MeasurementGuideStepScreen({
         >
           <Text style={styles.guideTitle}>{title}</Text>
           {/* lottie,mp4 파일 중 나중에 최종 결정하는 것으로 수정 */}
-            <View style={[styles.mediaCard, { height: layout.mediaHeight }]}>
+            {/* <View style={[styles.mediaCard, { height: layout.mediaHeight }]}>
               <View style={styles.mediaClip}>
                 {videoSource ? (
                   <GuideVideo source={videoSource} />
@@ -114,7 +114,19 @@ export default function MeasurementGuideStepScreen({
                   />
                 ) : null}
               </View>
-            </View>
+            </View> */}
+            <View style={[styles.mediaCard, { height: layout.mediaHeight }]}>
+            {/* Lottie 파일만 바꾸어 2D, 3D, 척추측만계 가이드를 같은 레이아웃으로 재사용한다. */}
+              {lottieSource ? (
+                <LottieView
+                  source={lottieSource}
+                  autoPlay
+                  loop
+                  resizeMode="contain"
+                  style={styles.guideLottie}
+                />
+              ) : null}
+          </View>
           <View style={styles.descriptionGroup}>
             <Text style={styles.description}>{description}</Text>
             {subDescription ? <Text style={styles.subDescription}>{subDescription}</Text> : null}
