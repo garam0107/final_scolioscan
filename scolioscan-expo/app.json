@@ -16,7 +16,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSMotionUsageDescription": "척추측만계 측정을 위해 기기의 움직임 센서를 사용합니다.",
-        "NSLocationWhenInUseUsageDescription": "계정 보안을 위해 현재 로그인 기기의 위치를 표시하는 데 위치 정보를 사용합니다."
+        "NSLocationWhenInUseUsageDescription": "계정 보안을 위해 현재 로그인 기기의 위치를 표시하는 데 위치 정보를 사용합니다.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -28,10 +29,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.nextvine.scolioscan",
       "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
