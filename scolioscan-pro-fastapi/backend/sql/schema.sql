@@ -148,4 +148,5 @@ CREATE TABLE `rotation_measurements` (
     ON DELETE CASCADE
   CONSTRAINT `fk_rotation_measurements_curvature_measurement_id`
     FOREIGN KEY (`curvature_measurement_id`) REFERENCES `curvature_measurements` (`id`)
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -32,7 +32,7 @@ class RotationMeasurement(Base):
     # 같이 측정한 2D 촬영 결과를 연결하기 위한 curvature id
     curvature_measurement_id = Column(
         Integer,
-        ForeignKey("curvature_measurements.id"),
+        ForeignKey("curvature_measurements.id", ondelete = "CASCADE"),
         nullable=True,
         index=True,
     )
