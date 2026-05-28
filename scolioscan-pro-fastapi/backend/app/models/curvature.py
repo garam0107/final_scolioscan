@@ -25,7 +25,7 @@ class CurvatureMeasurement(Base):
     __tablename__ = "curvature_measurements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete = "CASCADE"), nullable=False, index=True)
     measured_at = Column(DateTime, nullable=False, server_default=func.now())
 
     main_thoracic_cobb = Column(Float, nullable=False)

@@ -122,6 +122,7 @@ CREATE TABLE `curvature_measurements` (
   KEY `ix_curvature_user_measured` (`user_id`, `measured_at`),
   CONSTRAINT `fk_curvature_measurements_user_id`
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `rotation_measurements` (
@@ -144,6 +145,7 @@ CREATE TABLE `rotation_measurements` (
   KEY `ix_rotation_measurements_curvature_measurement_id` (`curvature_measurement_id`),
   CONSTRAINT `fk_rotation_measurements_user_id`
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+    ON DELETE CASCADE
   CONSTRAINT `fk_rotation_measurements_curvature_measurement_id`
     FOREIGN KEY (`curvature_measurement_id`) REFERENCES `curvature_measurements` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

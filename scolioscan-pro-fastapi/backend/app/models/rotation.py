@@ -14,7 +14,7 @@ class RotationMeasurement(Base):
     __tablename__ = "rotation_measurements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete = "CASCADE"), nullable=False, index=True)
     measured_at = Column(DateTime, nullable=False, server_default=func.now())
 
     upper_thoracic_atr = Column(Float, nullable=False)
