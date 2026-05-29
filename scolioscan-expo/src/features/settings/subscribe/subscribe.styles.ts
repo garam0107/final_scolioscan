@@ -5,7 +5,7 @@ import { textFont } from '@/src/constants/fonts';
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: '#F9F9FB',
+    backgroundColor: Colors.gray[25],
     flex: 1,
   },
   content: {
@@ -27,10 +27,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...textFont,
-    color: '#2B2E35',
+    color: Colors.gray[800],
     fontSize: 18,
-    fontWeight: '700',
-    lineHeight: 25,
+    fontWeight: '600',
+    lineHeight: 24,
   },
   headerSide: {
     height: 24,
