@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
   },
   contentInset: {
     paddingTop: 8,
-    paddingBottom: 16,
+    paddingBottom: 32,
   },
   measurementRequiredContent: {
     alignItems: 'center',
