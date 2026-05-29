@@ -155,6 +155,68 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     pointerEvents: 'none',
   },
+  autoGuideChip: {
+    position: 'absolute',
+    bottom: 175,
+    alignSelf: 'center',
+    zIndex: 14,
+    maxWidth: '86%',
+    minHeight: 46,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: '#000000',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  autoGuideChipError: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  autoGuideIcon: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  autoGuideInfoIcon: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#7AD7D4',
+  },
+  autoGuideSuccessIcon: {
+    borderRadius: 5,
+    backgroundColor: '#64FFC9',
+  },
+  autoGuideIconText: {
+    ...textFont,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  autoGuideInfoIconText: {
+    color: '#7AD7D4',
+  },
+  autoGuideSuccessIconText: {
+    color: '#0F181A',
+  },
+  autoGuideChipText: {
+    ...textFont,
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  autoGuideChipInfoText: {
+    color: '#7AD7D4',
+  },
+  autoGuideChipSuccessText: {
+    color: '#64FFC9',
+  },
   captureCompleteBackdrop: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 15,

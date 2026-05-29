@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCameraPermissions } from 'expo-camera';
@@ -11,6 +11,7 @@ import { useMeasure2D } from './hooks/useMeasure2D';
 import CloseIcon from '../../../assets/icons/close.svg'
 import { useCaptureCompletionFlow } from './hooks/useCaptureCompletionFlow';
 import { CaptureProgressOverlay } from './components/CaptureProgressOverlay';
+import { AutoGuideStatusChip } from './components/AutoGuideStatusChip';
 import { Measure2DCameraStage } from './components/Measure2DCameraStage';
 import { Measure2DPermissionView } from './components/Measure2DPermissionView';
 import { styles } from './measure2d.styles';
@@ -191,14 +192,6 @@ export default function Measure2DScreen() {
     }
   }, [API_BASE_URL, markMeasurementChanged, showToast]);
 
-  useEffect(() => {
-    // 훅에서 발생한 자동 촬영 안내 메시지를 화면 공용 토스트로 옮긴다.
-    // 자동 체크 중 나온 안내 문구는 화면 토스트 컴포넌트로 전달한 뒤 훅 상태에서 비운다.
-    if (!autoToast) return;
-    showToast(autoToast.message, autoToast.tone);
-    clearAutoToast();
-  }, [autoToast, clearAutoToast, showToast]);
-
   const {
     activeCaptureLottieType,
     captureCompleteVisible,
@@ -333,6 +326,12 @@ export default function Measure2DScreen() {
                ) : null}
       </View>
        
+        <AutoGuideStatusChip
+          message={autoToast?.message ?? null}
+          tone={autoToast?.tone ?? 'info'}
+          toastKey={autoToast?.key ?? 0}
+          onDismiss={clearAutoToast}
+        />
 
         <CaptureProgressOverlay
           activeType={activeCaptureLottieType}

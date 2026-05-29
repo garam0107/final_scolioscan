@@ -112,6 +112,12 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
     });
   }, []);
 
+  const clearAutoToast = useCallback(() => {
+    // 칩이 사라진 뒤에도 같은 자세 상태가 계속되면 다시 안내할 수 있도록 마지막 reason도 비운다.
+    lastAutoReasonRef.current = null;
+    setAutoToast(null);
+  }, []);
+
   const analyzeCapture = useCallback(async (quality: number, skipProcessing: boolean): Promise<ManualCaptureResult | null> => {
     // 촬영한 사진을 랜드마크 서버에 보내고, 가이드 기준 안에 들어왔는지 같은 평가 규칙으로 판정한다.
     // 수동 촬영과 자동 체크가 같은 분석 경로를 쓰도록 촬영과 랜드마크 판정을 한곳에서 처리한다.
@@ -194,6 +200,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
     if (!cameraReady || !guidePoints || !guideRect) {
       resetAutoAlignment();
       lastAutoReasonRef.current = null;
+      setAutoToast(null);
       return;
     }
     // return;
@@ -293,7 +300,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
     autoCaptureResult,
     pauseAutoCapture,
     resumeAutoCapture,
-    clearAutoToast: () => setAutoToast(null),
+    clearAutoToast,
     clearAutoCaptureResult: () => setAutoCaptureResult(null),
   };
 }
