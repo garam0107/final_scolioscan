@@ -44,7 +44,15 @@ export default function PrimaryButton({
         style,
       ]}
     >
-      <Text style={[styles.text, textStyle]}>{title}</Text>
+      {/* 버튼 문구는 Figma처럼 한 줄로 유지한다. */}
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.9}
+        style={[styles.text, textStyle]}
+      >
+        {title}
+      </Text>
     </Pressable>
   );
 }
