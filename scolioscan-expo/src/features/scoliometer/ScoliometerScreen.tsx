@@ -426,7 +426,7 @@ export default function ScoliometerScreen() {
                 {
                   width: landscapeGuideAnchorWidth,
                   height: LANDSCAPE_GUIDE_ANCHOR_HEIGHT,
-                  left: (width - landscapeGuideAnchorWidth) / 2 + 24,
+                  left: (width - landscapeGuideAnchorWidth) / 2 + 28,
                   top: horizonY + 16,
                   transform: [{ rotateZ: `${surfaceAngle}deg` }],
                 },
