@@ -122,9 +122,7 @@ export default function Spine3DPreview({ measurementSet, active }: Spine3DPrevie
   }, []);
 
   useEffect(() => {
-    console.log('Spine3DPreview mounted');
     return () => {
-      console.log('Spine3DPreview umounted');
       aliveRef.current = false;
       contextIdRef.current += 1;
       stopCurrentContext();
@@ -169,7 +167,6 @@ export default function Spine3DPreview({ measurementSet, active }: Spine3DPrevie
   ).current;
 
   const onContextCreate = useCallback(async (gl: ExpoGL) => {
-    console.log('GLView context created');
     const contextId = contextIdRef.current + 1;
     contextIdRef.current = contextId;
     stopCurrentContext();
@@ -255,7 +252,7 @@ export default function Spine3DPreview({ measurementSet, active }: Spine3DPrevie
     deformerRef.current.setMetrics(metricsRef.current);
 
     const debugInfo = deformerRef.current.getDebugInfo();
-    console.log('[SpineDeformer] nodes', debugInfo.count, debugInfo.names);
+
 
     const render = () => {
       if (!aliveRef.current || contextIdRef.current !== contextId) return;
