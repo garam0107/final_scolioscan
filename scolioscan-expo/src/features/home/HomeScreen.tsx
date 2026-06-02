@@ -18,9 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, {
   Defs,
-  Line,
   LinearGradient as SvgLinearGradient,
-  Path,
   Rect,
   Stop,
 } from 'react-native-svg';
@@ -31,6 +29,13 @@ import NetworkErrorView from '@/src/components/NetworkErrorView';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
 import styles, { type HomeMeasurementCardLayout, getHomeMeasurementCardLayout } from '@/src/features/home/home.styles';
+import CurvatureSummaryCardRow from '@/src/features/measurementSummary/components/CurvatureSummaryCardRow';
+import CurvatureTrendChart from '@/src/features/measurementSummary/components/CurvatureTrendChart';
+import {
+  CURVATURE_TREND_CHART_HEIGHT,
+  CURVATURE_TREND_CHART_MAX_VALUE,
+  type CurvatureSummaryItem,
+} from '@/src/features/measurementSummary/measurementSummaryTypes';
 import { isNetworkError } from '@/src/lib/apiError';
 import type { CurvatureResponse } from '@/src/types/curvature';
 import ThreeDCameraIcon from '../../../assets/icons/home/3d_sub.svg';
@@ -57,12 +62,6 @@ type MeasurementCardProps = MeasurementItem & {
   layout: HomeMeasurementCardLayout;
 };
 
-type WeeklyResultItem = {
-  id: WeeklyResultId;
-  label: string;
-  value: number;
-};
-
 type WeeklyResultId = 'upper-thoracic' | 'main-thoracic' | 'lumbar';
 
 type WeeklyResultValues = {
@@ -83,8 +82,6 @@ const INITIAL_WEEKLY_RESULT_VALUES: WeeklyResultValues = {
 };
 
 const RECENT_CURVATURE_DAYS = 30;
-const TREND_CHART_HEIGHT = 120;
-const TREND_CHART_MAX_VALUE = 40;
 
 function formatAngleValue(value: number) {
   // 서버 값이 비정상이어도 홈 카드와 차트 계산이 깨지지 않게 보정한다.
@@ -225,10 +222,6 @@ function buildTrendPath(points: TrendChartPoint[]) {
   }
 
   return path.join(' ');
-}
-
-function getThresholdY(value: number) {
-  return TREND_CHART_HEIGHT - (value / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT;
 }
 
 function MeasurementCard({
@@ -395,10 +388,10 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
     onPress: () => Alert.alert('준비중', '3D 측정 기능은 다음 화면에서 연결할게요.'),
   },
 ];
-  const weeklyResults: WeeklyResultItem[] = [
-    { id: 'upper-thoracic', label: '상부 흉추만곡', value: weeklyResultValues.upperThoracic },
-    { id: 'main-thoracic', label: '주 흉추만곡', value: weeklyResultValues.mainThoracic },
-    { id: 'lumbar', label: '요추만곡', value: weeklyResultValues.lumbar },
+  const weeklyResults: CurvatureSummaryItem<WeeklyResultId>[] = [
+    { key: 'upper-thoracic', label: '상부 흉추만곡', value: `${weeklyResultValues.upperThoracic}°` },
+    { key: 'main-thoracic', label: '주 흉추만곡', value: `${weeklyResultValues.mainThoracic}°` },
+    { key: 'lumbar', label: '요추만곡', value: `${weeklyResultValues.lumbar}°` },
   ];
   const trendRecords = useMemo(
     () => [...curvatureTrendRecords].reverse(),
@@ -434,11 +427,12 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
       const measurementTime = new Date(getMeasurementDate(record)).getTime();
       const clampedTime = Math.max(startTime, Math.min(endTime, measurementTime));
       const value = formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId));
-      const safeValue = Math.max(0, Math.min(value, TREND_CHART_MAX_VALUE));
+      const safeValue = Math.max(0, Math.min(value, CURVATURE_TREND_CHART_MAX_VALUE));
 
       return {
         x: ((clampedTime - startTime) / rangeTime) * trendChartWidth,
-        y: TREND_CHART_HEIGHT - (safeValue / TREND_CHART_MAX_VALUE) * TREND_CHART_HEIGHT,
+        y: CURVATURE_TREND_CHART_HEIGHT
+          - (safeValue / CURVATURE_TREND_CHART_MAX_VALUE) * CURVATURE_TREND_CHART_HEIGHT,
       };
     });
   }, [selectedWeeklyResultId, trendChartWidth, trendPeriodRange, trendRecords]);
@@ -455,7 +449,7 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
     const firstPoint = trendPoints[0];
     const lastPoint = trendPoints[trendPoints.length - 1];
 
-    return `${trendPath} L ${lastPoint.x} ${TREND_CHART_HEIGHT} L ${firstPoint.x} ${TREND_CHART_HEIGHT} Z`;
+    return `${trendPath} L ${lastPoint.x} ${CURVATURE_TREND_CHART_HEIGHT} L ${firstPoint.x} ${CURVATURE_TREND_CHART_HEIGHT} Z`;
   }, [trendPath, trendPoints]);
   const recentChange = useMemo(() => {
     // 최근 변화량은 원본 최신 두 측정값의 차이를 사용해 하루 대표값 집계 영향을 줄인다.
@@ -708,97 +702,21 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
           </View>
           <View style={styles.weeklySection}>
             <Text style={styles.sectionHeading}>최근 1개월 측정 결과</Text>
-            <View style={styles.weeklyResultGrid}>
-              {weeklyResults.map((item) => {
-                const isSelected = selectedWeeklyResultId === item.id;
+            <CurvatureSummaryCardRow
+              items={weeklyResults}
+              selectedKey={selectedWeeklyResultId}
+              onSelect={setSelectedWeeklyResultId}
+            />
 
-                return (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => setSelectedWeeklyResultId(item.id)}
-                    style={({ pressed }) => [
-                      styles.weeklyResultCard,
-                      isSelected ? styles.weeklyResultCardActive : null,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <Text style={[styles.weeklyResultLabel, isSelected ? styles.weeklyResultLabelActive : null]}>
-                      {item.label}
-                    </Text>
-                    <Text style={[styles.weeklyResultValue, isSelected ? styles.weeklyResultValueActive : null]}>
-                      {item.value}°
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={styles.trendCard}>
-              <View style={styles.trendHeader}>
-                <View style={styles.trendSummary}>
-                  <Text style={styles.trendCaption}>평균 변화량</Text>
-                  <View style={styles.trendValueRow}>
-                    <Text style={styles.trendAverageValue}>{formatChangeAngle(averageChange)}</Text>
-                    <View style={styles.trendChangeBadge}>
-                      <Text style={styles.trendChangeText}>최근 변화 {formatChangeAngle(recentChange, true)}</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.trendLegend}>
-                  <View style={styles.trendLegendRow}>
-                    <View style={[styles.trendLegendLine, styles.trendLegendDanger]} />
-                    <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>위험</Text>
-                  </View>
-                  <View style={styles.trendLegendRow}>
-                    <View style={[styles.trendLegendLine, styles.trendLegendWarning]} />
-                    <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>보통</Text>
-                  </View>
-                  <View style={styles.trendLegendRow}>
-                    <View style={[styles.trendLegendLine, styles.trendLegendNormal]} />
-                    <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>정상</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.trendChartWrap}>
-                <Svg width={trendChartWidth} height={TREND_CHART_HEIGHT}>
-                  <Defs>
-                    <SvgLinearGradient id="trendAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                      <Stop offset="0%" stopColor="#2E96FF" stopOpacity={0.16} />
-                      <Stop offset="100%" stopColor="#2E96FF" stopOpacity={0} />
-                    </SvgLinearGradient>
-                  </Defs>
-                  <Line x1="0" y1={getThresholdY(40)} x2={trendChartWidth} y2={getThresholdY(40)} stroke="#FF4B3C" strokeWidth={1} strokeDasharray="6 6" />
-                  <Line x1="0" y1={getThresholdY(25)} x2={trendChartWidth} y2={getThresholdY(25)} stroke="#FABE00" strokeWidth={1} strokeDasharray="6 6" />
-                  <Line x1="0" y1={getThresholdY(10)} x2={trendChartWidth} y2={getThresholdY(10)} stroke="#2C9696" strokeWidth={1} strokeDasharray="6 6" />
-                  {trendPath ? (
-                    <>
-                      <Path
-                        d={trendAreaPath}
-                        fill="url(#trendAreaGradient)"
-                      />
-                      <Path
-                        d={trendPath}
-                        fill="none"
-                        stroke="#2E96FF"
-                        strokeWidth={1.5}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </>
-                  ) : null}
-                </Svg>
-              </View>
-
-              <View style={styles.trendXAxis}>
-                <Text style={styles.trendXAxisText}>한 달 전</Text>
-                <Text style={styles.trendXAxisText}>3주 전</Text>
-                <Text style={styles.trendXAxisText}>2주 전</Text>
-                <Text style={styles.trendXAxisText}>1주 전</Text>
-                <Text style={styles.trendXAxisText}>오늘</Text>
-              </View>
-            </View>
+            <CurvatureTrendChart
+              chartWidth={trendChartWidth}
+              averageChangeText={formatChangeAngle(averageChange)}
+              recentChangeText={formatChangeAngle(recentChange, true)}
+              trendPath={trendPath}
+              trendAreaPath={trendAreaPath}
+              xAxisLabels={['한 달 전', '3주 전', '2주 전', '1주 전', '오늘']}
+              gradientId="homeTrendAreaGradient"
+            />
           </View>
 
           <View style={styles.contentSlot} />

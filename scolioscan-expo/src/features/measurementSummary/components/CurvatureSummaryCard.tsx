@@ -1,26 +1,26 @@
 import { Pressable, Text } from 'react-native';
-import styles from '@/src/features/report/report.styles';
+import styles from '@/src/features/measurementSummary/measurementSummary.styles';
 
-type ReportSummaryCardProps = {
+type CurvatureSummaryCardProps = {
   label: string;
   value: string;
   selected: boolean;
   onPress: () => void;
 };
 
-export default function ReportSummaryCard({
+export default function CurvatureSummaryCard({
   label,
   value,
   selected,
   onPress,
-}: ReportSummaryCardProps) {
+}: CurvatureSummaryCardProps) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.summaryCard,
         selected ? styles.summaryCardActive : null,
-        pressed && styles.pressed,
+        pressed && { opacity: 0.92 },
       ]}
     >
       <Text style={[styles.summaryLabel, selected ? styles.summaryLabelActive : null]}>{label}</Text>

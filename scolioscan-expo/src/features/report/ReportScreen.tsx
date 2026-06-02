@@ -21,8 +21,8 @@ import ReportMeasurementListSection from '@/src/features/report/components/Repor
 import ReportMonthSheet from '@/src/features/report/components/ReportMonthSheet';
 import ReportTrendChart from '@/src/features/report/components/ReportTrendChart';
 import ReportEmptyOverlay from '@/src/features/report/components/ReportEmptyOverlay';
-import ReportSummaryCard from '@/src/features/report/components/ReportSummaryCard';
 import ReportTriangleChart from '@/src/features/report/components/ReportTriangleChart';
+import CurvatureSummaryCardRow from '@/src/features/measurementSummary/components/CurvatureSummaryCardRow';
 import { useReportCurvatureData } from '@/src/features/report/hooks/useReportCurvatureData';
 import { useReportMeasurementList } from '@/src/features/report/hooks/useReportMeasurementList';
 import styles from '@/src/features/report/report.styles';
@@ -323,17 +323,12 @@ export default function ReportScreen() {
             </View>
           </View>
 
-          <View style={styles.summaryRow}>
-            {summaryCards.map((card) => (
-              <ReportSummaryCard
-                key={card.key}
-                label={card.label}
-                value={card.value}
-                selected={selectedReportAngle === card.key}
-                onPress={() => setSelectedReportAngle(card.key)}
-              />
-            ))}
-          </View>
+          <CurvatureSummaryCardRow
+            items={summaryCards}
+            selectedKey={selectedReportAngle}
+            onSelect={setSelectedReportAngle}
+            style={styles.summaryRow}
+          />
 
           <ReportTrendChart
             records={curvatures}

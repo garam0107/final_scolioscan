@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
-import { Text, View, useWindowDimensions } from 'react-native';
-import Svg, { Defs, LinearGradient, Line, Path, Stop } from 'react-native-svg';
+import { useWindowDimensions } from 'react-native';
 
 // 평균 변화량 그래프 UI
 import type { CurvatureResponse } from '@/src/types/curvature';
-import styles from '@/src/features/report/styles/reportTrendChart.styles';
+import CurvatureTrendChart from '@/src/features/measurementSummary/components/CurvatureTrendChart';
 import {
   aggregateTrendPoints,
   buildTrendPath,
@@ -13,7 +12,6 @@ import {
   getMeasurementDate,
   getPeriodOption,
   getRecentDateRangeDates,
-  getThresholdY,
   getTrendAxisLabels,
   getTrendValue,
   TREND_CHART_HEIGHT,
@@ -135,72 +133,16 @@ export default function ReportTrendChart({
   const hasData = bucketPoints.length > 0;
 
   return (
-    <View style={styles.trendCard}>
-      <View style={styles.trendHeader}>
-        <View style={styles.trendSummary}>
-          <Text style={styles.trendTitle}>평균 변화량</Text>
-          <View style={styles.trendValueRow}>
-            <Text style={styles.trendValue}>{formatChangeAngle(averageChange)}</Text>
-            <View style={styles.trendBadge}>
-              <Text style={styles.trendBadgeText}>최근 변화 {formatChangeAngle(recentChange, true)}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.trendLegend}>
-          <View style={styles.trendLegendRow}>
-            <View style={[styles.trendLegendLine, styles.trendLegendDanger]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>위험</Text>
-          </View>
-          <View style={styles.trendLegendRow}>
-            <View style={[styles.trendLegendLine, styles.trendLegendWarning]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>보통</Text>
-          </View>
-          <View style={styles.trendLegendRow}>
-            <View style={[styles.trendLegendLine, styles.trendLegendNormal]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>정상</Text>
-          </View>
-        </View>
-      </View>
-
-      {hasData ? (
-        <View style={styles.trendChartWrap}>
-          <Svg width={chartWidth} height={TREND_CHART_HEIGHT}>
-            <Defs>
-              <LinearGradient id="reportTrendAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor="#2E96FF" stopOpacity={0.16} />
-                <Stop offset="100%" stopColor="#2E96FF" stopOpacity={0} />
-              </LinearGradient>
-            </Defs>
-            <Line x1="0" y1={getThresholdY(40)} x2={chartWidth} y2={getThresholdY(40)} stroke="#FF4B3C" strokeWidth={1} strokeDasharray="6 6" />
-            <Line x1="0" y1={getThresholdY(25)} x2={chartWidth} y2={getThresholdY(25)} stroke="#FABE00" strokeWidth={1} strokeDasharray="6 6" />
-            <Line x1="0" y1={getThresholdY(10)} x2={chartWidth} y2={getThresholdY(10)} stroke="#2C9696" strokeWidth={1} strokeDasharray="6 6" />
-            {trendPath ? (
-              <>
-                <Path d={trendAreaPath} fill="url(#reportTrendAreaGradient)" />
-                <Path
-                  d={trendPath}
-                  fill="none"
-                  stroke="#2E96FF"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </>
-            ) : null}
-          </Svg>
-        </View>
-      ) : (
-        <View style={styles.trendEmptyState}>
-          <Text style={styles.trendEmptyText}>선택한 기간의 측정 데이터가 없습니다.</Text>
-        </View>
-      )}
-
-      <View style={styles.trendXAxis}>
-        {xAxisLabels.map((label) => (
-          <Text key={label} style={styles.trendXAxisText}>{label}</Text>
-        ))}
-      </View>
-    </View>
+    <CurvatureTrendChart
+      chartWidth={chartWidth}
+      averageChangeText={formatChangeAngle(averageChange)}
+      recentChangeText={formatChangeAngle(recentChange, true)}
+      trendPath={trendPath}
+      trendAreaPath={trendAreaPath}
+      xAxisLabels={xAxisLabels}
+      gradientId="reportTrendAreaGradient"
+      hasData={hasData}
+      emptyText="선택한 기간의 측정 데이터가 없습니다."
+    />
   );
 }

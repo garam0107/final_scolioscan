@@ -6,5 +6,5 @@ export const CURVATURE_METRIC_LABELS = [
 
 export function formatRoundedDegree(value?: number | null) {
   if (value === null || value === undefined) return '-';
-  return `${Math.round(Math.abs(value))}°`;
+  return `${(Math.round(Math.abs(value) * 10) / 10).toFixed(1)}°`;
 }

@@ -1,13 +1,63 @@
 import { StyleSheet } from 'react-native';
 import { textFont } from '@/src/constants/fonts';
+import { Colors } from '@/src/constants/theme';
 
 const styles = StyleSheet.create({
+  summaryRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  summaryCard: {
+    flex: 1,
+    minHeight: 86,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    backgroundColor: Colors.primary.white,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: Colors.primary.black,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
+  },
+  summaryCardActive: {
+    backgroundColor: Colors.mint[25],
+    borderColor: Colors.mint[300],
+  },
+  summaryLabel: {
+    ...textFont,
+    color: Colors.gray[600],
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400',
+    textAlign: 'center',
+  },
+  summaryLabelActive: {
+    color: Colors.mint[600],
+  },
+  summaryValue: {
+    ...textFont,
+    color: Colors.gray[900],
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  summaryValueActive: {
+    color: Colors.mint[600],
+  },
   trendCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.primary.white,
     borderRadius: 12,
     marginTop: 8,
     padding: 16,
-    shadowColor: '#000000',
+    shadowColor: Colors.primary.black,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
@@ -24,7 +74,7 @@ const styles = StyleSheet.create({
   },
   trendTitle: {
     ...textFont,
-    color: '#25272D',
+    color: Colors.gray[900],
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '400',
@@ -36,20 +86,20 @@ const styles = StyleSheet.create({
   },
   trendValue: {
     ...textFont,
-    color: '#25272D',
+    color: Colors.gray[900],
     fontSize: 28,
     lineHeight: 38,
     fontWeight: '700',
   },
   trendBadge: {
-    backgroundColor: '#EDFDFC',
+    backgroundColor: Colors.mint[25],
     borderRadius: 5,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   trendBadgeText: {
     ...textFont,
-    color: '#20797E',
+    color: Colors.mint[600],
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '500',
@@ -76,13 +126,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   trendLegendDanger: {
-    borderTopColor: '#FF4B3C',
+    borderTopColor: Colors.red[400],
   },
   trendLegendWarning: {
-    borderTopColor: '#FABE00',
+    borderTopColor: Colors.yellow[300],
   },
   trendLegendNormal: {
-    borderTopColor: '#2C9696',
+    borderTopColor: Colors.mint[500],
   },
   trendLegendText: {
     ...textFont,
@@ -93,13 +143,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   trendLegendDangerText: {
-    color: '#FF4B3C',
+    color: Colors.red[400],
   },
   trendLegendWarningText: {
-    color: '#FABE00',
+    color: Colors.yellow[300],
   },
   trendLegendNormalText: {
-    color: '#2C9696',
+    color: Colors.mint[500],
   },
   trendXAxis: {
     marginTop: 12,
@@ -109,7 +159,7 @@ const styles = StyleSheet.create({
   },
   trendXAxisText: {
     ...textFont,
-    color: '#97A2B9',
+    color: Colors.gray[300],
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400',
@@ -121,7 +171,7 @@ const styles = StyleSheet.create({
   },
   trendEmptyText: {
     ...textFont,
-    color: '#A6AFC4',
+    color: Colors.gray[300],
     fontSize: 14,
     textAlign: 'center',
   },
