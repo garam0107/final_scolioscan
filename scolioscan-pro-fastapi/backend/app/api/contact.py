@@ -1,14 +1,18 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from ..models import User
 from ..schemas import ContactCreate
-from ..utils import send_contact_email
+from ..utils import get_current_user, send_contact_email
 
 router = APIRouter()
 
 
 @router.post("/", status_code=status.HTTP_200_OK)
-async def send_contact(contact_data: ContactCreate):
+async def send_contact(
+    contact_data: ContactCreate,
+    current_user: User = Depends(get_current_user),
+):
     """고객센터 문의 발송"""
     email_sent = send_contact_email(
         user_email=contact_data.email,
@@ -31,6 +35,7 @@ async def send_contact_with_attachments(
     inquiry_type: str = Form(...),
     inquiry_content: str = Form(...),
     screenshots: Optional[List[UploadFile]] = File(default=None),
+    current_user: User = Depends(get_current_user),
 ):
     """스크린샷을 포함한 고객센터 문의 발송"""
     attachments = []
@@ -49,7 +54,8 @@ async def send_contact_with_attachments(
         })
 
     email_sent = send_contact_email(
-        user_email=email or "미입력",
+        # 사용자가 회신 이메일을 생략하면 로그인 계정 이메일을 사용한다.
+        user_email=email or current_user.user_id,
         inquiry_type=inquiry_type,
         inquiry_content=inquiry_content,
         attachments=attachments,
