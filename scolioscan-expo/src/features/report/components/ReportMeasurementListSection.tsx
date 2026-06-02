@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import ReportMeasurementCard from '@/src/features/report/components/ReportMeasurementCard';
-import styles from '@/src/features/report/components/reportMeasurementList.styles';
+import styles from '@/src/features/report/styles/reportMeasurementList.styles';
 import {
   REPORT_MEASUREMENT_FILTERS,
   type ReportMeasurementFilterKey,

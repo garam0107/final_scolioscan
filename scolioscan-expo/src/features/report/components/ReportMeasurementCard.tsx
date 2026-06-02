@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import type { ReportMeasurementListItem } from '@/src/features/report/utils/reportMeasurementListTypes';
-import styles, { getReportMeasurementListLayout } from '@/src/features/report/components/reportMeasurementList.styles';
+import styles, { getReportMeasurementListLayout } from '@/src/features/report/styles/reportMeasurementList.styles';
 
 const WIDE_LAYOUT_MIN_WIDTH = 600;
 

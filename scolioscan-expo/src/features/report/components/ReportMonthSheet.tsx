@@ -14,7 +14,7 @@ import {
   getMonthSelectionYears,
   isFutureMonth,
 } from '@/src/features/report/utils/reportMonthFilter';
-import styles, { getReportMonthSheetLayout } from '@/src/features/report/components/reportMonthSheet.styles';
+import styles, { getReportMonthSheetLayout } from '@/src/features/report/styles/reportMonthSheet.styles';
 
 type ReportMonthSheetProps = {
   visible: boolean;
