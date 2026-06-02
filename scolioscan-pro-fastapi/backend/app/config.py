@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "mysql+pymysql://nextvine:nextvine@localhost:3306/nextvine?charset=utf8mb4"
 
     # JWT Settings
-    SECRET_KEY: str = "dev-secret-key-change-in-production"
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
