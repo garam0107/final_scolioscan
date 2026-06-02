@@ -61,7 +61,8 @@ def init_db():
         db.close()
 
 # 데이터베이스 테이블 생성
-Base.metadata.create_all(bind=engine)
+if settings.DEBUG:
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.APP_NAME,
