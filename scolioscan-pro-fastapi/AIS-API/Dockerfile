@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir \
         "attrs" \
         "sounddevice" \
         "sentencepiece" \
-    && pip install --no-cache-dir --no-deps mediapipe==0.10.13
+    && pip install --no-cache-dir --no-deps mediapipe==0.10.11
 
 COPY . .
 

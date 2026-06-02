@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     # App Settings
     APP_NAME: str = "NextVine API"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     # Database Settings
     DATABASE_URL: str = "mysql+pymysql://nextvine:nextvine@localhost:3306/nextvine?charset=utf8mb4"
