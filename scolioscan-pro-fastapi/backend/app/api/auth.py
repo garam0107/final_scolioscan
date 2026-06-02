@@ -12,7 +12,6 @@ from ..schemas import (
     OctomoVerifyResponse,
     UserCreate,
     UserLogin,
-    PasswordReset,
     PasswordResetVerify,
     PasswordResetCheckResponse,
     PasswordResetVerifyResponse,
@@ -21,7 +20,7 @@ from ..schemas import (
     EmailFindCheckResponse,
     EmailFindVerifyResponse,
 )
-from ..utils import create_access_token, verify_password, get_password_hash, send_password_reset_email, generate_random_password
+from ..utils import create_access_token, verify_password, get_password_hash
 # OCTOMO 관련 import
 from ..config import settings
 from ..services.octomo_verification import issue_verification_code, normalize_phone_number, verify_verification_code_with_octomo
@@ -342,33 +341,3 @@ async def confirm_password_reset(
     return {"message": "Password has been reset successfully"}
 
 
-@router.post("/password-reset")
-async def password_reset(reset_data: PasswordReset, db: Session = Depends(get_db)):
-    """비밀번호 찾기"""
-    user = db.query(User).filter(
-        User.user_id == reset_data.user_id,
-        User.name == reset_data.name
-    ).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found with provided email and name"
-        )
-
-    # 새 비밀번호 생성
-    new_password = generate_random_password()
-    user.user_pw = get_password_hash(new_password)
-
-    db.commit()
-
-    # 이메일 발송
-    email_sent = send_password_reset_email(user.user_id, user.name, new_password)
-
-    if not email_sent:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send password reset email"
-        )
-
-    return {"message": "Password reset email sent successfully"}

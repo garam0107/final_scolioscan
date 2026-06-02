@@ -20,11 +20,6 @@ class UserLogin(BaseModel):
     user_pw: str
 
 
-class PasswordReset(BaseModel):
-    user_id: EmailStr
-    name: str
-
-
 class PasswordResetVerify(BaseModel):
     user_id: EmailStr
     name: str = Field(..., min_length=1, max_length=32)

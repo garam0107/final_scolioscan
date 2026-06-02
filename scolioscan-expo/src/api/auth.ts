@@ -20,7 +20,6 @@ export const authAPI = {
   register: (data: RegisterRequest) => api.post('/auth/register', data),
   checkEmail: (email: string) => api.get<{ exists: boolean }>(`/auth/check-email/${encodeURIComponent(email)}`),
   checkPhone: (phone :string) => api.get<{exists: boolean}>(`/auth/check-phone/${encodeURIComponent(phone)}`),
-  passwordReset: (data: PasswordResetRequest) => api.post('/auth/password-reset', data),
   checkPasswordResetAccount: (data: PasswordResetAccountRequest) =>
     api.post<PasswordResetAccountResponse>('/auth/password-reset/check', data),
   verifyPasswordReset: (data: PasswordResetAccountRequest) =>

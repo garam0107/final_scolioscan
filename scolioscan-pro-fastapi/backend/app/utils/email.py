@@ -14,11 +14,6 @@ class EmailAttachment(TypedDict):
     content: bytes
 
 
-def generate_random_password(length: int = 6) -> str:
-    """랜덤 비밀번호 생성 (6자리)"""
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
-
 
 def send_email(
     email_to: str,
@@ -93,28 +88,6 @@ def send_email_with_attachments(
         return False
 
 
-def send_password_reset_email(email_to: str, name: str, new_password: str) -> bool:
-    """비밀번호 재설정 이메일 발송"""
-    subject = f"{settings.APP_NAME} - 비밀번호 재설정"
-
-    html_content = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2 style="color: #22BCB7;">비밀번호가 재설정되었습니다</h2>
-            <p>안녕하세요, {name}님</p>
-            <p>요청하신 비밀번호가 재설정되었습니다.</p>
-            <p style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
-                <strong>새 비밀번호:</strong> {new_password}
-            </p>
-            <p>로그인 후 반드시 비밀번호를 변경해주세요.</p>
-            <p style="color: #666; font-size: 12px; margin-top: 30px;">
-                이 이메일은 {settings.APP_NAME}에서 발송되었습니다.
-            </p>
-        </body>
-    </html>
-    """
-
-    return send_email(email_to, subject, html_content)
 
 
 def send_contact_email(
