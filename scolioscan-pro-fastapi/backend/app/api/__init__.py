@@ -7,6 +7,7 @@ from .contact import router as contact_router
 from .admin import router as admin_router
 from .rotation import router as rotation_router
 from .measurement_set import router as measurement_set_router
+from .measure2d import router as measure2d_router
 
 api_router = APIRouter()
 
@@ -18,3 +19,4 @@ api_router.include_router(contact_router, prefix="/contact", tags=["contact"])
 api_router.include_router(admin_router, prefix="/admin", tags=["admin"])
 api_router.include_router(rotation_router, prefix="/rotation", tags=["rotation"])
 api_router.include_router(measurement_set_router, prefix="/measurement-sets", tags=["measurement-sets"])
+api_router.include_router(measure2d_router, prefix="/measure2d", tags=["measure2d"])

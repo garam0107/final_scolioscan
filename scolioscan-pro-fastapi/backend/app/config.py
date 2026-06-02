@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     OCTOMO_VERIFICATION_TTL_SECONDS: int = 300
     OCTOMO_RECIPIENT_NUMBER: str = ""
 
+    # AIS API Settings
+    AIS_API_URL: str = "http://ais-api:8000"
+
     # File Upload Settings
     UPLOAD_DIR: str = "./uploads"  # Relative path works both in Docker and on regular servers
 

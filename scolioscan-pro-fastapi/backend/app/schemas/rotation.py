@@ -10,11 +10,11 @@ class SeverityZone(str, Enum):
 
 
 class RotationMeasurementCreate(BaseModel):
-    upper_thoracic_atr: float = Field(..., ge=-30, le=30)
-    lower_thoracic_atr: float = Field(..., ge=-30, le=30)
-    thoracolumbar_atr: float = Field(..., ge=-30, le=30)
-    upper_lumbar_atr: float = Field(..., ge=-30, le=30)
-    lower_lumbar_atr: float = Field(..., ge=-30, le=30)
+    upper_thoracic_atr: float = Field(..., ge=-90, le=90)
+    lower_thoracic_atr: float = Field(..., ge=-90, le=90)
+    thoracolumbar_atr: float = Field(..., ge=-90, le=90)
+    upper_lumbar_atr: float = Field(..., ge=-90, le=90)
+    lower_lumbar_atr: float = Field(..., ge=-90, le=90)
     curvature_measurement_id: int | None = Field(default=None, ge=1)
 
 
