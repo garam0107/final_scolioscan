@@ -2,538 +2,76 @@ import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fo
 import { useFonts as useExpoFonts } from 'expo-font';
 import { useRouter } from 'expo-router';
 import { useFocusEffect, useScrollToTop } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Alert,
-  Modal,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, {
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Rect,
-  Stop,
-} from 'react-native-svg';
-import CrownIcon from '../../../assets/home/crown.svg';
-import { alarmAPI } from '@/src/api/alarm';
-import { curvatureAPI } from '@/src/api/curvature';
 import NetworkErrorView from '@/src/components/NetworkErrorView';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { HomeNotificationIcon } from '@/src/features/home/homeIcons';
-import styles, { type HomeMeasurementCardLayout, getHomeMeasurementCardLayout } from '@/src/features/home/home.styles';
+import HomeBanner from '@/src/features/home/components/HomeBanner';
+import HomeHeader from '@/src/features/home/components/HomeHeader';
+import HomeProModal from '@/src/features/home/components/HomeProModal';
+import MeasurementShortcutSection from '@/src/features/home/components/MeasurementShortcutSection';
+import type { MeasurementItem } from '@/src/features/home/components/MeasurementCard';
+import { useHomeAlarmCount } from '@/src/features/home/hooks/useHomeAlarmCount';
+import { useHomeBannerPager } from '@/src/features/home/hooks/useHomeBannerPager';
+import { useHomeCurvatureSummary } from '@/src/features/home/hooks/useHomeCurvatureSummary';
+import styles, { getHomeMeasurementCardLayout } from '@/src/features/home/home.styles';
+import homeHeaderStyles from '@/src/features/home/styles/homeHeader.styles';
 import CurvatureSummaryCardRow from '@/src/features/measurementSummary/components/CurvatureSummaryCardRow';
 import CurvatureTrendChart from '@/src/features/measurementSummary/components/CurvatureTrendChart';
-import {
-  CURVATURE_TREND_CHART_HEIGHT,
-  CURVATURE_TREND_CHART_MAX_VALUE,
-  type CurvatureSummaryItem,
-} from '@/src/features/measurementSummary/measurementSummaryTypes';
-import { isNetworkError } from '@/src/lib/apiError';
-import type { CurvatureResponse } from '@/src/types/curvature';
-import ThreeDCameraIcon from '../../../assets/icons/home/3d_sub.svg';
-import TwoIcon from '../../../assets/home/test.svg'
-import ThreeIcon from '../../../assets/home/home_3d_camera.svg'
-import PrimaryButton from '@/src/components/ui/PrimaryButton';
-import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
+import TwoIcon from '../../../assets/home/test.svg';
+import ThreeIcon from '../../../assets/home/home_3d_camera.svg';
+
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
-const AD_PLACEHOLDER_SLIDES = ['ad-1', 'ad-2', 'ad-3'];
-
-
-type MeasurementItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  onPress?: () => void;
-  pro?: boolean;
-  subtitleColor?: string;
-  subtitleBackgroundColor?: string;
-};
-
-type MeasurementCardProps = MeasurementItem & {
-  layout: HomeMeasurementCardLayout;
-};
-
-type WeeklyResultId = 'upper-thoracic' | 'main-thoracic' | 'lumbar';
-
-type WeeklyResultValues = {
-  upperThoracic: number;
-  mainThoracic: number;
-  lumbar: number;
-};
-
-type TrendChartPoint = {
-  x: number;
-  y: number;
-};
-
-const INITIAL_WEEKLY_RESULT_VALUES: WeeklyResultValues = {
-  upperThoracic: 0,
-  mainThoracic: 0,
-  lumbar: 0,
-};
-
-const RECENT_CURVATURE_DAYS = 30;
-
-function formatAngleValue(value: number) {
-  // 서버 값이 비정상이어도 홈 카드와 차트 계산이 깨지지 않게 보정한다.
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-
-  return Math.round(value * 10) / 10;
-}
-
-function formatChangeAngle(value: number, showPlus = false) {
-  const angle = formatAngleValue(Math.abs(value));
-  const sign = showPlus
-    ? value > 0
-      ? '+'
-      : value < 0
-        ? '-'
-        : ''
-    : '';
-
-  return `${sign}${angle}°`;
-}
-
-function getSelectedCurvatureValue(record: CurvatureResponse, selectedId: WeeklyResultId) {
-  // 화면 카드의 선택값을 서버 응답의 실제 만곡 필드와 연결한다.
-  if (selectedId === 'upper-thoracic') {
-    return record.secondary_thoracic_cobb;
-  }
-
-  if (selectedId === 'main-thoracic') {
-    return record.main_thoracic_cobb;
-  }
-
-  return record.lumbar_cobb;
-}
-
-function getMeasurementDate(record: Pick<CurvatureResponse, 'measured_at' | 'created_at'>) {
-  return record.measured_at || record.created_at;
-}
-
-function formatDateParam(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-function getRecentDateRange(days: number) {
-  const toDate = new Date();
-  const fromDate = new Date(toDate);
-  fromDate.setDate(fromDate.getDate() - (days - 1));
-
-  return {
-    from_date: formatDateParam(fromDate),
-    to_date: formatDateParam(toDate),
-  };
-}
-
-function getRecentDateRangeDates(days: number) {
-  const endDate = new Date();
-  endDate.setHours(23, 59, 59, 999);
-
-  const startDate = new Date(endDate);
-  startDate.setDate(startDate.getDate() - (days - 1));
-  startDate.setHours(0, 0, 0, 0);
-
-  return { startDate, endDate };
-}
-
-function filterRecentCurvatureRecords(records: CurvatureResponse[]) {
-  // 홈 추세는 최근 30일만 보여주므로 범위 밖 측정값은 제외한다.
-  const endDate = new Date();
-  const startDate = new Date(endDate);
-  startDate.setDate(startDate.getDate() - (RECENT_CURVATURE_DAYS - 1));
-  startDate.setHours(0, 0, 0, 0);
-  endDate.setHours(23, 59, 59, 999);
-
-  return records.filter((record) => {
-    const measurementDate = new Date(getMeasurementDate(record));
-    return measurementDate >= startDate && measurementDate <= endDate;
-  });
-}
-
-function getDateKey(date: Date) {
-  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-}
-
-function getDailyLatestCurvatureRecords(records: CurvatureResponse[]) {
-  // 같은 날 여러 번 측정한 경우 가장 최신 측정만 하루 대표값으로 사용한다.
-  const latestByDay = new Map<string, CurvatureResponse>();
-
-  records.forEach((record) => {
-    const measurementDate = new Date(getMeasurementDate(record));
-    const dateKey = getDateKey(measurementDate);
-    const current = latestByDay.get(dateKey);
-
-    if (!current) {
-      latestByDay.set(dateKey, record);
-      return;
-    }
-
-    const currentTime = new Date(getMeasurementDate(current)).getTime();
-    if (measurementDate.getTime() >= currentTime) {
-      latestByDay.set(dateKey, record);
-    }
-  });
-
-  return Array.from(latestByDay.values()).sort(
-    (left, right) => new Date(getMeasurementDate(right)).getTime() - new Date(getMeasurementDate(left)).getTime(),
-  );
-}
-
-function buildTrendPath(points: TrendChartPoint[]) {
-  // 측정점 사이를 부드러운 곡선으로 이어 홈 추세 그래프를 만든다.
-  if (points.length === 0) {
-    return '';
-  }
-
-  if (points.length === 1) {
-    return `M ${points[0].x} ${points[0].y} L ${points[0].x + 0.1} ${points[0].y}`;
-  }
-
-  const path = [`M ${points[0].x} ${points[0].y}`];
-
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const current = points[index];
-    const next = points[index + 1];
-    const previous = points[index - 1] ?? current;
-    const afterNext = points[index + 2] ?? next;
-
-    const cp1x = current.x + (next.x - previous.x) / 6;
-    const cp1y = current.y + (next.y - previous.y) / 6;
-    const cp2x = next.x - (afterNext.x - current.x) / 6;
-    const cp2y = next.y - (afterNext.y - current.y) / 6;
-
-    path.push(`C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next.x} ${next.y}`);
-  }
-
-  return path.join(' ');
-}
-
-function MeasurementCard({
-  title,
-  subtitle,
-  icon,
-  onPress,
-  pro,
-  subtitleColor,
-  subtitleBackgroundColor,
-  layout,
-}: MeasurementCardProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.measurementCard,
-        {
-          width: layout.cardWidth,
-          height: layout.cardHeight,
-          padding: layout.cardPadding,
-          borderRadius: layout.cardRadius,
-        },
-        pressed && styles.pressed,
-      ]}
-    >
-      {pro && (
-        <View
-          style={[
-            styles.proBadge,
-            {
-              left: layout.proBadgeLeft,
-              top: layout.proBadgeTop,
-              height: layout.proBadgeHeight,
-              gap: layout.proBadgeGap,
-              paddingHorizontal: layout.proBadgePaddingHorizontal,
-            },
-          ]}
-        >
-          <CrownIcon width={layout.proBadgeIconSize} height={layout.proBadgeIconSize} />
-          <Text
-            style={[
-              styles.proBadgeText,
-              {
-                fontSize: layout.proBadgeTextFontSize,
-                lineHeight: layout.proBadgeTextLineHeight,
-              },
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="clip"
-          >
-            Pro
-          </Text>
-        </View>
-      )}
-      <View
-        style={[
-          styles.measurementIconWrap,
-          {
-            width: layout.iconSize,
-            height: layout.iconSize,
-            marginBottom: layout.iconMarginBottom,
-          },
-        ]}
-      >
-        {icon}
-      </View>
-      <View style={[styles.measurementCardContent, { gap: layout.contentGap }]}>
-        <Text
-          style={[
-            styles.measurementTitle,
-            {
-              fontSize: layout.titleTextFontSize,
-              lineHeight: layout.titleTextLineHeight,
-            },
-          ]}
-          numberOfLines={1}
-          ellipsizeMode="clip"
-        >
-          {title}
-        </Text>
-        <View
-          style={[
-            styles.measurementBadge,
-            {
-              paddingHorizontal: layout.badgePaddingHorizontal,
-              paddingVertical: layout.badgePaddingVertical,
-              borderRadius: layout.badgeRadius,
-            },
-            subtitleBackgroundColor ? { backgroundColor: subtitleBackgroundColor } : null,
-          ]}
-        >
-          <Text
-            style={[
-              styles.measurementBadgeText,
-              {
-                fontSize: layout.badgeTextFontSize,
-                lineHeight: layout.badgeTextLineHeight,
-              },
-              subtitleColor ? { color: subtitleColor } : null,
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="clip"
-          >
-            {subtitle}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
 
 export default function HomeScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
-  const bannerScrollRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const { loading, isAuthenticated, user } = useAuth();
   const [museoLoaded] = useMuseoFonts({ MuseoModerno_700Bold });
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
-  const [, setBannerIndex] = useState(0);
-  const [alarmCount, setAlarmCount] = useState(user?.alarm_count ?? 0);
-  const [isProModalVisible, setIsProModalVisible] = useState(false);
-  const [selectedWeeklyResultId, setSelectedWeeklyResultId] = useState<WeeklyResultId>('upper-thoracic');
-  const [weeklyResultValues, setWeeklyResultValues] = useState<WeeklyResultValues>(INITIAL_WEEKLY_RESULT_VALUES);
-  const [curvatureTrendRecords, setCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
-  const [rawCurvatureTrendRecords, setRawCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
   const [networkError, setNetworkError] = useState(false);
-  const isCompactWidth = width < 390;
-  const bannerHeight = isCompactWidth ? 104 : 112;
-  const bannerWidth = width - 40;
+  const [isProModalVisible, setIsProModalVisible] = useState(false);
   const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || '회원';
-  // measure-guide store 가이드 상태 
-  const measurementGuideCompleted = useMeasurementGuideStore(
-  (state) => state.measurementGuideCompleted,
-);
-const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
+  const { alarmCount, loadAlarmCount } = useHomeAlarmCount(user?.alarm_count, setNetworkError);
+  const { bannerHeight, bannerWidth } = useHomeBannerPager(width);
+  const {
+    selectedWeeklyResultId,
+    setSelectedWeeklyResultId,
+    weeklyResults,
+    averageChangeText,
+    recentChangeText,
+    trendPath,
+    trendAreaPath,
+    loadLatestCurvature,
+  } = useHomeCurvatureSummary(trendChartWidth, setNetworkError);
 
-
-
-  const measurementItems: MeasurementItem[] = [
-  {
-    id: '2d',
-    title: '2D 측정하기',
-    subtitle: '집에서 간편하게 측정',
-    icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
-    // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
-    // onPress: () => {
-    //   if (!guideHydrated) return;
-    //   router.push(measurementGuideCompleted ? '/measure/2d' : '/measure/guide');
-    // }
-    onPress: () => { router.push('/measure/2d')}
-  },
-  {
-    id: '3d',
-    title: '3D 동영상 측정',
-    subtitle: '영상을 통한 정밀 측정',
-    icon: <ThreeIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
-    pro: true,
-    subtitleColor: '#2E96FF',
-    subtitleBackgroundColor: '#EBF5FF',
-    onPress: () => Alert.alert('준비중', '3D 측정 기능은 다음 화면에서 연결할게요.'),
-  },
-];
-  const weeklyResults: CurvatureSummaryItem<WeeklyResultId>[] = [
-    { key: 'upper-thoracic', label: '상부 흉추만곡', value: `${weeklyResultValues.upperThoracic}°` },
-    { key: 'main-thoracic', label: '주 흉추만곡', value: `${weeklyResultValues.mainThoracic}°` },
-    { key: 'lumbar', label: '요추만곡', value: `${weeklyResultValues.lumbar}°` },
-  ];
-  const trendRecords = useMemo(
-    () => [...curvatureTrendRecords].reverse(),
-    [curvatureTrendRecords],
-  );
-  const trendValues = useMemo(
-    () => trendRecords.map((record) => formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId))),
-    [selectedWeeklyResultId, trendRecords],
-  );
-  const rawTrendRecords = useMemo(
-    () =>
-      [...rawCurvatureTrendRecords].sort(
-        (left, right) =>
-          new Date(getMeasurementDate(left)).getTime() - new Date(getMeasurementDate(right)).getTime(),
-      ),
-    [rawCurvatureTrendRecords],
-  );
-  const rawTrendValues = useMemo(
-    () => rawTrendRecords.map((record) => formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId))),
-    [rawTrendRecords, selectedWeeklyResultId],
-  );
-  const trendPeriodRange = useMemo(
-    () => getRecentDateRangeDates(RECENT_CURVATURE_DAYS),
-    [],
-  );
-  const trendPoints = useMemo(() => {
-    // 최근 30일 범위 안에서 측정 시각은 x좌표, 만곡 각도는 y좌표로 변환한다.
-    const startTime = trendPeriodRange.startDate.getTime();
-    const endTime = trendPeriodRange.endDate.getTime();
-    const rangeTime = Math.max(1, endTime - startTime);
-
-    return trendRecords.map((record) => {
-      const measurementTime = new Date(getMeasurementDate(record)).getTime();
-      const clampedTime = Math.max(startTime, Math.min(endTime, measurementTime));
-      const value = formatAngleValue(getSelectedCurvatureValue(record, selectedWeeklyResultId));
-      const safeValue = Math.max(0, Math.min(value, CURVATURE_TREND_CHART_MAX_VALUE));
-
-      return {
-        x: ((clampedTime - startTime) / rangeTime) * trendChartWidth,
-        y: CURVATURE_TREND_CHART_HEIGHT
-          - (safeValue / CURVATURE_TREND_CHART_MAX_VALUE) * CURVATURE_TREND_CHART_HEIGHT,
-      };
-    });
-  }, [selectedWeeklyResultId, trendChartWidth, trendPeriodRange, trendRecords]);
-  const trendPath = useMemo(
-    () => buildTrendPath(trendPoints),
-    [trendPoints],
-  );
-  const trendAreaPath = useMemo(() => {
-    if (!trendPath || trendPoints.length === 0) {
-      return '';
-    }
-
-    // 추세선 아래쪽을 닫힌 path로 만들어 그래프 면적 그라데이션을 채운다.
-    const firstPoint = trendPoints[0];
-    const lastPoint = trendPoints[trendPoints.length - 1];
-
-    return `${trendPath} L ${lastPoint.x} ${CURVATURE_TREND_CHART_HEIGHT} L ${firstPoint.x} ${CURVATURE_TREND_CHART_HEIGHT} Z`;
-  }, [trendPath, trendPoints]);
-  const recentChange = useMemo(() => {
-    // 최근 변화량은 원본 최신 두 측정값의 차이를 사용해 하루 대표값 집계 영향을 줄인다.
-    if (rawTrendValues.length < 2) {
-      return 0;
-    }
-
-    const latestTrendValue = rawTrendValues[rawTrendValues.length - 1];
-    const previousTrendValue = rawTrendValues[rawTrendValues.length - 2];
-
-    return Number((latestTrendValue - previousTrendValue).toFixed(1));
-  }, [rawTrendValues]);
-  const averageChange = useMemo(() => {
-    // 평균 변화량은 인접 측정값 사이의 절대 변화 폭을 평균낸 값이다.
-    const values = trendValues.length >= 2 ? trendValues : rawTrendValues;
-
-    if (values.length < 2) {
-      return 0;
-    }
-
-    const totalChange = values.slice(1).reduce((sum, value, index) => {
-      return sum + Math.abs(value - values[index]);
-    }, 0);
-
-    return Number((totalChange / (values.length - 1)).toFixed(1));
-  }, [rawTrendValues, trendValues]);
-
-  const loadAlarmCount = useCallback(async () => {
-    try {
-      const response = await alarmAPI.getUnreadCount();
-
-      setAlarmCount(response.data.count);
-    } catch (error) {
-      if (isNetworkError(error)) {
-        setNetworkError(true);
-      }
-    }
-  }, []);
-
-  const loadLatestCurvature = useCallback(async () => {
-    try {
-      // 네트워크가 복구된 뒤 재시도할 때 오류 화면을 내리고 최신 홈 데이터를 다시 채웁니다.
-      setNetworkError(false);
-      // 최근 측정값과 원본 기록을 함께 보관해 카드, 변화량, 차트가 같은 응답을 기준으로 갱신되게 한다.
-      const response = await curvatureAPI.getAnalyses({
-        limit: 1000,
-        ...getRecentDateRange(RECENT_CURVATURE_DAYS),
-      });
-      const recentCurvatures = filterRecentCurvatureRecords(response.data);
-      const dailyLatestCurvatures = getDailyLatestCurvatureRecords(recentCurvatures);
-      const latestCurvature = dailyLatestCurvatures[0];
-      setRawCurvatureTrendRecords(recentCurvatures);
-      setCurvatureTrendRecords(dailyLatestCurvatures);
-
-      if (!latestCurvature) {
-        setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
-        setRawCurvatureTrendRecords([]);
-        return;
-      }
-
-      setWeeklyResultValues({
-        upperThoracic: formatAngleValue(latestCurvature.secondary_thoracic_cobb),
-        mainThoracic: formatAngleValue(latestCurvature.main_thoracic_cobb),
-        lumbar: formatAngleValue(latestCurvature.lumbar_cobb),
-      });
-    } catch (error) {
-      if (isNetworkError(error)) {
-        setNetworkError(true);
-      }
-
-      setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
-      setRawCurvatureTrendRecords([]);
-      setCurvatureTrendRecords([]);
-    }
-  }, []);
+  const measurementItems: MeasurementItem[] = useMemo(() => [
+    {
+      id: '2d',
+      title: '2D 측정하기',
+      subtitle: '집에서 간편하게 측정',
+      icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
+      onPress: () => { router.push('/measure/2d'); },
+    },
+    {
+      id: '3d',
+      title: '3D 동영상 측정',
+      subtitle: '영상을 통한 정밀 측정',
+      icon: <ThreeIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
+      pro: true,
+      subtitleColor: '#2E96FF',
+      subtitleBackgroundColor: '#EBF5FF',
+    },
+  ], [measurementCardLayout.iconSize, router]);
 
   const handleNetworkRetry = useCallback(() => {
     void loadAlarmCount();
     void loadLatestCurvature();
   }, [loadAlarmCount, loadLatestCurvature]);
-
-  useEffect(() => {
-    setAlarmCount(user?.alarm_count ?? 0);
-  }, [user?.alarm_count]);
 
   useFocusEffect(
     useCallback(() => {
@@ -542,13 +80,9 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
       void loadLatestCurvature();
     }, [loadAlarmCount, loadLatestCurvature]),
   );
+
   // 현재 선택된 홈 탭을 다시 누르면 홈 메인 스크롤만 맨 위로 이동한다.
   useScrollToTop(scrollRef);
-
-  useEffect(() => {
-    if (pretendardError) {
-    }
-  }, [pretendardError]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -556,47 +90,9 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
     }
   }, [loading, isAuthenticated, router]);
 
-  const banners = useMemo(() => AD_PLACEHOLDER_SLIDES, []);
-  // 광고 넘기는 함수
-  const handleBannerMomentumEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
-    if (nextIndex >= banners.length) {
-      bannerScrollRef.current?.scrollTo({ x: 0, animated: false });
-      setBannerIndex(0);
-      return;
-    }
-
-    setBannerIndex(Math.max(0, Math.min(nextIndex, banners.length - 1)));
-  }, [bannerWidth, banners.length]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setBannerIndex((value) => {
-        // 마지막 복제 배너까지 이동한 뒤 첫 배너로 되돌려 무한 캐러셀처럼 보이게 한다.
-        const isLastBanner = value === banners.length - 1;
-        const nextIndex = isLastBanner ? banners.length : value + 1;
-        bannerScrollRef.current?.scrollTo({
-          x: nextIndex * bannerWidth,
-          animated: true,
-        });
-
-        if (isLastBanner) {
-          setTimeout(() => {
-            bannerScrollRef.current?.scrollTo({ x: 0, animated: false });
-          }, 450);
-          return 0;
-        }
-
-        return nextIndex;
-      });
-    }, 4000);
-
-    return () => clearInterval(timer);
-  }, [bannerWidth, banners.length]);
-
   if (loading || !museoLoaded || (!pretendardLoaded && !pretendardError)) {
     return (
-      <SafeAreaView style={styles.loadingScreen} edges={['top', 'left', 'right',]}>
+      <SafeAreaView style={styles.loadingScreen} edges={['top', 'left', 'right']}>
         <View style={styles.loadingBox}>
           <Text style={styles.loadingText}>화면을 불러오는 중입니다...</Text>
         </View>
@@ -613,93 +109,34 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right' , ]}>
+    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <View style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.brand}>ScolioScan</Text>
-          <View style={styles.headerActions}>
-            <Pressable onPress={() => router.push('/notifications')} style={styles.headerIconButton}>
-              <HomeNotificationIcon unread={alarmCount > 0} />
-            </Pressable>
-          </View>
-        </View>
-
-        {pretendardError ? (
-          <View style={styles.fontWarning}>
-            <Text style={styles.fontWarningText}>
-              폰트 로딩 실패: 기본 시스템 폰트로 표시 중입니다.
-            </Text>
-          </View>
-        ) : null}
+        <HomeHeader
+          alarmCount={alarmCount}
+          showFontWarning={Boolean(pretendardError)}
+          onNotificationPress={() => router.push('/notifications')}
+        />
 
         <ScrollView
           ref={scrollRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom:  0 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 0 }]}
         >
-          <View style={styles.greetingBlock}>
-            <View style={styles.greetingTitleRow}>
-              <Text style={styles.greetingTitle}>{displayName} 님 안녕하세요.</Text>
-                 {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
-              {/* <PrimaryButton
-                title="분석중 보기"
-                onPress={() => router.push('/measure-loading-preview')}
-                width={94}
-                height={32}
-                backgroundColor="#2C9696"
-                borderRadius={6}
-                textStyle={styles.previewButtonText}
-              /> */}
+          <View style={homeHeaderStyles.greetingBlock}>
+            <View style={homeHeaderStyles.greetingTitleRow}>
+              <Text style={homeHeaderStyles.greetingTitle}>{displayName} 님 안녕하세요.</Text>
             </View>
-            <Text style={styles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
+            <Text style={homeHeaderStyles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>
 
-          <View style={[styles.measurementGrid, { height: measurementCardLayout.cardHeight }]}>
-            {measurementItems.map((item) => (
-              <MeasurementCard
-                key={item.id}
-                {...item}
-                layout={measurementCardLayout}
-                onPress={item.id === '3d' ? () => setIsProModalVisible(true) : item.onPress}
-              />
-            ))}
-          </View>
-         
-          {/* 광고 슬라이드 배너 */}
-          {/* <View style={styles.bannerWrap}>
-            <ScrollView
-              ref={bannerScrollRef}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={handleBannerMomentumEnd}
-              scrollEventThrottle={16}
-              style={[styles.bannerPager, { width: bannerWidth, height: bannerHeight }]}
-            >
-              {[...banners, banners[0]].map((banner, index) => (
-                <View
-                  key={`home-banner-${banner}-${index}`}
-                  style={[styles.bannerSlide, { width: bannerWidth, height: bannerHeight }]}
-                >
-                  <View style={[styles.banner, { width: bannerWidth, height: bannerHeight }]}> */}
-                    {/* 광고 이미지가 준비되기 전까지 동일한 슬라이드 구조에서 준비중 상태만 보여준다. */}
-                    {/* <Text style={styles.bannerPlaceholderText}>광고 준비중</Text>
-                    <View style={styles.bannerBadge}>
-                      <Text style={styles.bannerBadgeText}>{(index % banners.length) + 1} / {banners.length}</Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          </View> */}
-          {/* 임시 광고 배너 */}
-          <View style={styles.bannerWrap}>
-            <View style={[styles.bannerPager, { width: bannerWidth, height: bannerHeight }]}>
-              <View style={[styles.banner, { width: bannerWidth, height: bannerHeight }]}>
-                <Text style={styles.bannerPlaceholderText}>광고 준비중</Text>
-              </View>
-            </View>
-          </View>
+          <MeasurementShortcutSection
+            items={measurementItems}
+            layout={measurementCardLayout}
+            onProPress={() => setIsProModalVisible(true)}
+          />
+
+          <HomeBanner width={bannerWidth} height={bannerHeight} />
+
           <View style={styles.weeklySection}>
             <Text style={styles.sectionHeading}>최근 1개월 측정 결과</Text>
             <CurvatureSummaryCardRow
@@ -710,8 +147,8 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
 
             <CurvatureTrendChart
               chartWidth={trendChartWidth}
-              averageChangeText={formatChangeAngle(averageChange)}
-              recentChangeText={formatChangeAngle(recentChange, true)}
+              averageChangeText={averageChangeText}
+              recentChangeText={recentChangeText}
               trendPath={trendPath}
               trendAreaPath={trendAreaPath}
               xAxisLabels={['한 달 전', '3주 전', '2주 전', '1주 전', '오늘']}
@@ -722,48 +159,14 @@ const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
           <View style={styles.contentSlot} />
         </ScrollView>
 
-        <Modal
+        <HomeProModal
           visible={isProModalVisible}
-          transparent
-          animationType="fade"
-          statusBarTranslucent
-          onRequestClose={() => setIsProModalVisible(false)}
-        >
-          <View style={styles.proModalOverlay}>
-            <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setIsProModalVisible(false)} />
-            <View style={styles.proModalCard}>
-              <View style={styles.proModalHeader}>
-                <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%">
-                  <Defs>
-                    <SvgLinearGradient id="proModalGradient" x1="0" y1="0" x2="0" y2="1">
-                      <Stop offset="18%" stopColor="#D6FFFE" />
-                      <Stop offset="100%" stopColor="#FFFFFF" />
-                    </SvgLinearGradient>
-                  </Defs>
-                  <Rect width="100%" height="100%" fill="url(#proModalGradient)" />
-                </Svg>
-                <ThreeDCameraIcon width={120} height={120} />
-              </View>
-
-              <View style={styles.proModalBody}>
-                <Text style={styles.proModalTitle}>
-                  3D 동영상 측정을 이용하시려면{'\n'}Pro 모델을 구독해주세요.
-                </Text>
-                <Text style={styles.proModalSubtitle}>처음 구독하시면 50% 할인해요!</Text>
-
-                <Pressable
-                  onPress={() => {
-                  router.push('/settings/subscribe')
-                  setIsProModalVisible(false)
-                  }}
-                  style={({ pressed }) => [styles.proModalButton, pressed && styles.pressed]}
-                >
-                  <Text style={styles.proModalButtonText}>구독하러 가기</Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        </Modal>
+          onClose={() => setIsProModalVisible(false)}
+          onSubscribePress={() => {
+            router.push('/settings/subscribe');
+            setIsProModalVisible(false);
+          }}
+        />
       </View>
     </SafeAreaView>
   );
