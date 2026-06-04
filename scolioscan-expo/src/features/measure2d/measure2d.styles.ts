@@ -157,7 +157,6 @@ export const styles = StyleSheet.create({
   },
   autoGuideChip: {
     position: 'absolute',
-    bottom: 175,
     alignSelf: 'center',
     zIndex: 14,
     maxWidth: '86%',

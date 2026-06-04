@@ -25,9 +25,17 @@ import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore'
 import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
 import type { CurvatureResponse } from '@/src/types/curvature';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
+type GuideChipState = {
+  message: string;
+  tone: ToastTone;
+  key: number;
+};
 
 const NEXT_MEASUREMENT_ROUTE = '/measure/scoliometer';
 const GUIDE_TOP_BAR_HEIGHT = 116;
+const SHUTTER_BUTTON_SIZE = 78;
+const SHUTTER_BOTTOM_PADDING = 34;
+const GUIDE_CHIP_SHUTTER_GAP = 24;
 const GUIDE_TOP_GAP = 40;
 
 export default function Measure2DScreen() {
@@ -38,10 +46,11 @@ export default function Measure2DScreen() {
   // 카메라 준비 상태
   const [cameraReady, setCameraReady] = useState(false);
   const [permission, requestPermission, getPermission] = useCameraPermissions();
-  const [showGuideText, setShowGuideText] = useState(true);
+  const [showGuideText] = useState(true);
   const [stageLayout, setStageLayout] = useState({ width: 0, height: 0 });
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState<ToastTone>('info');
+  const [manualGuideChip, setManualGuideChip] = useState<GuideChipState | null>(null);
   const [manualSubmitting, setManualSubmitting] = useState(false);
   const markMeasurementChanged = useMeasurementRefreshStore((state) => state.markMeasurementChanged);
   const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
@@ -105,6 +114,20 @@ export default function Measure2DScreen() {
     setToastTone(tone);
     setToastMessage(message);
   }, []);
+
+  const clearManualGuideChip = useCallback(() => {
+    setManualGuideChip(null);
+  }, []);
+
+  const showManualGuideChip = useCallback((message: string, tone: ToastTone = 'info') => {
+    // 수동 촬영 안내도 자동 촬영 안내와 같은 칩을 쓰도록 별도 상태로 관리한다.
+    clearAutoToast();
+    setManualGuideChip((current) => ({
+      message,
+      tone,
+      key: (current?.key ?? 0) + 1,
+    }));
+  }, [clearAutoToast]);
 
   const requestCameraPermission = useCallback(async () => {
     if (permissionRequestingRef.current) {
@@ -235,7 +258,7 @@ export default function Measure2DScreen() {
 
       if (nextEvaluation.aligned) {
         // 수동 촬영이 통과하면 자동 촬영과 같은 위치에 Lottie를 띄우고 완료 UI 이후 제출한다.
-        showToast('좋아요. 이 자세로 촬영할게요!', 'success');
+        showManualGuideChip('좋아요. 이 자세로 촬영할게요!', 'success');
         shouldResumeAuto = false;
         startManualCaptureFlow(result.photo.uri);
 
@@ -244,21 +267,21 @@ export default function Measure2DScreen() {
 
 
       if (firstReason.includes('조금 더 가까이 와주세요')) {
-        showToast('조금 더 가까이 와주세요.', 'warning');
+        showManualGuideChip('조금 더 가까이 와주세요.', 'warning');
         return;
       }
 
       if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
-        showToast('조금 더 멀리 떨어져주세요.', 'warning');
+        showManualGuideChip('조금 더 멀리 떨어져주세요.', 'warning');
         return;
       }
 
       if (firstReason.includes('뒷모습이 보이게 서주세요')) {
-        showToast('뒷모습이 보이게 서주세요.', 'warning');
+        showManualGuideChip('뒷모습이 보이게 서주세요.', 'warning');
         return;
       }
 
-      showToast(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'warning');
+      showManualGuideChip(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'warning');
     } finally {
       setManualSubmitting(false);
       if (shouldResumeAuto) {
@@ -266,6 +289,14 @@ export default function Measure2DScreen() {
       }
     }
   };
+
+  const activeGuideChip = manualGuideChip ?? autoToast;
+  const guideChipBottomOffset = insets.bottom + SHUTTER_BOTTOM_PADDING + SHUTTER_BUTTON_SIZE + GUIDE_CHIP_SHUTTER_GAP;
+  const handleGuideChipDismiss = useCallback(() => {
+    // 수동 촬영 뒤 자동 안내가 다시 들어와도 이전 수동 문구가 되살아나지 않도록 둘 다 비운다.
+    clearAutoToast();
+    clearManualGuideChip();
+  }, [clearAutoToast, clearManualGuideChip]);
 
   if (!permission) {
     return <View style={styles.screen} />;
@@ -320,7 +351,7 @@ export default function Measure2DScreen() {
                     <>
               <Pressable
                 style={styles.topIconButton}
-                onPress={() => setShowGuideText(false)}
+                onPress={() => router.back()}
                 hitSlop={12}
               >
                 <CloseIcon width={24} height={24} />
@@ -335,10 +366,11 @@ export default function Measure2DScreen() {
       </View>
        
         <AutoGuideStatusChip
-          message={autoToast?.message ?? null}
-          tone={autoToast?.tone ?? 'info'}
-          toastKey={autoToast?.key ?? 0}
-          onDismiss={clearAutoToast}
+          message={activeGuideChip?.message ?? null}
+          tone={activeGuideChip?.tone ?? 'info'}
+          toastKey={activeGuideChip?.key ?? 0}
+          bottomOffset={guideChipBottomOffset}
+          onDismiss={handleGuideChipDismiss}
         />
 
         <CaptureProgressOverlay

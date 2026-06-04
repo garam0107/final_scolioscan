@@ -9,10 +9,11 @@ type AutoGuideStatusChipProps = {
   message: string | null;
   tone: AutoGuideTone;
   toastKey: number;
+  bottomOffset: number;
   onDismiss: () => void;
 };
 
-export function AutoGuideStatusChip({ message, tone, toastKey, onDismiss }: AutoGuideStatusChipProps) {
+export function AutoGuideStatusChip({ message, tone, toastKey, bottomOffset, onDismiss }: AutoGuideStatusChipProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-6)).current;
 
@@ -28,7 +29,7 @@ export function AutoGuideStatusChip({ message, tone, toastKey, onDismiss }: Auto
       return undefined;
     }
 
-    const timer = setTimeout(onDismiss, 3000);
+    const timer = setTimeout(onDismiss, 1500);
 
     return () => {
       clearTimeout(timer);
@@ -62,6 +63,7 @@ export function AutoGuideStatusChip({ message, tone, toastKey, onDismiss }: Auto
         styles.autoGuideChip,
         chipToneStyle,
         {
+          bottom: bottomOffset,
           opacity,
           transform: [{ translateY }],
         },
