@@ -29,7 +29,7 @@ export function useTopScrollGradient(threshold = 4) {
 
 export default function TopScrollGradient({
   visible,
-  color = Colors.mint[50],
+  color = Colors.gray[25],
   height = 28,
 }: TopScrollGradientProps) {
   const insets = useSafeAreaInsets();

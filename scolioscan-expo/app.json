@@ -14,6 +14,9 @@
     "ios": {
       "bundleIdentifier": "com.nextvine.scolioscan",
       "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "NSMotionUsageDescription": "척추측만계 측정을 위해 기기의 움직임 센서를 사용합니다.",
         "NSLocationWhenInUseUsageDescription": "계정 보안을 위해 현재 로그인 기기의 위치를 표시하는 데 위치 정보를 사용합니다.",
