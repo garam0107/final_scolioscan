@@ -136,14 +136,14 @@ export default function HomeScreen() {
             <View style={homeHeaderStyles.greetingTitleRow}>
               <Text style={homeHeaderStyles.greetingTitle}>{displayName} 님 안녕하세요.</Text>
                                      {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
-              <PrimaryButton
+              {/* <PrimaryButton
                 title="분석중 보기"
                 onPress={() => router.push('/measure/scoliometer')}
                 width={94}
                 height={32}
                 backgroundColor="#2C9696"
                 borderRadius={6}
-              />
+              /> */}
             </View>
             <Text style={homeHeaderStyles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>
