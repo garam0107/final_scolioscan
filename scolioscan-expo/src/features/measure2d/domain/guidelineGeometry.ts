@@ -30,8 +30,14 @@ export type GuidelineGeometry = {
   referencePoints: GuideReferencePoints;
 };
 
+export type GuidelineGeometryOptions = {
+  topReservedHeight?: number;
+  bottomReservedHeight?: number;
+};
+
 const BASE_W = 237;
 const BASE_H = 588;
+// 가이드라인 비율 조정
 const GUIDE_WIDTH_RATIO = 0.72;
 
 const LEFT_SHOULDER_X_RATIO = 0.24;
@@ -86,13 +92,26 @@ export function createGuideReferencePoints(rect: NormalizedRect): GuideReference
 export function createGuidelineGeometry(
   previewWidth: number,
   previewHeight: number,
+  options: GuidelineGeometryOptions = {},
 ): GuidelineGeometry {
   // 기준 SVG 비율을 유지하면서 카메라 프리뷰 아래쪽에 가이드 박스를 배치한다.
-  const guideWidth = previewWidth * GUIDE_WIDTH_RATIO;
-  const guideHeight = guideWidth * (BASE_H / BASE_W);
+  const preferredGuideWidth = previewWidth * GUIDE_WIDTH_RATIO;
+  const guideAspectRatio = BASE_H / BASE_W;
+  const topBoundary = Math.max(options.topReservedHeight ?? 0, 0);
+  const bottomBoundary = Math.max(previewHeight - Math.max(options.bottomReservedHeight ?? 0, 0), topBoundary);
+  const maxGuideHeight = bottomBoundary - topBoundary;
+  let guideWidth = preferredGuideWidth;
+  let guideHeight = guideWidth * guideAspectRatio;
+
+  // 작은 화면에서는 상단 안내 영역과 하단 네비게이션 영역 사이에 들어오도록 같은 비율로 줄인다.
+  if (maxGuideHeight > 0 && guideHeight > maxGuideHeight) {
+    guideHeight = maxGuideHeight;
+    guideWidth = guideHeight / guideAspectRatio;
+  }
   // 가이드는 화면 하단에 붙여 전신이 프레임 안에 들어오도록 유도한다.
   const guideX = (previewWidth - guideWidth) / 2;
-  const guideY = previewHeight - guideHeight;
+  // 하단 안전 여백 위를 기준선으로 삼아 기기별 하단바에 가이드가 가려지지 않게 한다.
+  const guideY = bottomBoundary - guideHeight;
   const rect = buildGuideRect(guideX, guideY, guideWidth, guideHeight, previewWidth, previewHeight);
 
   return {

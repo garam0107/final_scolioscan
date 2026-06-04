@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -27,11 +27,14 @@ import type { CurvatureResponse } from '@/src/types/curvature';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
 const NEXT_MEASUREMENT_ROUTE = '/measure/scoliometer';
+const GUIDE_TOP_BAR_HEIGHT = 116;
+const GUIDE_TOP_GAP = 40;
 
 export default function Measure2DScreen() {
   const cameraRef = useRef<any>(null);
   const permissionRequestingRef = useRef(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   // 카메라 준비 상태
   const [cameraReady, setCameraReady] = useState(false);
   const [permission, requestPermission, getPermission] = useCameraPermissions();
@@ -52,8 +55,13 @@ export default function Measure2DScreen() {
       return null;
     }
 
-    return createGuidelineGeometry(stageLayout.width, stageLayout.height);
-  }, [stageLayout]);
+    return createGuidelineGeometry(stageLayout.width, stageLayout.height, {
+      // 상단 안내 막대와 기기 상단 여백을 피해 가이드가 텍스트를 침범하지 않게 한다.
+      topReservedHeight: insets.top + GUIDE_TOP_BAR_HEIGHT + GUIDE_TOP_GAP,
+      // 기기 하단 여백 위를 가이드 하단 기준선으로 사용한다.
+      bottomReservedHeight: insets.bottom,
+    });
+  }, [insets.bottom, insets.top, stageLayout]);
   const autoCaptureLottieLayout = useMemo(() => {
     if (!guidelineGeometry) {
       return null;
