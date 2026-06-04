@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, BackHandler, Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, BackHandler, Dimensions, Platform, Pressable, StatusBar as NativeStatusBar, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
@@ -203,6 +203,17 @@ export default function ScoliometerScreen() {
   const flatOffsetX = (bubbleX / 100) * flatTravel;
   const flatOffsetY = (bubbleY / 100) * flatTravel;
   const activeCurvatureMeasurementId = curvatureMeasurementId ?? parsePositiveId(curvatureMeasurementIdParam);
+  const screenDimensions = Dimensions.get('screen');
+  const physicalLandscapeWidth = Math.max(screenDimensions.width, screenDimensions.height);
+  const physicalCenterOffset = Platform.OS === 'android'
+    ? Math.max((physicalLandscapeWidth - width) / 2, 0)
+    : 0;
+  // 안드로이드 가로 모드에서 시스템 바가 한쪽을 차지해도 물리 화면 전체의 중앙축을 기준으로 배치한다.
+  const horizontalPadding = clamp(width * 0.045, 24, 36);
+  const contentCenterX = width / 2 + physicalCenterOffset;
+  const bottomActionsWidth = Math.max(width - horizontalPadding * 2 - physicalCenterOffset, width * 0.64);
+  const bottomActionsLeft = contentCenterX - bottomActionsWidth / 2;
+  const flatCenterY = height / 2;
   // 원 2개가 반대 방향으로 벌어지는 비율
   const flatFirstCx = flatSvgCenter - flatOffsetY * 0.6;
   const flatFirstCy = flatSvgCenter - flatOffsetX * 0.6;
@@ -292,15 +303,28 @@ export default function ScoliometerScreen() {
 
   useEffect(() => {
     // 측만계는 가로 화면에서 측정하므로 진입 시 방향과 안드로이드 내비게이션 바를 조정한다.
-    void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+    NativeStatusBar.setHidden(true, 'fade');
 
     if (Platform.OS === 'android') {
       void NavigationBar.setBehaviorAsync('overlay-swipe');
       void NavigationBar.setVisibilityAsync('hidden');
     }
 
+    const hideSystemBarsTimer = Platform.OS === 'android'
+      ? setInterval(() => {
+          // 사용자가 시스템 바를 스와이프로 꺼내도 측정 중에는 다시 전체 화면으로 돌린다.
+          void NavigationBar.setVisibilityAsync('hidden');
+        }, 1200)
+      : null;
+
     return () => {
       void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      NativeStatusBar.setHidden(false, 'fade');
+
+      if (hideSystemBarsTimer) {
+        clearInterval(hideSystemBarsTimer);
+      }
 
       if (Platform.OS === 'android') {
         void NavigationBar.setVisibilityAsync('visible');
@@ -353,8 +377,8 @@ export default function ScoliometerScreen() {
                 {
                   width: flatSvgSize,
                   height: flatSvgSize,
-                  left: width / 2 - flatSvgSize / 2 + 30,
-                  top: height / 2 - flatSvgSize / 2,
+                  left: contentCenterX - flatSvgSize / 2,
+                  top: flatCenterY - flatSvgSize / 2,
                 },
               ]}
               width={flatSvgSize}
@@ -393,11 +417,19 @@ export default function ScoliometerScreen() {
                 <Path d={overlap.path} fill="#FFFFFF" fillOpacity={1} />
               ) : null}
             </Svg>
-            <View pointerEvents="none" style={[styles.angleWrap, { top: angleTop }]}>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.flatAngleAnchor,
+                {
+                  width: flatSize,
+                  height: flatSize,
+                  left: contentCenterX - flatSize / 2,
+                  top: flatCenterY - flatSize / 2,
+                },
+              ]}
+            >
               <Text style={[styles.angleText, styles.angleTextDark]}>{angleLabel}</Text>
-            </View>
-            <View pointerEvents="none" style={styles.flatGuideTextWrap}>
-              <Text style={styles.flatGuideText}>{displayGuideText}</Text>
             </View>
           </>
         ) : (
@@ -409,7 +441,7 @@ export default function ScoliometerScreen() {
                 {
                   width: surfaceWidth,
                   height: surfaceHeight,
-                  left: (width - surfaceWidth) / 2,
+                  left: contentCenterX - surfaceWidth / 2,
                   top: horizonY,
                   transform: [
                     { translateY: -surfaceHeight / 2 },
@@ -419,14 +451,14 @@ export default function ScoliometerScreen() {
                 },
               ]}
             />
-            <View style={styles.bottomBubble} />
+            <View style={[styles.bottomBubble, { left: contentCenterX - 23 }]} />
             <View
               style={[
                 styles.landscapeGuideAnchor,
                 {
                   width: landscapeGuideAnchorWidth,
                   height: LANDSCAPE_GUIDE_ANCHOR_HEIGHT,
-                  left: (width - landscapeGuideAnchorWidth) / 2 + 28,
+                  left: contentCenterX - landscapeGuideAnchorWidth / 2,
                   top: horizonY + 16,
                   transform: [{ rotateZ: `${surfaceAngle}deg` }],
                 },
@@ -444,7 +476,7 @@ export default function ScoliometerScreen() {
               {
                 width: landscapeAngleAnchorWidth,
                 height: LANDSCAPE_ANGLE_ANCHOR_HEIGHT,
-                left: (width - landscapeAngleAnchorWidth) / 2 + 28,
+                left: contentCenterX - landscapeAngleAnchorWidth / 2,
                 top: angleTop,
                 transform: [{ rotateZ: `${surfaceAngle}deg` }],
               },
@@ -456,17 +488,34 @@ export default function ScoliometerScreen() {
         ) : null}
 
 
-        <View style={styles.bottomActions}>
-          <Pressable onPress={calibrate} style={styles.zeroButton}>
-            <Text style={styles.zeroButtonText}>0° 보정</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.measureButton, submitting ? styles.measureButtonDisabled : null]}
-            disabled={submitting}
-            onPress={handleMeasurePress}
-          >
-            <Text style={styles.measureButtonText}>{measureButtonLabel}</Text>
-          </Pressable>
+        <View style={[styles.bottomActions, { left: bottomActionsLeft, width: bottomActionsWidth }]}>
+          <View style={styles.bottomActionSlot}>
+            <Pressable onPress={calibrate} style={styles.zeroButton}>
+              <Text style={styles.zeroButtonText} numberOfLines={1} adjustsFontSizeToFit>
+                0° 보정
+              </Text>
+            </Pressable>
+          </View>
+          <View style={styles.bottomActionCenter}>
+            {isFlat ? (
+              <Text style={styles.bottomGuideText} numberOfLines={1} adjustsFontSizeToFit>
+                {displayGuideText}
+              </Text>
+            ) : (
+              <View style={styles.bottomCenterSpacer} />
+            )}
+          </View>
+          <View style={styles.bottomActionSlot}>
+            <Pressable
+              style={[styles.measureButton, submitting ? styles.measureButtonDisabled : null]}
+              disabled={submitting}
+              onPress={handleMeasurePress}
+            >
+              <Text style={styles.measureButtonText} numberOfLines={1} adjustsFontSizeToFit>
+                {measureButtonLabel}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </SafeAreaView>

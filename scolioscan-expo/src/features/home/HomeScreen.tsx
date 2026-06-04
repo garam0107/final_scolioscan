@@ -21,7 +21,8 @@ import CurvatureSummaryCardRow from '@/src/features/measurementSummary/component
 import CurvatureTrendChart from '@/src/features/measurementSummary/components/CurvatureTrendChart';
 import TwoIcon from '../../../assets/home/test.svg';
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg';
-
+import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
+import PrimaryButton from '@/src/components/ui/PrimaryButton';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 
 export default function HomeScreen() {
@@ -48,13 +49,22 @@ export default function HomeScreen() {
     trendAreaPath,
     loadLatestCurvature,
   } = useHomeCurvatureSummary(trendChartWidth, setNetworkError);
-
+    // measure-guide store 가이드 상태 
+  // const measurementGuideCompleted = useMeasurementGuideStore(
+  // (state) => state.measurementGuideCompleted,
+  // );
+  // const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
   const measurementItems: MeasurementItem[] = useMemo(() => [
     {
       id: '2d',
       title: '2D 측정하기',
       subtitle: '집에서 간편하게 측정',
       icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
+  // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
+  // onPress: () => {
+  //   if (!guideHydrated) return;
+  //   router.push(measurementGuideCompleted ? '/measure/2d' : '/measure/guide');
+  // }
       onPress: () => { router.push('/measure/2d'); },
     },
     {
@@ -125,10 +135,19 @@ export default function HomeScreen() {
           <View style={homeHeaderStyles.greetingBlock}>
             <View style={homeHeaderStyles.greetingTitleRow}>
               <Text style={homeHeaderStyles.greetingTitle}>{displayName} 님 안녕하세요.</Text>
+                                     {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
+              <PrimaryButton
+                title="분석중 보기"
+                onPress={() => router.push('/measure/scoliometer')}
+                width={94}
+                height={32}
+                backgroundColor="#2C9696"
+                borderRadius={6}
+              />
             </View>
             <Text style={homeHeaderStyles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
           </View>
-
+    
           <MeasurementShortcutSection
             items={measurementItems}
             layout={measurementCardLayout}
