@@ -12,6 +12,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon" : "./assets/icons/scolioscan_icon_ios.png",
       "bundleIdentifier": "com.nextvine.scolioscan",
       "supportsTablet": false,
       "config": {
