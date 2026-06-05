@@ -79,7 +79,12 @@ export function AutoGuideStatusChip({ message, tone, toastKey, bottomOffset, onD
           {isSuccess ? '✓' : 'i'}
         </Text>
       </View>
-      <Text style={[styles.autoGuideChipText, isSuccess ? styles.autoGuideChipSuccessText : styles.autoGuideChipInfoText]}>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.78}
+        style={[styles.autoGuideChipText, isSuccess ? styles.autoGuideChipSuccessText : styles.autoGuideChipInfoText]}
+      >
         {message}
       </Text>
     </Animated.View>

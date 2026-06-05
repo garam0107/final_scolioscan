@@ -159,7 +159,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     zIndex: 14,
-    maxWidth: '86%',
+    maxWidth: '94%',
     minHeight: 46,
     borderRadius: 30,
     borderWidth: 1,
@@ -205,6 +205,7 @@ export const styles = StyleSheet.create({
   },
   autoGuideChipText: {
     ...textFont,
+    flexShrink: 1,
     fontSize: 18,
     fontWeight: '600',
     lineHeight: 24,

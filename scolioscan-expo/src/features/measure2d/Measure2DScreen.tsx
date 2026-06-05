@@ -105,6 +105,7 @@ export default function Measure2DScreen() {
     camera,
     guidePoints: guidelineGeometry?.referencePoints ?? null,
     guideRect: guidelineGeometry?.rect ?? null,
+    previewSize: stageLayout.width > 0 && stageLayout.height > 0 ? stageLayout : null,
     cameraReady
   });
 

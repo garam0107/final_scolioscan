@@ -18,7 +18,7 @@ const MIN_VISIBILITY = 0.6;
 // 가이드 영역을 조금 넓혀서 촬영자가 완벽히 맞추지 않아도 통과시킨다.
 const GUIDE_AREA_PADDING_X = 0.06;
 const GUIDE_AREA_PADDING_Y = 0.04;
-const GUIDE_AREA_SCORE_THRESHOLD = 75;
+const GUIDE_AREA_SCORE_THRESHOLD = 100;
 
 // 후면/전면 판정 임계치
 const BEHIND_SHOULDER_DELTA = 0.02;
