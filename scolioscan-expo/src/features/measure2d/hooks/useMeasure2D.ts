@@ -4,7 +4,7 @@ import { CELLULAR_DATA_BLOCKED_MESSAGE, isCellularDataBlockedError } from '@/src
 import type { CameraCaptureSource, CapturedPhoto } from '../camera/cameraAdapter';
 import { evaluateLandmarks } from '../domain/landmarkRules';
 import type { GuideReferencePoints, NormalizedRect } from '../domain/guidelineGeometry';
-import { detectLandmarks } from '../services/landmarkApi';
+import { detectPoseOnDevice } from '../services/onDevicePose';
 import type { LandmarkEvaluation } from '../types';
 
 type UseMeasure2DParams = {
@@ -82,11 +82,13 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
   const autoCaptureCompletedRef = useRef(false);
   const toastKeyRef = useRef(0);
   const lastAutoReasonRef = useRef<string | null>(null);
+  const autoSuccessToastShownRef = useRef(false);
 
   const resetAutoAlignment = useCallback(() => {
     // 자세가 가이드에서 벗어나면 자동 촬영 대기 상태를 처음부터 다시 잡는다.
     // 자세가 흐트러지면 자동 촬영 대기 시간과 화면 카운트다운을 함께 초기화한다.
     alignedSinceRef.current = null;
+    autoSuccessToastShownRef.current = false;
     setAutoAligned(false);
   }, []);
 
@@ -129,12 +131,11 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
 
 
     if (!photo?.uri || !guidePoints || !guideRect) {
-
       return null;
     }
 
     try {
-      const response = await detectLandmarks(photo.uri);
+      const response = await detectPoseOnDevice(photo.uri);
 
       if (!response.detected || !response.landmarks) {
         const nextEvaluation: LandmarkEvaluation = {
@@ -248,6 +249,11 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
         const elapsed = Date.now() - alignedSinceRef.current;
 
         setAutoAligned(true);
+        if (!autoSuccessToastShownRef.current) {
+          // 가이드라인이 초록색으로 바뀌는 첫 정렬 시점에 촬영 안내를 먼저 보여준다.
+          autoSuccessToastShownRef.current = true;
+          emitAutoToast(AUTO_CAPTURE_SUCCESS, 'success');
+        }
 
         if (elapsed >= AUTO_HOLD_MS) {
           // 정렬 상태가 충분히 유지된 순간에만 고품질 최종 사진을 촬영해 다음 분석 단계로 넘긴다.
@@ -264,7 +270,6 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
                 photo: finalPhoto,
                 evaluation: result.evaluation,
               });
-              emitAutoToast(AUTO_CAPTURE_SUCCESS, 'success');
             } else {
               autoCaptureCompletedRef.current = false;
             }
