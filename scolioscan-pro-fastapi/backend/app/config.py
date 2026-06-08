@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # AIS API Settings
     AIS_API_URL: str = "http://ais-api:8000"
 
+    # AWS S3 Settings
+    AWS_REGION: str = "ap-northeast-2"
+    S3_BUCKET: str = ""
+
     # File Upload Settings
     UPLOAD_DIR: str = "./uploads"  # Relative path works both in Docker and on regular servers
 

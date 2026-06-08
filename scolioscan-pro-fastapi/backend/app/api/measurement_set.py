@@ -8,12 +8,24 @@ from ..models.curvature import CurvatureMeasurement
 from ..models.rotation import RotationMeasurement
 from ..models.user import User
 from ..schemas.measurement_set import MeasurementSetResponse
+from app.schemas.curvature import CurvatureMeasurementResponse
+from app.services.s3_service import create_presigned_get_url
 from ..utils import get_current_user
 
 
 router = APIRouter()
+def _curvature_response_with_presigned_image(
+    curvature: CurvatureMeasurement | None,
+) -> CurvatureMeasurementResponse | None:
+    if curvature is None:
+        return None
 
+    response = CurvatureMeasurementResponse.model_validate(curvature)
 
+    if curvature.image_path:
+        response.image_path = create_presigned_get_url(curvature.image_path)
+
+    return response
 @router.get("/", response_model=list[MeasurementSetResponse])
 def list_measurement_sets(
     skip: int = Query(0, ge=0),
@@ -71,7 +83,7 @@ def list_measurement_sets(
 
     return [
         MeasurementSetResponse(
-            curvature=curvature,
+            curvature=_curvature_response_with_presigned_image(curvature),
             rotation=rotation_by_curvature_id.get(curvature.id),
         )
         for curvature in curvatures
@@ -132,7 +144,10 @@ def get_measurement_set_by_curvature(
         .first()
     )
 
-    return MeasurementSetResponse(curvature=curvature, rotation=rotation)
+    return MeasurementSetResponse(
+    curvature=_curvature_response_with_presigned_image(curvature),
+    rotation=rotation,
+)
 
 
 @router.get("/by-rotation/{rotation_id}", response_model=MeasurementSetResponse)
@@ -148,4 +163,7 @@ def get_measurement_set_by_rotation(
         # 척추측만계 측정값에 연결된 2D 촬영 결과도 현재 사용자 소유인지 확인한다.
         curvature = _get_user_curvature(rotation.curvature_measurement_id, db, current_user)
 
-    return MeasurementSetResponse(curvature=curvature, rotation=rotation)
+    return MeasurementSetResponse(
+    curvature=_curvature_response_with_presigned_image(curvature),
+    rotation=rotation,
+)

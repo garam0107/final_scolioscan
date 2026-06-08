@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pathlib import Path
 from typing import List
 from datetime import date, datetime, time
-import uuid
-import shutil
+import tempfile
+
 
 from app.database import get_db
 from app.models.curvature import CurvatureMeasurement, Severity, BackType
@@ -13,14 +12,18 @@ from app.models.user import User
 from app.schemas.curvature import CurvatureMeasurementResponse
 from app.utils.auth import get_current_user
 from app.services.ais_client import predict_angle
-from app.config import settings
-
+from app.services.s3_service import upload_image_to_s3, create_presigned_get_url
 
 router = APIRouter(prefix="/api/curvature", tags=["curvature"])
+def _curvature_response_with_presigned_image(
+    measurement: CurvatureMeasurement,
+) -> CurvatureMeasurementResponse:
+    response = CurvatureMeasurementResponse.model_validate(measurement)
 
-UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "curvature"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    if measurement.image_path:
+        response.image_path = create_presigned_get_url(measurement.image_path)
 
+    return response
 
 def _severity_from_max_angle(angles: list[float]) -> Severity:
     max_abs = max(abs(a) for a in angles)
@@ -53,18 +56,36 @@ async def create_curvature(
     current_user: User = Depends(get_current_user),
 ):
     # Save image
-    ext = Path(image.filename or "upload.jpg").suffix or ".jpg"
-    filename = f"{uuid.uuid4().hex}{ext}"
-    file_path = UPLOAD_DIR / filename
-    with open(file_path, "wb") as f:
-        shutil.copyfileobj(image.file, f)
+    if not image.content_type or not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="이미지 파일만 업로드 가능합니다.")
 
-    # Call AIS-API
+    contents = await image.read()
+
+    ext = Path(image.filename or "upload.jpg").suffix or ".jpg"
+
+    tmp_path = None
     try:
-        result = await predict_angle(file_path)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+            tmp.write(contents)
+            tmp_path = Path(tmp.name)
+
+        result = await predict_angle(tmp_path)
+
     except Exception as exc:
-        file_path.unlink(missing_ok=True)
         raise HTTPException(status_code=502, detail=f"AIS-API call failed: {exc}")
+
+    finally:
+        if tmp_path and tmp_path.exists():
+            tmp_path.unlink(missing_ok=True)
+
+    try:
+        image_key = upload_image_to_s3(
+            contents,
+            image.content_type,
+            "curvature",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"S3 upload failed: {exc}")
 
     severity = _severity_from_max_angle([
         result["main_thoracic"], result["secondary_thoracic"], result["lumbar"],
@@ -79,12 +100,12 @@ async def create_curvature(
         severity=severity,
         back_type=back_type,
         score=None,
-        image_path=f"curvature/{filename}",
+        image_path=image_key,
     )
     db.add(measurement)
     db.commit()
     db.refresh(measurement)
-    return measurement
+    return _curvature_response_with_presigned_image(measurement)
 
 
 @router.get("/", response_model=List[CurvatureMeasurementResponse])
@@ -112,14 +133,18 @@ def list_curvatures(
         query = query.filter(
             CurvatureMeasurement.measured_at <= datetime.combine(to_date, time.max)
         )
-
-    return (
+    measurements = (
         query
         .order_by(CurvatureMeasurement.measured_at.desc())
         .offset(skip)
         .limit(limit)
         .all()
     )
+
+    return [
+        _curvature_response_with_presigned_image(measurement)
+        for measurement in measurements
+    ]
 
 
 @router.get("/{measurement_id}", response_model=CurvatureMeasurementResponse)
@@ -138,28 +163,5 @@ def get_curvature(
     )
     if not measurement:
         raise HTTPException(status_code=404, detail="Measurement not found")
-    return measurement
+    return _curvature_response_with_presigned_image(measurement)
 
-
-@router.get("/images/{filename}")
-def get_curvature_image(
-    filename: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    # Verify ownership
-    measurement = (
-        db.query(CurvatureMeasurement)
-        .filter(
-            CurvatureMeasurement.image_path == f"curvature/{filename}",
-            CurvatureMeasurement.user_id == str(current_user.id),
-        )
-        .first()
-    )
-    if not measurement:
-        raise HTTPException(status_code=404, detail="Image not found")
-
-    file_path = UPLOAD_DIR / filename
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(file_path)

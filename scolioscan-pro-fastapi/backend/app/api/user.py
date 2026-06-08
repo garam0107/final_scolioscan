@@ -9,16 +9,23 @@ from ..models import User, CurvatureMeasurement, RotationMeasurement
 from sqlalchemy.exc import IntegrityError,SQLAlchemyError
 from ..schemas import UserResponse, UserUpdate, PasswordChange, UserDeleteRequest
 from ..utils import get_current_user, get_password_hash, verify_password
-
+from app.services.s3_service import upload_image_to_s3, create_presigned_get_url, delete_s3_object
 router = APIRouter()
 
 
+def _user_response_with_presigned_image(user: User) -> UserResponse:
+    response = UserResponse.model_validate(user)
+
+    if user.profile_image:
+        response.profile_image = create_presigned_get_url(user.profile_image)
+
+    return response 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):
     """현재 로그인한 사용자 정보 조회"""
-    return current_user
+    return _user_response_with_presigned_image(current_user)
 
 
 @router.put("/me", response_model=UserResponse)
@@ -44,7 +51,7 @@ async def update_user_profile(
     db.commit()
     db.refresh(current_user)
 
-    return current_user
+    return _user_response_with_presigned_image(current_user)
 
 
 @router.put("/me/settings")
@@ -118,36 +125,23 @@ async def upload_profile_image(
             detail="이미지 크기는 5MB 이하여야 합니다."
         )
 
-    # uploads 디렉토리 생성
-    upload_dir = Path("uploads/profile_images")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-
-    # 파일 확장자 추출
-    file_extension = os.path.splitext(file.filename)[1] if file.filename else '.jpg'
-
-    # 고유한 파일명 생성
-    filename = f"{uuid.uuid4()}{file_extension}"
-    file_path = upload_dir / filename
-
-    # 이전 프로필 이미지 삭제
     if current_user.profile_image:
-        old_file_path = Path(current_user.profile_image.lstrip('/'))
-        if old_file_path.exists():
-            try:
-                old_file_path.unlink()
-            except Exception:
-                pass  # 파일 삭제 실패해도 계속 진행
+        try:
+            delete_s3_object(current_user.profile_image)
+        except Exception:
+            pass
 
-    # 파일 저장
-    with open(file_path, "wb") as buffer:
-        buffer.write(content)
+    profile_key = upload_image_to_s3(
+        content,
+        file.content_type,
+        "profile",
+    )
 
-    # DB에 이미지 경로 저장
-    current_user.profile_image = f"/uploads/profile_images/{filename}"
+    current_user.profile_image = profile_key
     db.commit()
     db.refresh(current_user)
 
-    return current_user
+    return _user_response_with_presigned_image(current_user)
 
 
 @router.post("/me/delete", status_code=status.HTTP_204_NO_CONTENT)

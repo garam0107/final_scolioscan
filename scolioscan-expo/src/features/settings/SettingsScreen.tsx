@@ -242,7 +242,6 @@ export default function SettingsScreen() {
 
   // 프로필 이미지 수정 함수
   const handleImageUpdate = async () => {
-    console.log('[DEBUG] handleImageUpdate started');
     try {
       // 1. 이미지 선택
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -253,7 +252,6 @@ export default function SettingsScreen() {
       });
 
       if (result.canceled || !result.assets[0].uri) {
-        console.log('[DEBUG] Image selection canceled or uri missing');
         return;
       }
 
@@ -262,7 +260,6 @@ export default function SettingsScreen() {
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-      console.log('[DEBUG] Selected Image Details:', { imageUri, filename, type });
 
       // 2. FormData 생성 (React Native 표준 방식)
       const formData = new FormData();
@@ -274,35 +271,27 @@ export default function SettingsScreen() {
 
       // @ts-ignore: React Native FormData append expects a specific object for files
       formData.append('file', fileData);
-      console.log('[DEBUG] FormData constructed with fileData:', fileData);
 
       // 3. API 호출
-      console.log('[DEBUG] Calling userAPI.updateProfileImage...');
+      
       const response = await userAPI.updateProfileImage(formData);
-      console.log('[DEBUG] API Response success:', response.status);
+      
 
       // 4. 세션 갱신 및 알림
       await refreshSession();
       showToast('프로필 이미지가 변경되었습니다.', 'success');
     } catch (error: any) {
-      console.log('[DEBUG] Caught Error:', error.message);
+      
 
       if (error.config) {
-        console.log('[DEBUG] Axios Config URL:', error.config.url);
-        console.log('[DEBUG] Axios Config Headers:', JSON.stringify(error.config.headers, null, 2));
+
       }
 
       if (error.request) {
-        console.log('[DEBUG] Axios Request Object exists. Status:', error.request.status);
-        // React Native의 에러 객체 내부를 더 깊게 들여다봅니다.
-        console.log('[DEBUG] Request Detail:', {
-          _response: error.request._response,
-          _url: error.request._url,
-          _hasError: error.request._hasError
-        });
+      
       }
 
-      console.error('Profile image upload error:', error);
+  
       showToast('이미지 업로드에 실패했습니다.', 'error');
     }
   };

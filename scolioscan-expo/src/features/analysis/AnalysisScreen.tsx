@@ -55,22 +55,7 @@ function getWideStageScale(width: number, height: number) {
   // 태블릿에서는 화면을 꽉 쓰되 첫 화면에서 과하게 커지지 않도록 가로/세로 중 작은 배율을 사용한다.
   return Math.max(1, Math.min(widthScale, heightScale));
 }
-// 분석 카드 배경에 이미지 띄우는 함수 
-function getCurvatureImageSource(imagePath?: string | null) {
-  if (!API_BASE_URL || !imagePath) return null;
 
-  const fileName = imagePath.split('/').filter(Boolean).pop();
-
-  if (!fileName) return null;
-
-  const token = getAccessToken();
-
-  // ImageBackground는 axios 인터셉터를 거치지 않으므로 이미지 요청에 인증 헤더를 직접 넣습니다.
-  return {
-    uri: `${API_BASE_URL}/curvature/images/${encodeURIComponent(fileName)}`,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  };
-}
 
 export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const { width, height } = useWindowDimensions();
@@ -84,6 +69,8 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
     networkError,
     reloadAnalysisData,
   } = useAnalysisData({ analysisId });
+
+ 
   const {
     progress,
     angleAnimationKey,
@@ -97,7 +84,7 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
   // 측정 때 사용한 이미지 
   const stageBackgroundSource = useMemo(
-    () => getCurvatureImageSource(analysis?.image_url),
+    () => analysis?.image_url ? { uri: analysis.image_url } : null,
     [analysis?.image_url],
   );
   const wideStageScale = getWideStageScale(width, height);
