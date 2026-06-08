@@ -1,6 +1,13 @@
 {
-  "platforms": ["android"],
+  "platforms": ["android", "ios"],
   "android": {
-    "modules": ["expo.modules.ondevicepose.OnDevicePoseModule"]
+    "modules": [
+      "expo.modules.ondevicepose.OnDevicePoseModule"
+    ]
+  },
+  "ios": {
+    "modules": [
+      "OnDevicePoseModule"
+    ]
   }
 }

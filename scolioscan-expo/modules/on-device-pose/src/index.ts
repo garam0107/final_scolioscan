@@ -23,10 +23,6 @@ type OnDevicePoseNativeModule = {
 let nativeModule: OnDevicePoseNativeModule | null = null;
 
 function getNativeModule(): OnDevicePoseNativeModule {
-  if (Platform.OS !== 'android') {
-    throw new Error('온디바이스 포즈 판정은 현재 Android PoC에서만 지원됩니다.');
-  }
-
   nativeModule ??= requireNativeModule<OnDevicePoseNativeModule>('OnDevicePose');
   return nativeModule;
 }
