@@ -12,6 +12,8 @@ import {
   Text,
   TextInput,
   View,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -287,6 +289,7 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardWrap}
       >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.content}>
           <View style={styles.brandArea}>
             <LoginLogo width={60} height={60} />
@@ -387,6 +390,7 @@ export default function LoginScreen() {
             </View>
           </View>
         </View>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
       <SimpleModal
