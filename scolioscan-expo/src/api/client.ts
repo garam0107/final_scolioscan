@@ -24,10 +24,10 @@ api.interceptors.request.use(async (config) => {
   // axios가 boundary를 포함한 multipart/form-data를 자동으로 붙입니다.
   if (config.data instanceof FormData) {
     if (typeof (config.headers as any).delete === 'function') {
-      (config.headers as any).delete('Content-Type');
+      config.headers.set('Content-Type', null)
     } else {
       delete (config.headers as any)['Content-Type'];
-      delete (config.headers as any)['content-type'];
+
     }
   } else {
     // 일반 JSON 요청은 application/json

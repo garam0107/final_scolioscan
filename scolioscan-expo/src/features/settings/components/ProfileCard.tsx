@@ -1,21 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
-
+import { Pressable, Text, View, Image } from 'react-native';
 import ProfileIcon from '@/assets/images/basic_profile_image.svg';
 import styles from '@/src/features/settings/components/profileCard.styles';
 
 type ProfileCardProps = {
   name: string;
   email: string;
+  profileImage?: string | null;
   onAccountPress: () => void;
+  onImagePress?: () => void;
 };
 
-export default function ProfileCard({ name, email, onAccountPress }: ProfileCardProps) {
+export default function ProfileCard({ name, email, profileImage, onAccountPress,onImagePress }: ProfileCardProps) {
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('/api', '') || '';
+  const imageUrl = profileImage 
+    ? (profileImage.startsWith('http') ? profileImage : `${API_BASE_URL}${profileImage}`)
+    : null;
+
+  console.log('[DEBUG] ProfileCard Render - imageUrl:', imageUrl);
+
   return (
     <View style={styles.profileCard}>
-      <View style={styles.avatar}>
+       <Pressable style={styles.avatar} onPress={onImagePress}>
+        {imageUrl ? (
+          <Image 
+            source={{ uri: imageUrl }} 
+            style={{ width: '100%', height: '100%', borderRadius: 100 }}
+          />
+        ) : (
         <ProfileIcon />
-      </View>
+        )}
+       </Pressable>
       <View style={styles.profileText}>
         <View style={styles.nameLine}>
           <Text style={styles.profileName}>{name}</Text>

@@ -2,6 +2,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker'
 import { useMemo, useRef, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -46,7 +47,7 @@ function formatHourLabel(hour: number) {
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshSession } = useAuth();
   const cellularDataAllowed = useAppSettingsStore((state) => state.cellularDataAllowed);
   const nightModeEnabled = useAppSettingsStore((state) => state.nightModeEnabled);
   const nightStartHour = useAppSettingsStore((state) => state.nightStartHour);
@@ -97,8 +98,9 @@ export default function SettingsScreen() {
     () => ({
       name: user?.name || 'ooo',
       email: user?.user_id || 'abcd@example.com',
+      profileImage : user?.profile_image,
     }),
-    [user?.name, user?.user_id],
+    [user?.name, user?.user_id, user?.profile_image],
   );
 
   const displayedToggles = useMemo(
@@ -238,6 +240,74 @@ export default function SettingsScreen() {
     closeNightTimeDropdown();
   };
 
+  // 프로필 이미지 수정 함수
+  const handleImageUpdate = async () => {
+    console.log('[DEBUG] handleImageUpdate started');
+    try {
+      // 1. 이미지 선택
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (result.canceled || !result.assets[0].uri) {
+        console.log('[DEBUG] Image selection canceled or uri missing');
+        return;
+      }
+
+      const imageUri = result.assets[0].uri;
+      const filename = imageUri.split('/').pop() || 'profile.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+      console.log('[DEBUG] Selected Image Details:', { imageUri, filename, type });
+
+      // 2. FormData 생성 (React Native 표준 방식)
+      const formData = new FormData();
+      const fileData = {
+        uri: imageUri,
+        name: filename,
+        type,
+      };
+
+      // @ts-ignore: React Native FormData append expects a specific object for files
+      formData.append('file', fileData);
+      console.log('[DEBUG] FormData constructed with fileData:', fileData);
+
+      // 3. API 호출
+      console.log('[DEBUG] Calling userAPI.updateProfileImage...');
+      const response = await userAPI.updateProfileImage(formData);
+      console.log('[DEBUG] API Response success:', response.status);
+
+      // 4. 세션 갱신 및 알림
+      await refreshSession();
+      showToast('프로필 이미지가 변경되었습니다.', 'success');
+    } catch (error: any) {
+      console.log('[DEBUG] Caught Error:', error.message);
+
+      if (error.config) {
+        console.log('[DEBUG] Axios Config URL:', error.config.url);
+        console.log('[DEBUG] Axios Config Headers:', JSON.stringify(error.config.headers, null, 2));
+      }
+
+      if (error.request) {
+        console.log('[DEBUG] Axios Request Object exists. Status:', error.request.status);
+        // React Native의 에러 객체 내부를 더 깊게 들여다봅니다.
+        console.log('[DEBUG] Request Detail:', {
+          _response: error.request._response,
+          _url: error.request._url,
+          _hasError: error.request._hasError
+        });
+      }
+
+      console.error('Profile image upload error:', error);
+      showToast('이미지 업로드에 실패했습니다.', 'error');
+    }
+  };
+
+
   return (
     
     <View style={styles.screen}>
@@ -259,7 +329,9 @@ export default function SettingsScreen() {
         <ProfileCard
           name={profile.name}
           email={profile.email}
+          profileImage={profile.profileImage}
           onAccountPress={() => router.push('/settings/account')}
+          onImagePress={handleImageUpdate} 
         />
         <SubscriptionCard onManagePress={() => router.push('/settings/subscribe')} />
 
