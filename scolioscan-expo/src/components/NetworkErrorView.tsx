@@ -3,7 +3,7 @@ import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { Colors } from '@/src/constants/theme';
 import { textFont } from '@/src/constants/fonts';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
-
+import NotNetworkIcon from '@/assets/icons/wifi-off.svg'
 type NetworkErrorViewProps = {
   onRetry: () => void;
   title?: string;
@@ -12,40 +12,7 @@ type NetworkErrorViewProps = {
   style?: ViewStyle;
 };
 
-function DisconnectedWifiIcon() {
-  return (
-    <Svg width={70} height={70} viewBox="0 0 70 70" fill="none">
-      <Path
-        d="M16 29.5C26.5 20.5 43.5 20.5 54 29.5"
-        stroke="#D4D9E2"
-        strokeWidth={5}
-        strokeLinecap="round"
-      />
-      <Path
-        d="M25 39C31 34 39 34 45 39"
-        stroke="#D4D9E2"
-        strokeWidth={5}
-        strokeLinecap="round"
-      />
-      <Path
-        d="M31.5 48C33.7 46.2 36.3 46.2 38.5 48"
-        stroke="#D4D9E2"
-        strokeWidth={5}
-        strokeLinecap="round"
-      />
-      <Circle cx={35} cy={56} r={3.2} fill="#D4D9E2" />
-      <Line
-        x1={50.2}
-        y1={20.8}
-        x2={19.8}
-        y2={51.2}
-        stroke="#FF4747"
-        strokeWidth={5}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
+
 
 export default function NetworkErrorView({
   onRetry,
@@ -56,8 +23,9 @@ export default function NetworkErrorView({
 }: NetworkErrorViewProps) {
   return (
     <View style={[styles.container, style]}>
+        <NotNetworkIcon  />
       <View style={styles.content}>
-        <DisconnectedWifiIcon />
+      
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.message}>{message}</Text>
         {/* 네트워크가 복구된 뒤 각 화면의 데이터 재요청 함수를 실행한다. */}
@@ -84,10 +52,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray[25],
     paddingHorizontal: 24,
   },
+
   content: {
     alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ translateY: -24 }],
+    marginTop :30
   },
   title: {
     ...textFont,
@@ -95,12 +63,12 @@ const styles = StyleSheet.create({
     color: Colors.gray[900],
     fontSize: 18,
     lineHeight: 24,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'center',
   },
   message: {
     ...textFont,
-    marginTop: 12,
+    marginTop: 14,
     color: Colors.gray[500],
     fontSize: 14,
     lineHeight: 21,
@@ -108,12 +76,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    marginTop: 22,
+    marginTop: 40,
   },
   buttonText: {
     ...textFont,
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
