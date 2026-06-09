@@ -9,6 +9,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     minHeight: 42,
+    marginBottom: 10,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },

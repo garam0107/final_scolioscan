@@ -11,12 +11,13 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import ProfileCard from '@/src/features/settings/components/ProfileCard';
 import SettingRow, { type SettingsToggleKey } from '@/src/features/settings/components/SettingRow';
 import SettingsSection from '@/src/features/settings/components/SettingsSection';
-import SettingsTimeRow, { type SettingsTimeTarget } from '@/src/features/settings/components/SettingsTimeRow';
+import SettingsTimeRow from '@/src/features/settings/components/SettingsTimeRow';
 import SubscriptionCard from '@/src/features/settings/components/SubscriptionCard';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
 import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
 import HistoryExportSheet from '@/src/features/settings/sheets/HistoryExportSheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
+import NightModeSettingsSheet from '@/src/features/settings/sheets/NightModeSettingsSheet';
 import styles from '@/src/features/settings/settings.styles';
 import { createHistoryReportPdfHtml } from '@/src/features/settings/utils/historyReportPdfHtml';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
@@ -24,7 +25,7 @@ import { measurementSetAPI } from '@/src/api/measurementSet';
 import { userAPI } from '@/src/api/user';
 import ToastAlert, { type ToastTone } from '@/src/components/ui/ToastAlert';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
-type SettingsSheetType = 'language' | 'reset' | 'guide' | 'historyExport' | null;
+type SettingsSheetType = 'language' | 'reset' | 'guide' | 'historyExport' | 'nightMode' | null;
 
 const DEFAULT_TOGGLES: Record<SettingsToggleKey, boolean> = {
   cellular: true,
@@ -35,14 +36,13 @@ const DEFAULT_TOGGLES: Record<SettingsToggleKey, boolean> = {
   cloudBackup: false,
 };
 
-const NIGHT_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour);
-
-function formatHourLabel(hour: number) {
+function formatTimeLabel(hour: number, minute: number) {
   // 야간 모드 시간 선택값을 설정 화면 표시 형식으로 바꾼다.
   const period = hour < 12 ? '오전' : '오후';
   const displayHour = hour % 12 || 12;
+  const displayMinute = String(minute).padStart(2, '0');
 
-  return `${period} ${displayHour}시`;
+  return `${period} ${displayHour}:${displayMinute}`;
 }
 
 export default function SettingsScreen() {
@@ -51,14 +51,15 @@ export default function SettingsScreen() {
   const cellularDataAllowed = useAppSettingsStore((state) => state.cellularDataAllowed);
   const nightModeEnabled = useAppSettingsStore((state) => state.nightModeEnabled);
   const nightStartHour = useAppSettingsStore((state) => state.nightStartHour);
+  const nightStartMinute = useAppSettingsStore((state) => state.nightStartMinute);
   const nightEndHour = useAppSettingsStore((state) => state.nightEndHour);
+  const nightEndMinute = useAppSettingsStore((state) => state.nightEndMinute);
   const setCellularDataAllowed = useAppSettingsStore((state) => state.setCellularDataAllowed);
   const setNightModeEnabled = useAppSettingsStore((state) => state.setNightModeEnabled);
   const setNightModeHours = useAppSettingsStore((state) => state.setNightModeHours);
    // 앱 설정 리셋
   const resetSettings = useAppSettingsStore((state) => state.resetSettings);
   const [toggles, setToggles] = useState(DEFAULT_TOGGLES);
-  const [nightTimeTarget, setNightTimeTarget] = useState<SettingsTimeTarget | null>(null);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('한국어');
   const [historyExporting, setHistoryExporting] = useState(false);
@@ -213,31 +214,17 @@ export default function SettingsScreen() {
     setSettingsSheetType(null);
   };
 
-  const closeNightTimeDropdown = () => {
-    setNightTimeTarget(null);
-  };
-
-  const handleNightTimeSelect = (hour: number) => {
+  const handleNightModeApply = (startHour: number, startMinute: number, endHour: number, endMinute: number) => {
     // 시작과 종료 시간이 같으면 야간 모드 범위가 사라지므로 선택을 막는다.
-    if (nightTimeTarget === 'start' && hour === nightEndHour) {
+    if (startHour === endHour && startMinute === endMinute) {
       Alert.alert('시간 설정', '시작 시간과 종료 시간은 같을 수 없습니다.');
       return;
     }
 
-    if (nightTimeTarget === 'end' && hour === nightStartHour) {
-      Alert.alert('시간 설정', '종료 시간과 시작 시간은 같을 수 없습니다.');
-      return;
-    }
-
-    const nextStartHour = nightTimeTarget === 'start' ? hour : nightStartHour;
-    const nextEndHour = nightTimeTarget === 'end' ? hour : nightEndHour;
-
     // 야간 모드 시간도 앱을 다시 켜도 유지되도록 저장한다.
-    void setNightModeHours(nextStartHour, nextEndHour).catch(() => {
+    void setNightModeHours(startHour, startMinute, endHour, endMinute).catch(() => {
       Alert.alert('설정 저장 실패', '야간 모드 시간을 저장하지 못했어요. 다시 시도해주세요.');
     });
-
-    closeNightTimeDropdown();
   };
 
   // 프로필 이미지 수정 함수
@@ -349,9 +336,11 @@ export default function SettingsScreen() {
           />
           <SettingsTimeRow
             startHour={nightStartHour}
+            startMinute={nightStartMinute}
             endHour={nightEndHour}
-            formatHourLabel={formatHourLabel}
-            onSelectTarget={setNightTimeTarget}
+            endMinute={nightEndMinute}
+            formatTimeLabel={formatTimeLabel}
+            onPress={() => setSettingsSheetType('nightMode')}
           />
           {/* API 개발 되면 추가 */}
           {/* <SettingRow
@@ -427,51 +416,15 @@ export default function SettingsScreen() {
         onShare={handleHistorySharePress}
       />
 
-      <Modal
-        visible={nightTimeTarget !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={closeNightTimeDropdown}
-      >
-        <Pressable style={styles.timeDropdownOverlay} onPress={closeNightTimeDropdown}>
-          <Pressable style={styles.timeDropdownCard} onPress={(event) => event.stopPropagation()}>
-            <Text style={styles.timeDropdownTitle}>
-              {nightTimeTarget === 'start' ? '시작 시간 선택' : '종료 시간 선택'}
-            </Text>
-            <ScrollView style={styles.timeDropdownList} showsVerticalScrollIndicator={false}>
-              {NIGHT_TIME_OPTIONS.map((hour) => {
-                const selectedHour = nightTimeTarget === 'start' ? nightStartHour : nightEndHour;
-                const disabled =
-                  (nightTimeTarget === 'start' && hour === nightEndHour) ||
-                  (nightTimeTarget === 'end' && hour === nightStartHour);
-
-                return (
-                  <Pressable
-                    key={hour}
-                    disabled={disabled}
-                    style={[
-                      styles.timeDropdownOption,
-                      selectedHour === hour && styles.timeDropdownOptionSelected,
-                      disabled && styles.timeDropdownOptionDisabled,
-                    ]}
-                    onPress={() => handleNightTimeSelect(hour)}
-                  >
-                    <Text
-                      style={[
-                        styles.timeDropdownOptionText,
-                        selectedHour === hour && styles.timeDropdownOptionTextSelected,
-                        disabled && styles.timeDropdownOptionTextDisabled,
-                      ]}
-                    >
-                      {formatHourLabel(hour)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <NightModeSettingsSheet
+        visible={settingsSheetType === 'nightMode'}
+        startHour={nightStartHour}
+        startMinute={nightStartMinute}
+        endHour={nightEndHour}
+        endMinute={nightEndMinute}
+        onClose={closeSettingsSheet}
+        onApply={handleNightModeApply}
+      />
       </SafeAreaView>
       <TopScrollGradient visible={topScrollGradient.visible} />
     </View>

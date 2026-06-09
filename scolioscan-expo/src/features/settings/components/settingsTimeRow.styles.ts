@@ -18,6 +18,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
   },
   timeLabel: {
     ...textFont,
@@ -34,8 +37,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 30,
     justifyContent: 'center',
-    paddingHorizontal: 10,
-    width: 90,
+    paddingHorizontal: 8,
+    minWidth: 96,
   },
   timePillPressed: {
     backgroundColor: Colors.gray[75],

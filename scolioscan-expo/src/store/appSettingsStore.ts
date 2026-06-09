@@ -12,12 +12,14 @@ type AppSettingsState = {
   cellularDataAllowed: boolean;
   nightModeEnabled: boolean;
   nightStartHour: number;
+  nightStartMinute: number;
   nightEndHour: number;
+  nightEndMinute: number;
   settingsLoaded: boolean;
   loadSettings: () => Promise<void>;
   setCellularDataAllowed: (allowed: boolean) => Promise<void>;
   setNightModeEnabled: (enabled: boolean) => Promise<void>;
-  setNightModeHours: (startHour: number, endHour: number) => Promise<void>;
+  setNightModeHours: (startHour: number, startMinute: number, endHour: number, endMinute: number) => Promise<void>;
   resetSettings: () => Promise<void>;
 };
 
@@ -25,7 +27,9 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
   cellularDataAllowed: true,
   nightModeEnabled: false,
   nightStartHour: 22,
+  nightStartMinute: 0,
   nightEndHour: 6,
+  nightEndMinute: 0,
   settingsLoaded: false,
   loadSettings: async () => {
     if (get().settingsLoaded) {
@@ -43,7 +47,9 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
         cellularDataAllowed,
         nightModeEnabled: nightModeSettings.enabled,
         nightStartHour: nightModeSettings.startHour,
+        nightStartMinute: nightModeSettings.startMinute,
         nightEndHour: nightModeSettings.endHour,
+        nightEndMinute: nightModeSettings.endMinute,
         settingsLoaded: true,
       });
     } catch (error) {
@@ -79,22 +85,28 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
       throw error;
     }
   },
-  setNightModeHours: async (startHour, endHour) => {
+  setNightModeHours: async (startHour, startMinute, endHour, endMinute) => {
     const previousStartHour = get().nightStartHour;
+    const previousStartMinute = get().nightStartMinute;
     const previousEndHour = get().nightEndHour;
+    const previousEndMinute = get().nightEndMinute;
 
     // 시간 선택도 즉시 반영하고, 저장 실패 시 이전 시간으로 되돌린다.
     set({
       nightStartHour: startHour,
+      nightStartMinute: startMinute,
       nightEndHour: endHour,
+      nightEndMinute: endMinute,
     });
 
     try {
-      await saveNightModeHours(startHour, endHour);
+      await saveNightModeHours(startHour, startMinute, endHour, endMinute);
     } catch (error) {
       set({
         nightStartHour: previousStartHour,
+        nightStartMinute: previousStartMinute,
         nightEndHour: previousEndHour,
+        nightEndMinute: previousEndMinute,
       });
       throw error;
     }
@@ -103,19 +115,23 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
   const defaultCellularDataAllowed = true;
   const defaultNightModeEnabled = false;
   const defaultNightStartHour = 22;
+  const defaultNightStartMinute = 0;
   const defaultNightEndHour = 6;
+  const defaultNightEndMinute = 0;
 
   set({
     cellularDataAllowed: defaultCellularDataAllowed,
     nightModeEnabled: defaultNightModeEnabled,
     nightStartHour: defaultNightStartHour,
+    nightStartMinute: defaultNightStartMinute,
     nightEndHour: defaultNightEndHour,
+    nightEndMinute: defaultNightEndMinute,
   });
 
   await Promise.all([
     saveCellularDataAllowed(defaultCellularDataAllowed),
     saveNightModeEnabled(defaultNightModeEnabled),
-    saveNightModeHours(defaultNightStartHour, defaultNightEndHour),
+    saveNightModeHours(defaultNightStartHour, defaultNightStartMinute, defaultNightEndHour, defaultNightEndMinute),
   ]);
 },
 }));

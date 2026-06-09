@@ -2,42 +2,48 @@ import { Pressable, Text, View } from 'react-native';
 
 import styles from '@/src/features/settings/components/settingsTimeRow.styles';
 
-export type SettingsTimeTarget = 'start' | 'end';
-
 type SettingsTimeRowProps = {
   startHour: number;
+  startMinute: number;
   endHour: number;
-  formatHourLabel: (hour: number) => string;
-  onSelectTarget: (target: SettingsTimeTarget) => void;
+  endMinute: number;
+  formatTimeLabel: (hour: number, minute: number) => string;
+  onPress: () => void;
 };
 
 export default function SettingsTimeRow({
   startHour,
+  startMinute,
   endHour,
-  formatHourLabel,
-  onSelectTarget,
+  endMinute,
+  formatTimeLabel,
+  onPress,
 }: SettingsTimeRowProps) {
   return (
     <View style={styles.timeRow}>
-      <View style={styles.timeField}>
+      <Pressable
+        style={({ pressed }) => [styles.timeField, pressed && styles.timePillPressed]}
+        onPress={onPress}
+      >
         <Text style={styles.timeLabel}>시작</Text>
-        <Pressable
-          style={({ pressed }) => [styles.timePill, pressed && styles.timePillPressed]}
-          onPress={() => onSelectTarget('start')}
-        >
-          <Text numberOfLines={1} style={styles.timePillText}>{formatHourLabel(startHour)}</Text>
-        </Pressable>
-      </View>
+        <View style={styles.timePill}>
+          <Text numberOfLines={1} style={styles.timePillText}>
+            {formatTimeLabel(startHour, startMinute)}
+          </Text>
+        </View>
+      </Pressable>
       <Text style={styles.timeSeparator}>~</Text>
-      <View style={styles.timeField}>
+      <Pressable
+        style={({ pressed }) => [styles.timeField, pressed && styles.timePillPressed]}
+        onPress={onPress}
+      >
         <Text style={styles.timeLabel}>종료</Text>
-        <Pressable
-          style={({ pressed }) => [styles.timePill, pressed && styles.timePillPressed]}
-          onPress={() => onSelectTarget('end')}
-        >
-          <Text numberOfLines={1} style={styles.timePillText}>{formatHourLabel(endHour)}</Text>
-        </Pressable>
-      </View>
+        <View style={styles.timePill}>
+          <Text numberOfLines={1} style={styles.timePillText}>
+            {formatTimeLabel(endHour, endMinute)}
+          </Text>
+        </View>
+      </Pressable>
     </View>
   );
 }

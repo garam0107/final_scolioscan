@@ -1,5 +1,5 @@
-import PlaceholderScreen from '@/src/features/common/PlaceholderScreen';
+import SettingsScreen from '@/src/features/settings/SettingsScreen';
 
 export default function SettingsPage() {
-  return <PlaceholderScreen title="설정" description="설정 화면은 다음 단계에서 연결할게요." />;
+  return <SettingsScreen />;
 }

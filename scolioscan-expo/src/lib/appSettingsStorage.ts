@@ -3,26 +3,32 @@ import * as SecureStore from 'expo-secure-store';
 const CELLULAR_DATA_ALLOWED_KEY = 'scolioscan_cellular_data_allowed';
 const NIGHT_MODE_ENABLED_KEY = 'scolioscan_night_mode_enabled';
 const NIGHT_MODE_START_HOUR_KEY = 'scolioscan_night_mode_start_hour';
+const NIGHT_MODE_START_MINUTE_KEY = 'scolioscan_night_mode_start_minute';
 const NIGHT_MODE_END_HOUR_KEY = 'scolioscan_night_mode_end_hour';
+const NIGHT_MODE_END_MINUTE_KEY = 'scolioscan_night_mode_end_minute';
 
 const DEFAULT_NIGHT_START_HOUR = 22;
+const DEFAULT_NIGHT_START_MINUTE = 0;
 const DEFAULT_NIGHT_END_HOUR = 6;
+const DEFAULT_NIGHT_END_MINUTE = 0;
 
 export type StoredNightModeSettings = {
   enabled: boolean;
   startHour: number;
+  startMinute: number;
   endHour: number;
+  endMinute: number;
 };
 
-function parseStoredHour(value: string | null, fallback: number) {
+function parseStoredTimeValue(value: string | null, fallback: number, max: number) {
   // 저장소에 잘못된 시간이 남아 있어도 설정 화면이 깨지지 않게 기본값으로 보정한다.
-  const parsedHour = Number(value);
+  const parsedValue = Number(value);
 
-  if (!Number.isInteger(parsedHour) || parsedHour < 0 || parsedHour > 23) {
+  if (value === null || !Number.isInteger(parsedValue) || parsedValue < 0 || parsedValue > max) {
     return fallback;
   }
 
-  return parsedHour;
+  return parsedValue;
 }
 
 export async function loadCellularDataAllowed() {
@@ -41,17 +47,21 @@ export async function saveCellularDataAllowed(allowed: boolean) {
 }
 
 export async function loadNightModeSettings(): Promise<StoredNightModeSettings> {
-  const [enabledValue, startHourValue, endHourValue] = await Promise.all([
+  const [enabledValue, startHourValue, startMinuteValue, endHourValue, endMinuteValue] = await Promise.all([
     SecureStore.getItemAsync(NIGHT_MODE_ENABLED_KEY),
     SecureStore.getItemAsync(NIGHT_MODE_START_HOUR_KEY),
+    SecureStore.getItemAsync(NIGHT_MODE_START_MINUTE_KEY),
     SecureStore.getItemAsync(NIGHT_MODE_END_HOUR_KEY),
+    SecureStore.getItemAsync(NIGHT_MODE_END_MINUTE_KEY),
   ]);
 
   return {
     // 저장된 값이 없으면 야간 모드는 기본적으로 꺼진 상태로 둔다.
     enabled: enabledValue === '1',
-    startHour: parseStoredHour(startHourValue, DEFAULT_NIGHT_START_HOUR),
-    endHour: parseStoredHour(endHourValue, DEFAULT_NIGHT_END_HOUR),
+    startHour: parseStoredTimeValue(startHourValue, DEFAULT_NIGHT_START_HOUR, 23),
+    startMinute: parseStoredTimeValue(startMinuteValue, DEFAULT_NIGHT_START_MINUTE, 59),
+    endHour: parseStoredTimeValue(endHourValue, DEFAULT_NIGHT_END_HOUR, 23),
+    endMinute: parseStoredTimeValue(endMinuteValue, DEFAULT_NIGHT_END_MINUTE, 59),
   };
 }
 
@@ -59,9 +69,11 @@ export async function saveNightModeEnabled(enabled: boolean) {
   await SecureStore.setItemAsync(NIGHT_MODE_ENABLED_KEY, enabled ? '1' : '0');
 }
 
-export async function saveNightModeHours(startHour: number, endHour: number) {
+export async function saveNightModeHours(startHour: number, startMinute: number, endHour: number, endMinute: number) {
   await Promise.all([
     SecureStore.setItemAsync(NIGHT_MODE_START_HOUR_KEY, String(startHour)),
+    SecureStore.setItemAsync(NIGHT_MODE_START_MINUTE_KEY, String(startMinute)),
     SecureStore.setItemAsync(NIGHT_MODE_END_HOUR_KEY, String(endHour)),
+    SecureStore.setItemAsync(NIGHT_MODE_END_MINUTE_KEY, String(endMinute)),
   ]);
 }
