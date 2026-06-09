@@ -39,7 +39,11 @@ export function formatPhoneNumber(phone: string) {
 
 export function isValidPhoneNumber(phone: string) {
   const normalizedPhone = normalizePhoneNumber(phone);
-  return /^01[016789]\d{7,8}$/.test(normalizedPhone);
+  // 010은 8자리, 나머지 01X는 7~8자리
+  if (normalizedPhone.startsWith('010')) {
+    return /^010\d{8}$/.test(normalizedPhone);
+  }
+  return /^01[16789]\d{7,8}$/.test(normalizedPhone);
 }
 
 export function isValidBirthday(year: string, month: string, day: string) {
@@ -71,7 +75,9 @@ export function isValidBirthday(year: string, month: string, day: string) {
     birthday.getDate() === parsedDay
   );
 }
-
+export function isPhoneNumberComplete(phone: string) {
+  return normalizePhoneNumber(phone).length >= 11;
+}
 export function formatBirthdayIso(year: string, month: string, day: string) {
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00`;
 }

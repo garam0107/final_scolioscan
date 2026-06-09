@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { useAuthStore } from '@/src/store/authStore';
 import AuthField from './AuthField';
-import { formatPhoneNumber, isValidPhoneNumber, normalizePhoneNumber } from './registerValidation';
+import { formatPhoneNumber, isValidPhoneNumber, normalizePhoneNumber, isPhoneNumberComplete } from './registerValidation';
 import { styles } from './register.styles';
 
 const carrierOptions = ['SKT', 'KT', 'LG U+', 'SKT\n알뜰폰', 'KT\n알뜰폰', 'LG U+\n알뜰폰'];
@@ -51,9 +51,9 @@ export default function RegisterCarrierStep() {
             onChangeText={(text) => updateRegisterDraft({ phone: normalizePhoneNumber(text) })}
             onClear={() => updateRegisterDraft({ phone: '' })}
           />
-          {phone.trim().length > 0 && !isValidPhoneNumber(phone) ? (
-            <Text style={styles.phoneHelperText}>숫자만 입력해주세요.</Text>
-          ) : null}
+        {phone.trim().length > 0 && isPhoneNumberComplete(phone) && !isValidPhoneNumber(phone) ? (
+        <Text style={styles.phoneHelperText}>올바른 전화번호를 입력해주세요.</Text>
+      ) : null}
         </View>
       ) : null}
     </View>

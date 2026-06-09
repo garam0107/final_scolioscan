@@ -107,9 +107,11 @@ export default function RegisterScreen() {
     }
 
     showToast('휴대전화 번호 인증이 아직 완료되지 않았습니다.');
+    setSmsRequested(false);
   } catch (error) {
     const message = error instanceof Error ? error.message : '휴대전화 번호 인증 확인에 실패했습니다.';
     showToast(normalizeRegisterMessage(message));
+    setSmsRequested(false); 
   } finally {
     setVerifyingPhone(false);
   }
@@ -395,7 +397,8 @@ useEffect(() => {
     (step === 'name' && !draft.name.trim()) ||
     (step === 'birthday' && !birthdayReady) ||
     (step === 'carrier' && (!draft.carrier || !isValidPhoneNumber(draft.phone))) ||
-    (step === 'gender' && draft.gender === null);
+    (step === 'gender' && draft.gender === null) ||
+    (step === 'message' && smsRequested);
   // 문자 인증 함수
   const handleMessagePress = async () => {
   // 인증 문구를 받아 문자 앱을 열고, 이후 복귀 시 검증할 수 있게 요청 상태를 저장한다.

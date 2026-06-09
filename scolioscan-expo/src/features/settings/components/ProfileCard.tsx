@@ -17,8 +17,6 @@ export default function ProfileCard({ name, email, profileImage, onAccountPress,
     ? (profileImage.startsWith('http') ? profileImage : `${API_BASE_URL}${profileImage}`)
     : null;
 
-  console.log('[DEBUG] ProfileCard Render - imageUrl:', imageUrl);
-
   return (
     <View style={styles.profileCard}>
        <Pressable style={styles.avatar} onPress={onImagePress}>
