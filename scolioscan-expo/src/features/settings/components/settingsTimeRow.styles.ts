@@ -10,9 +10,9 @@ const styles = StyleSheet.create({
     gap: 11,
     justifyContent: 'flex-start',
     minHeight: 30,
-    paddingBottom: 20,
+    paddingBottom: 15,
     paddingHorizontal: 16,
-    paddingTop: 0,
+    paddingTop: 10,
   },
   timeField: {
     alignItems: 'center',

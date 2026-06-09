@@ -8,7 +8,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
     minHeight: 42,
     paddingHorizontal: 16,
     paddingVertical: 10,
