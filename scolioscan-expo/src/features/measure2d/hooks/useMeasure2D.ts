@@ -2,15 +2,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CELLULAR_DATA_BLOCKED_MESSAGE, isCellularDataBlockedError } from '@/src/lib/networkAccessGuard';
 import type { CameraCaptureSource, CapturedPhoto } from '../camera/cameraAdapter';
+import { convertPhotoLandmarksToPreviewLandmarks } from '../domain/landmarkCoordinateTransform';
 import { evaluateLandmarks } from '../domain/landmarkRules';
 import type { GuideReferencePoints, NormalizedRect } from '../domain/guidelineGeometry';
-import { detectLandmarks } from '../services/landmarkApi';
+import { detectPoseOnDevice } from '../services/onDevicePose';
 import type { LandmarkEvaluation } from '../types';
+
+type PreviewSize = {
+  width: number;
+  height: number;
+};
 
 type UseMeasure2DParams = {
   camera: CameraCaptureSource;
   guidePoints: GuideReferencePoints | null;
   guideRect: NormalizedRect | null;
+  previewSize: PreviewSize | null;
   cameraReady: boolean;
 };
 
@@ -67,7 +74,7 @@ const LANDMARK_NOT_FOUND = '사람을 찾지 못했습니다.';
 const LANDMARK_ANALYZE_FAIL = '랜드마크 분석에 실패했습니다.';
 const AUTO_CAPTURE_SUCCESS = '좋아요. 이 자세로 촬영할게요!';
 
-export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: UseMeasure2DParams) {
+export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, cameraReady }: UseMeasure2DParams) {
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<LandmarkEvaluation | null>(null);
   const [autoAligned, setAutoAligned] = useState(false);
@@ -82,11 +89,13 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
   const autoCaptureCompletedRef = useRef(false);
   const toastKeyRef = useRef(0);
   const lastAutoReasonRef = useRef<string | null>(null);
+  const autoSuccessToastShownRef = useRef(false);
 
   const resetAutoAlignment = useCallback(() => {
     // 자세가 가이드에서 벗어나면 자동 촬영 대기 상태를 처음부터 다시 잡는다.
     // 자세가 흐트러지면 자동 촬영 대기 시간과 화면 카운트다운을 함께 초기화한다.
     alignedSinceRef.current = null;
+    autoSuccessToastShownRef.current = false;
     setAutoAligned(false);
   }, []);
 
@@ -128,13 +137,12 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
 
 
 
-    if (!photo?.uri || !guidePoints || !guideRect) {
-
+    if (!photo?.uri || !guidePoints || !guideRect || !previewSize) {
       return null;
     }
 
     try {
-      const response = await detectLandmarks(photo.uri);
+      const response = await detectPoseOnDevice(photo.uri);
 
       if (!response.detected || !response.landmarks) {
         const nextEvaluation: LandmarkEvaluation = {
@@ -146,7 +154,34 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
         return { photo, evaluation: nextEvaluation };
       }
 
-      const nextEvaluation = evaluateLandmarks(response.landmarks, guidePoints, guideRect, {
+      if (!photo.width || !photo.height) {
+        const nextEvaluation: LandmarkEvaluation = {
+          aligned: false,
+          score: 0,
+          reasons: [LANDMARK_ANALYZE_FAIL],
+        };
+        setEvaluation(nextEvaluation);
+        return { photo, evaluation: nextEvaluation };
+      }
+
+      const previewLandmarks = convertPhotoLandmarksToPreviewLandmarks(response.landmarks, {
+        photoWidth: photo.width,
+        photoHeight: photo.height,
+        previewWidth: previewSize.width,
+        previewHeight: previewSize.height,
+      });
+
+      if (!previewLandmarks) {
+        const nextEvaluation: LandmarkEvaluation = {
+          aligned: false,
+          score: 0,
+          reasons: [LANDMARK_ANALYZE_FAIL],
+        };
+        setEvaluation(nextEvaluation);
+        return { photo, evaluation: nextEvaluation };
+      }
+
+      const nextEvaluation = evaluateLandmarks(previewLandmarks, guidePoints, guideRect, {
         faceDetected: response.face_detected,
         faceScore: response.face_score,
         faceCount: response.face_count,
@@ -163,7 +198,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };
     }
-  }, [camera, guidePoints, guideRect]);
+  }, [camera, guidePoints, guideRect, previewSize]);
 
   const handleManualCapture = useCallback(async (): Promise<ManualCaptureResult | null> => {
     // 자동 분석 요청이 진행 중이면 잠깐 기다린 뒤, 수동 촬영 결과를 우선 처리한다.
@@ -197,7 +232,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
   }, [analyzeCapture, cameraReady, loading, resetAutoAlignment]);
   // 자동 촬영
   useEffect(() => {
-    if (!cameraReady || !guidePoints || !guideRect) {
+    if (!cameraReady || !guidePoints || !guideRect || !previewSize) {
       resetAutoAlignment();
       lastAutoReasonRef.current = null;
       setAutoToast(null);
@@ -248,6 +283,11 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
         const elapsed = Date.now() - alignedSinceRef.current;
 
         setAutoAligned(true);
+        if (!autoSuccessToastShownRef.current) {
+          // 가이드라인이 초록색으로 바뀌는 첫 정렬 시점에 촬영 안내를 먼저 보여준다.
+          autoSuccessToastShownRef.current = true;
+          emitAutoToast(AUTO_CAPTURE_SUCCESS, 'success');
+        }
 
         if (elapsed >= AUTO_HOLD_MS) {
           // 정렬 상태가 충분히 유지된 순간에만 고품질 최종 사진을 촬영해 다음 분석 단계로 넘긴다.
@@ -264,7 +304,6 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
                 photo: finalPhoto,
                 evaluation: result.evaluation,
               });
-              emitAutoToast(AUTO_CAPTURE_SUCCESS, 'success');
             } else {
               autoCaptureCompletedRef.current = false;
             }
@@ -288,7 +327,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect,cameraReady }: Use
       disposed = true;
       clearInterval(timer);
     };
-  }, [analyzeCapture, camera,cameraReady, emitAutoToast, guidePoints, guideRect, resetAutoAlignment]);
+  }, [analyzeCapture, camera,cameraReady, emitAutoToast, guidePoints, guideRect, previewSize, resetAutoAlignment]);
 
 
   return {
