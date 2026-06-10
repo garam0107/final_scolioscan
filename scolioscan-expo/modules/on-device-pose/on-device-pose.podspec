@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license        = package['license'] || 'MIT'
   s.author         = package['author'] || 'author'
   s.homepage       = package['homepage'] || 'https://github.com/expo/expo'
-  s.platform       = :ios, '13.4'
+  s.platform       = :ios, '15.5'
   s.source         = { git: '' }
   s.static_framework = true
 

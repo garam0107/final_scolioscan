@@ -2,23 +2,26 @@ import ExpoModulesCore
 import MLKitPoseDetection
 import MLKitFaceDetection
 import MLKitVision
+import UIKit
 
 public class OnDevicePoseModule: Module {
-  public override func definition() -> ModuleDefinition {
+  public func definition() -> ModuleDefinition {
     Name("OnDevicePose")
 
-    // Expo SDK 50+ async/await syntax
-    AsyncFunction("detectPoseOnDevice") { (imageUri: String) async throws -> [String: Any?] in
+    AsyncFunction("detectPoseOnDevice") { (imageUri: String) async throws -> [String: Any] in
       guard let url = URL(string: imageUri),
             let data = try? Data(contentsOf: url),
             let image = UIImage(data: data) else {
-        throw NSError(domain: "OnDevicePose", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to load image from URI"])
+        throw NSError(
+          domain: "OnDevicePose",
+          code: 1,
+          userInfo: [NSLocalizedDescriptionKey: "Failed to load image from URI"]
+        )
       }
 
       let visionImage = VisionImage(image: image)
       visionImage.orientation = image.imageOrientation
 
-      // Detector options
       let poseOptions = PoseDetectorOptions()
       poseOptions.detectorMode = .singleImage
       let poseDetector = PoseDetector.poseDetector(options: poseOptions)
@@ -28,15 +31,14 @@ public class OnDevicePoseModule: Module {
       faceOptions.minFaceSize = 0.1
       let faceDetector = FaceDetector.faceDetector(options: faceOptions)
 
-      // Parallel execution using Swift Concurrency
       async let poseResult = self.processPose(detector: poseDetector, image: visionImage)
       async let faceResult = self.processFaces(detector: faceDetector, image: visionImage)
 
-      let pose = try await poseResult
+      let poses = try await poseResult
       let faces = try await faceResult
 
       return self.buildResponse(
-        pose: pose,
+        poses: poses ?? [],
         imageWidth: image.size.width,
         imageHeight: image.size.height,
         faces: faces ?? []
@@ -44,20 +46,20 @@ public class OnDevicePoseModule: Module {
     }
   }
 
-  private func processPose(detector: PoseDetector, image: VisionImage) async throws -> Pose? {
-    return try await withCheckedThrowingContinuation { continuation in
-      detector.process(image) { results, error in
-        if let error = error {
-          continuation.resume(throwing: error)
-        } else {
-          continuation.resume(returning: results)
-        }
+  private func processPose(detector: PoseDetector, image: VisionImage) async throws -> [Pose]? {
+  return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[Pose]?, Error>) in
+    detector.process(image) { results, error in
+      if let error = error {
+        continuation.resume(throwing: error)
+      } else {
+        continuation.resume(returning: results)
       }
     }
   }
+}
 
   private func processFaces(detector: FaceDetector, image: VisionImage) async throws -> [Face]? {
-    return try await withCheckedThrowingContinuation { continuation in
+    return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[Face]?, Error>) in
       detector.process(image) { results, error in
         if let error = error {
           continuation.resume(throwing: error)
@@ -68,62 +70,98 @@ public class OnDevicePoseModule: Module {
     }
   }
 
-  private func buildResponse(pose: Pose?, imageWidth: CGFloat, imageHeight: CGFloat, faces: [Face]) -> [String: Any?] {
-    guard let pose = pose, imageWidth > 0, imageHeight > 0 else {
+  private func buildResponse(
+    poses: [Pose],
+    imageWidth: CGFloat,
+    imageHeight: CGFloat,
+    faces: [Face]
+  ) -> [String: Any] {
+    let faceCount = faces.count
+    let faceDetected = faceCount > 0
+    let faceScore = faceDetected ? 1.0 : 0.0
+
+    guard let pose = poses.first, imageWidth > 0, imageHeight > 0 else {
       return [
         "detected": false,
-        "landmarks": nil,
-        "face_detected": false,
-        "face_score": 0.0,
-        "face_count": 0
+        "landmarks": NSNull(),
+        "face_detected": faceDetected,
+        "face_score": faceScore,
+        "face_count": faceCount
       ]
     }
 
-    let landmarkTypes: [PoseLandmarkType] = [
-      .nose,
-      .leftEyeInner, .leftEye, .leftEyeOuter,
-      .rightEyeInner, .rightEye, .rightEyeOuter,
-      .leftEar, .rightEar,
-      .leftMouth, .rightMouth,
-      .leftShoulder, .rightShoulder,
-      .leftElbow, .rightElbow,
-      .leftWrist, .rightWrist,
-      .leftPinky, .rightPinky,
-      .leftIndex, .rightIndex,
-      .leftThumb, .rightThumb,
-      .leftHip, .rightHip,
-      .leftKnee, .rightKnee,
-      .leftAnkle, .rightAnkle,
-      .leftHeel, .rightHeel,
-      .leftFootIndex, .rightFootIndex
+    let landmarkTypes: [(name: String, type: PoseLandmarkType)] = [
+      ("nose", .nose),
+
+      ("leftEyeInner", .leftEyeInner),
+      ("leftEye", .leftEye),
+      ("leftEyeOuter", .leftEyeOuter),
+
+      ("rightEyeInner", .rightEyeInner),
+      ("rightEye", .rightEye),
+      ("rightEyeOuter", .rightEyeOuter),
+
+      ("leftEar", .leftEar),
+      ("rightEar", .rightEar),
+
+      ("leftMouth", .mouthLeft),
+      ("rightMouth", .mouthRight),
+
+      ("leftShoulder", .leftShoulder),
+      ("rightShoulder", .rightShoulder),
+
+      ("leftElbow", .leftElbow),
+      ("rightElbow", .rightElbow),
+
+      ("leftWrist", .leftWrist),
+      ("rightWrist", .rightWrist),
+
+      ("leftPinky", .leftPinkyFinger),
+      ("rightPinky", .rightPinkyFinger),
+
+      ("leftIndex", .leftIndexFinger),
+      ("rightIndex", .rightIndexFinger),
+
+      ("leftThumb", .leftThumb),
+      ("rightThumb", .rightThumb),
+
+      ("leftHip", .leftHip),
+      ("rightHip", .rightHip),
+
+      ("leftKnee", .leftKnee),
+      ("rightKnee", .rightKnee),
+
+      ("leftAnkle", .leftAnkle),
+      ("rightAnkle", .rightAnkle),
+
+      ("leftHeel", .leftHeel),
+      ("rightHeel", .rightHeel),
+
+      ("leftFootIndex", .leftToe),
+      ("rightFootIndex", .rightToe)
     ]
 
-    let landmarks: [[String: Double]] = landmarkTypes.map { type in
-      let landmark = pose.landmark(ofType: type)
-      // iOS ML Kit PoseLandmark has 'position' (2D) and 'position3D' (3D)
-      let pos2D = landmark.position
-      let pos3D = landmark.position3D
-      
+    let landmarks: [[String: Any]] = landmarkTypes.map { item in
+      let landmark = pose.landmark(ofType: item.type)
+      let position = landmark.position
+
       return [
-        "x": Double(max(0, min(1, pos2D.x / imageWidth))),
-        "y": Double(max(0, min(1, pos2D.y / imageHeight))),
-        "z": Double(pos3D.z),
+        "name": item.name,
+        "x": Double(max(0, min(1, position.x / imageWidth))),
+        "y": Double(max(0, min(1, position.y / imageHeight))),
+        "z": Double(position.z),
         "visibility": Double(landmark.inFrameLikelihood)
       ]
     }
 
     let personDetectedVisibility = 0.2
     let detected = landmarks.contains { landmark in
-      (landmark["visibility"] ?? 0.0) >= personDetectedVisibility
+      (landmark["visibility"] as? Double ?? 0.0) >= personDetectedVisibility
     }
-
-    let faceCount = faces.count
-    let faceDetected = faceCount > 0
-    let faceScore = faceDetected ? 1.0 : 0.0
 
     return [
       "detected": detected,
-      "landmarks": detected ? landmarks : nil,
+      "landmarks": detected ? landmarks : NSNull(),
       "face_detected": faceDetected,
       "face_score": faceScore,
       "face_count": faceCount

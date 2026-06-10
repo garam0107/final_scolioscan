@@ -12,7 +12,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "icon" : "./assets/icons/scolioscan_icon_ios.png",
+      "icon": "./assets/icons/scolioscan_icon_ios.png",
       "bundleIdentifier": "com.nextvine.scolioscan",
       "supportsTablet": false,
       "config": {
@@ -133,7 +133,15 @@
         {
           "cameraPermission": "2D 측정을 위해 카메라로 자세를 촬영합니다."
         }
-      ]
+      ],
+    [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.5"
+          }
+        }
+    ]
     ],
     "experiments": {
       "typedRoutes": true,
