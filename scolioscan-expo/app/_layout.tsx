@@ -1,20 +1,17 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fonts/museomoderno';
-import { Stack, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
-import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 
 // const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
 
 const defaultFontFamily = 'PretendardVariable';
-
 
 function applyDefaultFont(component: typeof Text | typeof TextInput) {
   const defaultRender = (component as typeof Text & { render?: (...args: any[]) => any }).render;
@@ -32,13 +29,12 @@ function applyDefaultFont(component: typeof Text | typeof TextInput) {
 
     return defaultRender.call(this, {
       ...props,
-      style: [{defaultFontFamily}, props?.style],
+      style: [{ defaultFontFamily }, props?.style],
     }, ref);
   };
 }
-// allowFontScaling 설정으로 폰트 사이즈 고정
-// 휴대폰 설정에서 텍스트 크기를 키우는 것에 따라 앱의 폰트 크기가 달라지게 할 경우 false -> true로 변경
-// maxFontSizeMultiplier -> 최대 몇배율까지 보여질 지 결정
+
+// allowFontScaling 설정으로 폰트 사이즈를 고정한다.
 const textDefaultProps = (Text as typeof Text & { defaultProps?: { allowFontScaling?: boolean; maxFontSizeMultiplier?: number } }).defaultProps ?? {};
 textDefaultProps.allowFontScaling = false;
 textDefaultProps.maxFontSizeMultiplier = 1;
@@ -54,37 +50,24 @@ applyDefaultFont(TextInput);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const segments = useSegments();
-  const settingsLoaded = useAppSettingsStore((state) => state.settingsLoaded);
-  const loadSettings = useAppSettingsStore((state) => state.loadSettings);
   const [museoLoaded] = useMuseoFonts({
     MuseoModerno_700Bold,
   });
-  // const [fontsLoaded] = useFonts({
-  //   PretendardVariable: pretendardFont,
-  // });
-  const hideTopSeparator = segments[0] === 'intro' || segments[0] === 'measure';
 
-  useEffect(() => {
-    // 앱 시작 시 설정값을 미리 불러와 설정 화면 진입 시 토글 깜빡임을 줄인다.
-    void loadSettings().catch(() => undefined);
-  }, [loadSettings]);
-
-  if (!museoLoaded || !settingsLoaded) {
+  if (!museoLoaded) {
     return null;
   }
 
   return (
     <KeyboardProvider>
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AuthProvider>
-        {/* View, TopSeparator 추가해서 상단바 밑으로 표시 */}
-        {/* <View style={styles.root}> */}
-          <Stack screenOptions={{ headerShown: false,
-               contentStyle: {
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AuthProvider>
+          <Stack screenOptions={{
+            headerShown: false,
+            contentStyle: {
               backgroundColor: '#FFFFFF',
-    },
-           }}>
+            },
+          }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="intro" />
@@ -110,13 +93,12 @@ export default function RootLayout() {
             <Stack.Screen name="settings/password-message" />
             <Stack.Screen name="settings/password-reset" />
             <Stack.Screen name="profile/edit" />
-             <Stack.Screen name="settings/contact" />
+            <Stack.Screen name="settings/contact" />
           </Stack>
-          {/* {hideTopSeparator ? null : <TopSeparator />}
-        </View> */}
-      </AuthProvider>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+          {/* {hideTopSeparator ? null : <TopSeparator />} */}
+        </AuthProvider>
+        <StatusBar style="auto" />
+      </ThemeProvider>
     </KeyboardProvider>
   );
 }

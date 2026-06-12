@@ -8,15 +8,21 @@ import {
   saveNightModeHours,
 } from '@/src/lib/appSettingsStorage';
 
-type AppSettingsState = {
-  cellularDataAllowed: boolean;
-  nightModeEnabled: boolean;
-  nightStartHour: number;
-  nightStartMinute: number;
-  nightEndHour: number;
-  nightEndMinute: number;
+const DEFAULT_SETTINGS = {
+  cellularDataAllowed: true,
+  nightModeEnabled: false,
+  nightStartHour: 22,
+  nightStartMinute: 0,
+  nightEndHour: 6,
+  nightEndMinute: 0,
+};
+
+type AppSettingsState = typeof DEFAULT_SETTINGS & {
+  activeUserId: string | null;
+  loadedForUserId: string | null;
   settingsLoaded: boolean;
-  loadSettings: () => Promise<void>;
+  loadSettings: (userId: string) => Promise<void>;
+  resetSettingsState: () => void;
   setCellularDataAllowed: (allowed: boolean) => Promise<void>;
   setNightModeEnabled: (enabled: boolean) => Promise<void>;
   setNightModeHours: (startHour: number, startMinute: number, endHour: number, endMinute: number) => Promise<void>;
@@ -24,23 +30,22 @@ type AppSettingsState = {
 };
 
 export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
-  cellularDataAllowed: true,
-  nightModeEnabled: false,
-  nightStartHour: 22,
-  nightStartMinute: 0,
-  nightEndHour: 6,
-  nightEndMinute: 0,
-  settingsLoaded: false,
-  loadSettings: async () => {
-    if (get().settingsLoaded) {
+  ...DEFAULT_SETTINGS,
+  activeUserId: null,
+  loadedForUserId: null,
+  settingsLoaded: true,
+  loadSettings: async (userId) => {
+    if (get().loadedForUserId === userId && get().settingsLoaded) {
       return;
     }
 
+    set({ settingsLoaded: false, activeUserId: userId });
+
     try {
-      // 앱 시작 시 필요한 설정을 병렬로 읽어 화면 설정과 네트워크 차단 로직이 같은 값을 보게 한다.
+      // 로그인한 사용자 id 기준으로 로컬 설정을 읽어 계정 간 설정 섞임을 막는다.
       const [cellularDataAllowed, nightModeSettings] = await Promise.all([
-        loadCellularDataAllowed(),
-        loadNightModeSettings(),
+        loadCellularDataAllowed(userId),
+        loadNightModeSettings(userId),
       ]);
 
       set({
@@ -50,48 +55,70 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
         nightStartMinute: nightModeSettings.startMinute,
         nightEndHour: nightModeSettings.endHour,
         nightEndMinute: nightModeSettings.endMinute,
+        activeUserId: userId,
+        loadedForUserId: userId,
         settingsLoaded: true,
       });
     } catch (error) {
-      // 설정 로딩 실패로 앱 시작이 멈추지 않도록 기본값으로 진행한다.
-      set({ settingsLoaded: true });
+      set({
+        ...DEFAULT_SETTINGS,
+        activeUserId: userId,
+        loadedForUserId: userId,
+        settingsLoaded: true,
+      });
       throw error;
     }
   },
+  resetSettingsState: () => {
+    // 로그아웃 후에는 이전 사용자의 메모리 설정이 화면에 남지 않도록 기본값으로만 되돌린다.
+    set({
+      ...DEFAULT_SETTINGS,
+      activeUserId: null,
+      loadedForUserId: null,
+      settingsLoaded: true,
+    });
+  },
   setCellularDataAllowed: async (allowed) => {
+    const userId = get().activeUserId;
     const previousValue = get().cellularDataAllowed;
-    // API 요청 차단 여부와 설정 스위치가 즉시 맞물리도록 먼저 상태를 바꾼다.
 
-    // 토글 반응은 즉시 보여주고, 저장 실패 시 이전 값으로 되돌린다.
     set({ cellularDataAllowed: allowed });
 
+    if (!userId) {
+      return;
+    }
+
     try {
-      await saveCellularDataAllowed(allowed);
+      await saveCellularDataAllowed(userId, allowed);
     } catch (error) {
       set({ cellularDataAllowed: previousValue });
       throw error;
     }
   },
   setNightModeEnabled: async (enabled) => {
+    const userId = get().activeUserId;
     const previousValue = get().nightModeEnabled;
 
-    // 토글 반응은 즉시 보여주고, 저장 실패 시 이전 값으로 되돌린다.
     set({ nightModeEnabled: enabled });
 
+    if (!userId) {
+      return;
+    }
+
     try {
-      await saveNightModeEnabled(enabled);
+      await saveNightModeEnabled(userId, enabled);
     } catch (error) {
       set({ nightModeEnabled: previousValue });
       throw error;
     }
   },
   setNightModeHours: async (startHour, startMinute, endHour, endMinute) => {
+    const userId = get().activeUserId;
     const previousStartHour = get().nightStartHour;
     const previousStartMinute = get().nightStartMinute;
     const previousEndHour = get().nightEndHour;
     const previousEndMinute = get().nightEndMinute;
 
-    // 시간 선택도 즉시 반영하고, 저장 실패 시 이전 시간으로 되돌린다.
     set({
       nightStartHour: startHour,
       nightStartMinute: startMinute,
@@ -99,8 +126,12 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
       nightEndMinute: endMinute,
     });
 
+    if (!userId) {
+      return;
+    }
+
     try {
-      await saveNightModeHours(startHour, startMinute, endHour, endMinute);
+      await saveNightModeHours(userId, startHour, startMinute, endHour, endMinute);
     } catch (error) {
       set({
         nightStartHour: previousStartHour,
@@ -112,26 +143,24 @@ export const useAppSettingsStore = create<AppSettingsState>((set, get) => ({
     }
   },
   resetSettings: async () => {
-  const defaultCellularDataAllowed = true;
-  const defaultNightModeEnabled = false;
-  const defaultNightStartHour = 22;
-  const defaultNightStartMinute = 0;
-  const defaultNightEndHour = 6;
-  const defaultNightEndMinute = 0;
+    const userId = get().activeUserId;
 
-  set({
-    cellularDataAllowed: defaultCellularDataAllowed,
-    nightModeEnabled: defaultNightModeEnabled,
-    nightStartHour: defaultNightStartHour,
-    nightStartMinute: defaultNightStartMinute,
-    nightEndHour: defaultNightEndHour,
-    nightEndMinute: defaultNightEndMinute,
-  });
+    set(DEFAULT_SETTINGS);
 
-  await Promise.all([
-    saveCellularDataAllowed(defaultCellularDataAllowed),
-    saveNightModeEnabled(defaultNightModeEnabled),
-    saveNightModeHours(defaultNightStartHour, defaultNightStartMinute, defaultNightEndHour, defaultNightEndMinute),
-  ]);
-},
+    if (!userId) {
+      return;
+    }
+
+    await Promise.all([
+      saveCellularDataAllowed(userId, DEFAULT_SETTINGS.cellularDataAllowed),
+      saveNightModeEnabled(userId, DEFAULT_SETTINGS.nightModeEnabled),
+      saveNightModeHours(
+        userId,
+        DEFAULT_SETTINGS.nightStartHour,
+        DEFAULT_SETTINGS.nightStartMinute,
+        DEFAULT_SETTINGS.nightEndHour,
+        DEFAULT_SETTINGS.nightEndMinute
+      ),
+    ]);
+  },
 }));

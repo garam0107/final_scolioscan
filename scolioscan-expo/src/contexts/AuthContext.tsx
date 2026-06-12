@@ -2,6 +2,9 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { authAPI } from '@/src/api/auth';
 import { userAPI } from '@/src/api/user';
 import { clearAccessToken, loadAccessToken, saveAccessToken, setAccessToken } from '@/src/lib/tokenStorage';
+import { useAppSettingsStore } from '@/src/store/appSettingsStore';
+import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
+import { useReportMeasurementListFilterStore } from '@/src/store/reportMeasurementListFilterStore';
 import type { LoginRequest, RegisterRequest, MessagCodeResponse, OctomoApiResponse } from '@/src/types/auth';
 import type { UserResponse } from '@/src/types/user';
 
@@ -51,6 +54,28 @@ function isAuthExpiredError(error: unknown) {
   return status === 401 || status === 403;
 }
 
+async function loadUserScopedLocalState(userId: string) {
+  // 사용자별 로컬 저장소를 로그인한 계정 기준으로 전환한다.
+  const results = await Promise.allSettled([
+    useAppSettingsStore.getState().loadSettings(userId),
+    useReportMeasurementListFilterStore.getState().setCurrentUserId(userId),
+    useMeasurementGuideStore.getState().setCurrentUserId(userId),
+  ]);
+
+  results.forEach((result) => {
+    if (result.status === 'rejected') {
+      console.log('[auth] 사용자별 로컬 상태 로딩 실패', result.reason);
+    }
+  });
+}
+
+function resetUserScopedLocalState() {
+  // 로그아웃 후 이전 사용자의 로컬 상태가 화면에 남지 않도록 메모리만 초기화한다.
+  useAppSettingsStore.getState().resetSettingsState();
+  useReportMeasurementListFilterStore.getState().resetCurrentUserState();
+  useMeasurementGuideStore.getState().resetCurrentUserState();
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
@@ -66,10 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!storedToken) {
         setUser(null);
+        resetUserScopedLocalState();
         return;
       }
 
       const response = await userAPI.getCurrentUser();
+      await loadUserScopedLocalState(response.data.id);
       setUser(response.data);
     } catch (error) {
       if (isAuthExpiredError(error)) {
@@ -78,11 +105,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAccessToken(null);
         setAccessTokenState(null);
         setUser(null);
+        resetUserScopedLocalState();
         return;
       }
 
       // 네트워크 끊김이나 서버 일시 오류는 로그아웃으로 보지 않고 저장된 토큰을 유지한다.
       setUser(null);
+      resetUserScopedLocalState();
     } finally {
       setLoading(false);
     }
@@ -102,12 +131,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessTokenState(token);
 
       const userResponse = await userAPI.getCurrentUser();
+      await loadUserScopedLocalState(userResponse.data.id);
       setUser(userResponse.data);
     } catch (error) {
       await clearAccessToken();
       setAccessToken(null);
       setAccessTokenState(null);
       setUser(null);
+      resetUserScopedLocalState();
       throw new Error(normalizeApiError(error));
     }
   }, []);
@@ -164,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(null);
     setAccessTokenState(null);
     setUser(null);
+    resetUserScopedLocalState();
   }, []);
 
   const value = useMemo<AuthContextValue>(

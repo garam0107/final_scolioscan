@@ -42,12 +42,6 @@ export function isCellularDataBlockedError(error: unknown) {
 }
 
 export async function assertNetworkRequestAllowed() {
-  const { settingsLoaded, loadSettings } = useAppSettingsStore.getState();
-
-  if (!settingsLoaded) {
-    await loadSettings().catch(() => undefined);
-  }
-
   let networkModule: ExpoNetworkModule;
   let networkState: Awaited<ReturnType<ExpoNetworkModule['getNetworkStateAsync']>>;
 
