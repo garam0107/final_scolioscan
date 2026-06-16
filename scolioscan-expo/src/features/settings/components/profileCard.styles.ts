@@ -15,7 +15,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 46,
     justifyContent: 'center',
+    position: 'relative',
     width: 46,
+  },
+  avatarImage: {
+    borderRadius: 999,
+    height: '100%',
+    width: '100%',
+  },
+  plusBadge: {
+    height: 16,
+    position: 'absolute',
+    right: -2,
+    top: -2,
+    width: 16,
   },
   profileText: {
     flex: 1,

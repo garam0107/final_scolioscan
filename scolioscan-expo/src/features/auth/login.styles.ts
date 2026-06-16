@@ -125,6 +125,8 @@ const styles = StyleSheet.create({
     color: '#000000',
     ...textFont,
     fontSize: 12,
+    fontWeight : 400,
+    lineHeight : 16
   },
   findPasswordText: {
     color: '#6B7280',

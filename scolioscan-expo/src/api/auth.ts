@@ -2,6 +2,9 @@ import api from '@/src/api/client';
 import type {
   LoginRequest,
   LoginResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  LogoutRequest,
   EmailFindCheckResponse,
   EmailFindRequest,
   EmailFindVerifyResponse,
@@ -17,6 +20,8 @@ import type {
 
 export const authAPI = {
   login: (credentials: LoginRequest) => api.post<LoginResponse>('/auth/login', credentials),
+  refreshToken: (data: RefreshTokenRequest) => api.post<RefreshTokenResponse>('/auth/refresh', data),
+  logout: (data: LogoutRequest) => api.post('/auth/logout', data),
   register: (data: RegisterRequest) => api.post('/auth/register', data),
   checkEmail: (email: string) => api.get<{ exists: boolean }>(`/auth/check-email/${encodeURIComponent(email)}`),
   checkPhone: (phone :string) => api.get<{exists: boolean}>(`/auth/check-phone/${encodeURIComponent(phone)}`),

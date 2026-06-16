@@ -1,10 +1,20 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authAPI } from '@/src/api/auth';
+import { refreshAccessToken, setAuthFailureHandler } from '@/src/api/client';
 import { userAPI } from '@/src/api/user';
-import { clearAccessToken, loadAccessToken, saveAccessToken, setAccessToken } from '@/src/lib/tokenStorage';
+import {
+  clearAuthTokens,
+  getOrCreateDeviceId,
+  loadAccessToken,
+  loadRefreshToken,
+  saveAuthTokens,
+  setAccessToken,
+  setRefreshToken,
+} from '@/src/lib/tokenStorage';
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import { useReportMeasurementListFilterStore } from '@/src/store/reportMeasurementListFilterStore';
+import { getCurrentDeviceLabel } from '@/src/features/settings/accountManage/accountManageUtils';
 import type { LoginRequest, RegisterRequest, MessagCodeResponse, OctomoApiResponse } from '@/src/types/auth';
 import type { UserResponse } from '@/src/types/user';
 
@@ -13,11 +23,11 @@ type AuthContextValue = {
   accessToken: string | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: Omit<LoginRequest, 'device_id' | 'device_name'>) => Promise<void>;
   checkEmail: (email: string) => Promise<boolean>;
   checkPhone: (phone: string) => Promise<boolean>;
-  messageCode : (phone :string) => Promise<MessagCodeResponse>;
-  octomoApi : (phone : string) => Promise<OctomoApiResponse>;
+  messageCode: (phone: string) => Promise<MessagCodeResponse>;
+  octomoApi: (phone: string) => Promise<OctomoApiResponse>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -70,7 +80,7 @@ async function loadUserScopedLocalState(userId: string) {
 }
 
 function resetUserScopedLocalState() {
-  // 로그아웃 후 이전 사용자의 로컬 상태가 화면에 남지 않도록 메모리만 초기화한다.
+  // 로그아웃 후에는 이전 사용자의 로컬 상태가 화면에 남지 않도록 메모리 상태를 초기화한다.
   useAppSettingsStore.getState().resetSettingsState();
   useReportMeasurementListFilterStore.getState().resetCurrentUserState();
   useMeasurementGuideStore.getState().resetCurrentUserState();
@@ -81,67 +91,108 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const clearAuthState = useCallback(async () => {
+    // 세션 종료 시 토큰과 사용자 상태를 같은 타이밍에 함께 비운다.
+    await clearAuthTokens();
+    setAccessToken(null);
+    setRefreshToken(null);
+    setAccessTokenState(null);
+    setUser(null);
+    resetUserScopedLocalState();
+  }, []);
+
+  const hydrateCurrentUser = useCallback(async () => {
+    // 현재 access token으로 사용자 정보를 다시 받아 전역 인증 상태를 맞춘다.
+    const userResponse = await userAPI.getCurrentUser();
+    await loadUserScopedLocalState(userResponse.data.id);
+    setUser(userResponse.data);
+  }, []);
+
   const refreshSession = useCallback(async () => {
-    // 앱 시작과 프로필 갱신 후 저장된 토큰으로 현재 사용자 정보를 다시 맞춘다.
+    // 앱 시작 시 저장된 토큰으로 세션을 복구하고, access token이 만료됐으면 refresh를 시도한다.
     setLoading(true);
     try {
-      const storedToken = await loadAccessToken();
-      setAccessToken(storedToken);
-      setAccessTokenState(storedToken);
+      const [storedAccessToken, storedRefreshToken] = await Promise.all([
+        loadAccessToken(),
+        loadRefreshToken(),
+      ]);
 
-      if (!storedToken) {
+      setAccessToken(storedAccessToken);
+      setRefreshToken(storedRefreshToken);
+      setAccessTokenState(storedAccessToken);
+
+      if (!storedAccessToken && !storedRefreshToken) {
         setUser(null);
         resetUserScopedLocalState();
         return;
       }
 
-      const response = await userAPI.getCurrentUser();
-      await loadUserScopedLocalState(response.data.id);
-      setUser(response.data);
-    } catch (error) {
-      if (isAuthExpiredError(error)) {
-        // 서버가 명확하게 인증 실패를 응답한 경우에만 저장된 토큰을 삭제한다.
-        await clearAccessToken();
-        setAccessToken(null);
-        setAccessTokenState(null);
-        setUser(null);
-        resetUserScopedLocalState();
+      try {
+        await hydrateCurrentUser();
+        return;
+      } catch (error) {
+        if (!isAuthExpiredError(error)) {
+          setUser(null);
+          resetUserScopedLocalState();
+          return;
+        }
+      }
+
+      const nextAccessToken = await refreshAccessToken();
+      if (!nextAccessToken) {
+        await clearAuthState();
         return;
       }
 
-      // 네트워크 끊김이나 서버 일시 오류는 로그아웃으로 보지 않고 저장된 토큰을 유지한다.
-      setUser(null);
-      resetUserScopedLocalState();
+      setAccessToken(nextAccessToken);
+      setAccessTokenState(nextAccessToken);
+      await hydrateCurrentUser();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clearAuthState, hydrateCurrentUser]);
 
   useEffect(() => {
     void refreshSession();
   }, [refreshSession]);
 
-  const login = useCallback(async (credentials: LoginRequest) => {
-    try {
-      // 로그인 성공 후 토큰 저장과 사용자 조회를 한 번에 끝내 전역 인증 상태를 갱신한다.
-      const response = await authAPI.login(credentials);
-      const token = response.data.access_token;
-      await saveAccessToken(token);
-      setAccessToken(token);
-      setAccessTokenState(token);
-
-      const userResponse = await userAPI.getCurrentUser();
-      await loadUserScopedLocalState(userResponse.data.id);
-      setUser(userResponse.data);
-    } catch (error) {
-      await clearAccessToken();
+  useEffect(() => {
+    // axios 계층에서 refresh까지 실패했을 때 컨텍스트 상태도 함께 초기화되도록 연결한다.
+    setAuthFailureHandler(() => {
       setAccessToken(null);
+      setRefreshToken(null);
       setAccessTokenState(null);
       setUser(null);
       resetUserScopedLocalState();
+    });
+
+    return () => {
+      setAuthFailureHandler(null);
+    };
+  }, []);
+
+  const login = useCallback(async (credentials: Omit<LoginRequest, 'device_id' | 'device_name'>) => {
+    try {
+      // 백엔드가 요구하는 설치 식별자와 기기 이름을 함께 보내 로그인 세션을 생성한다.
+      const deviceId = await getOrCreateDeviceId();
+      const deviceName = getCurrentDeviceLabel();
+      const response = await authAPI.login({
+        ...credentials,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+
+      await saveAuthTokens(response.data.access_token, response.data.refresh_token);
+      setAccessToken(response.data.access_token);
+      setRefreshToken(response.data.refresh_token);
+      setAccessTokenState(response.data.access_token);
+
+      await hydrateCurrentUser();
+    } catch (error) {
+      await clearAuthState();
       throw new Error(normalizeApiError(error));
     }
-  }, []);
+  }, [clearAuthState, hydrateCurrentUser]);
 
   const checkEmail = useCallback(async (email: string) => {
     try {
@@ -153,7 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const checkPhone = useCallback(async (phone: string) => {
-    try{
+    try {
       const response = await authAPI.checkPhone(phone);
       return response.data.exists;
     } catch (error) {
@@ -161,26 +212,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-
-  const messageCode = useCallback(async (phone : string) => {
-    // 문자 인증 앱에 전달할 수신번호와 메시지 본문을 서버에서 받아온다.
+  const messageCode = useCallback(async (phone: string) => {
+    // 문자 인증 값은 기존과 같이 auth API를 그대로 사용한다.
     try {
-    const response = await authAPI.messageCode({ phoneNumber: phone });
-    return response.data;
-  } catch (error) {
-    throw new Error(normalizeApiError(error));
-  }
+      const response = await authAPI.messageCode({ phoneNumber: phone });
+      return response.data;
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
   }, []);
 
-  const octomoApi = useCallback(async (phone : string) => {
-    // 문자 발송 후 실제 인증 완료 여부를 서버에서 확인한다.
-    try{
-      const response = await authAPI.octomoApi({phoneNumber : phone});
+  const octomoApi = useCallback(async (phone: string) => {
+    // 문자 인증 완료 여부도 기존 API와 동일하게 조회한다.
+    try {
+      const response = await authAPI.octomoApi({ phoneNumber: phone });
       return response.data;
-    }catch (error) {
-    throw new Error(normalizeApiError(error));
-  }
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
   }, []);
+
   const register = useCallback(async (data: RegisterRequest) => {
     try {
       await authAPI.register(data);
@@ -190,16 +241,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // 로그아웃은 저장된 토큰과 메모리의 사용자 상태를 함께 비운다.
-    await clearAccessToken();
-    setAccessToken(null);
-    setAccessTokenState(null);
-    setUser(null);
-    resetUserScopedLocalState();
-  }, []);
+    // refresh token이 남아 있으면 서버에 revoke를 요청하고, 실패해도 로컬 세션은 항상 정리한다.
+    const refreshToken = await loadRefreshToken();
+
+    try {
+      if (refreshToken) {
+        await authAPI.logout({ refresh_token: refreshToken });
+      }
+    } catch (error) {
+      console.log('[auth] 로그아웃 revoke 실패', error);
+    } finally {
+      await clearAuthState();
+    }
+  }, [clearAuthState]);
 
   const value = useMemo<AuthContextValue>(
-    // 컨텍스트 값 참조를 고정해 인증 상태 변경이 있을 때만 하위 화면을 다시 렌더링한다.
     () => ({
       user,
       accessToken,
@@ -214,7 +270,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshSession,
     }),
-    [user, accessToken, loading, login, checkEmail,checkPhone,messageCode, register, octomoApi, logout, refreshSession]
+    [user, accessToken, loading, login, checkEmail, checkPhone, messageCode, register, octomoApi, logout, refreshSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

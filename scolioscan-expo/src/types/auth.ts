@@ -1,14 +1,31 @@
 export interface LoginRequest {
   user_id: string;
   user_pw: string;
+  device_id: string;
+  device_name: string;
 }
 
 export interface LoginResponse {
   access_token: string;
+  refresh_token: string;
   token_type: 'bearer' | string;
   user_id: string;
   name: string;
   email: string;
+}
+
+export interface RefreshTokenRequest {
+  refresh_token: string;
+}
+
+export interface RefreshTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: 'bearer' | string;
+}
+
+export interface LogoutRequest {
+  refresh_token: string;
 }
 
 export interface PasswordResetRequest {

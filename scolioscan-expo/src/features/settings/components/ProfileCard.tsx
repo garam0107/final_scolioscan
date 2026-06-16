@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View, Image } from 'react-native';
 import ProfileIcon from '@/assets/images/basic_profile_image.svg';
+import PlusIcon from '@/assets/icons/setting/plus.svg';
 import styles from '@/src/features/settings/components/profileCard.styles';
 
 type ProfileCardProps = {
@@ -23,11 +24,15 @@ export default function ProfileCard({ name, email, profileImage, onAccountPress,
         {imageUrl ? (
           <Image 
             source={{ uri: imageUrl }} 
-            style={{ width: '100%', height: '100%', borderRadius: 100 }}
+            style={styles.avatarImage}
           />
         ) : (
-        <ProfileIcon />
+        <ProfileIcon width="100%" height="100%" />
         )}
+        {/* 프로필 원형 영역을 기준으로 우상단에 아이콘을 고정해 기기별 위치 차이를 줄인다. */}
+        <View pointerEvents="none" style={styles.plusBadge}>
+          <PlusIcon width="100%" height="100%" />
+        </View>
        </Pressable>
       <View style={styles.profileText}>
         <View style={styles.nameLine}>

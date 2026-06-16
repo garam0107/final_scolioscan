@@ -20,6 +20,7 @@ import {
   guardedFetch,
   isCellularDataBlockedError,
 } from '@/src/lib/networkAccessGuard';
+import { curvatureAPI } from '@/src/api/curvature';
 import { getAccessToken } from '@/src/lib/tokenStorage';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
@@ -172,11 +173,7 @@ export default function Measure2DScreen() {
   const submitCurvature = useCallback(async (photoUri: string) => {
     // 자동/수동 촬영으로 확보한 최종 사진을 척추측만 분석 API에 제출한다.
     // 자동 촬영 또는 수동 촬영이 성공한 뒤 최종 사진을 척추측만 분석 API로 보낸다.
-    if (!API_BASE_URL) {
       showToast('API 주소가 설정되지 않았습니다.', 'error');
-      return null;
-    }
-
     try {
       const fd = new FormData();
       // React Native FormData는 웹 File 객체가 없어 uri, name, type 형태로 이미지를 전달한다.
@@ -224,6 +221,30 @@ export default function Measure2DScreen() {
     }
   }, [API_BASE_URL, markMeasurementChanged, showToast]);
 
+  const submitCurvatureWithAxios = useCallback(async (photoUri: string) => {
+    // 공통 axios 클라이언트를 사용해 access token 만료 시 refresh 후 재시도를 자동으로 탄다.
+    try {
+      const response = await curvatureAPI.postAnalysis(photoUri);
+      const curvature = response.data as CurvatureResponse;
+
+      if (!curvature.id) {
+        showToast('2D 측정 결과를 확인하지 못했습니다.', 'error');
+        return null;
+      }
+
+      markMeasurementChanged();
+      return curvature;
+    } catch (error) {
+      showToast(
+        isCellularDataBlockedError(error)
+          ? CELLULAR_DATA_BLOCKED_MESSAGE
+          : '서버 연결에 실패했습니다. 네트워크를 확인해주세요.',
+        'error',
+      );
+      return null;
+    }
+  }, [markMeasurementChanged, showToast]);
+
   const {
     activeCaptureLottieType,
     captureCompleteVisible,
@@ -234,7 +255,7 @@ export default function Measure2DScreen() {
     autoAligned,
     autoCaptureResult,
     clearAutoCaptureResult,
-    submitCurvature,
+    submitCurvature: submitCurvatureWithAxios,
     goToNextMeasurement,
     resumeAutoCapture,
   });
