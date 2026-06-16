@@ -18,6 +18,31 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     user_id: EmailStr
     user_pw: str
+    device_id: str = Field(..., min_length=1, max_length=128)
+    device_name: str = Field(..., min_length=1, max_length=128)
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user_id: str
+    name: str
+    email: str
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., min_length=1)
+
+
+class RefreshTokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: str = Field(..., min_length=1)
 
 
 class PasswordResetVerify(BaseModel):

@@ -186,6 +186,7 @@ MYSQL_ROOT_PASSWORD=CHANGE_ME_ROOT_PASSWORD
 # Backend
 DATABASE_URL=mysql+pymysql://nextvine:CHANGE_ME_DB_PASSWORD@mysql:3306/nextvine?charset=utf8mb4
 SECRET_KEY=CHANGE_ME_SECRET_KEY
+REFRESH_TOKEN_SECRET=CHANGE_ME_REFRESH_TOKEN_SECRET
 SMTP_HOST=smtp.daum.net
 SMTP_PORT=465
 SMTP_USER=CHANGE_ME_SMTP_USER
@@ -224,6 +225,19 @@ chmod 600 /opt/scolioscan/.env
 
 ```bash
 openssl rand -base64 32
+```
+
+refresh token 정리 예시:
+
+```bash
+cd /opt/scolioscan/backend
+python -m app.scripts.cleanup_refresh_tokens
+```
+
+cron 예시:
+
+```bash
+0 3 * * * cd /opt/scolioscan/backend && /usr/bin/python3 -m app.scripts.cleanup_refresh_tokens >> /opt/scolioscan/logs/refresh-token-cleanup.log 2>&1
 ```
 
 주의:

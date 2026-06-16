@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Optional
 import hashlib
+import hmac
+import secrets
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
@@ -48,6 +50,40 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
+
+
+def create_refresh_token() -> tuple[str, str]:
+    """클라이언트에만 내려줄 refresh token 원문과 token_id를 함께 생성한다."""
+    token_id = secrets.token_urlsafe(24)
+    token_secret = secrets.token_urlsafe(48)
+    return f"{token_id}.{token_secret}", token_id
+
+
+def parse_refresh_token(raw_token: str) -> tuple[str, str]:
+    """저장 조회에 사용할 token_id와 검증용 secret 부분을 분리한다."""
+    token_id, separator, token_secret = raw_token.partition(".")
+    if not token_id or not separator or not token_secret:
+        raise ValueError("Invalid refresh token format")
+    return token_id, token_secret
+
+
+def hash_refresh_token(raw_token: str) -> str:
+    """서버 secret 기반 HMAC으로 refresh token 원문을 해시한다."""
+    return hmac.new(
+        settings.REFRESH_TOKEN_SECRET.encode("utf-8"),
+        raw_token.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def verify_refresh_token_hash(raw_token: str, token_hash: str) -> bool:
+    """DB의 해시와 안전하게 비교해 위조된 토큰을 걸러낸다."""
+    return hmac.compare_digest(hash_refresh_token(raw_token), token_hash)
+
+
+def build_refresh_token_expiry() -> datetime:
+    """refresh token 만료 시각을 한 곳에서 계산한다."""
+    return datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
 
 def get_current_user(

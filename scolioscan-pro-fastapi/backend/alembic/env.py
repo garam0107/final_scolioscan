@@ -5,7 +5,7 @@ from alembic import context
 from app.config import settings
 from app.database import Base
 # 마이그레이션에서 현재 모델 metadata를 모두 읽을 수 있도록 실제 모델 파일을 import한다.
-from app.models import user, alarm, subscribe, rotation, curvature
+from app.models import user, alarm, subscribe, rotation, curvature, refresh_token
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
