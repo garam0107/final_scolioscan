@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from fastapi import HTTPException, status
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -14,6 +15,7 @@ KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token"
 KAKAO_ME_URL = "https://kapi.kakao.com/v2/user/me"
 NAVER_TOKEN_URL = "https://nid.naver.com/oauth2.0/token"
 NAVER_PROFILE_URL = "https://openapi.naver.com/v1/nid/me"
+SOCIAL_TEMP_TOKEN_TYPE = "social_temp"
 
 
 def extract_provider_error_message(payload: object, default_message: str) -> str:
@@ -69,15 +71,79 @@ def build_social_verify_response(
     provider_email: str | None,
     social_account: SocialAccount | None,
 ) -> SocialVerifyResponse:
-    """이번 단계에서는 로그인 대신 linked 여부와 연결된 user_id만 반환한다."""
+    """미연결 소셜 계정이면 다음 단계에서 재사용할 임시 토큰을 함께 반환한다."""
+    social_temp_token = None
+    response_status = "linked"
+
+    if social_account is None:
+        response_status = "need_account_decision"
+        social_temp_token = create_social_temp_token(
+            provider=provider,
+            provider_user_id=provider_user_id,
+            provider_email=provider_email,
+        )
+
     return SocialVerifyResponse(
-        status="linked" if social_account else "not_linked",
+        status=response_status,
         provider=provider,
         provider_user_id=provider_user_id,
         provider_email=provider_email,
         linked_user_id=str(social_account.user_id) if social_account else None,
+        social_temp_token=social_temp_token,
         verified_at=datetime.now(timezone.utc),
     )
+
+
+def create_social_temp_token(
+    provider: str,
+    provider_user_id: str,
+    provider_email: str | None,
+) -> str:
+    """소셜 검증 이후 계정 연결 또는 신규 가입 단계로 넘길 임시 JWT를 발급한다."""
+    expire = datetime.utcnow() + timedelta(minutes=settings.SOCIAL_TEMP_TOKEN_EXPIRE_MINUTES)
+    payload = {
+        "type": SOCIAL_TEMP_TOKEN_TYPE,
+        "provider": provider,
+        "provider_user_id": provider_user_id,
+        "provider_email": provider_email,
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def verify_social_temp_token(token: str) -> dict:
+    """후속 소셜 연결 API에서 사용할 임시 토큰의 서명과 필수 값을 검증한다."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired social_temp_token",
+    )
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except JWTError as error:
+        raise credentials_exception from error
+
+    if payload.get("type") != SOCIAL_TEMP_TOKEN_TYPE:
+        raise credentials_exception
+
+    provider = payload.get("provider")
+    provider_user_id = payload.get("provider_user_id")
+    provider_email = payload.get("provider_email")
+
+    if provider not in {"google", "kakao", "naver"}:
+        raise credentials_exception
+
+    if not isinstance(provider_user_id, str) or not provider_user_id.strip():
+        raise credentials_exception
+
+    if provider_email is not None and (not isinstance(provider_email, str) or not provider_email.strip()):
+        raise credentials_exception
+
+    return {
+        "provider": provider,
+        "provider_user_id": provider_user_id,
+        "provider_email": provider_email,
+    }
 
 
 async def verify_google_identity(id_token: str) -> tuple[str, str | None]:

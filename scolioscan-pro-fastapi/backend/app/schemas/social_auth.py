@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 SocialProvider = Literal["google", "kakao", "naver"]
-SocialLinkStatus = Literal["linked", "not_linked"]
+SocialVerifyStatus = Literal["linked", "need_account_decision"]
 
 
 class GoogleVerifyRequest(BaseModel):
@@ -22,9 +22,10 @@ class NaverVerifyRequest(BaseModel):
 
 
 class SocialVerifyResponse(BaseModel):
-    status: SocialLinkStatus
+    status: SocialVerifyStatus
     provider: SocialProvider
     provider_user_id: str
     provider_email: Optional[EmailStr] = None
     linked_user_id: Optional[str] = None
+    social_temp_token: Optional[str] = None
     verified_at: datetime
