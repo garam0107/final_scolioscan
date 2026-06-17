@@ -310,6 +310,7 @@ export default function LoginScreen() {
 
       if (isSuccessResponse(response)) {
         if (response.data.idToken) {
+          console.log("구글 id token", response.data.idToken);
           showToast('구글 로그인 화면이 정상적으로 동작했습니다.');
           return;
         }

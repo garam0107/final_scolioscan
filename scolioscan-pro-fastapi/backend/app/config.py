@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
 from typing import Optional
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -48,21 +49,18 @@ class Settings(BaseSettings):
     # AWS S3 Settings
     AWS_REGION: str = "ap-northeast-2"
     S3_BUCKET: str = ""
-    
-    # Google Web Client
-    GOOGLE_WEB_CLIENT_ID : str
 
-    # Kakao Settings
+    # Social Login Settings
+    GOOGLE_WEB_CLIENT_ID: str
     KAKAO_REST_API_KEY: str
-    KAKAO_CLIENT_SECRET : str
-    KAKAO_REDIRECT_URI : str
+    KAKAO_CLIENT_SECRET: Optional[str] = None
+    KAKAO_REDIRECT_URI: str
+    NAVER_CLIENT_ID: str
+    NAVER_CLIENT_SECRET: str
+    NAVER_REDIRECT_URI: str
+    SOCIAL_AUTH_HTTP_TIMEOUT_SECONDS: float = 10.0
+    APP_OAUTH_RETURN_BASE: str = "scolioscan://oauth"
 
-    # Naver Settings
-    NAVER_CLIENT_ID : str
-    NAVER_CLIENT_SECRET : str
-    NAVER_REDIRECT_URI : str
-    
-    APP_OAUTH_RETURN_BASE : str = "scolioscan://oauth"
     # File Upload Settings
     UPLOAD_DIR: str = "./uploads"  # Relative path works both in Docker and on regular servers
 
@@ -70,8 +68,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list = [
         "http://localhost:3000",
         "http://localhost:8000",
-        "http://localhost:8081",       # Expo dev server
-        "http://127.0.0.1:8081",       # Expo dev server
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
         "http://192.168.0.190:3000",
         "http://192.168.0.190:8000",
         "http://127.0.0.1:3000",

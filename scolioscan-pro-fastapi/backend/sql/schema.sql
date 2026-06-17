@@ -22,6 +22,25 @@ CREATE TABLE `users` (
   KEY `ix_users_id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `social_accounts` (
+  `id` CHAR(36) NOT NULL,
+  `user_id` CHAR(36) NOT NULL,
+  `provider` ENUM('google', 'kakao', 'naver') NOT NULL,
+  `provider_user_id` VARCHAR(128) NOT NULL,
+  `provider_email` VARCHAR(128) NULL,
+  `linked_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_login_at` DATETIME NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `ix_social_accounts_id` (`id`),
+  KEY `ix_social_accounts_user_id` (`user_id`),
+  UNIQUE KEY `uq_social_accounts_provider_user` (`provider`, `provider_user_id`),
+  UNIQUE KEY `uq_social_accounts_user_provider` (`user_id`, `provider`),
+  CONSTRAINT `fk_social_accounts_user_id`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE `alarm_types` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(16) NOT NULL,

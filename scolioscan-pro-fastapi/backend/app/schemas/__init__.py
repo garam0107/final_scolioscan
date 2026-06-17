@@ -1,29 +1,29 @@
+from .alarm import AlarmCreate, AlarmResponse
+from .contact import ContactCreate
+from .curvature import BackType, CurvatureMeasurementResponse, Severity
+from .octomo import OctomoIssueCodeRequest, OctomoIssueCodeResponse, OctomoVerifyRequest, OctomoVerifyResponse
+from .rotation import RotationMeasurementCreate, RotationMeasurementResponse, SeverityZone, compute_zone
+from .social_auth import GoogleVerifyRequest, KakaoVerifyRequest, NaverVerifyRequest, SocialVerifyResponse
+from .subscribe import SubscribeCreate, SubscribeResponse, SubscribeTypeResponse
 from .user import (
-    UserCreate,
-    UserLogin,
+    EmailFindCheckResponse,
+    EmailFindRequest,
+    EmailFindVerifyResponse,
     LoginResponse,
+    LogoutRequest,
+    PasswordChange,
+    PasswordResetCheckResponse,
+    PasswordResetConfirm,
+    PasswordResetVerify,
+    PasswordResetVerifyResponse,
     RefreshTokenRequest,
     RefreshTokenResponse,
-    LogoutRequest,
+    UserCreate,
+    UserDeleteRequest,
+    UserLogin,
     UserResponse,
     UserUpdate,
-    PasswordResetVerify,
-    PasswordResetCheckResponse,
-    PasswordResetVerifyResponse,
-    PasswordResetConfirm,
-    EmailFindRequest,
-    EmailFindCheckResponse,
-    EmailFindVerifyResponse,
-    PasswordChange,
-    UserDeleteRequest,
 )
-from .alarm import AlarmResponse, AlarmCreate
-from .subscribe import SubscribeResponse, SubscribeCreate, SubscribeTypeResponse
-from .contact import ContactCreate
-from .rotation import RotationMeasurementCreate, RotationMeasurementResponse, SeverityZone, compute_zone
-from .curvature import CurvatureMeasurementResponse, Severity, BackType
-# OCTOMO API 관련
-from .octomo import OctomoIssueCodeRequest, OctomoIssueCodeResponse, OctomoVerifyRequest, OctomoVerifyResponse
 
 __all__ = [
     "UserCreate",
@@ -42,6 +42,7 @@ __all__ = [
     "EmailFindCheckResponse",
     "EmailFindVerifyResponse",
     "PasswordChange",
+    "UserDeleteRequest",
     "AlarmResponse",
     "AlarmCreate",
     "SubscribeResponse",
@@ -54,9 +55,11 @@ __all__ = [
     "compute_zone",
     "CurvatureMeasurementResponse",
     "Severity",
-    "UserDeleteRequest",
     "BackType",
-    # OCTOMO API 관련
+    "GoogleVerifyRequest",
+    "KakaoVerifyRequest",
+    "NaverVerifyRequest",
+    "SocialVerifyResponse",
     "OctomoIssueCodeRequest",
     "OctomoIssueCodeResponse",
     "OctomoVerifyRequest",
