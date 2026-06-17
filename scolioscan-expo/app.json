@@ -8,7 +8,7 @@
     "splash": {
       "image": "./assets/icons/splash_icon.png"
     },
-    "scheme": "scolioscanexpo",
+    "scheme": "scolioscan",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -59,6 +59,12 @@
           "dark": {
             "backgroundColor": "#22BCB7"
           }
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.134913920767-k5n471ojmnjbbh74vg63n4g9ugi47dbk.apps.googleusercontent.com"
         }
       ],
       [

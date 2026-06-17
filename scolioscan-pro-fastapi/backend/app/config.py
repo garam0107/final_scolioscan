@@ -48,7 +48,21 @@ class Settings(BaseSettings):
     # AWS S3 Settings
     AWS_REGION: str = "ap-northeast-2"
     S3_BUCKET: str = ""
+    
+    # Google Web Client
+    GOOGLE_WEB_CLIENT_ID : str
 
+    # Kakao Settings
+    KAKAO_REST_API_KEY: str
+    KAKAO_CLIENT_SECRET : str
+    KAKAO_REDIRECT_URI : str
+
+    # Naver Settings
+    NAVER_CLIENT_ID : str
+    NAVER_CLIENT_SECRET : str
+    NAVER_REDIRECT_URI : str
+    
+    APP_OAUTH_RETURN_BASE : str = "scolioscan://oauth"
     # File Upload Settings
     UPLOAD_DIR: str = "./uploads"  # Relative path works both in Docker and on regular servers
 
