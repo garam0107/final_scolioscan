@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from ..config import settings
-from ..models import SocialAccount
+from ..models import SocialAccount, User
 from ..schemas import SocialVerifyResponse
 
 
@@ -144,6 +144,62 @@ def verify_social_temp_token(token: str) -> dict:
         "provider_user_id": provider_user_id,
         "provider_email": provider_email,
     }
+
+
+def ensure_social_account_not_linked(
+    db: Session,
+    provider: str,
+    provider_user_id: str,
+) -> None:
+    """임시 토큰이 오래 남아 있어도 이미 연결된 소셜 계정이면 후속 처리를 막는다."""
+    social_account = get_social_account(
+        db=db,
+        provider=provider,
+        provider_user_id=provider_user_id,
+    )
+    if social_account is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Social account is already linked",
+        )
+
+
+def ensure_user_provider_not_linked(
+    db: Session,
+    user: User,
+    provider: str,
+) -> None:
+    """한 계정에 같은 공급자를 중복 연결하지 않도록 미리 차단한다."""
+    existing_account = db.query(SocialAccount).filter(
+        SocialAccount.user_id == user.id,
+        SocialAccount.provider == provider,
+    ).first()
+    if existing_account is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"{provider} is already linked to this user",
+        )
+
+
+def create_social_account(
+    db: Session,
+    user: User,
+    provider: str,
+    provider_user_id: str,
+    provider_email: str | None,
+    linked_at: datetime,
+) -> SocialAccount:
+    """기존 사용자 또는 신규 사용자 계정에 소셜 연결 정보를 생성한다."""
+    social_account = SocialAccount(
+        user_id=user.id,
+        provider=provider,
+        provider_user_id=provider_user_id,
+        provider_email=provider_email,
+        linked_at=linked_at,
+        last_login_at=linked_at,
+    )
+    db.add(social_account)
+    return social_account
 
 
 async def verify_google_identity(id_token: str) -> tuple[str, str | None]:

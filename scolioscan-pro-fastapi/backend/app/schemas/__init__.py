@@ -3,7 +3,14 @@ from .contact import ContactCreate
 from .curvature import BackType, CurvatureMeasurementResponse, Severity
 from .octomo import OctomoIssueCodeRequest, OctomoIssueCodeResponse, OctomoVerifyRequest, OctomoVerifyResponse
 from .rotation import RotationMeasurementCreate, RotationMeasurementResponse, SeverityZone, compute_zone
-from .social_auth import GoogleVerifyRequest, KakaoVerifyRequest, NaverVerifyRequest, SocialVerifyResponse
+from .social_auth import (
+    GoogleVerifyRequest,
+    KakaoVerifyRequest,
+    NaverVerifyRequest,
+    SocialLinkExistingRequest,
+    SocialSignupRequest,
+    SocialVerifyResponse,
+)
 from .subscribe import SubscribeCreate, SubscribeResponse, SubscribeTypeResponse
 from .user import (
     EmailFindCheckResponse,
@@ -59,6 +66,8 @@ __all__ = [
     "GoogleVerifyRequest",
     "KakaoVerifyRequest",
     "NaverVerifyRequest",
+    "SocialLinkExistingRequest",
+    "SocialSignupRequest",
     "SocialVerifyResponse",
     "OctomoIssueCodeRequest",
     "OctomoIssueCodeResponse",

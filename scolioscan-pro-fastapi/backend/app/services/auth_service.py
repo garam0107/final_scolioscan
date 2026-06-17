@@ -76,6 +76,17 @@ def find_user_by_name_and_phone(name: str, normalized_phone: str, db: Session) -
     return None
 
 
+def find_user_by_normalized_phone(normalized_phone: str, db: Session) -> User | None:
+    """휴대폰 번호 포맷 차이를 무시하고 기존 가입 여부를 확인한다."""
+    users = db.query(User).all()
+
+    for user in users:
+        if normalize_phone_number(user.phone) == normalized_phone:
+            return user
+
+    return None
+
+
 def revoke_all_active_refresh_tokens(db: Session, user: User, revoked_at: datetime) -> None:
     """보안상 세션을 모두 끊어야 할 때 활성 refresh token을 일괄 폐기한다."""
     db.query(RefreshToken).filter(

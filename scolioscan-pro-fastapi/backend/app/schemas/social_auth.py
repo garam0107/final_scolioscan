@@ -21,6 +21,28 @@ class NaverVerifyRequest(BaseModel):
     state: str = Field(..., min_length=1)
 
 
+class SocialLinkExistingRequest(BaseModel):
+    social_temp_token: str = Field(..., min_length=1)
+    user_id: EmailStr
+    user_pw: str = Field(..., min_length=8, max_length=128)
+    device_id: str = Field(..., min_length=1, max_length=128)
+    device_name: str = Field(..., min_length=1, max_length=128)
+
+
+class SocialSignupRequest(BaseModel):
+    social_temp_token: str = Field(..., min_length=1)
+    user_id: EmailStr
+    user_pw: str = Field(..., min_length=8, max_length=128)
+    name: str = Field(..., min_length=1, max_length=32)
+    phone: str
+    birthday: datetime
+    sex: bool
+    address: str
+    detail_address: Optional[str] = None
+    device_id: str = Field(..., min_length=1, max_length=128)
+    device_name: str = Field(..., min_length=1, max_length=128)
+
+
 class SocialVerifyResponse(BaseModel):
     status: SocialVerifyStatus
     provider: SocialProvider

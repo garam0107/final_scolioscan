@@ -1,5 +1,6 @@
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -24,6 +25,8 @@ from ..schemas import (
     PasswordResetVerifyResponse,
     RefreshTokenRequest,
     RefreshTokenResponse,
+    SocialLinkExistingRequest,
+    SocialSignupRequest,
     SocialVerifyResponse,
     UserCreate,
     UserLogin,
@@ -33,6 +36,7 @@ from ..services.auth_service import (
     build_password_reset_password_hash,
     create_password_reset_token,
     ensure_refresh_token_is_active,
+    find_user_by_normalized_phone,
     find_user_by_name_and_phone,
     get_password_reset_user,
     get_refresh_token_or_401,
@@ -48,9 +52,13 @@ from ..services.octomo_verification import (
 )
 from ..services.social_auth_service import (
     build_social_verify_response,
+    create_social_account,
+    ensure_social_account_not_linked,
+    ensure_user_provider_not_linked,
     exchange_kakao_code,
     exchange_naver_code,
     get_social_account,
+    verify_social_temp_token,
     verify_google_identity,
 )
 from ..utils import create_access_token, get_password_hash
@@ -197,6 +205,146 @@ async def verify_naver_social_login(
     return build_social_verify_response("naver", provider_user_id, provider_email, social_account)
 
 
+@router.post("/social/link-existing", response_model=LoginResponse)
+async def link_existing_social_account(
+    payload: SocialLinkExistingRequest,
+    db: Session = Depends(get_db),
+):
+    """소셜 임시 토큰을 검증한 뒤 기존 계정에 연결하고 바로 로그인한다."""
+    social_identity = verify_social_temp_token(payload.social_temp_token)
+    ensure_social_account_not_linked(
+        db=db,
+        provider=social_identity["provider"],
+        provider_user_id=social_identity["provider_user_id"],
+    )
+
+    user = db.query(User).filter(User.user_id == payload.user_id).first()
+    if not user or not verify_user_password(payload.user_pw, user.user_pw):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+
+    ensure_user_provider_not_linked(
+        db=db,
+        user=user,
+        provider=social_identity["provider"],
+    )
+
+    now = utcnow()
+    create_social_account(
+        db=db,
+        user=user,
+        provider=social_identity["provider"],
+        provider_user_id=social_identity["provider_user_id"],
+        provider_email=social_identity["provider_email"],
+        linked_at=now,
+    )
+    try:
+        # 동시 요청으로 같은 소셜 계정이 먼저 연결된 경우 DB unique 제약 오류를 409로 변환한다.
+        db.flush()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Social account is already linked",
+        ) from error
+
+    access_token = create_access_token(data={"sub": user.user_id})
+    refresh_token, _ = issue_refresh_token(
+        db=db,
+        user=user,
+        device_id=payload.device_id,
+        device_name=payload.device_name,
+    )
+    db.commit()
+
+    return build_login_response(user, access_token, refresh_token)
+
+
+@router.post("/social/signup", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
+async def signup_with_social_account(
+    payload: SocialSignupRequest,
+    db: Session = Depends(get_db),
+):
+    """소셜 임시 토큰을 검증한 뒤 신규 계정을 만들고 연결과 로그인을 한 번에 처리한다."""
+    social_identity = verify_social_temp_token(payload.social_temp_token)
+    ensure_social_account_not_linked(
+        db=db,
+        provider=social_identity["provider"],
+        provider_user_id=social_identity["provider_user_id"],
+    )
+
+    existing_user = db.query(User).filter(User.user_id == payload.user_id).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered",
+        )
+
+    normalized_phone = normalize_phone_number(payload.phone)
+    existing_phone_user = find_user_by_normalized_phone(normalized_phone, db)
+    if existing_phone_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Phone already registered",
+        )
+
+    # 일반 회원가입과 같은 사용자 필드를 받되, 생성 직후 소셜 연결과 로그인까지 이어간다.
+    user = User(
+        user_id=payload.user_id,
+        user_pw=get_password_hash(payload.user_pw),
+        name=payload.name,
+        phone=payload.phone,
+        birthday=payload.birthday,
+        sex=payload.sex,
+        address=payload.address,
+        detail_address=payload.detail_address,
+        alarm_count=0,
+        setting={"voice_alarm": False},
+    )
+    db.add(user)
+    try:
+        # 사전 중복 검사 이후에도 동시 가입이 들어오면 DB unique 제약 기준으로 한 번 더 막는다.
+        db.flush()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered",
+        ) from error
+
+    now = utcnow()
+    create_social_account(
+        db=db,
+        user=user,
+        provider=social_identity["provider"],
+        provider_user_id=social_identity["provider_user_id"],
+        provider_email=social_identity["provider_email"],
+        linked_at=now,
+    )
+    try:
+        # 임시 토큰 재사용이나 동시 요청으로 같은 소셜 계정이 먼저 연결된 경우를 막는다.
+        db.flush()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Social account is already linked",
+        ) from error
+
+    access_token = create_access_token(data={"sub": user.user_id})
+    refresh_token, _ = issue_refresh_token(
+        db=db,
+        user=user,
+        device_id=payload.device_id,
+        device_name=payload.device_name,
+    )
+    db.commit()
+
+    return build_login_response(user, access_token, refresh_token)
+
+
 @router.get("/check-email/{email}")
 async def check_email(email: str, db: Session = Depends(get_db)):
     """이메일 중복 확인"""
@@ -207,7 +355,8 @@ async def check_email(email: str, db: Session = Depends(get_db)):
 @router.get("/check-phone/{phone}")
 async def check_phone(phone: str, db: Session = Depends(get_db)):
     """전화번호 중복 확인"""
-    existing_user_phone = db.query(User).filter(User.phone == phone).first()
+    normalized_phone = normalize_phone_number(phone)
+    existing_user_phone = find_user_by_normalized_phone(normalized_phone, db)
     return {"exists": existing_user_phone is not None}
 
 
