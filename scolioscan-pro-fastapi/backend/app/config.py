@@ -58,6 +58,8 @@ class Settings(BaseSettings):
     NAVER_REDIRECT_URI: str
     SOCIAL_AUTH_HTTP_TIMEOUT_SECONDS: float = 10.0
     SOCIAL_TEMP_TOKEN_EXPIRE_MINUTES: int = 10
+    SOCIAL_OAUTH_STATE_EXPIRE_MINUTES: int = 10
+    SOCIAL_ONE_TIME_TICKET_EXPIRE_MINUTES: int = 10
     APP_OAUTH_RETURN_BASE: str = "scolioscan://oauth"
 
     # File Upload Settings

@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 SocialProvider = Literal["google", "kakao", "naver"]
 SocialVerifyStatus = Literal["linked", "need_account_decision"]
+SocialTicketExchangeStatus = Literal["login_success", "need_account_decision"]
 
 
 class GoogleVerifyRequest(BaseModel):
@@ -43,6 +44,12 @@ class SocialSignupRequest(BaseModel):
     device_name: str = Field(..., min_length=1, max_length=128)
 
 
+class SocialTicketExchangeRequest(BaseModel):
+    ticket: str = Field(..., min_length=1)
+    device_id: str = Field(..., min_length=1, max_length=128)
+    device_name: str = Field(..., min_length=1, max_length=128)
+
+
 class SocialVerifyResponse(BaseModel):
     status: SocialVerifyStatus
     provider: SocialProvider
@@ -50,4 +57,20 @@ class SocialVerifyResponse(BaseModel):
     provider_email: Optional[EmailStr] = None
     linked_user_id: Optional[str] = None
     social_temp_token: Optional[str] = None
+    verified_at: datetime
+
+
+class SocialTicketExchangeResponse(BaseModel):
+    status: SocialTicketExchangeStatus
+    provider: SocialProvider
+    provider_user_id: str
+    provider_email: Optional[EmailStr] = None
+    linked_user_id: Optional[str] = None
+    social_temp_token: Optional[str] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_type: Optional[str] = None
+    user_id: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
     verified_at: datetime
