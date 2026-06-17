@@ -99,12 +99,32 @@ async def start_naver_social_login():
 
 @router.get("/oauth/kakao/callback")
 async def kakao_social_login_callback(
-    code: str = Query(..., min_length=1),
+    code: str | None = Query(None, min_length=1),
     state_value: str = Query(..., alias="state", min_length=1),
+    error_code: str | None = Query(None, alias="error"),
+    error_description: str | None = Query(None),
 ):
     """카카오 callback에서 code를 검증한 뒤 앱이 소비할 1회용 ticket을 deep link로 전달한다."""
     try:
         await consume_oauth_state_or_401("kakao", state_value)
+        if error_code:
+            return RedirectResponse(
+                url=build_app_oauth_redirect_url(
+                    "kakao",
+                    error=error_code,
+                    error_description=error_description,
+                ),
+                status_code=status.HTTP_302_FOUND,
+            )
+        if not code:
+            return RedirectResponse(
+                url=build_app_oauth_redirect_url(
+                    "kakao",
+                    error="invalid_request",
+                    error_description="Authorization code is missing",
+                ),
+                status_code=status.HTTP_302_FOUND,
+            )
         provider_user_id, provider_email = await exchange_kakao_code(code)
         ticket = await create_one_time_social_ticket(
             provider="kakao",
@@ -124,12 +144,32 @@ async def kakao_social_login_callback(
 
 @router.get("/oauth/naver/callback")
 async def naver_social_login_callback(
-    code: str = Query(..., min_length=1),
+    code: str | None = Query(None, min_length=1),
     state_value: str = Query(..., alias="state", min_length=1),
+    error_code: str | None = Query(None, alias="error"),
+    error_description: str | None = Query(None),
 ):
     """네이버 callback에서 code를 검증한 뒤 앱이 소비할 1회용 ticket을 deep link로 전달한다."""
     try:
         await consume_oauth_state_or_401("naver", state_value)
+        if error_code:
+            return RedirectResponse(
+                url=build_app_oauth_redirect_url(
+                    "naver",
+                    error=error_code,
+                    error_description=error_description,
+                ),
+                status_code=status.HTTP_302_FOUND,
+            )
+        if not code:
+            return RedirectResponse(
+                url=build_app_oauth_redirect_url(
+                    "naver",
+                    error="invalid_request",
+                    error_description="Authorization code is missing",
+                ),
+                status_code=status.HTTP_302_FOUND,
+            )
         provider_user_id, provider_email = await exchange_naver_code(code, state_value)
         ticket = await create_one_time_social_ticket(
             provider="naver",

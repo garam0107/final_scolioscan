@@ -335,6 +335,7 @@ def build_app_oauth_redirect_url(
     provider: str,
     ticket: str | None = None,
     error: str | None = None,
+    error_description: str | None = None,
 ) -> str:
     """브라우저 callback 완료 후 앱 deep link로 돌아갈 URL을 만든다."""
     base_url = settings.APP_OAUTH_RETURN_BASE.rstrip("/")
@@ -343,6 +344,8 @@ def build_app_oauth_redirect_url(
         query["ticket"] = ticket
     if error is not None:
         query["error"] = error
+    if error_description is not None:
+        query["error_description"] = error_description
 
     query_string = urlencode(query)
     if query_string:
