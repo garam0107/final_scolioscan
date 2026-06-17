@@ -127,11 +127,11 @@ async def exchange_kakao_code(code: str) -> tuple[str, str | None]:
     form_data = {
         "grant_type": "authorization_code",
         "client_id": settings.KAKAO_REST_API_KEY,
+        # 카카오 시크릿 사용이 활성화된 운영 설정에 맞춰 항상 포함한다.
+        "client_secret": settings.KAKAO_CLIENT_SECRET,
         "redirect_uri": settings.KAKAO_REDIRECT_URI,
         "code": code,
     }
-    if settings.KAKAO_CLIENT_SECRET:
-        form_data["client_secret"] = settings.KAKAO_CLIENT_SECRET
 
     try:
         async with httpx.AsyncClient(timeout=settings.SOCIAL_AUTH_HTTP_TIMEOUT_SECONDS) as client:

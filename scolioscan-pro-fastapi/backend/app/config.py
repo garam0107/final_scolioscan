@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic_settings import BaseSettings
 
 
@@ -53,7 +51,7 @@ class Settings(BaseSettings):
     # Social Login Settings
     GOOGLE_WEB_CLIENT_ID: str
     KAKAO_REST_API_KEY: str
-    KAKAO_CLIENT_SECRET: Optional[str] = None
+    KAKAO_CLIENT_SECRET: str
     KAKAO_REDIRECT_URI: str
     NAVER_CLIENT_ID: str
     NAVER_CLIENT_SECRET: str
