@@ -339,18 +339,14 @@ def build_app_oauth_redirect_url(
 ) -> str:
     """브라우저 callback 완료 후 앱 deep link로 돌아갈 URL을 만든다."""
     base_url = settings.APP_OAUTH_RETURN_BASE.rstrip("/")
-    query: dict[str, str] = {}
+    query: dict[str, str] = {"provider": provider}
     if ticket is not None:
         query["ticket"] = ticket
     if error is not None:
         query["error"] = error
     if error_description is not None:
         query["error_description"] = error_description
-
-    query_string = urlencode(query)
-    if query_string:
-        return f"{base_url}/{provider}?{query_string}"
-    return f"{base_url}/{provider}"
+    return f"{base_url}?{urlencode(query)}"
 
 
 def build_social_ticket_exchange_response(
