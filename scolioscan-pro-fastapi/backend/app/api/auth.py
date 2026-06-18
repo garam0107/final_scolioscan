@@ -30,6 +30,7 @@ from ..services.auth_service import (
     create_password_reset_token,
     ensure_refresh_token_is_active,
     find_user_by_name_and_phone,
+    find_user_by_normalized_phone,
     get_password_reset_user,
     get_refresh_token_or_401,
     issue_refresh_token,
