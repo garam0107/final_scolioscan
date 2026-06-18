@@ -91,7 +91,8 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     
-    print("[auth] get_current_user token =", token)
+    print("[auth] get_current_user token =", token, flush=True)
+    print("[auth] auth file =", __file__, flush=True)
     """현재 로그인한 사용자 정보 가져오기"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
