@@ -228,50 +228,7 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.55,
   },
-  modalOverlay: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(17, 24, 39, 0.35)',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    maxWidth: 320,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    width: '100%',
-  },
-  modalTitle: {
-    color: '#1F2937',
-    ...textFont,
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  modalMessage: {
-    color: '#4B5563',
-    ...textFont,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  modalButton: {
-    alignItems: 'center',
-    backgroundColor: '#5F9F9D',
-    borderRadius: 6,
-    height: 42,
-    justifyContent: 'center',
-    marginTop: 18,
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    ...textFont,
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  
 
   // 로그인 중 로딩 오버레이
   loadingOverlay: {

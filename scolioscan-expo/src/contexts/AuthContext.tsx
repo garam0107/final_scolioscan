@@ -4,7 +4,9 @@ import { refreshAccessToken, setAuthFailureHandler } from '@/src/api/client';
 import { userAPI } from '@/src/api/user';
 import {
   clearAuthTokens,
+  getAccessToken,
   getOrCreateDeviceId,
+  getRefreshToken,
   loadAccessToken,
   loadRefreshToken,
   saveAuthTokens,
@@ -15,7 +17,15 @@ import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import { useReportMeasurementListFilterStore } from '@/src/store/reportMeasurementListFilterStore';
 import { getCurrentDeviceLabel } from '@/src/features/settings/accountManage/accountManageUtils';
-import type { LoginRequest, RegisterRequest, MessagCodeResponse, OctomoApiResponse } from '@/src/types/auth';
+import type {
+  LoginRequest,
+  RegisterRequest,
+  MessagCodeResponse,
+  OctomoApiResponse,
+  SocialAuthResponse,
+  SocialLinkExistingRequest,
+  SocialSignupRequest,
+} from '@/src/types/auth';
 import type { UserResponse } from '@/src/types/user';
 
 type AuthContextValue = {
@@ -24,6 +34,10 @@ type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   login: (credentials: Omit<LoginRequest, 'device_id' | 'device_name'>) => Promise<void>;
+  verifyGoogleSocialLogin: (idToken: string) => Promise<SocialAuthResponse>;
+  exchangeSocialTicket: (ticket: string) => Promise<SocialAuthResponse>;
+  linkSocialAccount: (payload: Omit<SocialLinkExistingRequest, 'device_id' | 'device_name'>) => Promise<void>;
+  signupWithSocialAccount: (payload: Omit<SocialSignupRequest, 'device_id' | 'device_name'>) => Promise<void>;
   checkEmail: (email: string) => Promise<boolean>;
   checkPhone: (phone: string) => Promise<boolean>;
   messageCode: (phone: string) => Promise<MessagCodeResponse>;
@@ -108,6 +122,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userResponse.data);
   }, []);
 
+  const applyLoginSession = useCallback(
+    async (payload: { access_token: string; refresh_token: string }) => {
+      // 일반 로그인과 소셜 로그인 모두 같은 토큰 저장 경로를 사용해 세션 상태를 맞춘다.
+      await saveAuthTokens(payload.access_token, payload.refresh_token);
+      console.log("소셜 저장 후 토큰 확인", getAccessToken(),getRefreshToken());
+      setAccessToken(payload.access_token);
+      setRefreshToken(payload.refresh_token);
+      setAccessTokenState(payload.access_token);
+      await hydrateCurrentUser();
+    },
+    [hydrateCurrentUser],
+  );
+
   const refreshSession = useCallback(async () => {
     // 앱 시작 시 저장된 토큰으로 세션을 복구하고, access token이 만료됐으면 refresh를 시도한다.
     setLoading(true);
@@ -182,17 +209,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         device_name: deviceName,
       });
 
-      await saveAuthTokens(response.data.access_token, response.data.refresh_token);
-      setAccessToken(response.data.access_token);
-      setRefreshToken(response.data.refresh_token);
-      setAccessTokenState(response.data.access_token);
-
-      await hydrateCurrentUser();
+      await applyLoginSession(response.data);
     } catch (error) {
       await clearAuthState();
       throw new Error(normalizeApiError(error));
     }
-  }, [clearAuthState, hydrateCurrentUser]);
+  }, [applyLoginSession, clearAuthState]);
+
+  const verifyGoogleSocialLogin = useCallback(async (idToken: string) => {
+    try {
+      // 구글 SDK 로그인 뒤에는 현재 기기 정보를 함께 보내 백엔드가 즉시 세션을 발급할 수 있게 한다.
+      const deviceId = await getOrCreateDeviceId();
+      const deviceName = getCurrentDeviceLabel();
+      const response = await authAPI.verifyGoogleSocialLogin({
+        id_token: idToken,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+
+      if (response.data.status === 'login_success') {
+        await applyLoginSession(response.data);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, [applyLoginSession]);
+
+  const exchangeSocialTicket = useCallback(async (ticket: string) => {
+    try {
+      // 브라우저 OAuth 티켓은 한 번만 사용할 수 있으므로 바로 기기 정보와 함께 교환한다.
+      const deviceId = await getOrCreateDeviceId();
+      const deviceName = getCurrentDeviceLabel();
+      const response = await authAPI.exchangeSocialTicket({
+        ticket,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+
+      if (response.data.status === 'login_success') {
+        await applyLoginSession(response.data);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, [applyLoginSession]);
+
+  const linkSocialAccount = useCallback(async (payload: Omit<SocialLinkExistingRequest, 'device_id' | 'device_name'>) => {
+    try {
+      // 기존 계정 연결도 최종적으로는 로그인 응답을 돌려주므로 동일한 세션 저장 로직에 태운다.
+      const deviceId = await getOrCreateDeviceId();
+      const deviceName = getCurrentDeviceLabel();
+      const response = await authAPI.linkExistingSocialAccount({
+        ...payload,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+
+      await applyLoginSession(response.data);
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, [applyLoginSession]);
+
+  const signupWithSocialAccount = useCallback(async (payload: Omit<SocialSignupRequest, 'device_id' | 'device_name'>) => {
+    try {
+      // 소셜 회원가입이 성공하면 백엔드가 바로 로그인 응답을 주므로 추가 로그인 없이 세션을 완성한다.
+      const deviceId = await getOrCreateDeviceId();
+      const deviceName = getCurrentDeviceLabel();
+      const response = await authAPI.signupWithSocialAccount({
+        ...payload,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+
+      await applyLoginSession(response.data);
+      console.log("소셜 토큰확인", response.data.access_token, response.data.refresh_token)
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, [applyLoginSession]);
 
   const checkEmail = useCallback(async (email: string) => {
     try {
@@ -262,6 +361,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       isAuthenticated: Boolean(accessToken),
       login,
+      verifyGoogleSocialLogin,
+      exchangeSocialTicket,
+      linkSocialAccount,
+      signupWithSocialAccount,
       checkEmail,
       checkPhone,
       messageCode,
@@ -270,7 +373,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshSession,
     }),
-    [user, accessToken, loading, login, checkEmail, checkPhone, messageCode, register, octomoApi, logout, refreshSession],
+    [
+      user,
+      accessToken,
+      loading,
+      login,
+      verifyGoogleSocialLogin,
+      exchangeSocialTicket,
+      linkSocialAccount,
+      signupWithSocialAccount,
+      checkEmail,
+      checkPhone,
+      messageCode,
+      register,
+      octomoApi,
+      logout,
+      refreshSession,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

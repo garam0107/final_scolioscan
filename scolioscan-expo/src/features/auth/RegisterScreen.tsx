@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Platform, BackHandler } from 'react-native';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
@@ -44,8 +44,14 @@ type RegisterStep = 'agreement' | 'email' | 'password' | 'name' | 'birthday' | '
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { checkEmail, checkPhone, register, messageCode,octomoApi } = useAuth();
+  const params = useLocalSearchParams<{
+    social_provider?: string | string[];
+    social_temp_token?: string | string[];
+    provider_email?: string | string[];
+  }>();
+  const { checkEmail, checkPhone, register, signupWithSocialAccount, messageCode,octomoApi } = useAuth();
   const draft = useAuthStore((state) => state.registerDraft);
+  const updateRegisterDraft = useAuthStore((state) => state.updateRegisterDraft);
   const resetRegisterDraft = useAuthStore((state) => state.resetRegisterDraft);
   const [step, setStep] = useState<RegisterStep>('agreement');
   const [agreement, setAgreement] = useState(initialAgreementState);
@@ -76,6 +82,10 @@ export default function RegisterScreen() {
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   // 키보드 창 닫히고 버튼 위치 조정
   const [toastKey, setToastKey] = useState(0);
+  const socialProvider = Array.isArray(params.social_provider) ? params.social_provider[0] : params.social_provider;
+  const socialTempToken = Array.isArray(params.social_temp_token) ? params.social_temp_token[0] : params.social_temp_token;
+  const providerEmail = Array.isArray(params.provider_email) ? params.provider_email[0] : params.provider_email;
+  const isSocialSignup = Boolean(socialProvider && socialTempToken);
   const passwordHasLength = hasPasswordLength(draft.password);
   const passwordHasMix = hasPasswordMix(draft.password);
   const birthdayReady = isValidBirthday(draft.birthYear, draft.birthMonth, draft.birthDay);
@@ -148,6 +158,7 @@ useEffect(() => {
   };
 }, [router, step]);
 
+
   useEffect(() => {
     // 회원가입 화면에 들어올 때마다 임시 입력값을 초기화합니다.
     resetRegisterDraft();
@@ -157,6 +168,7 @@ useEffect(() => {
       resetRegisterDraft();
     };
   }, [resetRegisterDraft]);
+
 
   const stepMeta = useMemo(() => {
     // 현재 가입 단계에 맞춰 상단 제목과 하단 버튼 문구를 한 곳에서 결정한다.
@@ -361,18 +373,30 @@ useEffect(() => {
     setLoading(true);
 
     try {
-      await register({
+      const registerPayload = {
         user_id: draft.email.trim(),
         user_pw: draft.password,
         name: draft.name.trim(),
         sex: draft.gender,
-        // 현재 화면에는 아직 없는 필수 항목이라 임시값을 넣었습니다.
-        // 다음 단계에서 전화번호, 생년월일, 주소 입력이 붙으면 이 부분만 바꾸면 됩니다.
+        // 현재 화면에서는 휴대전화 인증까지 끝난 값을 그대로 사용한다.
         phone: draft.phone,
         birthday: formatBirthdayIso(draft.birthYear, draft.birthMonth, draft.birthDay),
         address: draft.address,
         detail_address: draft.detailAddress || null,
-      });
+      };
+
+      if (isSocialSignup && socialTempToken) {
+        // 소셜 회원가입은 응답과 함께 로그인도 끝나므로 완료 화면 대신 홈으로 이동한다.
+        await signupWithSocialAccount({
+          ...registerPayload,
+          social_temp_token: socialTempToken,
+        });
+        resetRegisterDraft();
+        router.replace('/home');
+        return;
+      }
+
+      await register(registerPayload);
 
       resetRegisterDraft();
       // setDoneModalVisible(true);

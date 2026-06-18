@@ -15,7 +15,12 @@ import type {
   PasswordResetVerifyResponse,
   RegisterRequest,
   MessageCodeRequest,
-  OctomoApiRequest
+  OctomoApiRequest,
+  GoogleVerifyRequest,
+  SocialAuthResponse,
+  SocialLinkExistingRequest,
+  SocialSignupRequest,
+  SocialTicketExchangeRequest,
 } from '@/src/types/auth';
 
 export const authAPI = {
@@ -37,5 +42,13 @@ export const authAPI = {
     api.post('/auth/password-reset/confirm', data),
   messageCode : (data : MessageCodeRequest) => api.post('/auth/issue-code', data),
   octomoApi : (data : OctomoApiRequest) => api.post('/auth/verify', data),
+  verifyGoogleSocialLogin: (data: GoogleVerifyRequest) =>
+    api.post<SocialAuthResponse>('/auth/social/google/verify', data),
+  exchangeSocialTicket: (data: SocialTicketExchangeRequest) =>
+    api.post<SocialAuthResponse>('/auth/social/ticket/exchange', data),
+  linkExistingSocialAccount: (data: SocialLinkExistingRequest) =>
+    api.post<LoginResponse>('/auth/social/link-existing', data),
+  signupWithSocialAccount: (data: SocialSignupRequest) =>
+    api.post<LoginResponse>('/auth/social/signup', data),
 };
 

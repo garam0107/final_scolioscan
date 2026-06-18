@@ -14,6 +14,68 @@ export interface LoginResponse {
   email: string;
 }
 
+export type SocialProvider = 'google' | 'kakao' | 'naver';
+
+export interface SocialLoginSuccessResponse {
+  status: 'login_success';
+  provider: SocialProvider;
+  provider_user_id: string;
+  provider_email?: string | null;
+  linked_user_id?: string | null;
+  social_temp_token?: null;
+  access_token: string;
+  refresh_token: string;
+  token_type: 'bearer' | string;
+  user_id?: string | null;
+  name?: string | null;
+  email?: string | null;
+  verified_at: string;
+}
+
+export interface SocialDecisionRequiredResponse {
+  status: 'need_account_decision';
+  provider: SocialProvider;
+  provider_user_id: string;
+  provider_email?: string | null;
+  linked_user_id?: null;
+  social_temp_token: string;
+  access_token?: null;
+  refresh_token?: null;
+  token_type?: null;
+  user_id?: null;
+  name?: null;
+  email?: null;
+  verified_at: string;
+}
+
+export type SocialAuthResponse = SocialLoginSuccessResponse | SocialDecisionRequiredResponse;
+
+export interface GoogleVerifyRequest {
+  id_token: string;
+  device_id: string;
+  device_name: string;
+}
+
+export interface SocialTicketExchangeRequest {
+  ticket: string;
+  device_id: string;
+  device_name: string;
+}
+
+export interface SocialLinkExistingRequest {
+  social_temp_token: string;
+  user_id: string;
+  user_pw: string;
+  device_id: string;
+  device_name: string;
+}
+
+export interface SocialSignupRequest extends RegisterRequest {
+  social_temp_token: string;
+  device_id: string;
+  device_name: string;
+}
+
 export interface RefreshTokenRequest {
   refresh_token: string;
 }
