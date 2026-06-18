@@ -11,6 +11,8 @@ SocialTicketExchangeStatus = Literal["login_success", "need_account_decision"]
 
 class GoogleVerifyRequest(BaseModel):
     id_token: str = Field(..., min_length=1)
+    device_id: str = Field(..., min_length=1, max_length=128)
+    device_name: str = Field(..., min_length=1, max_length=128)
 
 
 class KakaoVerifyRequest(BaseModel):

@@ -90,6 +90,8 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ) -> User:
+    
+    print("[auth] get_current_user token =", token)
     """현재 로그인한 사용자 정보 가져오기"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -99,13 +101,18 @@ def get_current_user(
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        print("[auth] decoded payload =", payload)
+        print("[auth] payload sub =", payload.get("sub"))
         user_id: str = payload.get("sub")
+        print("[auth] querying user by user_id =", user_id)
         if user_id is None:
             raise credentials_exception
     except JWTError:
+        print("[auth] jwt decode error =", error)
         raise credentials_exception
 
     user = db.query(User).filter(User.user_id == user_id).first()
+    print("[auth] queried user =", user)
     if user is None:
         raise credentials_exception
 

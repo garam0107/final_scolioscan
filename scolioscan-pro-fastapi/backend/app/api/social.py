@@ -16,7 +16,6 @@ from ..schemas import (
     SocialSignupRequest,
     SocialTicketExchangeRequest,
     SocialTicketExchangeResponse,
-    SocialVerifyResponse,
 )
 from ..services.auth_service import (
     build_login_response,
@@ -31,7 +30,6 @@ from ..services.social_auth_service import (
     build_kakao_oauth_start_url,
     build_naver_oauth_start_url,
     build_social_ticket_exchange_response,
-    build_social_verify_response,
     consume_oauth_state_or_401,
     consume_one_time_social_ticket_or_401,
     create_oauth_state,
@@ -50,37 +48,71 @@ from ..utils import create_access_token, get_password_hash
 router = APIRouter()
 
 
-@router.post("/social/google/verify", response_model=SocialVerifyResponse)
+@router.post("/social/google/verify", response_model=SocialTicketExchangeResponse)
 async def verify_google_social_login(
     payload: GoogleVerifyRequest,
     db: Session = Depends(get_db),
 ):
-    """구글 id_token을 검증하고 연결 여부만 반환한다."""
+    """구글 id_token을 검증한 뒤 바로 login_success 또는 need_account_decision으로 분기한다."""
     provider_user_id, provider_email = await verify_google_identity(payload.id_token)
     social_account = get_social_account(db, "google", provider_user_id)
-    return build_social_verify_response("google", provider_user_id, provider_email, social_account)
+
+    if social_account is None:
+        return build_social_ticket_exchange_response(
+            provider="google",
+            provider_user_id=provider_user_id,
+            provider_email=provider_email,
+            social_account=None,
+        )
+
+    user = db.get(User, social_account.user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Linked user not found",
+        )
+
+    social_account.last_login_at = utcnow()
+    access_token = create_access_token(data={"sub": user.user_id})
+    refresh_token, _ = issue_refresh_token(
+        db=db,
+        user=user,
+        device_id=payload.device_id,
+        device_name=payload.device_name,
+    )
+    db.commit()
+
+    return build_social_ticket_exchange_response(
+        provider="google",
+        provider_user_id=provider_user_id,
+        provider_email=provider_email,
+        social_account=social_account,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=user,
+    )
 
 
-@router.post("/social/kakao/verify", response_model=SocialVerifyResponse)
-async def verify_kakao_social_login(
-    payload: KakaoVerifyRequest,
-    db: Session = Depends(get_db),
-):
-    """카카오 code를 검증하고 연결 여부만 반환한다."""
-    provider_user_id, provider_email = await exchange_kakao_code(payload.code)
-    social_account = get_social_account(db, "kakao", provider_user_id)
-    return build_social_verify_response("kakao", provider_user_id, provider_email, social_account)
+# @router.post("/social/kakao/verify", response_model=SocialVerifyResponse)
+# async def verify_kakao_social_login(
+#     payload: KakaoVerifyRequest,
+#     db: Session = Depends(get_db),
+# ):
+#     """카카오 code를 검증하고 연결 여부만 반환한다."""
+#     provider_user_id, provider_email = await exchange_kakao_code(payload.code)
+#     social_account = get_social_account(db, "kakao", provider_user_id)
+#     return build_social_verify_response("kakao", provider_user_id, provider_email, social_account)
 
 
-@router.post("/social/naver/verify", response_model=SocialVerifyResponse)
-async def verify_naver_social_login(
-    payload: NaverVerifyRequest,
-    db: Session = Depends(get_db),
-):
-    """네이버 code/state를 검증하고 연결 여부만 반환한다."""
-    provider_user_id, provider_email = await exchange_naver_code(payload.code, payload.state)
-    social_account = get_social_account(db, "naver", provider_user_id)
-    return build_social_verify_response("naver", provider_user_id, provider_email, social_account)
+# @router.post("/social/naver/verify", response_model=SocialVerifyResponse)
+# async def verify_naver_social_login(
+#     payload: NaverVerifyRequest,
+#     db: Session = Depends(get_db),
+# ):
+#     """네이버 code/state를 검증하고 연결 여부만 반환한다."""
+#     provider_user_id, provider_email = await exchange_naver_code(payload.code, payload.state)
+#     social_account = get_social_account(db, "naver", provider_user_id)
+#     return build_social_verify_response("naver", provider_user_id, provider_email, social_account)
 
 
 @router.get("/oauth/kakao/start")
@@ -338,6 +370,9 @@ async def signup_with_social_account(
     try:
         # 사전 중복 검사 이후에도 동시 가입이 들어오면 DB unique 제약 기준으로 한 번 더 막는다.
         db.flush()
+        print("[social signup] created user.id =", user.id)
+        print("[social signup] created user.user_id =", user.user_id)
+        print("[social signup] social sub for token =", user.user_id)
     except IntegrityError as error:
         db.rollback()
         raise HTTPException(
