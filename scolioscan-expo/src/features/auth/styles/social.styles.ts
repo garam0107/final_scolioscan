@@ -114,6 +114,16 @@ export function createSocialStyles(cardWidth: number) {
       fontWeight: '500',
       color: Colors.gray[900],
     },
+    socialDecisionCloseButton: {
+      position: 'absolute',
+      top: 16,
+      right: 16,
+      zIndex: 1,
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   });
 }
 

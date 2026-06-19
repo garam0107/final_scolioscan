@@ -3,6 +3,7 @@ import { Image, Modal, Pressable, Text, View, useWindowDimensions } from 'react-
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { Colors } from '@/src/constants/theme';
 import { createSocialStyles } from '../styles/social.styles';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type SocialAccountDecisionModalProps = {
   visible: boolean;
@@ -24,13 +25,15 @@ export default function SocialAccountDecisionModal({
   const { width } = useWindowDimensions();
   // 작은 화면에서도 피그마 카드 비율이 크게 틀어지지 않도록 폭을 제한한다.
   const styles = createSocialStyles(Math.min(Math.max(width - 40, 280), 328));
-
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
       <View style={styles.socialDecisionOverlay}>
         <Pressable style={styles.socialDecisionBackdrop} onPress={onClose} />
 
         <View style={styles.socialDecisionCard}>
+           <Pressable style={styles.socialDecisionCloseButton} onPress={onClose} hitSlop={10}>
+            <Ionicons name="close" size={20} color={Colors.gray[500]} />
+          </Pressable>
           <View style={styles.socialDecisionContent}>
             <Image
               source={require('@/assets/icons/key.png')}

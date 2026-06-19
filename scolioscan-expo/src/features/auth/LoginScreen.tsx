@@ -22,6 +22,7 @@ import ToastAlert from '@/src/components/ui/ToastAlert';
 import { useAuth } from '@/src/contexts/AuthContext';
 import SocialAccountDecisionModal from '@/src/features/auth/components/SocialAccountDecisionModal';
 import { clearSavedEmail, loadSavedEmail, saveSavedEmail } from '@/src/lib/savedEmailStorage';
+import { useAuthStore } from '@/src/store/authStore';
 import type { SocialAuthResponse, SocialProvider } from '@/src/types/auth';
 import GoogleIcon from '../../../assets/icons/google.svg';
 import KakaoIcon from '../../../assets/icons/kakao.svg';
@@ -32,12 +33,6 @@ import styles from './login.styles';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-
-type SocialDecisionState = {
-  provider: SocialProvider;
-  providerEmail: string | null;
-  socialTempToken: string;
-};
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -184,7 +179,8 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastKey, setToastKey] = useState(0);
-  const [socialDecision, setSocialDecision] = useState<SocialDecisionState | null>(null);
+  const socialDecision = useAuthStore((state) => state.pendingSocialDecision);
+  const setPendingSocialDecision = useAuthStore((state) => state.setPendingSocialDecision);
 
   useEffect(() => {
     loadAsync({ PretendardVariable: pretendardFont })
@@ -255,10 +251,11 @@ export default function LoginScreen() {
 
   const resetSocialDecisionModal = () => {
     // 계정 유무 확인 모달을 닫을 때는 소셜 분기 상태만 정리한다.
-    setSocialDecision(null);
+    setPendingSocialDecision(null);
   };
 
   const handleSocialAuthResponse = async (response: SocialAuthResponse) => {
+  
     if (response.status === 'login_success') {
       resetSocialDecisionModal();
       router.replace('/home');
@@ -266,11 +263,14 @@ export default function LoginScreen() {
     }
 
     // 미연결 계정은 로그인 화면에서 기존 계정 로그인 또는 회원가입으로만 분기시킨다.
-    setSocialDecision({
+ 
+  
+    setPendingSocialDecision({
       provider: response.provider,
       providerEmail: response.provider_email ?? null,
       socialTempToken: response.social_temp_token,
     });
+    
   };
 
   const handleLogin = async () => {
@@ -330,11 +330,10 @@ export default function LoginScreen() {
       if (Platform.OS === 'android') {
         await GoogleSignin.hasPlayServices();
       }
-
       const signInResult = await GoogleSignin.signIn();
       const idToken = extractGoogleIdToken(signInResult);
       if (!idToken) {
-        throw new Error('Google id_token을 가져오지 못했어요.');
+        return;
       }
 
       const response = await verifyGoogleSocialLogin(idToken);
@@ -363,20 +362,23 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const redirectUrl = `scolioscan://oauth/${provider}`;
+      // 백엔드 callback은 provider를 path가 아니라 query string으로 붙여 deep link를 반환한다.
+      const redirectUrl = 'scolioscan://oauth';
       const authUrl = `${API_BASE_URL}/auth/oauth/${provider}/start`;
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
-
+  
       // 동의 화면에서 취소하면 로그인 화면에 그대로 머무르도록 별도 오류 처리 없이 종료한다.
       if (result.type !== 'success' || !result.url) {
+
         return;
       }
 
       const { queryParams } = Linking.parse(result.url);
+ 
       const ticket = getQueryParam(queryParams?.ticket);
       const error = getQueryParam(queryParams?.error);
       const errorDescription = getQueryParam(queryParams?.error_description);
-
+  
       if (error) {
         if (error === 'access_denied') {
           return;
@@ -390,6 +392,7 @@ export default function LoginScreen() {
       }
 
       const response = await exchangeSocialTicket(ticket);
+
       await handleSocialAuthResponse(response);
     } catch (error) {
       const message = error instanceof Error ? error.message : '소셜 로그인에 실패했습니다.';
@@ -449,14 +452,7 @@ export default function LoginScreen() {
         onHasAccount={handleUseExistingAccount}
         onNeedSignup={handleMoveToSocialSignup}
       />
-      {loading ? (
-        <View style={styles.loadingOverlay}>
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color="#2C9696" />
-            <Text style={styles.loadingText}>로그인 중입니다...</Text>
-          </View>
-        </View>
-      ) : null}
+
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
