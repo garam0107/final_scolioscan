@@ -56,8 +56,14 @@ export interface GoogleVerifyRequest {
   device_name: string;
 }
 
-export interface SocialTicketExchangeRequest {
-  ticket: string;
+export interface KakaoVerifyRequest {
+  access_token: string;
+  device_id: string;
+  device_name: string;
+}
+
+export interface NaverVerifyRequest {
+  access_token: string;
   device_id: string;
   device_name: string;
 }

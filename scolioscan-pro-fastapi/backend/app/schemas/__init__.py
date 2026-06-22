@@ -9,9 +9,7 @@ from .social_auth import (
     NaverVerifyRequest,
     SocialLinkExistingRequest,
     SocialSignupRequest,
-    SocialTicketExchangeRequest,
     SocialTicketExchangeResponse,
-    SocialVerifyResponse,
 )
 from .subscribe import SubscribeCreate, SubscribeResponse, SubscribeTypeResponse
 from .user import (
@@ -70,9 +68,7 @@ __all__ = [
     "NaverVerifyRequest",
     "SocialLinkExistingRequest",
     "SocialSignupRequest",
-    "SocialTicketExchangeRequest",
     "SocialTicketExchangeResponse",
-    "SocialVerifyResponse",
     "OctomoIssueCodeRequest",
     "OctomoIssueCodeResponse",
     "OctomoVerifyRequest",

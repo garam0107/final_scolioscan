@@ -5,9 +5,10 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, TextInput } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
-
+import NaverLogin from '@react-native-seoul/naver-login'
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
+import { useEffect } from 'react';
 
 // const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
 
@@ -54,6 +55,24 @@ export default function RootLayout() {
     MuseoModerno_700Bold,
   });
 
+  useEffect(() => {
+    const consumerKey = process.env.EXPO_PUBLIC_NAVER_CLIENT_ID;
+    const consumerSecret = process.env.EXPO_PUBLIC_NAVER_CLIENT_SECRET;
+    const serviceUrlSchemeIOS = process.env.EXPO_PUBLIC_NAVER_URL_SCHEME_IOS;
+
+    if (!consumerKey || !consumerSecret || !serviceUrlSchemeIOS) {
+      console.warn('Naver login env is missing');
+      return;
+    }
+
+    NaverLogin.initialize({
+      appName: 'Scolioscan',
+      consumerKey,
+      consumerSecret,
+      serviceUrlSchemeIOS,
+    });
+  }, []);
+  
   if (!museoLoaded) {
     return null;
   }

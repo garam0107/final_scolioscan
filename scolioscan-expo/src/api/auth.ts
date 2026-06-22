@@ -17,10 +17,11 @@ import type {
   MessageCodeRequest,
   OctomoApiRequest,
   GoogleVerifyRequest,
+  KakaoVerifyRequest,
+  NaverVerifyRequest,
   SocialAuthResponse,
   SocialLinkExistingRequest,
   SocialSignupRequest,
-  SocialTicketExchangeRequest,
 } from '@/src/types/auth';
 
 export const authAPI = {
@@ -44,8 +45,10 @@ export const authAPI = {
   octomoApi : (data : OctomoApiRequest) => api.post('/auth/verify', data),
   verifyGoogleSocialLogin: (data: GoogleVerifyRequest) =>
     api.post<SocialAuthResponse>('/auth/social/google/verify', data),
-  exchangeSocialTicket: (data: SocialTicketExchangeRequest) =>
-    api.post<SocialAuthResponse>('/auth/social/ticket/exchange', data),
+  verifyKakaoSocialLogin: (data: KakaoVerifyRequest) =>
+    api.post<SocialAuthResponse>('/auth/social/kakao/verify', data),
+  verifyNaverSocialLogin: (data: NaverVerifyRequest) =>
+    api.post<SocialAuthResponse>('/auth/social/naver/verify', data),
   linkExistingSocialAccount: (data: SocialLinkExistingRequest) =>
     api.post<LoginResponse>('/auth/social/link-existing', data),
   signupWithSocialAccount: (data: SocialSignupRequest) =>

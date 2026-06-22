@@ -32,7 +32,7 @@ export default function SocialAccountDecisionModal({
 
         <View style={styles.socialDecisionCard}>
            <Pressable style={styles.socialDecisionCloseButton} onPress={onClose} hitSlop={10}>
-            <Ionicons name="close" size={20} color={Colors.gray[500]} />
+            <Ionicons name="close" size={28} color={Colors.gray[500]} />
           </Pressable>
           <View style={styles.socialDecisionContent}>
             <Image
