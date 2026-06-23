@@ -158,7 +158,10 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "15.5"
+            "deploymentTarget": "15.5",
+              "extraPods": [
+                { "name": "AppCheckCore", "version": "11.2.0" }
+              ]
           },
           "android": {
             "extraMavenRepos": [
