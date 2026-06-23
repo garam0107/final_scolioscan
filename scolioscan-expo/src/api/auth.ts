@@ -20,6 +20,7 @@ import type {
   KakaoVerifyRequest,
   NaverVerifyRequest,
   SocialAuthResponse,
+  SocialLinkCurrentRequest,
   SocialLinkExistingRequest,
   SocialSignupRequest,
 } from '@/src/types/auth';
@@ -49,6 +50,8 @@ export const authAPI = {
     api.post<SocialAuthResponse>('/auth/social/kakao/verify', data),
   verifyNaverSocialLogin: (data: NaverVerifyRequest) =>
     api.post<SocialAuthResponse>('/auth/social/naver/verify', data),
+  linkCurrentSocialAccount: (data: SocialLinkCurrentRequest) =>
+    api.post('/auth/social/link-current', data),
   linkExistingSocialAccount: (data: SocialLinkExistingRequest) =>
     api.post<LoginResponse>('/auth/social/link-existing', data),
   signupWithSocialAccount: (data: SocialSignupRequest) =>

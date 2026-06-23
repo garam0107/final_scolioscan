@@ -76,6 +76,10 @@ export interface SocialLinkExistingRequest {
   device_name: string;
 }
 
+export interface SocialLinkCurrentRequest {
+  social_temp_token: string;
+}
+
 export interface SocialSignupRequest extends RegisterRequest {
   social_temp_token: string;
   device_id: string;

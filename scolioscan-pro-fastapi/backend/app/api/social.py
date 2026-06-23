@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -9,6 +9,7 @@ from ..schemas import (
     KakaoVerifyRequest,
     LoginResponse,
     NaverVerifyRequest,
+    SocialLinkCurrentRequest,
     SocialLinkExistingRequest,
     SocialSignupRequest,
     SocialTicketExchangeResponse,
@@ -32,7 +33,7 @@ from ..services.social_auth_service import (
     verify_naver_access_token,
     verify_social_temp_token,
 )
-from ..utils import create_access_token, get_password_hash
+from ..utils import create_access_token, get_current_user, get_password_hash
 
 router = APIRouter()
 
@@ -226,6 +227,70 @@ async def link_existing_social_account(
     db.commit()
 
     return build_login_response(user, access_token, refresh_token)
+
+
+@router.post("/social/link-current", status_code=status.HTTP_204_NO_CONTENT)
+async def connect_social_account(
+    payload: SocialLinkCurrentRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """계정 관리 화면에서 현재 로그인된 계정에 소셜 계정을 연결한다."""
+    social_identity = verify_social_temp_token(payload.social_temp_token)
+    provider = social_identity["provider"]
+    provider_user_id = social_identity["provider_user_id"]
+
+    # 다른 계정에 이미 연결된 소셜이면 현재 계정에 붙이지 못하도록 먼저 막는다.
+    linked_social_account = get_social_account(
+        db=db,
+        provider=provider,
+        provider_user_id=provider_user_id,
+    )
+    if linked_social_account is not None:
+        if linked_social_account.user_id == current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="이미 연결된 소셜 계정입니다.",
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="다른 계정에 이미 연결된 소셜 계정입니다.",
+        )
+
+    # 현재 계정에 같은 provider가 이미 연결된 상태도 명시적으로 차단한다.
+    try:
+        ensure_user_provider_not_linked(
+            db=db,
+            user=current_user,
+            provider=provider,
+        )
+    except HTTPException as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="이미 연결된 소셜 계정입니다.",
+        ) from error
+
+    create_social_account(
+        db=db,
+        user=current_user,
+        provider=provider,
+        provider_user_id=provider_user_id,
+        provider_email=social_identity["provider_email"],
+        linked_at=utcnow(),
+    )
+    try:
+        # 동시 요청으로 unique 제약이 걸리는 경우도 409로 응답한다.
+        db.flush()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="소셜 계정 연결 처리 중 충돌이 발생했습니다. 다시 시도해주세요.",
+        ) from error
+
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/social/signup", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)

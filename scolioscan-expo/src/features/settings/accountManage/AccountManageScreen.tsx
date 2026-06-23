@@ -1,9 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
-import { unlink as unlinkKakao } from '@react-native-seoul/kakao-login';
-import NaverLogin from '@react-native-seoul/naver-login';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -20,11 +15,6 @@ import {
   isValidBirthday,
   isValidPhoneNumber,
 } from '@/src/features/auth/registerValidation';
-import AccountEditForm from '@/src/features/settings/accountManage/components/AccountEditForm';
-import AccountFooter from '@/src/features/settings/accountManage/components/AccountFooter';
-import AccountProfileSection from '@/src/features/settings/accountManage/components/AccountProfileSection';
-import DeleteAccountModal from '@/src/features/settings/accountManage/components/DeleteAccountModal';
-import SocialLinkActionSheet from '@/src/features/settings/accountManage/components/SocialLinkActionSheet';
 import styles from '@/src/features/settings/accountManage/accountManage.styles';
 import {
   formatLocationAddress,
@@ -32,13 +22,15 @@ import {
   normalizeApiError,
   splitBirthday,
 } from '@/src/features/settings/accountManage/accountManageUtils';
-import type { SocialProvider } from '@/src/types/user';
+import AccountEditForm from '@/src/features/settings/accountManage/components/AccountEditForm';
+import AccountFooter from '@/src/features/settings/accountManage/components/AccountFooter';
+import AccountProfileSection from '@/src/features/settings/accountManage/components/AccountProfileSection';
+import DeleteAccountModal from '@/src/features/settings/accountManage/components/DeleteAccountModal';
+import SocialLinkActionSheet from '@/src/features/settings/accountManage/components/SocialLinkActionSheet';
+import { useSocialAccountManager } from '@/src/features/settings/accountManage/useSocialAccountManager';
 
 type GenderValue = 'male' | 'female';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
-type SocialSheetMode = 'link' | 'unlink';
-const PENDING_SOCIAL_UNLINK_STORAGE_KEY = 'pending_social_unlinks';
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
 export default function AccountManageScreen() {
   const router = useRouter();
@@ -65,15 +57,11 @@ export default function AccountManageScreen() {
   const [toastKey, setToastKey] = useState(0);
   const [deviceName, setDeviceName] = useState(getCurrentDeviceLabel());
   const [deviceMeta, setDeviceMeta] = useState('위치 확인 중');
-  const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
-  const [syncingPendingUnlinks, setSyncingPendingUnlinks] = useState(false);
-  const [socialUnlinkConfirmProvider, setSocialUnlinkConfirmProvider] = useState<SocialProvider | null>(null);
-  const [socialLinkSheetMode, setSocialLinkSheetMode] = useState<SocialSheetMode>('unlink');
   const scrollViewRef = useRef<ScrollViewType | null>(null);
   const [phoneFieldY, setPhoneFieldY] = useState(0);
 
   useEffect(() => {
-    // 세션 사용자 정보가 바뀌면 화면 입력값도 최신 계정 정보로 맞춘다.
+    // 세션 사용자 정보가 바뀌면 화면 입력값도 같은 기준으로 다시 맞춘다.
     const birthday = splitBirthday(user?.birthday);
 
     setName(user?.name || '');
@@ -86,18 +74,7 @@ export default function AccountManageScreen() {
   }, [user]);
 
   useEffect(() => {
-    // 계정 관리 화면에서도 구글 SDK 로그인 화면을 바로 띄울 수 있게 설정을 맞춘다.
-    if (!GOOGLE_WEB_CLIENT_ID) {
-      return;
-    }
-
-    GoogleSignin.configure({
-      webClientId: GOOGLE_WEB_CLIENT_ID,
-    });
-  }, []);
-
-  useEffect(() => {
-    // 비밀번호 변경 화면에서 돌아온 경우 한 번만 성공 토스트를 보여준다.
+    // 비밀번호 변경 화면에서 돌아온 경우에만 성공 토스트를 보여준다.
     if (params.toast !== 'passwordChanged') {
       return;
     }
@@ -110,14 +87,14 @@ export default function AccountManageScreen() {
     let isMounted = true;
 
     async function loadDeviceLocation() {
-      // 현재 로그인 기기와 최근 위치를 가져와 기기 목록 영역에 표시한다.
+      // 현재 로그인 기기의 최근 위치를 가져와 기기 목록 영역에 표시한다.
       setDeviceName(getCurrentDeviceLabel());
 
       try {
         const permission = await Location.requestForegroundPermissionsAsync();
 
         if (permission.status !== 'granted') {
-          if (isMounted) setDeviceMeta('위치 권한 필요 · 로그인 중');
+          if (isMounted) setDeviceMeta('위치 권한 필요 • 로그인 중');
           return;
         }
 
@@ -133,10 +110,10 @@ export default function AccountManageScreen() {
         const [address] = await Location.reverseGeocodeAsync(location.coords);
 
         if (isMounted) {
-          setDeviceMeta(`${formatLocationAddress(address)} · 방금 전`);
+          setDeviceMeta(`${formatLocationAddress(address)} • 방금 전`);
         }
       } catch {
-        if (isMounted) setDeviceMeta('위치 확인 실패 · 로그인 중');
+        if (isMounted) setDeviceMeta('위치 확인 실패 • 로그인 중');
       }
     }
 
@@ -147,15 +124,6 @@ export default function AccountManageScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    // SDK 해제 후 DB 삭제만 남은 provider가 있으면 화면 진입 후 자동 복구를 시도한다.
-    if (!user?.id || syncingPendingUnlinks || unlinkingProvider) {
-      return;
-    }
-
-    void retryPendingSocialUnlinks();
-  }, [syncingPendingUnlinks, unlinkingProvider, user?.id]);
-
   function handleFieldLayout(setter: (value: number) => void) {
     return (event: LayoutChangeEvent) => {
       setter(event.nativeEvent.layout.y);
@@ -163,7 +131,7 @@ export default function AccountManageScreen() {
   }
 
   function scrollToField(y: number) {
-    // 키보드가 올라왔을 때 전화번호 입력칸이 가려지지 않도록 살짝 위로 이동한다.
+    // 키보드가 올라왔을 때 전화번호 입력칸이 가려지지 않게 위로 이동시킨다.
     scrollViewRef.current?.scrollTo({
       y: Math.max(0, y - 30),
       animated: true,
@@ -176,100 +144,25 @@ export default function AccountManageScreen() {
     setToastMessage(message);
   }
 
-  async function loadPendingSocialUnlinks() {
-    // 부분 성공 상태를 복구할 수 있게 provider 목록을 로컬에 저장한다.
-    const rawValue = await AsyncStorage.getItem(PENDING_SOCIAL_UNLINK_STORAGE_KEY);
-
-    if (!rawValue) {
-      return [] as SocialProvider[];
-    }
-
-    try {
-      const parsedValue = JSON.parse(rawValue);
-
-      if (!Array.isArray(parsedValue)) {
-        return [] as SocialProvider[];
-      }
-
-      return parsedValue.filter(
-        (provider): provider is SocialProvider =>
-          provider === 'google' || provider === 'naver' || provider === 'kakao',
-      );
-    } catch {
-      return [] as SocialProvider[];
-    }
-  }
-
-  async function savePendingSocialUnlinks(providers: SocialProvider[]) {
-    // 같은 provider가 중복 저장되지 않게 정리해서 보관한다.
-    const uniqueProviders = Array.from(new Set(providers));
-    await AsyncStorage.setItem(PENDING_SOCIAL_UNLINK_STORAGE_KEY, JSON.stringify(uniqueProviders));
-  }
-
-  async function addPendingSocialUnlink(provider: SocialProvider) {
-    const providers = await loadPendingSocialUnlinks();
-    await savePendingSocialUnlinks([...providers, provider]);
-  }
-
-  async function removePendingSocialUnlink(provider: SocialProvider) {
-    const providers = await loadPendingSocialUnlinks();
-    await savePendingSocialUnlinks(providers.filter((item) => item !== provider));
-  }
-
-  async function retryPendingSocialUnlinks() {
-    const providers = await loadPendingSocialUnlinks();
-
-    if (providers.length === 0) {
-      return;
-    }
-
-    try {
-      setSyncingPendingUnlinks(true);
-
-      let hasResolvedPendingUnlink = false;
-
-      for (const provider of providers) {
-        try {
-          // SDK는 이미 해제됐을 수 있으므로 DB row 삭제만 멱등적으로 재시도한다.
-          await userAPI.deleteSocialAccount(provider);
-          await removePendingSocialUnlink(provider);
-          hasResolvedPendingUnlink = true;
-        } catch {
-          // 실패한 항목은 다음 진입에서도 다시 재시도할 수 있게 남겨둔다.
-        }
-      }
-
-      if (hasResolvedPendingUnlink) {
-        await refreshSession();
-      }
-    } finally {
-      setSyncingPendingUnlinks(false);
-    }
-  }
+  const {
+    closeSocialLinkSheet,
+    confirmSocialSheet,
+    socialLinkMethods,
+    socialSheetEmail,
+    socialSheetMode,
+    socialSheetProvider,
+    socialSheetSubmitting,
+  } = useSocialAccountManager({
+    user,
+    refreshSession,
+    showToast,
+  });
 
   function closeWithdrawModal() {
     if (withdrawing) return;
     setWithdrawModalVisible(false);
     setWithdrawPassword('');
     setWithdrawErrorMessage('');
-  }
-
-  function openSocialLinkSheet(provider: SocialProvider, mode: SocialSheetMode) {
-    // 연결/해제는 즉시 실행하지 않고 확인 시트를 먼저 보여준다.
-    if (unlinkingProvider || syncingPendingUnlinks) {
-      return;
-    }
-
-    setSocialLinkSheetMode(mode);
-    setSocialUnlinkConfirmProvider(provider);
-  }
-
-  function closeSocialUnlinkConfirm() {
-    if (unlinkingProvider) {
-      return;
-    }
-
-    setSocialUnlinkConfirmProvider(null);
   }
 
   const initialBirthday = splitBirthday(user?.birthday);
@@ -283,181 +176,6 @@ export default function AccountManageScreen() {
     birthDay !== initialBirthday.day ||
     gender !== initialGender;
   const canSave = hasChanges && !saving;
-  const socialLoginMethods = [
-    {
-      provider: 'google' as const,
-      isLinked: user?.social_accounts.google.is_linked ?? false,
-      email: user?.social_accounts.google.email ?? null,
-      onPress:
-        unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => openSocialLinkSheet('google', user?.social_accounts.google.is_linked ? 'unlink' : 'link')
-          : undefined,
-    },
-    {
-      provider: 'naver' as const,
-      isLinked: user?.social_accounts.naver.is_linked ?? false,
-      email: user?.social_accounts.naver.email ?? null,
-      onPress:
-        unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => openSocialLinkSheet('naver', user?.social_accounts.naver.is_linked ? 'unlink' : 'link')
-          : undefined,
-    },
-    {
-      provider: 'kakao' as const,
-      isLinked: user?.social_accounts.kakao.is_linked ?? false,
-      email: user?.social_accounts.kakao.email ?? null,
-      onPress:
-        unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => openSocialLinkSheet('kakao', user?.social_accounts.kakao.is_linked ? 'unlink' : 'link')
-          : undefined,
-    },
-  ];
-
-  function getSocialProviderLabel(provider: SocialProvider) {
-    if (provider === 'google') return '구글';
-    if (provider === 'naver') return '네이버';
-    return '카카오';
-  }
-
-  function getSocialProviderEmail(provider: SocialProvider) {
-    if (provider === 'google') return user?.social_accounts.google.email ?? null;
-    if (provider === 'naver') return user?.social_accounts.naver.email ?? null;
-    return user?.social_accounts.kakao.email ?? null;
-  }
-
-  function extractSocialSdkErrorMessage(error: unknown) {
-    // 네이티브 SDK reject 객체에서도 message/code를 최대한 읽어 사용자에게 정확한 원인을 보여준다.
-    if (error instanceof Error && error.message.trim()) {
-      return error.message;
-    }
-
-    if (typeof error === 'object' && error !== null) {
-      const message = 'message' in error ? (error as { message?: unknown }).message : undefined;
-      if (typeof message === 'string' && message.trim()) {
-        return message;
-      }
-
-      const code = 'code' in error ? (error as { code?: unknown }).code : undefined;
-      if (typeof code === 'string' && code.trim()) {
-        return code;
-      }
-    }
-
-    return '';
-  }
-
-  function isSocialLoginCancelled(message: string) {
-    const normalizedMessage = message.toLowerCase();
-
-    return (
-      normalizedMessage.includes('cancelled') ||
-      normalizedMessage.includes('canceled') ||
-      normalizedMessage.includes('취소')
-    );
-  }
-
-  function isNaverDeleteTokenRetryableError(message: string) {
-    const normalizedMessage = message.toLowerCase();
-
-    return (
-      normalizedMessage.length === 0 ||
-      normalizedMessage.includes('token') ||
-      normalizedMessage.includes('login') ||
-      normalizedMessage.includes('oauth') ||
-      normalizedMessage.includes('unauthorized') ||
-      normalizedMessage.includes('access_denied')
-    );
-  }
-
-  async function ensureNaverDeleteToken() {
-    // 네이버 SDK 내부 토큰이 없는 경우 재로그인으로 토큰을 확보한 뒤 삭제를 한 번 더 시도한다.
-    try {
-      await NaverLogin.deleteToken();
-      return;
-    } catch (error) {
-      const message = extractSocialSdkErrorMessage(error);
-
-      if (!isNaverDeleteTokenRetryableError(message)) {
-        throw new Error(message || '네이버 연결 해제에 실패했습니다.');
-      }
-    }
-
-    const loginResult = await NaverLogin.login();
-    const successResponse = (loginResult as { successResponse?: { accessToken?: string } }).successResponse;
-    const failureResponse = (loginResult as { failureResponse?: { message?: string; isCancel?: boolean } }).failureResponse;
-
-    if (failureResponse?.isCancel) {
-      throw new Error('네이버 로그인 후 연결 해제가 취소되었습니다.');
-    }
-
-    if (!successResponse?.accessToken) {
-      throw new Error(failureResponse?.message ?? '네이버 로그인 정보를 다시 가져오지 못했습니다.');
-    }
-
-    await NaverLogin.deleteToken();
-  }
-
-  async function unlinkSocialWithSdk(provider: SocialProvider) {
-    // SDK 해제가 성공한 경우에만 백엔드 row 삭제 단계로 넘긴다.
-    if (provider === 'google') {
-      await GoogleSignin.revokeAccess();
-      return;
-    }
-
-    if (provider === 'kakao') {
-      await unlinkKakao();
-      return;
-    }
-
-    await ensureNaverDeleteToken();
-  }
-  
-  async function handleSocialLink(provider: SocialProvider) {
-    // 연결하기 버튼은 우선 각 SDK 로그인/동의 화면만 띄우고 이후 연동 로직은 다음 단계에서 붙인다.
-    if (provider === 'google') {
-      if (!GOOGLE_WEB_CLIENT_ID) {
-        throw new Error('구글 로그인 설정이 아직 완료되지 않았습니다.');
-      }
-
-      await GoogleSignin.signIn();
-      return;
-    }
-
-    if (provider === 'kakao') {
-      await kakaoLogin();
-      return;
-    }
-
-    const result = await NaverLogin.login();
-    const failureResponse = (result as { failureResponse?: { message?: string; isCancel?: boolean } }).failureResponse;
-
-    if (failureResponse?.isCancel) {
-      throw new Error('네이버 로그인이 취소되었습니다.');
-    }
-  }
-
-  async function handleSocialUnlink(provider: SocialProvider) {
-    // 중복 요청을 막고 SDK 해제 이후에만 DB 삭제를 요청한다.
-    if (unlinkingProvider || syncingPendingUnlinks) {
-      return;
-    }
-
-    try {
-      setUnlinkingProvider(provider);
-      await unlinkSocialWithSdk(provider);
-      await addPendingSocialUnlink(provider);
-      await userAPI.deleteSocialAccount(provider);
-      await removePendingSocialUnlink(provider);
-      await refreshSession();
-      showToast(`${getSocialProviderLabel(provider)} 소셜 연동이 해제되었습니다.`, 'success');
-    } catch (error) {
-      const sdkMessage = extractSocialSdkErrorMessage(error);
-      showToast(sdkMessage || normalizeApiError(error), 'error');
-    } finally {
-      setSocialUnlinkConfirmProvider(null);
-      setUnlinkingProvider(null);
-    }
-  }
 
   async function handleSave() {
     // 저장 전에 필수값과 형식을 다시 확인해 잘못된 프로필 갱신을 막는다.
@@ -495,7 +213,7 @@ export default function AccountManageScreen() {
   }
 
   async function handleWithdraw() {
-    // 회원 탈퇴는 비밀번호 확인이 끝난 뒤 완료 모달을 보여준다.
+    // 회원 탈퇴는 비밀번호 확인 이후 완료 모달로 이어진다.
     const password = withdrawPassword.trim();
 
     if (!password || withdrawing) return;
@@ -560,34 +278,13 @@ export default function AccountManageScreen() {
       />
 
       <SocialLinkActionSheet
-        visible={socialUnlinkConfirmProvider !== null}
-        provider={socialUnlinkConfirmProvider}
-        mode={socialLinkSheetMode}
-        email={socialUnlinkConfirmProvider ? getSocialProviderEmail(socialUnlinkConfirmProvider) : null}
-        submitting={unlinkingProvider !== null}
-        onClose={closeSocialUnlinkConfirm}
-        onConfirm={() => {
-          if (!socialUnlinkConfirmProvider) {
-            return;
-          }
-
-          if (socialLinkSheetMode === 'unlink') {
-            void handleSocialUnlink(socialUnlinkConfirmProvider);
-            return;
-          }
-
-          // 연결 시트는 퍼블리싱만 먼저 반영하고 실제 연결 로직은 이후에 붙일 수 있게 닫기만 처리한다.
-          closeSocialUnlinkConfirm();
-          void handleSocialLink(socialUnlinkConfirmProvider).catch((error) => {
-            const sdkMessage = extractSocialSdkErrorMessage(error);
-
-            if (isSocialLoginCancelled(sdkMessage)) {
-              return;
-            }
-
-            showToast(sdkMessage || normalizeApiError(error), 'error');
-          });
-        }}
+        visible={socialSheetProvider !== null}
+        provider={socialSheetProvider}
+        mode={socialSheetMode}
+        email={socialSheetEmail}
+        submitting={socialSheetSubmitting}
+        onClose={closeSocialLinkSheet}
+        onConfirm={confirmSocialSheet}
       />
 
       <View style={styles.header}>
@@ -635,7 +332,7 @@ export default function AccountManageScreen() {
           onDeviceLogout={() => void handleDeviceLogout()}
           onPasswordPress={() => router.push('/settings/password')}
           onWithdrawPress={() => setWithdrawModalVisible(true)}
-          socialLoginMethods={socialLoginMethods}
+          socialLoginMethods={socialLinkMethods}
         />
       </ScrollView>
 

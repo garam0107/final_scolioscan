@@ -34,6 +34,10 @@ class SocialLinkExistingRequest(BaseModel):
     device_name: str = Field(..., min_length=1, max_length=128)
 
 
+class SocialLinkCurrentRequest(BaseModel):
+    social_temp_token: str = Field(..., min_length=1)
+
+
 class SocialSignupRequest(BaseModel):
     social_temp_token: str = Field(..., min_length=1)
     user_id: EmailStr
