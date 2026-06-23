@@ -15,10 +15,6 @@ import {
   isValidBirthday,
   isValidPhoneNumber,
 } from '@/src/features/auth/registerValidation';
-import AccountEditForm from '@/src/features/settings/accountManage/components/AccountEditForm';
-import AccountFooter from '@/src/features/settings/accountManage/components/AccountFooter';
-import AccountProfileSection from '@/src/features/settings/accountManage/components/AccountProfileSection';
-import DeleteAccountModal from '@/src/features/settings/accountManage/components/DeleteAccountModal';
 import styles from '@/src/features/settings/accountManage/accountManage.styles';
 import {
   formatLocationAddress,
@@ -26,6 +22,12 @@ import {
   normalizeApiError,
   splitBirthday,
 } from '@/src/features/settings/accountManage/accountManageUtils';
+import AccountEditForm from '@/src/features/settings/accountManage/components/AccountEditForm';
+import AccountFooter from '@/src/features/settings/accountManage/components/AccountFooter';
+import AccountProfileSection from '@/src/features/settings/accountManage/components/AccountProfileSection';
+import DeleteAccountModal from '@/src/features/settings/accountManage/components/DeleteAccountModal';
+import SocialLinkActionSheet from '@/src/features/settings/accountManage/components/SocialLinkActionSheet';
+import { useSocialAccountManager } from '@/src/features/settings/accountManage/useSocialAccountManager';
 
 type GenderValue = 'male' | 'female';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
@@ -59,7 +61,7 @@ export default function AccountManageScreen() {
   const [phoneFieldY, setPhoneFieldY] = useState(0);
 
   useEffect(() => {
-    // 세션 사용자 정보가 바뀌면 화면 입력값도 최신 계정 정보로 맞춘다.
+    // 세션 사용자 정보가 바뀌면 화면 입력값도 같은 기준으로 다시 맞춘다.
     const birthday = splitBirthday(user?.birthday);
 
     setName(user?.name || '');
@@ -72,7 +74,7 @@ export default function AccountManageScreen() {
   }, [user]);
 
   useEffect(() => {
-    // 비밀번호 변경 화면에서 돌아온 경우 한 번만 성공 토스트를 보여준다.
+    // 비밀번호 변경 화면에서 돌아온 경우에만 성공 토스트를 보여준다.
     if (params.toast !== 'passwordChanged') {
       return;
     }
@@ -85,14 +87,14 @@ export default function AccountManageScreen() {
     let isMounted = true;
 
     async function loadDeviceLocation() {
-      // 현재 로그인 기기와 최근 위치를 가져와 기기 목록 영역에 표시한다.
+      // 현재 로그인 기기의 최근 위치를 가져와 기기 목록 영역에 표시한다.
       setDeviceName(getCurrentDeviceLabel());
 
       try {
         const permission = await Location.requestForegroundPermissionsAsync();
 
         if (permission.status !== 'granted') {
-          if (isMounted) setDeviceMeta('위치 권한 필요 · 로그인 중');
+          if (isMounted) setDeviceMeta('위치 권한 필요 • 로그인 중');
           return;
         }
 
@@ -108,10 +110,10 @@ export default function AccountManageScreen() {
         const [address] = await Location.reverseGeocodeAsync(location.coords);
 
         if (isMounted) {
-          setDeviceMeta(`${formatLocationAddress(address)} · 방금 전`);
+          setDeviceMeta(`${formatLocationAddress(address)} • 방금 전`);
         }
       } catch {
-        if (isMounted) setDeviceMeta('위치 확인 실패 · 로그인 중');
+        if (isMounted) setDeviceMeta('위치 확인 실패 • 로그인 중');
       }
     }
 
@@ -129,7 +131,7 @@ export default function AccountManageScreen() {
   }
 
   function scrollToField(y: number) {
-    // 키보드가 올라왔을 때 전화번호 입력칸이 가려지지 않도록 살짝 위로 이동한다.
+    // 키보드가 올라왔을 때 전화번호 입력칸이 가려지지 않게 위로 이동시킨다.
     scrollViewRef.current?.scrollTo({
       y: Math.max(0, y - 30),
       animated: true,
@@ -141,6 +143,20 @@ export default function AccountManageScreen() {
     setToastTone(tone);
     setToastMessage(message);
   }
+
+  const {
+    closeSocialLinkSheet,
+    confirmSocialSheet,
+    socialLinkMethods,
+    socialSheetEmail,
+    socialSheetMode,
+    socialSheetProvider,
+    socialSheetSubmitting,
+  } = useSocialAccountManager({
+    user,
+    refreshSession,
+    showToast,
+  });
 
   function closeWithdrawModal() {
     if (withdrawing) return;
@@ -197,7 +213,7 @@ export default function AccountManageScreen() {
   }
 
   async function handleWithdraw() {
-    // 회원 탈퇴는 비밀번호 확인이 끝난 뒤 완료 모달을 보여준다.
+    // 회원 탈퇴는 비밀번호 확인 이후 완료 모달로 이어진다.
     const password = withdrawPassword.trim();
 
     if (!password || withdrawing) return;
@@ -261,6 +277,16 @@ export default function AccountManageScreen() {
         onCompleteConfirm={() => void handleWithdrawCompleteConfirm()}
       />
 
+      <SocialLinkActionSheet
+        visible={socialSheetProvider !== null}
+        provider={socialSheetProvider}
+        mode={socialSheetMode}
+        email={socialSheetEmail}
+        submitting={socialSheetSubmitting}
+        onClose={closeSocialLinkSheet}
+        onConfirm={confirmSocialSheet}
+      />
+
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
           <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
@@ -306,6 +332,7 @@ export default function AccountManageScreen() {
           onDeviceLogout={() => void handleDeviceLogout()}
           onPasswordPress={() => router.push('/settings/password')}
           onWithdrawPress={() => setWithdrawModalVisible(true)}
+          socialLoginMethods={socialLinkMethods}
         />
       </ScrollView>
 

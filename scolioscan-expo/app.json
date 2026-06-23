@@ -67,6 +67,20 @@
           "iosUrlScheme": "com.googleusercontent.apps.134913920767-k5n471ojmnjbbh74vg63n4g9ugi47dbk.apps.googleusercontent.com"
         }
       ],
+
+      [
+          "@react-native-seoul/naver-login",
+        {
+          "urlScheme": "scolioscannaver" 
+        }
+      ],
+        [
+        "@react-native-seoul/kakao-login",
+        {
+          "kakaoAppKey": "928ff7803adb922ff7ecf311fb62e2be",
+          "kotlinVersion" : "2.1.20"
+        }
+      ],
       [
         "expo-font",
         {
@@ -145,7 +159,13 @@
         {
           "ios": {
             "deploymentTarget": "15.5"
+          },
+          "android": {
+            "extraMavenRepos": [
+              "https://devrepo.kakao.com/nexus/content/groups/public/"
+            ]
           }
+    
         }
     ]
     ],

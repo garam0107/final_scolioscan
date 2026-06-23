@@ -1,4 +1,5 @@
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, String, UniqueConstraint
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
 
@@ -24,3 +25,5 @@ class SocialAccount(Base):
     linked_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # 사용자 엔티티에서 역방향으로 연동 목록을 읽을 수 있게 연결한다.
+    user = relationship("User", back_populates="social_accounts")

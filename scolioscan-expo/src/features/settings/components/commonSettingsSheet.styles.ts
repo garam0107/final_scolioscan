@@ -25,6 +25,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 8,
   },
+  headerTopContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    width: '100%',
+  },
   centerConfirmHeader: {
     // PDF 저장 완료 시트는 Figma처럼 제목과 설명을 가운데에 둔다.
     alignItems: 'center',
@@ -58,6 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 8,
+    maxWidth: 336,
     textAlign: 'center',
   },
   pinnedContent: {
@@ -88,9 +95,10 @@ const styles = StyleSheet.create({
     height: 42,
     justifyContent: 'center',
     paddingHorizontal: 14,
+    paddingVertical : 10
   },
   centerConfirmActionButton: {
-    height: 40,
+    height: 42,
   },
   primaryButton: {
     backgroundColor: Colors.primary[500],
@@ -99,6 +107,19 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: '#FF4B3C',
     borderColor: '#FF4B3C',
+  },
+  googleButton: {
+    backgroundColor: Colors.primary[500],
+    borderColor: Colors.primary[500],
+  },
+  naverButton: {
+    backgroundColor : '#03C75A',
+    borderColor : '#03C75A'
+
+  },
+  kakaoButton: {
+    backgroundColor : '#FFE812',
+    borderColor : '#FFE812'
   },
   disabledButton: {
     backgroundColor: Colors.gray[100],

@@ -56,8 +56,14 @@ export interface GoogleVerifyRequest {
   device_name: string;
 }
 
-export interface SocialTicketExchangeRequest {
-  ticket: string;
+export interface KakaoVerifyRequest {
+  access_token: string;
+  device_id: string;
+  device_name: string;
+}
+
+export interface NaverVerifyRequest {
+  access_token: string;
   device_id: string;
   device_name: string;
 }
@@ -68,6 +74,10 @@ export interface SocialLinkExistingRequest {
   user_pw: string;
   device_id: string;
   device_name: string;
+}
+
+export interface SocialLinkCurrentRequest {
+  social_temp_token: string;
 }
 
 export interface SocialSignupRequest extends RegisterRequest {

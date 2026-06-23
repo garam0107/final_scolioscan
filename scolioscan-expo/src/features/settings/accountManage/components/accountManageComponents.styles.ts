@@ -107,20 +107,27 @@ const styles = StyleSheet.create({
   cardSection: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.04,
     shadowRadius: 16,
     boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
   },
+  loginMethodList: {
+    gap: 24,
+  },
+  loginMethodRowBox: {
+    paddingHorizontal: 6,
+    // paddingVertical: 14,
+  },
   infoRow: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: 14,
     justifyContent: 'space-between',
-    minHeight: 46,
+    minHeight: 52,
   },
   infoIcon: {
     alignItems: 'center',
@@ -132,7 +139,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoContentWithRight: {
-    paddingRight: 12,
+    paddingRight: 6,
   },
   infoTitleRow: {
     alignItems: 'center',
@@ -168,14 +175,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.mint[25],
     borderRadius: 999,
     justifyContent: 'center',
-    paddingHorizontal: 9,
+    paddingHorizontal: 10,
     paddingVertical: 3,
   },
   infoBadgeText: {
     ...textFont,
-    color: Colors.mint[600],
+    color: Colors.primary[500],
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '400',
     lineHeight: 14,
   },
   actionArea: {
@@ -202,6 +209,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
+  },
+  loginMethodActionText: {
+    ...textFont,
+    color: Colors.primary[500],
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16,
+  },
+  loginMethodActionTextMuted: {
+      ...textFont,
+    color: Colors.gray[300],
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16,
   },
   actionDivider: {
     backgroundColor: '#D8DDE5',
@@ -397,6 +418,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  socialUnlinkSheetBody: {
+    paddingBottom: 4,
+    paddingTop: 8,
+  },
+  socialUnlinkSheetContent: {
+    paddingBottom: 0,
+  },
+  socialUnlinkProviderCard: {
+    alignItems: 'center',
+    backgroundColor: Colors.gray[25],
+    borderColor: Colors.gray[75],
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    minHeight: 68,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    width: '100%',
+  },
+  socialUnlinkProviderIcon: {
+    alignItems: 'center',
+    backgroundColor: Colors.primary.white,
+    borderRadius: 999,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  socialUnlinkProviderTextWrap: {
+    flex: 1,
+  },
+  socialUnlinkProviderTitle: {
+    ...textFont,
+    color: Colors.gray[900],
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  socialUnlinkProviderDescription: {
+    ...textFont,
+    color: Colors.gray[500],
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 18,
+    marginTop: 4,
   },
 });
 

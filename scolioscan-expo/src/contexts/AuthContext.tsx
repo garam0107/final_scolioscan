@@ -4,9 +4,7 @@ import { refreshAccessToken, setAuthFailureHandler } from '@/src/api/client';
 import { userAPI } from '@/src/api/user';
 import {
   clearAuthTokens,
-  getAccessToken,
   getOrCreateDeviceId,
-  getRefreshToken,
   loadAccessToken,
   loadRefreshToken,
   saveAuthTokens,
@@ -35,7 +33,8 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   login: (credentials: Omit<LoginRequest, 'device_id' | 'device_name'>) => Promise<void>;
   verifyGoogleSocialLogin: (idToken: string) => Promise<SocialAuthResponse>;
-  exchangeSocialTicket: (ticket: string) => Promise<SocialAuthResponse>;
+  verifyKakaoSocialLogin: (accessToken: string) => Promise<SocialAuthResponse>;
+  verifyNaverSocialLogin: (accessToken: string) => Promise<SocialAuthResponse>;
   linkSocialAccount: (payload: Omit<SocialLinkExistingRequest, 'device_id' | 'device_name'>) => Promise<void>;
   signupWithSocialAccount: (payload: Omit<SocialSignupRequest, 'device_id' | 'device_name'>) => Promise<void>;
   checkEmail: (email: string) => Promise<boolean>;
@@ -50,7 +49,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function normalizeApiError(error: unknown) {
-  // API 오류 형태를 화면에서 그대로 사용할 수 있는 메시지로 통일한다.
+  // API 오류 형태를 화면에서 바로 쓸 수 있는 문구로 통일한다.
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (error as { response?: { data?: { detail?: string } } }).response;
     const detail = response?.data?.detail;
@@ -58,9 +57,11 @@ function normalizeApiError(error: unknown) {
       return detail;
     }
   }
+
   if (error instanceof Error && error.message.trim()) {
     return error.message;
   }
+
   return '요청 처리 중 오류가 발생했습니다.';
 }
 
@@ -79,7 +80,7 @@ function isAuthExpiredError(error: unknown) {
 }
 
 async function loadUserScopedLocalState(userId: string) {
-  // 사용자별 로컬 저장소를 로그인한 계정 기준으로 전환한다.
+  // 사용자별 로컬 상태를 로그인한 계정 기준으로 다시 불러온다.
   const results = await Promise.allSettled([
     useAppSettingsStore.getState().loadSettings(userId),
     useReportMeasurementListFilterStore.getState().setCurrentUserId(userId),
@@ -94,7 +95,7 @@ async function loadUserScopedLocalState(userId: string) {
 }
 
 function resetUserScopedLocalState() {
-  // 로그아웃 후에는 이전 사용자의 로컬 상태가 화면에 남지 않도록 메모리 상태를 초기화한다.
+  // 로그아웃 뒤 이전 사용자의 로컬 상태가 남지 않도록 메모리 상태를 초기화한다.
   useAppSettingsStore.getState().resetSettingsState();
   useReportMeasurementListFilterStore.getState().resetCurrentUserState();
   useMeasurementGuideStore.getState().resetCurrentUserState();
@@ -124,9 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const applyLoginSession = useCallback(
     async (payload: { access_token: string; refresh_token: string }) => {
-      // 일반 로그인과 소셜 로그인 모두 같은 토큰 저장 경로를 사용해 세션 상태를 맞춘다.
+      // 일반 로그인과 소셜 로그인 모두 같은 토큰 저장 경로를 사용한다.
       await saveAuthTokens(payload.access_token, payload.refresh_token);
-      console.log("소셜 저장 후 토큰 확인", getAccessToken(),getRefreshToken());
       setAccessToken(payload.access_token);
       setRefreshToken(payload.refresh_token);
       setAccessTokenState(payload.access_token);
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const refreshSession = useCallback(async () => {
-    // 앱 시작 시 저장된 토큰으로 세션을 복구하고, access token이 만료됐으면 refresh를 시도한다.
+    // 앱 시작 시 저장된 토큰으로 세션을 복구하고 필요하면 refresh를 시도한다.
     setLoading(true);
     try {
       const [storedAccessToken, storedRefreshToken] = await Promise.all([
@@ -184,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshSession]);
 
   useEffect(() => {
-    // axios 계층에서 refresh까지 실패했을 때 컨텍스트 상태도 함께 초기화되도록 연결한다.
+    // axios 계층에서 refresh까지 실패하면 컨텍스트 상태도 함께 초기화한다.
     setAuthFailureHandler(() => {
       setAccessToken(null);
       setRefreshToken(null);
@@ -200,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (credentials: Omit<LoginRequest, 'device_id' | 'device_name'>) => {
     try {
-      // 백엔드가 요구하는 설치 식별자와 기기 이름을 함께 보내 로그인 세션을 생성한다.
+      // 백엔드가 요구하는 기기 식별값을 함께 보내 세션을 생성한다.
       const deviceId = await getOrCreateDeviceId();
       const deviceName = getCurrentDeviceLabel();
       const response = await authAPI.login({
@@ -218,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyGoogleSocialLogin = useCallback(async (idToken: string) => {
     try {
-      // 구글 SDK 로그인 뒤에는 현재 기기 정보를 함께 보내 백엔드가 즉시 세션을 발급할 수 있게 한다.
+      // 구글 SDK가 발급한 id_token을 백엔드 검증 API로 전달한다.
       const deviceId = await getOrCreateDeviceId();
       const deviceName = getCurrentDeviceLabel();
       const response = await authAPI.verifyGoogleSocialLogin({
@@ -237,17 +237,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyLoginSession]);
 
-  const exchangeSocialTicket = useCallback(async (ticket: string) => {
+  const verifyKakaoSocialLogin = useCallback(async (socialAccessToken: string) => {
     try {
-      // 브라우저 OAuth 티켓은 한 번만 사용할 수 있으므로 바로 기기 정보와 함께 교환한다.
+      
+      // 카카오 SDK access token을 백엔드에 넘겨 검증과 계정 분기를 통합한다.
       const deviceId = await getOrCreateDeviceId();
       const deviceName = getCurrentDeviceLabel();
-      const response = await authAPI.exchangeSocialTicket({
-        ticket,
+
+      const response = await authAPI.verifyKakaoSocialLogin({
+        access_token: socialAccessToken,
         device_id: deviceId,
         device_name: deviceName,
       });
-
+      
       if (response.data.status === 'login_success') {
         await applyLoginSession(response.data);
       }
@@ -258,9 +260,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyLoginSession]);
 
+  const verifyNaverSocialLogin = useCallback(async (socialAccessToken: string) => {
+    try {
+      // 네이버 SDK access token을 백엔드에 넘겨 검증과 계정 분기를 통합한다.
+      const deviceId = await getOrCreateDeviceId();
+      const deviceName = getCurrentDeviceLabel();
+      const response = await authAPI.verifyNaverSocialLogin({
+        access_token: socialAccessToken,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+      console.log('[auth][naver] verify response =', response);
+      console.log('[auth][naver] http status =', response.status);
+      console.log('[auth][naver] api status =', response.data.status);
+      console.log('[auth][naver] social temp token =', response.data.social_temp_token);
+      console.log('[auth][naver] app access token =', response.data.access_token);
+      if (response.data.status === 'login_success') {
+        await applyLoginSession(response.data);
+      }
+      if (response.data.status === 'need_account_decision') {
+      console.log('[auth][naver] branch = need_account_decision');
+      }
+      return response.data;
+    } catch (error) {
+      console.log('[auth][naver] verify error raw =', error);
+      console.log(
+      '[auth][naver] verify error message =',
+      error instanceof Error ? error.message : String(error)
+    );
+      throw new Error(normalizeApiError(error));
+    }
+  }, [applyLoginSession]);
+
   const linkSocialAccount = useCallback(async (payload: Omit<SocialLinkExistingRequest, 'device_id' | 'device_name'>) => {
     try {
-      // 기존 계정 연결도 최종적으로는 로그인 응답을 돌려주므로 동일한 세션 저장 로직에 태운다.
+      // 기존 계정 연결도 최종적으로는 로그인 응답을 돌려주므로 같은 세션 저장 로직을 쓴다.
       const deviceId = await getOrCreateDeviceId();
       const deviceName = getCurrentDeviceLabel();
       const response = await authAPI.linkExistingSocialAccount({
@@ -277,7 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signupWithSocialAccount = useCallback(async (payload: Omit<SocialSignupRequest, 'device_id' | 'device_name'>) => {
     try {
-      // 소셜 회원가입이 성공하면 백엔드가 바로 로그인 응답을 주므로 추가 로그인 없이 세션을 완성한다.
+      // 소셜 회원가입 성공 시 백엔드가 돌려준 로그인 응답으로 곧바로 세션을 완성한다.
       const deviceId = await getOrCreateDeviceId();
       const deviceName = getCurrentDeviceLabel();
       const response = await authAPI.signupWithSocialAccount({
@@ -287,7 +321,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       await applyLoginSession(response.data);
-      console.log("소셜 토큰확인", response.data.access_token, response.data.refresh_token)
     } catch (error) {
       throw new Error(normalizeApiError(error));
     }
@@ -312,7 +345,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const messageCode = useCallback(async (phone: string) => {
-    // 문자 인증 값은 기존과 같이 auth API를 그대로 사용한다.
+    // 문자 인증 코드는 기존 auth API를 그대로 사용한다.
     try {
       const response = await authAPI.messageCode({ phoneNumber: phone });
       return response.data;
@@ -322,7 +355,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const octomoApi = useCallback(async (phone: string) => {
-    // 문자 인증 완료 여부도 기존 API와 동일하게 조회한다.
+    // 문자 인증 확인도 기존 API를 그대로 사용한다.
     try {
       const response = await authAPI.octomoApi({ phoneNumber: phone });
       return response.data;
@@ -340,7 +373,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // refresh token이 남아 있으면 서버에 revoke를 요청하고, 실패해도 로컬 세션은 항상 정리한다.
+    // refresh token이 남아 있으면 revoke를 요청하고 실패해도 로컬 세션은 정리한다.
     const refreshToken = await loadRefreshToken();
 
     try {
@@ -362,7 +395,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: Boolean(accessToken),
       login,
       verifyGoogleSocialLogin,
-      exchangeSocialTicket,
+      verifyKakaoSocialLogin,
+      verifyNaverSocialLogin,
       linkSocialAccount,
       signupWithSocialAccount,
       checkEmail,
@@ -379,14 +413,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       login,
       verifyGoogleSocialLogin,
-      exchangeSocialTicket,
+      verifyKakaoSocialLogin,
+      verifyNaverSocialLogin,
       linkSocialAccount,
       signupWithSocialAccount,
       checkEmail,
       checkPhone,
       messageCode,
-      register,
       octomoApi,
+      register,
       logout,
       refreshSession,
     ],

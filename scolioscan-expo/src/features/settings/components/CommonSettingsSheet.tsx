@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import styles from '@/src/features/settings/components/commonSettingsSheet.styles';
 
-type SheetActionVariant = 'default' | 'primary' | 'danger';
+type SheetActionVariant = 'default' | 'primary' | 'danger' | 'google' | 'naver' | 'kakao';
 
 type SheetAction = {
   label: string;
@@ -19,6 +19,7 @@ type CommonSettingsSheetProps = {
   visible: boolean;
   title: string;
   description?: string;
+  headerTopContent?: ReactNode;
   titleTone?: 'default' | 'danger';
   presentation?: 'default' | 'centerConfirm';
   bottomPlacement?: 'safeArea' | 'screen';
@@ -36,6 +37,7 @@ export default function CommonSettingsSheet({
   visible,
   title,
   description,
+  headerTopContent,
   titleTone = 'default',
   presentation = 'default',
   bottomPlacement = 'safeArea',
@@ -54,7 +56,7 @@ export default function CommonSettingsSheet({
   const sheetBottomOffset = bottomPlacement === 'safeArea' ? insets.bottom : 0;
   const resolvedActionBottomPadding =
     actionBottomPadding ?? (bottomPlacement === 'safeArea' ? 16 : Math.max(insets.bottom, 16));
-
+  
   const sheetContent = (
     <Pressable
       style={[
@@ -67,6 +69,7 @@ export default function CommonSettingsSheet({
       onPress={(event) => event.stopPropagation()}
     >
       <View style={[styles.header, isCenterConfirm && styles.centerConfirmHeader]}>
+        {headerTopContent ? <View style={styles.headerTopContent}>{headerTopContent}</View> : null}
         <Text
           style={[
             styles.title,
@@ -97,7 +100,9 @@ export default function CommonSettingsSheet({
           {actions.map((action) => {
             const isPrimary = action.variant === 'primary';
             const isDanger = action.variant === 'danger';
-
+            const isGoogle = action.variant === 'google';
+            const isNaver = action.variant === 'naver';
+            const isKakao = action.variant === 'kakao';
             return (
               <Pressable
                 key={action.label}
@@ -108,13 +113,16 @@ export default function CommonSettingsSheet({
                   isCenterConfirm && styles.centerConfirmActionButton,
                   isPrimary && styles.primaryButton,
                   isDanger && styles.dangerButton,
+                  isGoogle && styles.googleButton,
+                  isNaver && styles.naverButton,
+                  isKakao && styles.kakaoButton,
                   action.disabled && styles.disabledButton,
                 ]}
               >
                 <Text
                   style={[
                     styles.actionButtonText,
-                    (isPrimary || isDanger) && styles.filledActionButtonText,
+                    (isPrimary || isDanger || isGoogle || isNaver) && styles.filledActionButtonText,
                     action.disabled && styles.disabledButtonText,
                   ]}
                 >

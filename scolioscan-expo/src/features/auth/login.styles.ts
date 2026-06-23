@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   formArea: {
-    marginTop: 44,
+    marginTop: 40,
     width: '100%',
   },
   fieldGroup: {
@@ -228,7 +228,30 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.55,
   },
-  
+  // 소셜 연동 시 나오는 문구 
+  socialLinkGuideBox: {
+  marginTop: 40,
+  alignItems: 'center',
+  },
+
+  socialLinkGuideText: {
+    ...textFont,
+    fontWeight : 500,
+    color: Colors.gray[300],
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+
+  socialLinkGuideTextCenter: {
+    ...textFont,
+    fontWeight : 500,
+    marginTop: 4,
+    color: Colors.gray[300],
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
 
   // 로그인 중 로딩 오버레이
   loadingOverlay: {

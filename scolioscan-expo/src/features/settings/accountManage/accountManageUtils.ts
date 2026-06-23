@@ -58,7 +58,7 @@ export function normalizeApiError(error: unknown) {
   if (error instanceof Error && error.message.trim()) {
     return error.message;
   }
-
+  console.log("네이버111");
   return '요청 처리 중 오류가 발생했습니다.';
 }
 
