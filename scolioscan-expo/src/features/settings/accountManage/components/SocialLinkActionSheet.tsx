@@ -5,23 +5,27 @@ import GoogleIcon from '../../../../../assets/icons/setting/setting_google.svg';
 import KakaoIcon from '../../../../../assets/icons/setting/setting_kakao.svg';
 import NaverIcon from '../../../../../assets/icons/setting/setting_naver.svg';
 
-type SocialUnlinkConfirmSheetProps = {
+type SocialLinkSheetMode = 'link' | 'unlink';
+
+type SocialLinkActionSheetProps = {
   visible: boolean;
   provider: SocialProvider | null;
+  mode: SocialLinkSheetMode;
   email?: string | null;
   submitting?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 };
 
-export default function SocialUnlinkConfirmSheet({
+export default function SocialLinkActionSheet({
   visible,
   provider,
+  mode,
   email,
   submitting = false,
   onClose,
   onConfirm,
-}: SocialUnlinkConfirmSheetProps) {
+}: SocialLinkActionSheetProps) {
   if (!provider) {
     return null;
   }
@@ -42,12 +46,21 @@ export default function SocialUnlinkConfirmSheet({
   } as const;
 
   const selectedProvider = providerMeta[provider];
+  const isUnlinkMode = mode === 'unlink';
 
   return (
     <CommonSettingsSheet
       visible={visible}
-      title={`${selectedProvider.label} 연결 해제`}
-      description={email ? `${email} 연결을 해제할게요` : `${selectedProvider.label} 연결을 해제할게요`}
+      title={isUnlinkMode ? `${selectedProvider.label} 연결 해제` : `${selectedProvider.label} 연결하기`}
+      description={
+        isUnlinkMode
+          ? email
+            ? `${email} 연결을 해제할게요`
+            : `${selectedProvider.label} 연결을 해제할게요`
+          : email
+            ? `${email} 계정으로 연결할게요`
+            : `${selectedProvider.label} 계정으로 연결할게요`
+      }
       headerTopContent={<>{selectedProvider.icon}</>}
       presentation="centerConfirm"
       bottomPlacement="safeArea"
@@ -59,7 +72,7 @@ export default function SocialUnlinkConfirmSheet({
           disabled: submitting,
         },
         {
-          label: '해제하기',
+          label: isUnlinkMode ? '해제하기' : '연결하기',
           variant: 'primary',
           onPress: onConfirm,
           disabled: submitting,

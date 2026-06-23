@@ -23,7 +23,7 @@ import AccountEditForm from '@/src/features/settings/accountManage/components/Ac
 import AccountFooter from '@/src/features/settings/accountManage/components/AccountFooter';
 import AccountProfileSection from '@/src/features/settings/accountManage/components/AccountProfileSection';
 import DeleteAccountModal from '@/src/features/settings/accountManage/components/DeleteAccountModal';
-import SocialUnlinkConfirmSheet from '@/src/features/settings/accountManage/components/SocialUnlinkConfirmSheet';
+import SocialLinkActionSheet from '@/src/features/settings/accountManage/components/SocialLinkActionSheet';
 import styles from '@/src/features/settings/accountManage/accountManage.styles';
 import {
   formatLocationAddress,
@@ -35,6 +35,7 @@ import type { SocialProvider } from '@/src/types/user';
 
 type GenderValue = 'male' | 'female';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
+type SocialSheetMode = 'link' | 'unlink';
 const PENDING_SOCIAL_UNLINK_STORAGE_KEY = 'pending_social_unlinks';
 
 export default function AccountManageScreen() {
@@ -65,6 +66,7 @@ export default function AccountManageScreen() {
   const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
   const [syncingPendingUnlinks, setSyncingPendingUnlinks] = useState(false);
   const [socialUnlinkConfirmProvider, setSocialUnlinkConfirmProvider] = useState<SocialProvider | null>(null);
+  const [socialLinkSheetMode, setSocialLinkSheetMode] = useState<SocialSheetMode>('unlink');
   const scrollViewRef = useRef<ScrollViewType | null>(null);
   const [phoneFieldY, setPhoneFieldY] = useState(0);
 
@@ -239,12 +241,13 @@ export default function AccountManageScreen() {
     setWithdrawErrorMessage('');
   }
 
-  function openSocialUnlinkConfirm(provider: SocialProvider) {
-    // 연결 해제는 즉시 실행하지 않고 확인 시트를 먼저 보여준다.
+  function openSocialLinkSheet(provider: SocialProvider, mode: SocialSheetMode) {
+    // 연결/해제는 즉시 실행하지 않고 확인 시트를 먼저 보여준다.
     if (unlinkingProvider || syncingPendingUnlinks) {
       return;
     }
 
+    setSocialLinkSheetMode(mode);
     setSocialUnlinkConfirmProvider(provider);
   }
 
@@ -273,8 +276,8 @@ export default function AccountManageScreen() {
       isLinked: user?.social_accounts.google.is_linked ?? false,
       email: user?.social_accounts.google.email ?? null,
       onPress:
-        user?.social_accounts.google.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => openSocialUnlinkConfirm('google')
+        unlinkingProvider === null && !syncingPendingUnlinks
+          ? () => openSocialLinkSheet('google', user?.social_accounts.google.is_linked ? 'unlink' : 'link')
           : undefined,
     },
     {
@@ -282,8 +285,8 @@ export default function AccountManageScreen() {
       isLinked: user?.social_accounts.naver.is_linked ?? false,
       email: user?.social_accounts.naver.email ?? null,
       onPress:
-        user?.social_accounts.naver.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => openSocialUnlinkConfirm('naver')
+        unlinkingProvider === null && !syncingPendingUnlinks
+          ? () => openSocialLinkSheet('naver', user?.social_accounts.naver.is_linked ? 'unlink' : 'link')
           : undefined,
     },
     {
@@ -291,8 +294,8 @@ export default function AccountManageScreen() {
       isLinked: user?.social_accounts.kakao.is_linked ?? false,
       email: user?.social_accounts.kakao.email ?? null,
       onPress:
-        user?.social_accounts.kakao.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => openSocialUnlinkConfirm('kakao')
+        unlinkingProvider === null && !syncingPendingUnlinks
+          ? () => openSocialLinkSheet('kakao', user?.social_accounts.kakao.is_linked ? 'unlink' : 'link')
           : undefined,
     },
   ];
@@ -509,9 +512,10 @@ export default function AccountManageScreen() {
         onCompleteConfirm={() => void handleWithdrawCompleteConfirm()}
       />
 
-      <SocialUnlinkConfirmSheet
+      <SocialLinkActionSheet
         visible={socialUnlinkConfirmProvider !== null}
         provider={socialUnlinkConfirmProvider}
+        mode={socialLinkSheetMode}
         email={socialUnlinkConfirmProvider ? getSocialProviderEmail(socialUnlinkConfirmProvider) : null}
         submitting={unlinkingProvider !== null}
         onClose={closeSocialUnlinkConfirm}
@@ -520,7 +524,13 @@ export default function AccountManageScreen() {
             return;
           }
 
-          void handleSocialUnlink(socialUnlinkConfirmProvider);
+          if (socialLinkSheetMode === 'unlink') {
+            void handleSocialUnlink(socialUnlinkConfirmProvider);
+            return;
+          }
+
+          // 연결 시트는 퍼블리싱만 먼저 반영하고 실제 연결 로직은 이후에 붙일 수 있게 닫기만 처리한다.
+          closeSocialUnlinkConfirm();
         }}
       />
 

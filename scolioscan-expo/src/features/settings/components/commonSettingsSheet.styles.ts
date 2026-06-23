@@ -95,10 +95,11 @@ const styles = StyleSheet.create({
     height: 42,
     justifyContent: 'center',
     paddingHorizontal: 14,
+    paddingVertical : 10
   },
-  centerConfirmActionButton: {
-    height: 40,
-  },
+  // centerConfirmActionButton: {
+  //   height: 40,
+  // },
   primaryButton: {
     backgroundColor: Colors.primary[500],
     borderColor: Colors.primary[500],
