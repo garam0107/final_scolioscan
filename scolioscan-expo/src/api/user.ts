@@ -1,5 +1,11 @@
 import api from '@/src/api/client';
-import type { ChangePasswordRequest, DeleteUserRequest, PutUserRequest, UserResponse } from '@/src/types/user';
+import type {
+  ChangePasswordRequest,
+  DeleteUserRequest,
+  PutUserRequest,
+  SocialProvider,
+  UserResponse,
+} from '@/src/types/user';
 
 export const userAPI = {
   getCurrentUser: () => api.get<UserResponse>('/users/me'),
@@ -7,5 +13,6 @@ export const userAPI = {
   changeUserPassword: (data: ChangePasswordRequest) => api.put('/users/me/password', data),
   deleteCurrentUser: (data: DeleteUserRequest) => api.post('/users/me/delete', data),
   deleteUserData: () => api.delete('/users/data/delete'),
-  updateProfileImage: (formData: FormData) => api.post<UserResponse>('/users/me/profile-image', formData)
+  updateProfileImage: (formData: FormData) => api.post<UserResponse>('/users/me/profile-image', formData),
+  deleteSocialAccount: (provider: SocialProvider) => api.delete(`/users/me/social/${provider}`),
 };

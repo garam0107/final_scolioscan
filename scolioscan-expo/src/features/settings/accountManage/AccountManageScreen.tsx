@@ -1,4 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { unlink as unlinkKakao } from '@react-native-seoul/kakao-login';
+import NaverLogin from '@react-native-seoul/naver-login';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,9 +30,11 @@ import {
   normalizeApiError,
   splitBirthday,
 } from '@/src/features/settings/accountManage/accountManageUtils';
+import type { SocialProvider } from '@/src/types/user';
 
 type GenderValue = 'male' | 'female';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
+const PENDING_SOCIAL_UNLINK_STORAGE_KEY = 'pending_social_unlinks';
 
 export default function AccountManageScreen() {
   const router = useRouter();
@@ -55,6 +61,8 @@ export default function AccountManageScreen() {
   const [toastKey, setToastKey] = useState(0);
   const [deviceName, setDeviceName] = useState(getCurrentDeviceLabel());
   const [deviceMeta, setDeviceMeta] = useState('위치 확인 중');
+  const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
+  const [syncingPendingUnlinks, setSyncingPendingUnlinks] = useState(false);
   const scrollViewRef = useRef<ScrollViewType | null>(null);
   const [phoneFieldY, setPhoneFieldY] = useState(0);
 
@@ -122,6 +130,15 @@ export default function AccountManageScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    // SDK 해제 후 DB 삭제만 남은 provider가 있으면 화면 진입 후 자동 복구를 시도한다.
+    if (!user?.id || syncingPendingUnlinks || unlinkingProvider) {
+      return;
+    }
+
+    void retryPendingSocialUnlinks();
+  }, [syncingPendingUnlinks, unlinkingProvider, user?.id]);
+
   function handleFieldLayout(setter: (value: number) => void) {
     return (event: LayoutChangeEvent) => {
       setter(event.nativeEvent.layout.y);
@@ -140,6 +157,77 @@ export default function AccountManageScreen() {
     setToastKey((current) => current + 1);
     setToastTone(tone);
     setToastMessage(message);
+  }
+
+  async function loadPendingSocialUnlinks() {
+    // 부분 성공 상태를 복구할 수 있게 provider 목록을 로컬에 저장한다.
+    const rawValue = await AsyncStorage.getItem(PENDING_SOCIAL_UNLINK_STORAGE_KEY);
+
+    if (!rawValue) {
+      return [] as SocialProvider[];
+    }
+
+    try {
+      const parsedValue = JSON.parse(rawValue);
+
+      if (!Array.isArray(parsedValue)) {
+        return [] as SocialProvider[];
+      }
+
+      return parsedValue.filter(
+        (provider): provider is SocialProvider =>
+          provider === 'google' || provider === 'naver' || provider === 'kakao',
+      );
+    } catch {
+      return [] as SocialProvider[];
+    }
+  }
+
+  async function savePendingSocialUnlinks(providers: SocialProvider[]) {
+    // 같은 provider가 중복 저장되지 않게 정리해서 보관한다.
+    const uniqueProviders = Array.from(new Set(providers));
+    await AsyncStorage.setItem(PENDING_SOCIAL_UNLINK_STORAGE_KEY, JSON.stringify(uniqueProviders));
+  }
+
+  async function addPendingSocialUnlink(provider: SocialProvider) {
+    const providers = await loadPendingSocialUnlinks();
+    await savePendingSocialUnlinks([...providers, provider]);
+  }
+
+  async function removePendingSocialUnlink(provider: SocialProvider) {
+    const providers = await loadPendingSocialUnlinks();
+    await savePendingSocialUnlinks(providers.filter((item) => item !== provider));
+  }
+
+  async function retryPendingSocialUnlinks() {
+    const providers = await loadPendingSocialUnlinks();
+
+    if (providers.length === 0) {
+      return;
+    }
+
+    try {
+      setSyncingPendingUnlinks(true);
+
+      let hasResolvedPendingUnlink = false;
+
+      for (const provider of providers) {
+        try {
+          // SDK는 이미 해제됐을 수 있으므로 DB row 삭제만 멱등적으로 재시도한다.
+          await userAPI.deleteSocialAccount(provider);
+          await removePendingSocialUnlink(provider);
+          hasResolvedPendingUnlink = true;
+        } catch {
+          // 실패한 항목은 다음 진입에서도 다시 재시도할 수 있게 남겨둔다.
+        }
+      }
+
+      if (hasResolvedPendingUnlink) {
+        await refreshSession();
+      }
+    } finally {
+      setSyncingPendingUnlinks(false);
+    }
   }
 
   function closeWithdrawModal() {
@@ -165,18 +253,73 @@ export default function AccountManageScreen() {
       provider: 'google' as const,
       isLinked: user?.social_accounts.google.is_linked ?? false,
       email: user?.social_accounts.google.email ?? null,
+      onPress:
+        user?.social_accounts.google.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
+          ? () => void handleSocialUnlink('google')
+          : undefined,
     },
     {
       provider: 'naver' as const,
       isLinked: user?.social_accounts.naver.is_linked ?? false,
       email: user?.social_accounts.naver.email ?? null,
+      onPress:
+        user?.social_accounts.naver.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
+          ? () => void handleSocialUnlink('naver')
+          : undefined,
     },
     {
       provider: 'kakao' as const,
       isLinked: user?.social_accounts.kakao.is_linked ?? false,
       email: user?.social_accounts.kakao.email ?? null,
+      onPress:
+        user?.social_accounts.kakao.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
+          ? () => void handleSocialUnlink('kakao')
+          : undefined,
     },
   ];
+
+  function getSocialProviderLabel(provider: SocialProvider) {
+    if (provider === 'google') return '구글';
+    if (provider === 'naver') return '네이버';
+    return '카카오';
+  }
+
+  async function unlinkSocialWithSdk(provider: SocialProvider) {
+    // SDK 해제가 성공한 경우에만 백엔드 row 삭제 단계로 넘긴다.
+    if (provider === 'google') {
+      await GoogleSignin.revokeAccess();
+      return;
+    }
+
+    if (provider === 'kakao') {
+      await unlinkKakao();
+      return;
+    }
+
+    await NaverLogin.deleteToken();
+  }
+
+  async function handleSocialUnlink(provider: SocialProvider) {
+    // 중복 요청을 막고 SDK 해제 이후에만 DB 삭제를 요청한다.
+    if (unlinkingProvider || syncingPendingUnlinks) {
+      return;
+    }
+
+    try {
+      setUnlinkingProvider(provider);
+      await unlinkSocialWithSdk(provider);
+      await addPendingSocialUnlink(provider);
+      await userAPI.deleteSocialAccount(provider);
+      await removePendingSocialUnlink(provider);
+      await refreshSession();
+      showToast(`${getSocialProviderLabel(provider)} 소셜 연동이 해제되었습니다.`, 'success');
+    } catch (error) {
+      showToast(normalizeApiError(error), 'error');
+    } finally {
+      setUnlinkingProvider(null);
+    }
+  }
+
   async function handleSave() {
     // 저장 전에 필수값과 형식을 다시 확인해 잘못된 프로필 갱신을 막는다.
     if (!canSave) return;

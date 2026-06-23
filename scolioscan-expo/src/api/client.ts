@@ -54,7 +54,6 @@ export async function refreshAccessToken() {
 
   refreshPromise = (async () => {
     const refreshToken = getRefreshToken();
-        console.log('[api][refresh] stored refresh token =', refreshToken);
     if (!refreshToken) {
       await handleAuthFailure();
       return null;
@@ -69,8 +68,7 @@ export async function refreshAccessToken() {
         { headers: { 'Content-Type': 'application/json' } },
       );
 
-      console.log('[api][refresh] response access token =', response.data?.access_token);
-      console.log('[api][refresh] response refresh token =', response.data?.refresh_token);
+
 
       const nextAccessToken = response.data?.access_token;
       const nextRefreshToken = response.data?.refresh_token;
@@ -82,10 +80,8 @@ export async function refreshAccessToken() {
 
       await saveAuthTokens(nextAccessToken, nextRefreshToken);
       setAccessToken(nextAccessToken);
-      console.log('[api][refresh] saved new access token');
       return nextAccessToken;
     } catch (error) {
-      console.log('[api][refresh] refresh failed =', error);
       await handleAuthFailure();
       return null;
     } finally {
@@ -101,18 +97,13 @@ api.interceptors.request.use(async (config) => {
   await assertNetworkRequestAllowed();
 
   const token = getAccessToken();
-  console.log('[api][request] url =', config.url);
-  console.log('[api][request] memory access token =', token);
 
   config.headers = config.headers ?? {};
 
   if (token) {
     (config.headers as any).Authorization = `Bearer ${token}`;
   }
-  console.log(
-  '[api][request] Authorization header =',
-  (config.headers as any)?.Authorization,
-);
+
   // FormData 업로드일 때는 Content-Type을 직접 지정하지 않아야 boundary가 자동으로 붙는다.
   if (config.data instanceof FormData) {
     if (typeof (config.headers as any).delete === 'function') {

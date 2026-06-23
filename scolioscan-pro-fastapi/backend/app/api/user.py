@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Literal
 import os
 import uuid
 from pathlib import Path
 from ..database import get_db
-from ..models import User, CurvatureMeasurement, RotationMeasurement
+from ..models import User, CurvatureMeasurement, RotationMeasurement, SocialAccount
 from sqlalchemy.exc import IntegrityError,SQLAlchemyError
 from ..schemas import (
     PasswordChange,
@@ -99,6 +99,36 @@ async def update_user_profile(
     db.refresh(current_user)
 
     return _user_response_with_presigned_image(current_user)
+
+
+@router.delete("/me/social/{provider}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_my_social_account(
+    provider: Literal["google", "naver", "kakao"],
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """현재 사용자에 연결된 소셜 계정 row만 삭제"""
+    # 현재 사용자에게 연결된 동일 provider row만 찾아 삭제한다.
+    social_account = db.query(SocialAccount).filter(
+        SocialAccount.user_id == current_user.id,
+        SocialAccount.provider == provider,
+    ).first()
+
+    if social_account is None:
+        # 이미 삭제된 상태여도 재시도를 성공으로 처리해 프론트가 안전하게 복구할 수 있게 한다.
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    try:
+        db.delete(social_account)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="소셜 연동 해제 처리 중 오류가 발생했습니다.",
+        )
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.put("/me/settings")
