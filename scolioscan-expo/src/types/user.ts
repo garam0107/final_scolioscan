@@ -1,3 +1,14 @@
+export type SocialProvider = 'google' | 'naver' | 'kakao'
+
+export interface SocialAccountStatus {
+  is_linked: boolean;
+  email: string | null;
+}
+export interface UserSocialAccounts {
+  google: SocialAccountStatus;
+  naver: SocialAccountStatus;
+  kakao: SocialAccountStatus;
+}
 export interface UserResponse {
   id: string;
   user_id: string;
@@ -12,7 +23,9 @@ export interface UserResponse {
   setting: Record<string, unknown>;
   is_admin: boolean;
   created_at: string;
+  social_accounts: UserSocialAccounts;
 }
+
 
 export interface PutUserRequest {
   name: string;

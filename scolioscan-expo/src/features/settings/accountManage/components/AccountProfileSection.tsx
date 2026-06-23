@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
-
 import AccountInfoRow from '@/src/features/settings/accountManage/components/AccountInfoRow';
 import LoginMethodRow from '@/src/features/settings/accountManage/components/LoginMethodRow';
 import styles from '@/src/features/settings/accountManage/components/accountManageComponents.styles';

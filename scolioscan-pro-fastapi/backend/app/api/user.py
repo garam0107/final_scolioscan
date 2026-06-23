@@ -7,19 +7,66 @@ from pathlib import Path
 from ..database import get_db
 from ..models import User, CurvatureMeasurement, RotationMeasurement
 from sqlalchemy.exc import IntegrityError,SQLAlchemyError
-from ..schemas import UserResponse, UserUpdate, PasswordChange, UserDeleteRequest
+from ..schemas import (
+    PasswordChange,
+    SocialAccountInfo,
+    UserDeleteRequest,
+    UserResponse,
+    UserSocialAccountsResponse,
+    UserUpdate,
+)
 from ..utils import get_current_user, get_password_hash, verify_password
 from app.services.s3_service import upload_image_to_s3, create_presigned_get_url, delete_s3_object
 router = APIRouter()
 
 
+def _build_social_accounts_response(user: User) -> UserSocialAccountsResponse:
+    # 연동되지 않은 기본 상태를 먼저 만들고, relationship으로 읽은 값만 덮어쓴다.
+    social_accounts = {
+        "google": SocialAccountInfo(is_linked=False, email=None),
+        "naver": SocialAccountInfo(is_linked=False, email=None),
+        "kakao": SocialAccountInfo(is_linked=False, email=None),
+    }
+
+    for social_account in user.social_accounts:
+        if social_account.provider not in social_accounts:
+            continue
+
+        social_accounts[social_account.provider] = SocialAccountInfo(
+            is_linked=True,
+            email=social_account.provider_email,
+        )
+
+    return UserSocialAccountsResponse(
+        google=social_accounts["google"],
+        naver=social_accounts["naver"],
+        kakao=social_accounts["kakao"],
+    )
+
+
 def _user_response_with_presigned_image(user: User) -> UserResponse:
-    response = UserResponse.model_validate(user)
+    # 계산 필드가 추가되어 응답을 명시적으로 조립한다.
+    response = UserResponse(
+        id=user.id,
+        user_id=user.user_id,
+        name=user.name,
+        phone=user.phone,
+        birthday=user.birthday,
+        sex=user.sex,
+        address=user.address,
+        detail_address=user.detail_address,
+        profile_image=user.profile_image,
+        alarm_count=user.alarm_count,
+        setting=user.setting,
+        is_admin=user.is_admin,
+        created_at=user.created_at,
+        social_accounts=_build_social_accounts_response(user),
+    )
 
     if user.profile_image:
         response.profile_image = create_presigned_get_url(user.profile_image)
 
-    return response 
+    return response
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
     current_user: User = Depends(get_current_user)

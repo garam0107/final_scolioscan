@@ -160,7 +160,23 @@ export default function AccountManageScreen() {
     birthDay !== initialBirthday.day ||
     gender !== initialGender;
   const canSave = hasChanges && !saving;
-
+  const socialLoginMethods = [
+    {
+      provider: 'google' as const,
+      isLinked: user?.social_accounts.google.is_linked ?? false,
+      email: user?.social_accounts.google.email ?? null,
+    },
+    {
+      provider: 'naver' as const,
+      isLinked: user?.social_accounts.naver.is_linked ?? false,
+      email: user?.social_accounts.naver.email ?? null,
+    },
+    {
+      provider: 'kakao' as const,
+      isLinked: user?.social_accounts.kakao.is_linked ?? false,
+      email: user?.social_accounts.kakao.email ?? null,
+    },
+  ];
   async function handleSave() {
     // 저장 전에 필수값과 형식을 다시 확인해 잘못된 프로필 갱신을 막는다.
     if (!canSave) return;
@@ -306,6 +322,7 @@ export default function AccountManageScreen() {
           onDeviceLogout={() => void handleDeviceLogout()}
           onPasswordPress={() => router.push('/settings/password')}
           onWithdrawPress={() => setWithdrawModalVisible(true)}
+          socialLoginMethods={socialLoginMethods}
         />
       </ScrollView>
 

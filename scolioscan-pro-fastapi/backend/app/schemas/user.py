@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Dict
 from datetime import datetime
+from typing import Dict, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -92,8 +93,22 @@ class UserUpdate(BaseModel):
     detail_address: Optional[str] = None
     birthday: Optional[datetime] = None
     sex: Optional[bool] = None  # True: Male, False: Female
+
+
 class UserDeleteRequest(BaseModel):
     password: str = Field(..., min_length=1, max_length=128)
+
+
+class SocialAccountInfo(BaseModel):
+    is_linked: bool
+    email: Optional[str] = None
+
+
+class UserSocialAccountsResponse(BaseModel):
+    google: SocialAccountInfo
+    naver: SocialAccountInfo
+    kakao: SocialAccountInfo
+
 
 class UserResponse(BaseModel):
     id: UUID
@@ -109,6 +124,7 @@ class UserResponse(BaseModel):
     setting: Dict
     is_admin: bool = False  # 관리자 여부
     created_at: datetime
+    social_accounts: UserSocialAccountsResponse
 
     class Config:
         from_attributes = True
