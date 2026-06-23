@@ -19,6 +19,7 @@ type CommonSettingsSheetProps = {
   visible: boolean;
   title: string;
   description?: string;
+  headerTopContent?: ReactNode;
   titleTone?: 'default' | 'danger';
   presentation?: 'default' | 'centerConfirm';
   bottomPlacement?: 'safeArea' | 'screen';
@@ -36,6 +37,7 @@ export default function CommonSettingsSheet({
   visible,
   title,
   description,
+  headerTopContent,
   titleTone = 'default',
   presentation = 'default',
   bottomPlacement = 'safeArea',
@@ -67,6 +69,7 @@ export default function CommonSettingsSheet({
       onPress={(event) => event.stopPropagation()}
     >
       <View style={[styles.header, isCenterConfirm && styles.centerConfirmHeader]}>
+        {headerTopContent ? <View style={styles.headerTopContent}>{headerTopContent}</View> : null}
         <Text
           style={[
             styles.title,

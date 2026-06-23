@@ -419,6 +419,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 20,
   },
+  socialUnlinkSheetBody: {
+    paddingBottom: 4,
+    paddingTop: 8,
+  },
+  socialUnlinkSheetContent: {
+    paddingBottom: 0,
+  },
+  socialUnlinkProviderCard: {
+    alignItems: 'center',
+    backgroundColor: Colors.gray[25],
+    borderColor: Colors.gray[75],
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    minHeight: 68,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    width: '100%',
+  },
+  socialUnlinkProviderIcon: {
+    alignItems: 'center',
+    backgroundColor: Colors.primary.white,
+    borderRadius: 999,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  socialUnlinkProviderTextWrap: {
+    flex: 1,
+  },
+  socialUnlinkProviderTitle: {
+    ...textFont,
+    color: Colors.gray[900],
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  socialUnlinkProviderDescription: {
+    ...textFont,
+    color: Colors.gray[500],
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 18,
+    marginTop: 4,
+  },
 });
 
 export default styles;

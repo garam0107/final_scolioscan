@@ -4,9 +4,9 @@ import AccountInfoRow from '@/src/features/settings/accountManage/components/Acc
 import LoginMethodRow from '@/src/features/settings/accountManage/components/LoginMethodRow';
 import styles from '@/src/features/settings/accountManage/components/accountManageComponents.styles';
 import type { SocialLoginMethod } from '@/src/features/settings/accountManage/components/accountProfileSection.types';
-import GoogleIcon from '../../../../../assets/icons/google.svg';
-import KakaoIcon from '../../../../../assets/icons/kakao.svg';
-import NaverIcon from '../../../../../assets/icons/naver.svg';
+import GoogleIcon from '../../../../../assets/icons/setting/setting_google.svg';
+import KakaoIcon from '../../../../../assets/icons/setting/setting_kakao.svg';
+import NaverIcon from '../../../../../assets/icons/setting/setting_naver.svg';
 
 type AccountProfileSectionProps = {
   email: string;

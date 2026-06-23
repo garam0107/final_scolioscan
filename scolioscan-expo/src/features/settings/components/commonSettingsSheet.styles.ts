@@ -25,6 +25,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 8,
   },
+  headerTopContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    width: '100%',
+  },
   centerConfirmHeader: {
     // PDF 저장 완료 시트는 Figma처럼 제목과 설명을 가운데에 둔다.
     alignItems: 'center',
@@ -58,6 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 8,
+    maxWidth: 336,
     textAlign: 'center',
   },
   pinnedContent: {

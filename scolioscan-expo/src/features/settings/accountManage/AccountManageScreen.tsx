@@ -23,6 +23,7 @@ import AccountEditForm from '@/src/features/settings/accountManage/components/Ac
 import AccountFooter from '@/src/features/settings/accountManage/components/AccountFooter';
 import AccountProfileSection from '@/src/features/settings/accountManage/components/AccountProfileSection';
 import DeleteAccountModal from '@/src/features/settings/accountManage/components/DeleteAccountModal';
+import SocialUnlinkConfirmSheet from '@/src/features/settings/accountManage/components/SocialUnlinkConfirmSheet';
 import styles from '@/src/features/settings/accountManage/accountManage.styles';
 import {
   formatLocationAddress,
@@ -63,6 +64,7 @@ export default function AccountManageScreen() {
   const [deviceMeta, setDeviceMeta] = useState('위치 확인 중');
   const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
   const [syncingPendingUnlinks, setSyncingPendingUnlinks] = useState(false);
+  const [socialUnlinkConfirmProvider, setSocialUnlinkConfirmProvider] = useState<SocialProvider | null>(null);
   const scrollViewRef = useRef<ScrollViewType | null>(null);
   const [phoneFieldY, setPhoneFieldY] = useState(0);
 
@@ -237,6 +239,23 @@ export default function AccountManageScreen() {
     setWithdrawErrorMessage('');
   }
 
+  function openSocialUnlinkConfirm(provider: SocialProvider) {
+    // 연결 해제는 즉시 실행하지 않고 확인 시트를 먼저 보여준다.
+    if (unlinkingProvider || syncingPendingUnlinks) {
+      return;
+    }
+
+    setSocialUnlinkConfirmProvider(provider);
+  }
+
+  function closeSocialUnlinkConfirm() {
+    if (unlinkingProvider) {
+      return;
+    }
+
+    setSocialUnlinkConfirmProvider(null);
+  }
+
   const initialBirthday = splitBirthday(user?.birthday);
   const initialGender: GenderValue = user?.sex === false ? 'female' : 'male';
   const hasChanges =
@@ -255,7 +274,7 @@ export default function AccountManageScreen() {
       email: user?.social_accounts.google.email ?? null,
       onPress:
         user?.social_accounts.google.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => void handleSocialUnlink('google')
+          ? () => openSocialUnlinkConfirm('google')
           : undefined,
     },
     {
@@ -264,7 +283,7 @@ export default function AccountManageScreen() {
       email: user?.social_accounts.naver.email ?? null,
       onPress:
         user?.social_accounts.naver.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => void handleSocialUnlink('naver')
+          ? () => openSocialUnlinkConfirm('naver')
           : undefined,
     },
     {
@@ -273,7 +292,7 @@ export default function AccountManageScreen() {
       email: user?.social_accounts.kakao.email ?? null,
       onPress:
         user?.social_accounts.kakao.is_linked && unlinkingProvider === null && !syncingPendingUnlinks
-          ? () => void handleSocialUnlink('kakao')
+          ? () => openSocialUnlinkConfirm('kakao')
           : undefined,
     },
   ];
@@ -282,6 +301,74 @@ export default function AccountManageScreen() {
     if (provider === 'google') return '구글';
     if (provider === 'naver') return '네이버';
     return '카카오';
+  }
+
+  function getSocialProviderEmail(provider: SocialProvider) {
+    if (provider === 'google') return user?.social_accounts.google.email ?? null;
+    if (provider === 'naver') return user?.social_accounts.naver.email ?? null;
+    return user?.social_accounts.kakao.email ?? null;
+  }
+
+  function extractSocialSdkErrorMessage(error: unknown) {
+    // 네이티브 SDK reject 객체에서도 message/code를 최대한 읽어 사용자에게 정확한 원인을 보여준다.
+    if (error instanceof Error && error.message.trim()) {
+      return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null) {
+      const message = 'message' in error ? (error as { message?: unknown }).message : undefined;
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+
+      const code = 'code' in error ? (error as { code?: unknown }).code : undefined;
+      if (typeof code === 'string' && code.trim()) {
+        return code;
+      }
+    }
+
+    return '';
+  }
+
+  function isNaverDeleteTokenRetryableError(message: string) {
+    const normalizedMessage = message.toLowerCase();
+
+    return (
+      normalizedMessage.length === 0 ||
+      normalizedMessage.includes('token') ||
+      normalizedMessage.includes('login') ||
+      normalizedMessage.includes('oauth') ||
+      normalizedMessage.includes('unauthorized') ||
+      normalizedMessage.includes('access_denied')
+    );
+  }
+
+  async function ensureNaverDeleteToken() {
+    // 네이버 SDK 내부 토큰이 없는 경우 재로그인으로 토큰을 확보한 뒤 삭제를 한 번 더 시도한다.
+    try {
+      await NaverLogin.deleteToken();
+      return;
+    } catch (error) {
+      const message = extractSocialSdkErrorMessage(error);
+
+      if (!isNaverDeleteTokenRetryableError(message)) {
+        throw new Error(message || '네이버 연결 해제에 실패했습니다.');
+      }
+    }
+
+    const loginResult = await NaverLogin.login();
+    const successResponse = (loginResult as { successResponse?: { accessToken?: string } }).successResponse;
+    const failureResponse = (loginResult as { failureResponse?: { message?: string; isCancel?: boolean } }).failureResponse;
+
+    if (failureResponse?.isCancel) {
+      throw new Error('네이버 로그인 후 연결 해제가 취소되었습니다.');
+    }
+
+    if (!successResponse?.accessToken) {
+      throw new Error(failureResponse?.message ?? '네이버 로그인 정보를 다시 가져오지 못했습니다.');
+    }
+
+    await NaverLogin.deleteToken();
   }
 
   async function unlinkSocialWithSdk(provider: SocialProvider) {
@@ -296,7 +383,7 @@ export default function AccountManageScreen() {
       return;
     }
 
-    await NaverLogin.deleteToken();
+    await ensureNaverDeleteToken();
   }
 
   async function handleSocialUnlink(provider: SocialProvider) {
@@ -314,8 +401,10 @@ export default function AccountManageScreen() {
       await refreshSession();
       showToast(`${getSocialProviderLabel(provider)} 소셜 연동이 해제되었습니다.`, 'success');
     } catch (error) {
-      showToast(normalizeApiError(error), 'error');
+      const sdkMessage = extractSocialSdkErrorMessage(error);
+      showToast(sdkMessage || normalizeApiError(error), 'error');
     } finally {
+      setSocialUnlinkConfirmProvider(null);
       setUnlinkingProvider(null);
     }
   }
@@ -418,6 +507,21 @@ export default function AccountManageScreen() {
         }}
         onWithdraw={() => void handleWithdraw()}
         onCompleteConfirm={() => void handleWithdrawCompleteConfirm()}
+      />
+
+      <SocialUnlinkConfirmSheet
+        visible={socialUnlinkConfirmProvider !== null}
+        provider={socialUnlinkConfirmProvider}
+        email={socialUnlinkConfirmProvider ? getSocialProviderEmail(socialUnlinkConfirmProvider) : null}
+        submitting={unlinkingProvider !== null}
+        onClose={closeSocialUnlinkConfirm}
+        onConfirm={() => {
+          if (!socialUnlinkConfirmProvider) {
+            return;
+          }
+
+          void handleSocialUnlink(socialUnlinkConfirmProvider);
+        }}
       />
 
       <View style={styles.header}>
