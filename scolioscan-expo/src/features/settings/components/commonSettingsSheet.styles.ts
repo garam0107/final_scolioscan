@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical : 10
   },
-  // centerConfirmActionButton: {
-  //   height: 40,
-  // },
+  centerConfirmActionButton: {
+    height: 42,
+  },
   primaryButton: {
     backgroundColor: Colors.primary[500],
     borderColor: Colors.primary[500],
@@ -107,6 +107,19 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: '#FF4B3C',
     borderColor: '#FF4B3C',
+  },
+  googleButton: {
+    backgroundColor: Colors.primary[500],
+    borderColor: Colors.primary[500],
+  },
+  naverButton: {
+    backgroundColor : '#03C75A',
+    borderColor : '#03C75A'
+
+  },
+  kakaoButton: {
+    backgroundColor : '#FFE812',
+    borderColor : '#FFE812'
   },
   disabledButton: {
     backgroundColor: Colors.gray[100],

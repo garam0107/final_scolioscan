@@ -16,7 +16,15 @@ type SocialLinkActionSheetProps = {
   onClose: () => void;
   onConfirm: () => void;
 };
+function getConfirmVariant(provider: SocialProvider, mode: SocialLinkSheetMode) {
+  if (mode === 'unlink') {
+    return 'primary';
+  }
 
+  if (provider === 'google') return 'google';
+  if (provider === 'naver') return 'naver';
+  return 'kakao';
+}
 export default function SocialLinkActionSheet({
   visible,
   provider,
@@ -73,7 +81,7 @@ export default function SocialLinkActionSheet({
         },
         {
           label: isUnlinkMode ? '해제하기' : '연결하기',
-          variant: 'primary',
+          variant: isUnlinkMode ? 'primary' : getConfirmVariant(provider, mode),
           onPress: onConfirm,
           disabled: submitting,
         },
