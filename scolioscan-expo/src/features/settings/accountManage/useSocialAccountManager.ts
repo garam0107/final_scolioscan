@@ -197,8 +197,11 @@ export function useSocialAccountManager({
       }
 
       const signInResult = await GoogleSignin.signIn();
+      if (signInResult.type === 'cancelled') {
+          throw new Error('구글 로그인이 취소되었습니다.');
+        }
       const idToken = extractGoogleIdToken(signInResult);
-
+     
       if (!idToken) {
         throw new Error('구글 로그인 정보를 다시 가져오지 못했습니다.');
       }
