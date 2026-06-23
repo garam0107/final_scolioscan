@@ -102,6 +102,7 @@ api.interceptors.request.use(async (config) => {
 
   if (token) {
     (config.headers as any).Authorization = `Bearer ${token}`;
+    console.log("현재 토큰", token)
   }
 
   // FormData 업로드일 때는 Content-Type을 직접 지정하지 않아야 boundary가 자동으로 붙는다.

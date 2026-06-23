@@ -108,7 +108,7 @@ def get_current_user(
         print("[auth] querying user by user_id =", user_id)
         if user_id is None:
             raise credentials_exception
-    except JWTError:
+    except JWTError as error:
         print("[auth] jwt decode error =", error)
         raise credentials_exception
 
