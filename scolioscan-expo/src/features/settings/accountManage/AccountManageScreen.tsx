@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
 import { unlink as unlinkKakao } from '@react-native-seoul/kakao-login';
 import NaverLogin from '@react-native-seoul/naver-login';
 import { CommonActions, useNavigation } from '@react-navigation/native';
@@ -37,6 +38,7 @@ type GenderValue = 'male' | 'female';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 type SocialSheetMode = 'link' | 'unlink';
 const PENDING_SOCIAL_UNLINK_STORAGE_KEY = 'pending_social_unlinks';
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
 export default function AccountManageScreen() {
   const router = useRouter();
@@ -82,6 +84,17 @@ export default function AccountManageScreen() {
     setPhone(user?.phone || '');
     setEmail(user?.user_id || '');
   }, [user]);
+
+  useEffect(() => {
+    // 계정 관리 화면에서도 구글 SDK 로그인 화면을 바로 띄울 수 있게 설정을 맞춘다.
+    if (!GOOGLE_WEB_CLIENT_ID) {
+      return;
+    }
+
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+    });
+  }, []);
 
   useEffect(() => {
     // 비밀번호 변경 화면에서 돌아온 경우 한 번만 성공 토스트를 보여준다.
@@ -333,6 +346,16 @@ export default function AccountManageScreen() {
     return '';
   }
 
+  function isSocialLoginCancelled(message: string) {
+    const normalizedMessage = message.toLowerCase();
+
+    return (
+      normalizedMessage.includes('cancelled') ||
+      normalizedMessage.includes('canceled') ||
+      normalizedMessage.includes('취소')
+    );
+  }
+
   function isNaverDeleteTokenRetryableError(message: string) {
     const normalizedMessage = message.toLowerCase();
 
@@ -387,6 +410,30 @@ export default function AccountManageScreen() {
     }
 
     await ensureNaverDeleteToken();
+  }
+  
+  async function handleSocialLink(provider: SocialProvider) {
+    // 연결하기 버튼은 우선 각 SDK 로그인/동의 화면만 띄우고 이후 연동 로직은 다음 단계에서 붙인다.
+    if (provider === 'google') {
+      if (!GOOGLE_WEB_CLIENT_ID) {
+        throw new Error('구글 로그인 설정이 아직 완료되지 않았습니다.');
+      }
+
+      await GoogleSignin.signIn();
+      return;
+    }
+
+    if (provider === 'kakao') {
+      await kakaoLogin();
+      return;
+    }
+
+    const result = await NaverLogin.login();
+    const failureResponse = (result as { failureResponse?: { message?: string; isCancel?: boolean } }).failureResponse;
+
+    if (failureResponse?.isCancel) {
+      throw new Error('네이버 로그인이 취소되었습니다.');
+    }
   }
 
   async function handleSocialUnlink(provider: SocialProvider) {
@@ -531,6 +578,15 @@ export default function AccountManageScreen() {
 
           // 연결 시트는 퍼블리싱만 먼저 반영하고 실제 연결 로직은 이후에 붙일 수 있게 닫기만 처리한다.
           closeSocialUnlinkConfirm();
+          void handleSocialLink(socialUnlinkConfirmProvider).catch((error) => {
+            const sdkMessage = extractSocialSdkErrorMessage(error);
+
+            if (isSocialLoginCancelled(sdkMessage)) {
+              return;
+            }
+
+            showToast(sdkMessage || normalizeApiError(error), 'error');
+          });
         }}
       />
 
