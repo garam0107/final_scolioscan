@@ -26,13 +26,19 @@ export default function ProfileCard({ name, email, profileImage, onAccountPress,
             source={{ uri: imageUrl }} 
             style={styles.avatarImage}
           />
+          
         ) : (
         <ProfileIcon width="100%" height="100%" />
         )}
         {/* 프로필 원형 영역을 기준으로 우상단에 아이콘을 고정해 기기별 위치 차이를 줄인다. */}
-        <View pointerEvents="none" style={styles.plusBadge}>
-          <PlusIcon width="100%" height="100%" />
-        </View>
+        {imageUrl && (
+            <View pointerEvents="none" style={styles.plusBadge}>
+              <PlusIcon width="100%" height="100%" />
+            </View>
+          )}
+
+    
+
        </Pressable>
       <View style={styles.profileText}>
         <View style={styles.nameLine}>
