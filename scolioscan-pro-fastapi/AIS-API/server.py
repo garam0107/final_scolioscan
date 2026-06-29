@@ -1,226 +1,104 @@
 """
-AIS-API FastAPI Server
-Wraps the scoliosis detection pipeline as an HTTP API for iOS/Android clients.
+AIS-API 호환 서버.
 
-Endpoint: POST /ais/angle
-  - Accepts multipart form data with a JPEG image (field name: "file")
-  - Returns JSON with predicted angles, severity, and back type
+기존 백엔드는 POST /ais/angle 로 main_thoracic, secondary_thoracic, lumbar,
+severity, back_type 필드를 기대한다. 실제 예측은 predict_dict 안의 새
+11포인트 AIS numeric 파이프라인을 사용하고, 이 파일은 기존 응답 형식으로
+변환하는 역할만 담당한다.
 """
 
-import io
-import os
-import logging
+from typing import Any, Dict
 
-import numpy as np
-from PIL import Image,ImageOps,ExifTags
-import tensorflow as tf
-from tensorflow.keras.models import model_from_json
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import File, HTTPException, UploadFile
 
-# ================= Configuration =================
-
-KP_ARCH = os.environ.get("KP_ARCH", "./keypointsmodel/keypoints_architecture.json")
-KP_WEIGHTS = os.environ.get("KP_WEIGHTS", "./keypointsmodel/keypoints_weigts.hdf5")
-TF_MODEL = os.environ.get("TF_MODEL", "./tflite/model_fp32.tflite")
-
-# Normalization extremum parameters for the keypoint model
-UMIN = -0.46649292628443784
-UMAX = 0.36221122112211224
-VMIN = -0.2185929648241206
-VMAX = 0.4490084985835694
-
-SCREENING_THRESHOLD = 4  # degrees - below this, no scoliosis detected
-CLASSIFICATION_THRESHOLD = 8  # degrees - for scoliosis type classification
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("ais-api")
-
-# ================= Helper Functions =================
-
-def denor(x, maxn, minn):
-    """Denormalization"""
-    return x * (maxn - minn) + minn
+from predict_dict.ais_numeric_api_spyder_fix import (
+    USE_SEGMENTATION_DEFAULT,
+    app,
+    read_image_from_bytes,
+    run_pipeline_from_pil,
+)
 
 
-def classify_three(a, b, c, threshold=CLASSIFICATION_THRESHOLD):
-    """Classify scoliosis type based on three angles."""
-    labels = ['Straight' if x <= threshold else 'Bent' for x in (a, b, c)]
+CLASSIFICATION_THRESHOLD = 8
+
+
+def classify_three(a: float, b: float, c: float, threshold: float = CLASSIFICATION_THRESHOLD) -> str:
+    """세 Cobb 각도를 기존 앱의 등 유형 문자열로 변환한다."""
+    labels = ["Straight" if abs(x) <= threshold else "Bent" for x in (a, b, c)]
     mapping = {
-        ('Straight', 'Straight', 'Straight'): 'Normal',
-        ('Straight', 'Bent',     'Straight'): 'Thoracic',
-        ('Bent',     'Bent',     'Straight'): 'Double Thoracic',
-        ('Straight', 'Bent',     'Bent'):     'Double major',
-        ('Bent',     'Bent',     'Bent'):     'Triple curve',
-        ('Straight', 'Straight', 'Bent'):     'Lumbar',
+        ("Straight", "Straight", "Straight"): "Normal",
+        ("Straight", "Bent", "Straight"): "Thoracic",
+        ("Bent", "Bent", "Straight"): "Double Thoracic",
+        ("Straight", "Bent", "Bent"): "Double major",
+        ("Bent", "Bent", "Bent"): "Triple curve",
+        ("Straight", "Straight", "Bent"): "Lumbar",
     }
-    back_type = mapping.get(tuple(labels), 'Unknown')
-    return back_type
+    return mapping.get(tuple(labels), "Unknown")
 
 
-def get_severity(max_angle):
-    """Determine severity based on the maximum Cobb angle."""
+def get_severity(max_angle: float) -> str:
+    """기존 백엔드/앱에서 사용하는 심각도 문자열로 변환한다."""
     if max_angle < 10:
         return "normal"
-    elif max_angle < 25:
+    if max_angle < 25:
         return "mild"
-    elif max_angle < 40:
+    if max_angle < 40:
         return "moderate"
-    else:
-        return "severe"
-
-
-# ================= Model Loading =================
-
-logger.info("Loading keypoint detection model...")
-with open(KP_ARCH, 'r') as f:
-    kp_model = model_from_json(f.read())
-kp_model.load_weights(KP_WEIGHTS)
-
-logger.info("Loading TFLite regression model...")
-interpreter = tf.lite.Interpreter(model_path=TF_MODEL, num_threads=4)
-interpreter.allocate_tensors()
-
-logger.info("Models loaded successfully.")
-
-# ================= Pipeline =================
-
-def predict_angles(image: Image.Image) -> dict:
-    """
-    Run the full scoliosis detection pipeline on a single image.
-
-    Returns dict with:
-      - secondary_thoracic (상부 흉추)
-      - main_thoracic (주 흉추)
-      - lumbar (요추)
-      - severity
-      - back_type
-    """
-    img = image.convert('RGB')
-    w, h = img.size
-    b_cx, b_cy = w / 2, h / 2
-
-    # ---- Stage 1: Keypoint Screening ----
-    img_kp = np.array(img.resize((256, 256), Image.LANCZOS)) / 255.0
-    img_kp = np.expand_dims(img_kp, axis=0)
-
-    predictions = kp_model.predict(img_kp, verbose=0)
-    u0, v0 = np.split(predictions, 2, axis=-1)
-
-    y_nor10 = denor(u0, UMAX, UMIN)
-    y_nor20 = denor(v0, VMAX, VMIN)
-    y_nor0 = np.concatenate((y_nor10, y_nor20), axis=-1).reshape(10, 2)
-
-    keypoints = np.zeros((10, 2))
-    keypoints[:, 0] = y_nor0[:, 0] * w + b_cx
-    keypoints[:, 1] = -y_nor0[:, 1] * h + b_cy
-
-    angles_degrees = []
-    for i in range(5):
-        j = 9 - i
-        x1, y1 = keypoints[i]
-        x2, y2 = keypoints[j]
-        dx = x2 - x1
-        dy = y1 - y2
-        angle_rad = np.arctan2(dy, dx)
-        angle_deg = abs(np.degrees(angle_rad))
-        angles_degrees.append(angle_deg)
-
-    mean_angle = float(np.mean(angles_degrees))
-    logger.info(f"Screening: mean_angle={mean_angle:.2f}°")
-
-    if mean_angle <= SCREENING_THRESHOLD:
-        logger.info("No scoliosis detected (below screening threshold)")
-        return {
-            "main_thoracic": 0.0,
-            "secondary_thoracic": 0.0,
-            "lumbar": 0.0,
-            "severity": "normal",
-            "back_type": "Normal",
-        }
-
-    # ---- Stage 2: Detailed Angle Prediction (TFLite) ----
-    img_tf = img.resize((1024, 1024), Image.BILINEAR)
-    x_tf = np.asarray(img_tf, dtype=np.float32)[None, ...]
-
-    tf_inp = interpreter.get_input_details()[0]
-    tf_out = interpreter.get_output_details()[0]
-
-    if tf_inp["dtype"] == np.int8:
-        scale, zero = tf_inp["quantization"]
-        x_tf = np.round(x_tf / scale + zero).astype(np.int8)
-
-    if tuple(tf_inp["shape"]) != x_tf.shape:
-        interpreter.resize_tensor_input(tf_inp["index"], x_tf.shape)
-        interpreter.allocate_tensors()
-        tf_inp = interpreter.get_input_details()[0]
-        tf_out = interpreter.get_output_details()[0]
-
-    interpreter.set_tensor(tf_inp["index"], x_tf)
-    interpreter.invoke()
-    pred_angles = interpreter.get_tensor(tf_out["index"]).squeeze().astype(np.float32)
-
-    if tf_out["dtype"] == np.int8:
-        scale, zero = tf_out["quantization"]
-        pred_angles = (pred_angles - zero) * scale
-
-    # pred_angles[0] = secondary thoracic (상부 흉추)
-    # pred_angles[1] = main thoracic (주 흉추)
-    # pred_angles[2] = lumbar (요추)
-    a1 = float(pred_angles[0])
-    a2 = float(pred_angles[1])
-    a3 = float(pred_angles[2])
-
-    logger.info(f"TFLite prediction: secondary_thoracic={a1:.2f}, main_thoracic={a2:.2f}, lumbar={a3:.2f}")
-
-    # ---- Stage 3: Classification ----
-    back_type = classify_three(a1, a2, a3)
-    max_angle = max(abs(a1), abs(a2), abs(a3))
-    severity = get_severity(max_angle)
-
-    return {
-        "main_thoracic": round(a2, 2),
-        "secondary_thoracic": round(a1, 2),
-        "lumbar": round(a3, 2),
-        "severity": severity,
-        "back_type": back_type,
-    }
-
-
-# ================= FastAPI App =================
-
-app = FastAPI(title="AIS-API", description="Scoliosis Detection and Classification API")
+    return "severe"
 
 
 @app.post("/ais/angle")
-async def predict_angle(file: UploadFile = File(...)):
+async def predict_angle(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
-    Predict spinal angles from an uploaded image.
+    기존 백엔드 호환용 Cobb angle 예측 엔드포인트.
 
-    Accepts: multipart/form-data with field "file" (JPEG/PNG image)
-    Returns: JSON with main_thoracic, secondary_thoracic, lumbar, severity, back_type
+    새 모델 출력 순서:
+    - cobb_angles_deg[0]: CA(Prox. T) -> secondary_thoracic
+    - cobb_angles_deg[1]: CA(Main. T) -> main_thoracic
+    - cobb_angles_deg[2]: CA(TL or Lumbar) -> lumbar
     """
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file must be an image")
 
     try:
-        contents = await file.read()
-        image = Image.open(io.BytesIO(contents))
-    except Exception as e:
-        logger.error(f"Failed to read image: {e}")
-        raise HTTPException(status_code=400, detail="Failed to read image file")
+        file_bytes = await file.read()
+        image = read_image_from_bytes(file_bytes)
+        result = run_pipeline_from_pil(
+            image,
+            use_segmentation=USE_SEGMENTATION_DEFAULT,
+            force_cobb=True,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={"error_code": "PREDICTION_FAILED", "error_message": str(exc)},
+        ) from exc
 
-    try:
-        result = predict_angles(image)
-    except Exception as e:
-        logger.error(f"Prediction failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Prediction failed")
+    if int(result.get("cobb_available", 0)) != 1:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_code": "COBB_UNAVAILABLE",
+                "cobb_error_code": result.get("cobb_error_code"),
+            },
+        )
 
-    return JSONResponse(content=result)
+    cobb_angles = result.get("cobb_angles_deg")
+    if not isinstance(cobb_angles, list) or len(cobb_angles) < 3:
+        raise HTTPException(
+            status_code=500,
+            detail={"error_code": "INVALID_COBB_OUTPUT"},
+        )
 
+    secondary_thoracic = float(cobb_angles[0])
+    main_thoracic = float(cobb_angles[1])
+    lumbar = float(cobb_angles[2])
+    max_angle = max(abs(secondary_thoracic), abs(main_thoracic), abs(lumbar))
 
-@app.get("/health")
-async def health():
-    """Health check endpoint."""
-    return {"status": "ok"}
-
+    return {
+        "main_thoracic": round(main_thoracic, 2),
+        "secondary_thoracic": round(secondary_thoracic, 2),
+        "lumbar": round(lumbar, 2),
+        "severity": get_severity(max_angle),
+        "back_type": classify_three(secondary_thoracic, main_thoracic, lumbar),
+    }
