@@ -147,8 +147,8 @@ public class OnDevicePoseModule: Module {
 
       return [
         "name": item.name,
-        "x": Double(max(0, min(1, position.x / imageWidth))),
-        "y": Double(max(0, min(1, position.y / imageHeight))),
+        "x": Double(max(0, min(1, position.x / imageHeight))),
+        "y": Double(max(0, min(1, position.y / imageWidth))),
         "z": Double(position.z),
         "visibility": Double(landmark.inFrameLikelihood)
       ]
