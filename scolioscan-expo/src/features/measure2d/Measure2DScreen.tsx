@@ -97,6 +97,7 @@ export default function Measure2DScreen() {
     autoAligned,
     autoToast,
     autoCaptureResult,
+    autoHoldProgress,
     pauseAutoCapture,
     resumeAutoCapture,
     clearAutoToast,
@@ -399,6 +400,7 @@ export default function Measure2DScreen() {
           activeType={activeCaptureLottieType}
           completeVisible={captureCompleteVisible}
           layout={autoCaptureLottieLayout}
+          autoHoldProgress={autoHoldProgress}
           onLottieFinish={handleCaptureLottieFinish}
         />
 

@@ -62,9 +62,7 @@ export function useCaptureCompletionFlow({
 
     setPendingCapturePhotoUri(autoCaptureResult.photo.uri);
     setActiveCaptureLottieType('auto');
-    if (lottieCompletedRef.current) {
-      setCaptureCompleteVisible(true);
-    }
+    setCaptureCompleteVisible(true);
     clearAutoCaptureResult();
   }, [autoCaptureResult, clearAutoCaptureResult]);
 

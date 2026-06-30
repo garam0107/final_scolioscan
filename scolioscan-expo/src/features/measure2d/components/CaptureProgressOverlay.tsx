@@ -8,6 +8,8 @@ import type { CaptureLottieType } from '../hooks/useCaptureCompletionFlow';
 
 const AutoCaptureLottie = require('../../../../assets/lottie/autocapture_progress_rad.json');
 const ManualCaptureLottie = require('../../../../assets/lottie/manualcapture_progress_rad.json');
+const AUTO_LOTTIE_START_PROGRESS = 0;
+const AUTO_LOTTIE_END_PROGRESS = (150 - 32) / (160 - 32);
 
 type CaptureLottieLayout = {
   left: number;
@@ -20,6 +22,7 @@ type CaptureProgressOverlayProps = {
   activeType: CaptureLottieType | null;
   completeVisible: boolean;
   layout: CaptureLottieLayout | null;
+  autoHoldProgress: number;
   onLottieFinish: () => boolean;
 };
 
@@ -27,9 +30,15 @@ export function CaptureProgressOverlay({
   activeType,
   completeVisible,
   layout,
+  autoHoldProgress,
   onLottieFinish,
 }: CaptureProgressOverlayProps) {
   const lottieRef = useRef<LottieView>(null);
+  const controlledAutoProgress =
+    activeType === 'auto'
+      ? AUTO_LOTTIE_START_PROGRESS +
+        Math.min(Math.max(autoHoldProgress, 0), 1) * (AUTO_LOTTIE_END_PROGRESS - AUTO_LOTTIE_START_PROGRESS)
+      : undefined;
 
   return (
     <>
@@ -54,12 +63,21 @@ export function CaptureProgressOverlay({
             loop={false}
             resizeMode="contain"
             style={styles.testLottie}
+            progress={controlledAutoProgress}
             onLayout={() => {
+              if (activeType !== 'manual') {
+                return;
+              }
+
               requestAnimationFrame(() => {
                 lottieRef.current?.play(32, 150);
               });
             }}
             onAnimationFinish={() => {
+              if (activeType !== 'manual') {
+                return;
+              }
+
               if (!onLottieFinish()) {
                 return;
               }

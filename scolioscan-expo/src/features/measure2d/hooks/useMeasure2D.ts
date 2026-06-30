@@ -1,5 +1,5 @@
-import { Image } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { CELLULAR_DATA_BLOCKED_MESSAGE, isCellularDataBlockedError } from '@/src/lib/networkAccessGuard';
 import type { CameraCaptureSource, CapturedPhoto } from '../camera/cameraAdapter';
 import { convertPhotoLandmarksToPreviewLandmarks } from '../domain/landmarkCoordinateTransform';
@@ -64,26 +64,7 @@ async function capturePhotoWithTimeout(
     }
   }
 }
-async function resolvePhotoSize(photo: CapturedPhoto): Promise<{ width: number; height: number } | null> {
-  if (photo.width && photo.height) {
-    return {
-      width: photo.width,
-      height: photo.height,
-    };
-  }
 
-  return new Promise((resolve) => {
-    Image.getSize(
-      photo.uri,
-      (width, height) => {
-        resolve({ width, height });
-      },
-      () => {
-        resolve(null);
-      },
-    );
-  });
-}
 // 자동 체크는 서버 부하를 줄이기 위해 낮은 화질로 보내고, 실제 분석용 사진은 더 높은 화질로 촬영한다.
 const AUTO_CHECK_QUALITY = 0.35;
 const MANUAL_CHECK_QUALITY = 0.8;
@@ -92,15 +73,15 @@ const AUTO_FINAL_QUALITY = 0.85;
 const LANDMARK_NOT_FOUND = '사람을 찾지 못했습니다.';
 const LANDMARK_ANALYZE_FAIL = '랜드마크 분석에 실패했습니다.';
 const AUTO_CAPTURE_SUCCESS = '좋아요. 이 자세로 촬영할게요!';
-const LANDMARK_PHOTO_SIZE_FAIL = '디버그: 사진 크기 확인 실패';
-const LANDMARK_CONVERT_FAIL = '디버그: 좌표 변환 실패';
-const LANDMARK_NATIVE_FAIL = '디버그: ML Kit 호출 실패';
+
 export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, cameraReady }: UseMeasure2DParams) {
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<LandmarkEvaluation | null>(null);
   const [autoAligned, setAutoAligned] = useState(false);
   const [autoToast, setAutoToast] = useState<AutoToast | null>(null);
   const [autoCaptureResult, setAutoCaptureResult] = useState<ManualCaptureResult | null>(null);
+  const [autoHoldStartedAt, setAutoHoldStartedAt] = useState<number | null>(null);
+  const [autoHoldProgress, setAutoHoldProgress] = useState(0);
 
   // ref 값들은 렌더링과 무관한 진행 상태를 저장해서 중복 촬영과 중복 서버 호출을 막는다.
   const captureInFlightRef = useRef(false);
@@ -117,6 +98,8 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     // 자세가 흐트러지면 자동 촬영 대기 시간과 화면 카운트다운을 함께 초기화한다.
     alignedSinceRef.current = null;
     autoSuccessToastShownRef.current = false;
+    setAutoHoldStartedAt(null);
+    setAutoHoldProgress(0);
     setAutoAligned(false);
   }, []);
 
@@ -131,6 +114,8 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     // 수동 촬영이 실패하거나 제출로 이어지지 않으면 자동 촬영을 다시 허용한다.
     // 수동 촬영이 실패했거나 자세 기준을 통과하지 못한 경우 다시 자동 체크를 허용한다.
     autoPausedRef.current = false;
+    setAutoHoldStartedAt(null);
+    setAutoHoldProgress(0);
   }, []);
 
   const emitAutoToast = useCallback((message: string, tone: AutoToast['tone']) => {
@@ -147,6 +132,21 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     lastAutoReasonRef.current = null;
     setAutoToast(null);
   }, []);
+
+  useEffect(() => {
+    if (!autoHoldStartedAt) {
+      return undefined;
+    }
+
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - autoHoldStartedAt;
+      setAutoHoldProgress(Math.min(elapsed / AUTO_HOLD_MS, 1));
+    }, 16);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [autoHoldStartedAt]);
 
   const analyzeCapture = useCallback(async (quality: number, skipProcessing: boolean): Promise<ManualCaptureResult | null> => {
     // 촬영한 사진을 랜드마크 서버에 보내고, 가이드 기준 안에 들어왔는지 같은 평가 규칙으로 판정한다.
@@ -165,40 +165,38 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     try {
       const response = await detectPoseOnDevice(photo.uri);
 
-        if (!response.detected || !Array.isArray(response.landmarks) || response.landmarks.length === 0) {
-          const nextEvaluation: LandmarkEvaluation = {
-            aligned: false,
-            score: 0,
-            reasons: [LANDMARK_NOT_FOUND],
-          };
-          setEvaluation(nextEvaluation);
-          return { photo, evaluation: nextEvaluation };
-        }
+      if (!response.detected || !response.landmarks) {
+        const nextEvaluation: LandmarkEvaluation = {
+          aligned: false,
+          score: 0,
+          reasons: [LANDMARK_NOT_FOUND],
+        };
+        setEvaluation(nextEvaluation);
+        return { photo, evaluation: nextEvaluation };
+      }
 
-        const photoSize = await resolvePhotoSize(photo);
+      if (!photo.width || !photo.height) {
+        const nextEvaluation: LandmarkEvaluation = {
+          aligned: false,
+          score: 0,
+          reasons: [LANDMARK_ANALYZE_FAIL],
+        };
+        setEvaluation(nextEvaluation);
+        return { photo, evaluation: nextEvaluation };
+      }
 
-        if (!photoSize) {
-          const nextEvaluation: LandmarkEvaluation = {
-            aligned: false,
-            score: 0,
-            reasons: [LANDMARK_PHOTO_SIZE_FAIL],
-          };
-          setEvaluation(nextEvaluation);
-          return { photo, evaluation: nextEvaluation };
-        }
-
-        const previewLandmarks = convertPhotoLandmarksToPreviewLandmarks(response.landmarks, {
-          photoWidth: photoSize.width,
-          photoHeight: photoSize.height,
-          previewWidth: previewSize.width,
-          previewHeight: previewSize.height,
-        });
+      const previewLandmarks = convertPhotoLandmarksToPreviewLandmarks(response.landmarks, {
+        photoWidth: photo.width,
+        photoHeight: photo.height,
+        previewWidth: previewSize.width,
+        previewHeight: previewSize.height,
+      });
 
       if (!previewLandmarks) {
         const nextEvaluation: LandmarkEvaluation = {
           aligned: false,
           score: 0,
-          reasons: [LANDMARK_CONVERT_FAIL],
+          reasons: [LANDMARK_ANALYZE_FAIL],
         };
         setEvaluation(nextEvaluation);
         return { photo, evaluation: nextEvaluation };
@@ -212,8 +210,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const message = isCellularDataBlockedError(error) ? CELLULAR_DATA_BLOCKED_MESSAGE : `디버그: 예외 발생 - ${errorMessage}`;
+      const message = isCellularDataBlockedError(error) ? CELLULAR_DATA_BLOCKED_MESSAGE : LANDMARK_ANALYZE_FAIL;
       const nextEvaluation: LandmarkEvaluation = {
         aligned: false,
         score: 0,
@@ -301,7 +298,10 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
 
         if (!alignedSinceRef.current) {
           // 처음으로 기준에 들어온 시점을 저장하고, 이 시점부터 1.5초 유지 여부를 계산한다.
-          alignedSinceRef.current = Date.now();
+          const now = Date.now();
+          alignedSinceRef.current = now;
+          setAutoHoldStartedAt(now);
+          setAutoHoldProgress(0);
         }
 
         const elapsed = Date.now() - alignedSinceRef.current;
@@ -323,9 +323,11 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
             shutterSound: false,
           });
 
-          if (finalPhoto?.uri && !disposed) {
+          const captureCompleted = Boolean(finalPhoto?.uri && !disposed);
+
+          if (captureCompleted) {
               setAutoCaptureResult({
-                photo: finalPhoto,
+                photo: finalPhoto!,
                 evaluation: result.evaluation,
               });
             } else {
@@ -334,6 +336,9 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
 
 
           resetAutoAlignment();
+          if (captureCompleted) {
+            setAutoHoldProgress(1);
+          }
         }
       } catch (error) {
         resetAutoAlignment();
@@ -361,6 +366,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     autoAligned,
     autoToast,
     autoCaptureResult,
+    autoHoldProgress,
     pauseAutoCapture,
     resumeAutoCapture,
     clearAutoToast,
