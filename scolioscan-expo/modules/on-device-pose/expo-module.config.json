@@ -1,11 +1,12 @@
 {
-  "platforms": ["android", "ios"],
+  "platforms": ["android", "apple"],
   "android": {
     "modules": [
       "expo.modules.ondevicepose.OnDevicePoseModule"
     ]
   },
-  "ios": {
+  "apple": {
+    "podspecPath": "on-device-pose.podspec",
     "modules": [
       "OnDevicePoseModule"
     ]

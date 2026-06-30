@@ -1,5 +1,5 @@
+import { Image } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-
 import { CELLULAR_DATA_BLOCKED_MESSAGE, isCellularDataBlockedError } from '@/src/lib/networkAccessGuard';
 import type { CameraCaptureSource, CapturedPhoto } from '../camera/cameraAdapter';
 import { convertPhotoLandmarksToPreviewLandmarks } from '../domain/landmarkCoordinateTransform';
@@ -64,7 +64,26 @@ async function capturePhotoWithTimeout(
     }
   }
 }
+async function resolvePhotoSize(photo: CapturedPhoto): Promise<{ width: number; height: number } | null> {
+  if (photo.width && photo.height) {
+    return {
+      width: photo.width,
+      height: photo.height,
+    };
+  }
 
+  return new Promise((resolve) => {
+    Image.getSize(
+      photo.uri,
+      (width, height) => {
+        resolve({ width, height });
+      },
+      () => {
+        resolve(null);
+      },
+    );
+  });
+}
 // 자동 체크는 서버 부하를 줄이기 위해 낮은 화질로 보내고, 실제 분석용 사진은 더 높은 화질로 촬영한다.
 const AUTO_CHECK_QUALITY = 0.35;
 const MANUAL_CHECK_QUALITY = 0.8;
@@ -73,7 +92,9 @@ const AUTO_FINAL_QUALITY = 0.85;
 const LANDMARK_NOT_FOUND = '사람을 찾지 못했습니다.';
 const LANDMARK_ANALYZE_FAIL = '랜드마크 분석에 실패했습니다.';
 const AUTO_CAPTURE_SUCCESS = '좋아요. 이 자세로 촬영할게요!';
-
+const LANDMARK_PHOTO_SIZE_FAIL = '디버그: 사진 크기 확인 실패';
+const LANDMARK_CONVERT_FAIL = '디버그: 좌표 변환 실패';
+const LANDMARK_NATIVE_FAIL = '디버그: ML Kit 호출 실패';
 export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, cameraReady }: UseMeasure2DParams) {
   const [loading, setLoading] = useState(false);
   const [evaluation, setEvaluation] = useState<LandmarkEvaluation | null>(null);
@@ -144,38 +165,40 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     try {
       const response = await detectPoseOnDevice(photo.uri);
 
-      if (!response.detected || !response.landmarks) {
-        const nextEvaluation: LandmarkEvaluation = {
-          aligned: false,
-          score: 0,
-          reasons: [LANDMARK_NOT_FOUND],
-        };
-        setEvaluation(nextEvaluation);
-        return { photo, evaluation: nextEvaluation };
-      }
+        if (!response.detected || !Array.isArray(response.landmarks) || response.landmarks.length === 0) {
+          const nextEvaluation: LandmarkEvaluation = {
+            aligned: false,
+            score: 0,
+            reasons: [LANDMARK_NOT_FOUND],
+          };
+          setEvaluation(nextEvaluation);
+          return { photo, evaluation: nextEvaluation };
+        }
 
-      if (!photo.width || !photo.height) {
-        const nextEvaluation: LandmarkEvaluation = {
-          aligned: false,
-          score: 0,
-          reasons: [LANDMARK_ANALYZE_FAIL],
-        };
-        setEvaluation(nextEvaluation);
-        return { photo, evaluation: nextEvaluation };
-      }
+        const photoSize = await resolvePhotoSize(photo);
 
-      const previewLandmarks = convertPhotoLandmarksToPreviewLandmarks(response.landmarks, {
-        photoWidth: photo.width,
-        photoHeight: photo.height,
-        previewWidth: previewSize.width,
-        previewHeight: previewSize.height,
-      });
+        if (!photoSize) {
+          const nextEvaluation: LandmarkEvaluation = {
+            aligned: false,
+            score: 0,
+            reasons: [LANDMARK_PHOTO_SIZE_FAIL],
+          };
+          setEvaluation(nextEvaluation);
+          return { photo, evaluation: nextEvaluation };
+        }
+
+        const previewLandmarks = convertPhotoLandmarksToPreviewLandmarks(response.landmarks, {
+          photoWidth: photoSize.width,
+          photoHeight: photoSize.height,
+          previewWidth: previewSize.width,
+          previewHeight: previewSize.height,
+        });
 
       if (!previewLandmarks) {
         const nextEvaluation: LandmarkEvaluation = {
           aligned: false,
           score: 0,
-          reasons: [LANDMARK_ANALYZE_FAIL],
+          reasons: [LANDMARK_CONVERT_FAIL],
         };
         setEvaluation(nextEvaluation);
         return { photo, evaluation: nextEvaluation };
@@ -189,7 +212,8 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
       setEvaluation(nextEvaluation);
       return { photo, evaluation: nextEvaluation };
     } catch (error) {
-      const message = isCellularDataBlockedError(error) ? CELLULAR_DATA_BLOCKED_MESSAGE : LANDMARK_ANALYZE_FAIL;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const message = isCellularDataBlockedError(error) ? CELLULAR_DATA_BLOCKED_MESSAGE : `디버그: 예외 발생 - ${errorMessage}`;
       const nextEvaluation: LandmarkEvaluation = {
         aligned: false,
         score: 0,
