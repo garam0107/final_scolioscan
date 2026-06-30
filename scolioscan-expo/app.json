@@ -87,7 +87,7 @@
           "android": {
             "fonts": [
               {
-                "fontFamily": "PretendardVariable",
+                "fontFamily": "Pretendard",
                 "fontDefinitions": [
                   {
                     "path": "./assets/fonts/Pretendard-Thin.ttf",
@@ -130,7 +130,12 @@
             ]
           },
           "ios": [
-            "./assets/fonts/PretendardVariable.ttf"
+            "./assets/fonts/Pretendard-Regular.ttf",
+            "./assets/fonts/Pretendard-Medium.ttf",
+            "./assets/fonts/Pretendard-SemiBold.ttf",
+            "./assets/fonts/Pretendard-Bold.ttf",
+            "./assets/fonts/Pretendard-ExtraBold.ttf",
+            "./assets/fonts/Pretendard-Black.ttf"
           ]
         }
       ],

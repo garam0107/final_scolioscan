@@ -144,11 +144,16 @@ public class OnDevicePoseModule: Module {
     let landmarks: [[String: Any]] = landmarkTypes.map { item in
       let landmark = pose.landmark(ofType: item.type)
       let position = landmark.position
+      let normalizedX = position.x / imageHeight
+      let normalizedY = position.y / imageWidth
 
+      let rotatedX = 1 - normalizedY
+      let rotatedY = normalizedX
+ 
       return [
         "name": item.name,
-        "x": Double(max(0, min(1, position.x / imageHeight))),
-        "y": Double(max(0, min(1, position.y / imageWidth))),
+        "x": Double(max(0, min(1, rotatedX))),
+        "y": Double(max(0, min(1, rotatedY))),
         "z": Double(position.z),
         "visibility": Double(landmark.inFrameLikelihood)
       ]
