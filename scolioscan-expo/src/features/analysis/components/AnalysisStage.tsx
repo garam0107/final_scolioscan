@@ -1,10 +1,20 @@
-import { Animated, ImageBackground, Pressable, Text, View, type ImageURISource } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  ImageBackground,
+  Pressable,
+  Text,
+  View,
+  type ImageURISource,
+} from 'react-native';
 import Spine3DPreview from './Spine3DPreview';
 import styles from '../styles/analysisStage.styles';
 import type { AnalysisPose } from '../analysisPose';
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
 import MetricBlock from './MetricBlock';
 import SpineRig from './SpineRig';
+import { Colors } from '@/src/constants/theme';
 
 type Spine3DMetric = {
   key: 'upper' | 'main' | 'lumbar';
@@ -96,6 +106,8 @@ export default function AnalysisStage({
 }: AnalysisStageProps) {
 
   const is3DView = viewMode === '3d';
+  const [is3DModelReady, setIs3DModelReady] = useState(false);
+  const show3DPlaceholder = is3DView && !is3DModelReady;
   const curvature = measurementSet?.curvature;
   const rotation = measurementSet?.rotation;
   const stage3DMetrics: Spine3DMetric[] = [
@@ -121,6 +133,16 @@ export default function AnalysisStage({
       rotationValue: rotation?.lumbar_atr,
     },
   ];
+
+  useEffect(() => {
+    if (is3DView) {
+      setIs3DModelReady(false);
+    }
+  }, [is3DView]);
+
+  const handle3DRenderStateChange = useCallback((ready: boolean) => {
+    setIs3DModelReady(ready);
+  }, []);
 
   return (
    <View style={[styles.stage, is3DView && styles.stage3D, { height: stageHeight }]}>
@@ -154,7 +176,17 @@ export default function AnalysisStage({
         ]}
         pointerEvents={is3DView ? 'auto' : 'none'}
       >
-        <Spine3DPreview measurementSet={measurementSet} active={is3DView} />
+        <Spine3DPreview
+          measurementSet={measurementSet}
+          active={is3DView}
+          onRenderStateChange={handle3DRenderStateChange}
+        />
+        {show3DPlaceholder ? (
+          <View style={styles.stage3DPlaceholder} pointerEvents="none">
+            <ActivityIndicator color={Colors.primary.white} />
+            <Text style={styles.stage3DPlaceholderText}>3D 모델을 불러오는 중입니다...</Text>
+          </View>
+        ) : null}
       </View>
         {is3DView ? (
       <View style={styles.stage3DOverlay} pointerEvents="none">

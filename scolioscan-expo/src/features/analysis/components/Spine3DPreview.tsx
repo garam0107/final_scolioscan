@@ -24,6 +24,7 @@ type NavigatorWithUserAgent = Navigator & {
 type Spine3DPreviewProps = {
   measurementSet: MeasurementSetResponse | null;
   active: boolean;
+  onRenderStateChange?: (ready: boolean) => void;
 };
 
 const EMPTY_DEFORMER_METRICS: SpineDeformerMetrics = {
@@ -85,7 +86,11 @@ function disposeObject3D(object: THREE.Object3D | null) {
   });
 }
 
-export default function Spine3DPreview({ measurementSet, active }: Spine3DPreviewProps) {
+export default function Spine3DPreview({
+  measurementSet,
+  active,
+  onRenderStateChange,
+}: Spine3DPreviewProps) {
   const aliveRef = useRef(true);
   const frameRef = useRef<number | null>(null);
   const inactiveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -170,6 +175,7 @@ export default function Spine3DPreview({ measurementSet, active }: Spine3DPrevie
     const contextId = contextIdRef.current + 1;
     contextIdRef.current = contextId;
     stopCurrentContext();
+    onRenderStateChange?.(false);
 
     const width = gl.drawingBufferWidth;
     const height = gl.drawingBufferHeight;
@@ -251,8 +257,7 @@ export default function Spine3DPreview({ measurementSet, active }: Spine3DPrevie
     deformerRef.current = new SpineDeformer(root);
     deformerRef.current.setMetrics(metricsRef.current);
 
-    const debugInfo = deformerRef.current.getDebugInfo();
-
+    let firstFrameLogged = false;
 
     const render = () => {
       if (!aliveRef.current || contextIdRef.current !== contextId) return;
@@ -282,6 +287,10 @@ export default function Spine3DPreview({ measurementSet, active }: Spine3DPrevie
       try {
         renderer.render(scene, camera);
         gl.endFrameEXP();
+        if (!firstFrameLogged) {
+          firstFrameLogged = true;
+          onRenderStateChange?.(true);
+        }
       } catch (error) {
         if (__DEV__) {
           console.warn('[Spine3DPreview] render skipped after GL context change', error);
@@ -296,7 +305,7 @@ export default function Spine3DPreview({ measurementSet, active }: Spine3DPrevie
 
     renderRef.current = render;
     render();
-  }, [stopCurrentContext]);
+  }, [onRenderStateChange, stopCurrentContext]);
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>

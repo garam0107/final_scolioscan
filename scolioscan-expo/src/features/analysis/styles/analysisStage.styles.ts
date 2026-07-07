@@ -191,6 +191,23 @@ const stageStyles = StyleSheet.create({
   stage3DModelSlotHidden: {
     opacity: 0,
   },
+  stage3DPlaceholder: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.gray[900],
+    zIndex: 5,
+    elevation: 5,
+  },
+  stage3DPlaceholderText: {
+    ...textFont,
+    marginTop: 10,
+    color: Colors.primary.white,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   stage3DOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 20,
