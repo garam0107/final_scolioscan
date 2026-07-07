@@ -1,6 +1,6 @@
 import { useFonts as useExpoFonts } from 'expo-font';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +8,12 @@ import LoadingSearchIcon from '../../../assets/icons/home/loading_search.svg';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import { Colors } from '@/src/constants/theme';
 import { textFont } from '@/src/constants/fonts';
+import { curvatureAPI } from '@/src/api/curvature';
+import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
+import {
+  CELLULAR_DATA_BLOCKED_MESSAGE,
+  isCellularDataBlockedError,
+} from '@/src/lib/networkAccessGuard';
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 // 피그마의 블러와 외곽 그림자 효과를 유지하기 위해 차트는 PNG로 표시한다.
@@ -26,19 +32,28 @@ const SEARCH_LENS_CENTER_X = 43.4896;
 const SEARCH_LENS_CENTER_Y = 43.4896;
 const SEARCH_ORBIT_INPUT_RANGE = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
 const SEARCH_ROTATE_INPUT_RANGE = [0, 0.25, 0.5, 0.75, 1];
+const MIN_ANALYSIS_LOADING_MS = 10000;
 
 export default function MeasureLoadingPreviewScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ photoUri?: string | string[] }>();
+  const markMeasurementChanged = useMeasurementRefreshStore((state) => state.markMeasurementChanged);
   const { width } = useWindowDimensions();
   const rotateProgress = useRef(new Animated.Value(0)).current;
   const spinnerProgress = useRef(new Animated.Value(0)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const buttonTranslateY = useRef(new Animated.Value(18)).current;
+  const analysisSubmittedRef = useRef(false);
   // 문구가 바뀔 때 새 문구만 아래에서 위로 나타나게 제어한다.
   const messageEnterProgress = useRef(new Animated.Value(1)).current;
   const [messageIndex, setMessageIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [analysisError, setAnalysisError] = useState('');
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
+  const photoUri = useMemo(
+    () => Array.isArray(params.photoUri) ? params.photoUri[0] : params.photoUri,
+    [params.photoUri],
+  );
   const iconScale = Math.min(1, Math.max(0.86, width / 390));
   const chartSize = 131 * iconScale;
   const searchSize = 99 * iconScale;
@@ -149,27 +164,75 @@ export default function MeasureLoadingPreviewScreen() {
     return () => clearInterval(messageTimer);
   }, [isComplete, messageEnterProgress]);
 
-  useEffect(() => {
-    const completeTimer = setTimeout(() => {
-      setIsComplete(true);
-      Animated.parallel([
-        Animated.timing(buttonOpacity, {
-          toValue: 1,
-          duration: 520,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(buttonTranslateY, {
-          toValue: 0,
-          duration: 520,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, 10000);
-
-    return () => clearTimeout(completeTimer);
+  const showResultButton = useCallback(() => {
+    setIsComplete(true);
+    Animated.parallel([
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 520,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonTranslateY, {
+        toValue: 0,
+        duration: 520,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [buttonOpacity, buttonTranslateY]);
+
+  useEffect(() => {
+    if (analysisSubmittedRef.current) {
+      return undefined;
+    }
+
+    analysisSubmittedRef.current = true;
+    let cancelled = false;
+    // API가 먼저 끝나도 사용자가 분석 중 화면을 최소 시간 동안 볼 수 있게 보장한다.
+    const minimumLoadingTimer = new Promise((resolve) => setTimeout(resolve, MIN_ANALYSIS_LOADING_MS));
+
+    const submitAnalysis = async () => {
+      try {
+        if (!photoUri) {
+          throw new Error('촬영 사진을 찾지 못했습니다.');
+        }
+
+        const response = await curvatureAPI.postAnalysis(photoUri);
+        await minimumLoadingTimer;
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!response.data.id) {
+          throw new Error('2D 측정 결과를 확인하지 못했습니다.');
+        }
+
+        markMeasurementChanged();
+        showResultButton();
+      } catch (error) {
+        await minimumLoadingTimer;
+
+        if (cancelled) {
+          return;
+        }
+
+        setAnalysisError(
+          isCellularDataBlockedError(error)
+            ? CELLULAR_DATA_BLOCKED_MESSAGE
+            : '분석 요청에 실패했습니다. 네트워크를 확인한 뒤 다시 촬영해주세요.',
+        );
+        showResultButton();
+      }
+    };
+
+    void submitAnalysis();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [markMeasurementChanged, photoUri, showResultButton]);
 
   if (!pretendardLoaded && !pretendardError) {
     return <SafeAreaView style={styles.screen} />;
@@ -206,7 +269,10 @@ export default function MeasureLoadingPreviewScreen() {
         </View>
 
         <View style={styles.textBlock}>
-          <Text style={styles.title}>{isComplete ? '분석이 완료되었어요!' : '척추 정보를 분석 중이에요'}</Text>
+          <Text style={styles.title}>
+            {analysisError ? '분석 요청에 실패했어요' : isComplete ? '분석이 완료되었어요!' : '척추 정보를 분석 중이에요'}
+          </Text>
+          {analysisError ? <Text style={styles.errorText}>{analysisError}</Text> : null}
           {isComplete ? null : (
             <View style={styles.loadingRow}>
               <Animated.View style={[styles.spinner, { transform: [{ rotate: spinnerRotate }] }]} />
@@ -247,8 +313,8 @@ export default function MeasureLoadingPreviewScreen() {
         ]}
       >
         <PrimaryButton
-          title="분석 결과 보기"
-          onPress={() => router.push('/analysis')}
+          title={analysisError ? '다시 촬영하기' : '분석 결과 보기'}
+          onPress={() => analysisError ? router.replace('/measure/2d') : router.push('/analysis')}
           width={width - 32}
           height={56}
           backgroundColor={Colors.mint[500]}
@@ -313,6 +379,15 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '400',
     color: Colors.gray[400],
+  },
+  errorText: {
+    ...textFont,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400',
+    color: Colors.gray[700],
+    textAlign: 'center',
+    marginTop: 12,
   },
   tipBlock: {
     position: 'absolute',

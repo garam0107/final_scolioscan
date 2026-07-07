@@ -15,16 +15,6 @@ import { AutoGuideStatusChip } from './components/AutoGuideStatusChip';
 import { Measure2DCameraStage } from './components/Measure2DCameraStage';
 import { Measure2DPermissionView } from './components/Measure2DPermissionView';
 import { styles } from './measure2d.styles';
-import {
-  CELLULAR_DATA_BLOCKED_MESSAGE,
-  guardedFetch,
-  isCellularDataBlockedError,
-} from '@/src/lib/networkAccessGuard';
-import { curvatureAPI } from '@/src/api/curvature';
-import { getAccessToken } from '@/src/lib/tokenStorage';
-import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
-import { useScoliometerSessionStore } from '@/src/store/scoliometerSessionStore';
-import type { CurvatureResponse } from '@/src/types/curvature';
 type ToastTone = 'info' | 'success' | 'warning' | 'error';
 type GuideChipState = {
   message: string;
@@ -53,9 +43,6 @@ export default function Measure2DScreen() {
   const [toastTone, setToastTone] = useState<ToastTone>('info');
   const [manualGuideChip, setManualGuideChip] = useState<GuideChipState | null>(null);
   const [manualSubmitting, setManualSubmitting] = useState(false);
-  const markMeasurementChanged = useMeasurementRefreshStore((state) => state.markMeasurementChanged);
-  const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
-  const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
   const [toastKey, setToastKey] = useState(0);
   const camera = useMemo(() => createExpoCameraAdapter(cameraRef), []);
   const guidelineGeometry = useMemo(() => {
@@ -160,84 +147,14 @@ export default function Measure2DScreen() {
     }, [requestCameraPermission]),
   );
 
-  const goToNextMeasurement = useCallback(() => {
-    router.replace(NEXT_MEASUREMENT_ROUTE);
+  const goToNextMeasurement = useCallback((photoUri: string) => {
+    router.replace({
+      pathname: NEXT_MEASUREMENT_ROUTE,
+      params: {
+        photoUri,
+      },
+    });
   }, [router]);
-
-  // const submitCurvature = useCallback(async (photoUri: string) => {
-  //   // 자동/수동 촬영으로 확보한 최종 사진을 척추측만 분석 API에 제출한다.
-  //   // 자동 촬영 또는 수동 촬영이 성공한 뒤 최종 사진을 척추측만 분석 API로 보낸다.
-  //     showToast('API 주소가 설정되지 않았습니다.', 'error');
-  //   try {
-  //     const fd = new FormData();
-  //     // React Native FormData는 웹 File 객체가 없어 uri, name, type 형태로 이미지를 전달한다.
-  //     fd.append('image', {
-  //       uri: photoUri,
-  //       name: 'upload.jpg',
-  //       type: 'image/jpeg',
-  //     } as any);
-
-  //     const token = getAccessToken(); // tokenStorage에서
-
-
-  //     const res = await guardedFetch(`${API_BASE_URL}/curvature/`, {
-  //       method: 'POST',
-  //       headers: {
-  //         Authorization: `Bearer ${token ?? ''}`,
-  //       },
-  //       body: fd,
-  //     });
-
-  //     const text = await res.text();
-
-  //     if (!res.ok) {
-  //       showToast('척추측만 분석 요청에 실패했습니다.', 'error');
-  //       return null;
-  //     }
-
-  //     const curvature = JSON.parse(text) as CurvatureResponse;
-
-  //     if (!curvature.id) {
-  //       showToast('2D 측정 결과를 확인하지 못했습니다.', 'error');
-  //       return null;
-  //     }
-
-  //     markMeasurementChanged();
-  //     return curvature;
-  //   } catch (error) {
-  //     showToast(
-  //       isCellularDataBlockedError(error)
-  //         ? CELLULAR_DATA_BLOCKED_MESSAGE
-  //         : '서버 연결에 실패했습니다. 네트워크를 확인해주세요.',
-  //       'error',
-  //     );
-  //     return null;
-  //   }
-  // }, [API_BASE_URL, markMeasurementChanged, showToast]);
-
-  const submitCurvatureWithAxios = useCallback(async (photoUri: string) => {
-    // 공통 axios 클라이언트를 사용해 access token 만료 시 refresh 후 재시도를 자동으로 탄다.
-    try {
-      const response = await curvatureAPI.postAnalysis(photoUri);
-      const curvature = response.data as CurvatureResponse;
-
-      if (!curvature.id) {
-        showToast('2D 측정 결과를 확인하지 못했습니다.', 'error');
-        return null;
-      }
-
-      markMeasurementChanged();
-      return curvature;
-    } catch (error) {
-      showToast(
-        isCellularDataBlockedError(error)
-          ? CELLULAR_DATA_BLOCKED_MESSAGE
-          : '서버 연결에 실패했습니다. 네트워크를 확인해주세요.',
-        'error',
-      );
-      return null;
-    }
-  }, [markMeasurementChanged, showToast]);
 
   const {
     activeCaptureLottieType,
@@ -249,9 +166,7 @@ export default function Measure2DScreen() {
     autoAligned,
     autoCaptureResult,
     clearAutoCaptureResult,
-    submitCurvature: submitCurvatureWithAxios,
     goToNextMeasurement,
-    resumeAutoCapture,
   });
 
   const handlePressCapture = async () => {

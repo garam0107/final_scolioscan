@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { CurvatureResponse } from '@/src/types/curvature';
-
 export type CaptureLottieType = 'auto' | 'manual';
 
 type AutoCaptureResult = {
@@ -14,9 +12,7 @@ type UseCaptureCompletionFlowParams = {
   autoAligned: boolean;
   autoCaptureResult: AutoCaptureResult | null;
   clearAutoCaptureResult: () => void;
-  submitCurvature: (photoUri: string) => Promise<CurvatureResponse | null>;
-  goToNextMeasurement: () => void;
-  resumeAutoCapture: () => void;
+  goToNextMeasurement: (photoUri: string) => void;
 };
 
 const CAPTURE_COMPLETE_DELAY_MS = 1000;
@@ -25,9 +21,7 @@ export function useCaptureCompletionFlow({
   autoAligned,
   autoCaptureResult,
   clearAutoCaptureResult,
-  submitCurvature,
   goToNextMeasurement,
-  resumeAutoCapture,
 }: UseCaptureCompletionFlowParams) {
   const lottieCompletedRef = useRef(false);
   const captureSubmitInFlightRef = useRef(false);
@@ -67,7 +61,7 @@ export function useCaptureCompletionFlow({
   }, [autoCaptureResult, clearAutoCaptureResult]);
 
   useEffect(() => {
-    // 자동/수동 모두 완료 UI가 표시된 뒤 1초 기다렸다가 척추측만 분석 API를 호출한다.
+    // 자동/수동 모두 완료 UI가 표시된 뒤 1초 기다렸다가 분석 중 화면으로 사진 URI를 넘긴다.
     if (!captureCompleteVisible || !pendingCapturePhotoUri || captureSubmitInFlightRef.current) {
       return;
     }
@@ -82,29 +76,13 @@ export function useCaptureCompletionFlow({
         return;
       }
 
-      const curvature = await submitCurvature(pendingCapturePhotoUri);
-
-      if (cancelled) {
-        return;
-      }
-
       captureSubmitInFlightRef.current = false;
 
-      if (curvature) {
-        setPendingCapturePhotoUri(null);
-        setManualCaptureProgressVisible(false);
-        setActiveCaptureLottieType(null);
-        setCaptureCompleteVisible(false);
-        goToNextMeasurement();
-        return;
-      }
-
-      lottieCompletedRef.current = false;
       setPendingCapturePhotoUri(null);
       setManualCaptureProgressVisible(false);
       setActiveCaptureLottieType(null);
       setCaptureCompleteVisible(false);
-      resumeAutoCapture();
+      goToNextMeasurement(pendingCapturePhotoUri);
     };
 
     void submitAfterComplete();
@@ -117,8 +95,6 @@ export function useCaptureCompletionFlow({
     captureCompleteVisible,
     goToNextMeasurement,
     pendingCapturePhotoUri,
-    resumeAutoCapture,
-    submitCurvature,
   ]);
 
   const startManualCaptureFlow = useCallback((photoUri: string) => {
