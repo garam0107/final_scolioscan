@@ -72,25 +72,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  viewModeToggleRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  gap: 8,
-  marginTop: 8,
-  marginBottom: 16,
-  paddingRight: 8,
-},
-viewModeLabel: {
-  ...textFont,
-  color: '#5E6A6D',
-  fontSize: 14,
-  fontWeight: '500',
-},
-viewModeLabelActive: {
-  color: '#1E2D30',
-  fontWeight: '700',
-},
 });
 
 export default styles;

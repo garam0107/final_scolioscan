@@ -1,20 +1,18 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import {
   ScrollView,
-  Switch,
   Text,
   View,
   useWindowDimensions,
   ActivityIndicator
 } from 'react-native';
-import { useFocusEffect ,useScrollToTop } from '@react-navigation/native';
+import { useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
 import NetworkErrorView from '@/src/components/NetworkErrorView';
 import TopScrollGradient, { useTopScrollGradient } from '@/src/components/TopScrollGradient';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { getAccessToken } from '@/src/lib/tokenStorage';
 import type { InfoCardLevel } from './analysisCopy';
 import styles from './styles/analysis.styles';
 import { createAnalysisPose } from './analysisPose';
@@ -37,9 +35,6 @@ const WIDE_LAYOUT_MIN_WIDTH = 600;
 const BASE_STAGE_WIDTH = 420;
 const BASE_STAGE_HEIGHT = 380;
 const STAGE_HORIZONTAL_PADDING = 20;
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
-
-
 type AnalysisScreenProps = {
   analysisId?: string;
 };
@@ -82,11 +77,6 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const topScrollGradient = useTopScrollGradient();
 
   const pose = useMemo(() => createAnalysisPose(analysis), [analysis]);
-  // 측정 때 사용한 이미지 
-  const stageBackgroundSource = useMemo(
-    () => analysis?.image_url ? { uri: analysis.image_url } : null,
-    [analysis?.image_url],
-  );
   const wideStageScale = getWideStageScale(width, height);
   const isWideLayout = width >= WIDE_LAYOUT_MIN_WIDTH;
   const cardWidth = Math.min(width - 24, 440);
@@ -109,14 +99,6 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const infoCardLevel = getInfoCardLevel(maxCobbValue);
   const severityLabel = infoCardLevel;
   const shouldShowMeasurementRequired = !loading && !analysis && !error && !networkError;
-  // 2D,3D 토글
-  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');  
-  useFocusEffect(
-  useCallback(() => {
-    setViewMode('2d');
-    }, []),
-  );
-  const is3DView = viewMode === '3d';
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);
     if (maxValue < 15) return '정상';
@@ -200,26 +182,11 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
             error={error}
             angleAnimationKey={angleAnimationKey}
             progress={progress}
-            // 측정 시 찍은 이미지 
-            viewMode={viewMode}
+            viewMode="3d"
             measurementSet={measurementSet}
-            backgroundImageSource={is3DView ? null : stageBackgroundSource}
+            backgroundImageSource={null}
             onRetry={reloadAnalysisData}
           />
-          <View style={styles.viewModeToggleRow}>
-            <Text style={[styles.viewModeLabel, !is3DView && styles.viewModeLabelActive]}>
-              2D
-            </Text>
-            <Switch
-              value={is3DView}
-              onValueChange={(value) => setViewMode(value ? '3d' : '2d')}
-              trackColor={{ false: '#C9D1D3', true: '#69B7BC' }}
-              thumbColor="#FFFFFF"
-            />
-            <Text style={[styles.viewModeLabel, is3DView && styles.viewModeLabelActive]}>
-              3D
-            </Text>
-          </View>
           <InfoCard level={infoCardLevel} />
 
           <SeverityCard metrics={pose.metrics} />
