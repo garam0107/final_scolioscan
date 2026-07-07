@@ -39,6 +39,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      detachInactiveScreens={false}
       screenOptions={{
         headerShown: false,
       }}
