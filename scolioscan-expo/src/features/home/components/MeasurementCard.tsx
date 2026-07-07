@@ -43,35 +43,6 @@ export default function MeasurementCard({
         pressed && styles.pressed,
       ]}
     >
-      {pro && (
-        <View
-          style={[
-            styles.proBadge,
-            {
-              left: layout.proBadgeLeft,
-              top: layout.proBadgeTop,
-              height: layout.proBadgeHeight,
-              gap: layout.proBadgeGap,
-              paddingHorizontal: layout.proBadgePaddingHorizontal,
-            },
-          ]}
-        >
-          <CrownIcon width={layout.proBadgeIconSize} height={layout.proBadgeIconSize} />
-          <Text
-            style={[
-              styles.proBadgeText,
-              {
-                fontSize: layout.proBadgeTextFontSize,
-                lineHeight: layout.proBadgeTextLineHeight,
-              },
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="clip"
-          >
-            Pro
-          </Text>
-        </View>
-      )}
       <View
         style={[
           styles.measurementIconWrap,
@@ -93,7 +64,7 @@ export default function MeasurementCard({
               lineHeight: layout.titleTextLineHeight,
             },
           ]}
-          numberOfLines={1}
+          numberOfLines={2}
           ellipsizeMode="clip"
         >
           {title}
@@ -118,7 +89,7 @@ export default function MeasurementCard({
               },
               subtitleColor ? { color: subtitleColor } : null,
             ]}
-            numberOfLines={1}
+            numberOfLines={2}
             ellipsizeMode="clip"
           >
             {subtitle}

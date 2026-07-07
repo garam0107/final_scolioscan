@@ -21,6 +21,7 @@ import CurvatureSummaryCardRow from '@/src/features/measurementSummary/component
 import CurvatureTrendChart from '@/src/features/measurementSummary/components/CurvatureTrendChart';
 import TwoIcon from '../../../assets/home/test.svg';
 import ThreeIcon from '../../../assets/home/home_3d_camera.svg';
+import ScoliometerIcon from '../../../assets/home/home_scolio.svg'
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
@@ -58,7 +59,7 @@ export default function HomeScreen() {
     {
       id: '2d',
       title: '2D 측정하기',
-      subtitle: '집에서 간편하게 측정',
+      subtitle: '사진 한 장으로 간편하게 측정',
       icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
   // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
   // onPress: () => {
@@ -68,10 +69,10 @@ export default function HomeScreen() {
       onPress: () => { router.push('/measure/2d'); },
     },
     {
-      id: '3d',
-      title: '3D 동영상 측정',
-      subtitle: '영상을 통한 정밀 측정',
-      icon: <ThreeIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
+      id: 'scoliometer',
+      title: '정교한 측정하기',
+      subtitle: '스콜리오미터로 정교한 측정',
+      icon: <ScoliometerIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
       pro: true,
       subtitleColor: '#2E96FF',
       subtitleBackgroundColor: '#EBF5FF',
