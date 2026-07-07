@@ -15,7 +15,7 @@ type UseCaptureCompletionFlowParams = {
   autoCaptureResult: AutoCaptureResult | null;
   clearAutoCaptureResult: () => void;
   submitCurvature: (photoUri: string) => Promise<CurvatureResponse | null>;
-  goToNextMeasurement: (curvatureMeasurementId: number) => void;
+  goToNextMeasurement: () => void;
   resumeAutoCapture: () => void;
 };
 
@@ -95,7 +95,7 @@ export function useCaptureCompletionFlow({
         setManualCaptureProgressVisible(false);
         setActiveCaptureLottieType(null);
         setCaptureCompleteVisible(false);
-        goToNextMeasurement(curvature.id);
+        goToNextMeasurement();
         return;
       }
 
