@@ -36,6 +36,7 @@ type AnalysisStageProps = {
   loading: boolean;
   viewMode: '2d' | '3d';
   measurementSet: MeasurementSetResponse | null;
+  screenFocused: boolean;
   error: string | null;
   angleAnimationKey: number;
   progress: Animated.Value;
@@ -100,12 +101,14 @@ export default function AnalysisStage({
   progress,
   viewMode,
   measurementSet,
+  screenFocused,
   // 측정 때 사용한 이미지 
   backgroundImageSource,
   onRetry,
 }: AnalysisStageProps) {
 
   const is3DView = viewMode === '3d';
+  const is3DActive = is3DView && screenFocused;
   const [is3DModelReady, setIs3DModelReady] = useState(false);
   const show3DPlaceholder = is3DView && !is3DModelReady;
   const curvature = measurementSet?.curvature;
@@ -178,7 +181,7 @@ export default function AnalysisStage({
       >
         <Spine3DPreview
           measurementSet={measurementSet}
-          active={is3DView}
+          active={is3DActive}
           onRenderStateChange={handle3DRenderStateChange}
         />
         {show3DPlaceholder ? (

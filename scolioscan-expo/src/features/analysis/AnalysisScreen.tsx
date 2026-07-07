@@ -6,7 +6,7 @@ import {
   useWindowDimensions,
   ActivityIndicator
 } from 'react-native';
-import { useScrollToTop } from '@react-navigation/native';
+import { useIsFocused, useScrollToTop } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
@@ -54,6 +54,7 @@ function getWideStageScale(width: number, height: number) {
 
 export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const { width, height } = useWindowDimensions();
+  const isFocused = useIsFocused();
   const { user } = useAuth();
   const scrollRef = useRef<ScrollView>(null);
   const {
@@ -184,6 +185,7 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
             progress={progress}
             viewMode="3d"
             measurementSet={measurementSet}
+            screenFocused={isFocused}
             backgroundImageSource={null}
             onRetry={reloadAnalysisData}
           />

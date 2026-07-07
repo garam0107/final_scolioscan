@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { PanResponder, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
 import { Asset } from 'expo-asset';
 import { GLView } from 'expo-gl';
 import * as THREE from 'three';
@@ -10,6 +10,7 @@ import { SpineDeformer, type SpineDeformerMetrics } from '../3d/SpineDeformer';
 
 const SPINE_MODEL = require('../../../../assets/glb/spine.glb');
 const INACTIVE_RENDER_DELAY_MS = 250;
+const AUTO_ROTATION_SPEED_RADIAN = 0.35;
 
 type ExpoGL = WebGLRenderingContext & {
   drawingBufferWidth: number;
@@ -102,8 +103,8 @@ export default function Spine3DPreview({
   const lastFrameTimeRef = useRef<number | null>(null);
   const contextIdRef = useRef(0);
   const activeRef = useRef(active);
-  const startRotationRef = useRef(0);
-  const targetRotationRef = useRef(0);
+  const autoRotationPausedRef = useRef(false);
+  const [autoRotationPaused, setAutoRotationPaused] = useState(false);
 
   const stopCurrentContext = useCallback(() => {
     if (frameRef.current !== null) {
@@ -139,6 +140,12 @@ export default function Spine3DPreview({
 
     if (active) {
       lastFrameTimeRef.current = null;
+      // 분석 화면으로 다시 돌아올 때는 이전 회전 상태를 이어가지 않고 정면에서 다시 시작한다.
+      if (modelRef.current) {
+        modelRef.current.rotation.y = 0;
+      }
+      autoRotationPausedRef.current = false;
+      setAutoRotationPaused(false);
 
       if (inactiveTimeoutRef.current !== null) {
         clearTimeout(inactiveTimeoutRef.current);
@@ -158,18 +165,13 @@ export default function Spine3DPreview({
     deformerRef.current?.setMetrics(metrics);
   }, [measurementSet]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 2,
-      onPanResponderGrant: () => {
-        startRotationRef.current = targetRotationRef.current;
-      },
-      onPanResponderMove: (_, gesture) => {
-        targetRotationRef.current = startRotationRef.current + gesture.dx * 0.012;
-      },
-    }),
-  ).current;
+  const toggleAutoRotation = useCallback(() => {
+    setAutoRotationPaused((current) => {
+      const next = !current;
+      autoRotationPausedRef.current = next;
+      return next;
+    });
+  }, []);
 
   const onContextCreate = useCallback(async (gl: ExpoGL) => {
     const contextId = contextIdRef.current + 1;
@@ -253,6 +255,8 @@ export default function Spine3DPreview({
     });
 
     scene.add(root);
+    // 새 GL context에서 모델을 다시 붙일 때는 항상 처음 방향에서 자동 회전을 시작한다.
+    root.rotation.y = 0;
     modelRef.current = root;
     deformerRef.current = new SpineDeformer(root);
     deformerRef.current.setMetrics(metricsRef.current);
@@ -278,9 +282,8 @@ export default function Spine3DPreview({
         return;
       }
 
-      if (modelRef.current) {
-        modelRef.current.rotation.y +=
-          (targetRotationRef.current - modelRef.current.rotation.y) * 0.18;
+      if (modelRef.current && !autoRotationPausedRef.current) {
+        modelRef.current.rotation.y += AUTO_ROTATION_SPEED_RADIAN * deltaSeconds;
       }
 
       deformerRef.current?.update(deltaSeconds);
@@ -308,9 +311,15 @@ export default function Spine3DPreview({
   }, [onRenderStateChange, stopCurrentContext]);
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: !autoRotationPaused }}
+      accessibilityLabel={autoRotationPaused ? '3D 모델 자동 회전 시작' : '3D 모델 자동 회전 멈춤'}
+      style={styles.container}
+      onPress={toggleAutoRotation}
+    >
       <GLView style={styles.glView} onContextCreate={onContextCreate} />
-    </View>
+    </Pressable>
   );
 }
 
