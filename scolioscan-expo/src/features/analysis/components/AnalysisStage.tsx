@@ -56,16 +56,20 @@ function Spine3DMetricOverlay({ metric }: { metric: Spine3DMetric }) {
         <Text style={styles.stage3DMetricBadgeText}>{metric.label}</Text>
       </View>
 
-      <View style={styles.stage3DMetricValues}>
-        <View style={styles.stage3DMetricColumn}>
-          <Text style={styles.stage3DMetricLabel}>만곡도</Text>
-          <Text style={styles.stage3DMetricValue}>{formatDegree(metric.curvatureValue)}</Text>
+      <View style={styles.stage3DMetricRow}>
+        <View style={styles.stage3DMetricValues}>
+          <View style={styles.stage3DMetricCurveColumn}>
+            <Text style={styles.stage3DMetricLabel}>만곡도</Text>
+            <Text style={styles.stage3DMetricValue}>{formatDegree(metric.curvatureValue)}</Text>
+          </View>
+
+          <View style={styles.stage3DMetricRotationColumn}>
+            <Text style={styles.stage3DMetricLabel}>비틀림</Text>
+            <Text style={styles.stage3DMetricValue} >{formatDegree(metric.rotationValue, true)}</Text>
+          </View>
         </View>
 
-        <View style={styles.stage3DMetricColumn}>
-          <Text style={styles.stage3DMetricLabel}>비틀림</Text>
-          <Text style={styles.stage3DMetricValue} >{formatDegree(metric.rotationValue, true)}</Text>
-        </View>
+        <View style={styles.stage3DMetricGuideLine} />
       </View>
     </View>
   );

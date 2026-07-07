@@ -218,15 +218,36 @@ const stageStyles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0,
   },
-  stage3DMetricValues: {
-    width: 118,
+  stage3DMetricRow: {
+    width: 210,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 16,
     marginTop: 4,
   },
-  stage3DMetricColumn: {
-    width: 70,
+  stage3DMetricValues: {
+    flexDirection: 'row',
     alignItems: 'flex-start',
+  },
+  stage3DMetricCurveColumn: {
+    width: 50,
+    alignItems: 'flex-start',
+  },
+  stage3DMetricRotationColumn: {
+    alignItems: 'flex-start',
+    marginLeft: 8,
+  },
+  stage3DMetricGuideLine: {
+    flex: 1,
+    minWidth: 1,
+    height: 2,
+    backgroundColor: Colors.primary.white,
+    opacity: 0.95,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 2,
+    elevation: 2,
   },
   stage3DMetricLabel: {
     ...textFont,
