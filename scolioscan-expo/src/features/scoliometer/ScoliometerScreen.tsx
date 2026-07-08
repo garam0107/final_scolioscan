@@ -245,23 +245,7 @@ export default function ScoliometerScreen() {
     }
   }, [curvatureMeasurementIdParam, setCurvatureMeasurementId]);
 
-  const handleStopConfirmed = useCallback(() => {
-    // 측정 중단 시에는 2D 측정과 이어지는 임시 세션도 함께 비운다.
-    resetSession();
-    router.replace('/home');
-  }, [resetSession, router]);
 
-  const showStopConfirm = useCallback(() => {
-    Alert.alert(
-      '측정을 중단할까요?',
-      '진행 중인 척추측만계 측정값이 삭제됩니다.',
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '확인', style: 'destructive', onPress: handleStopConfirmed },
-      ],
-      { cancelable: true },
-    );
-  }, [handleStopConfirmed]);
 
   const handleMeasurePress = useCallback(async () => {
     // 필요한 샘플 수가 모이면 회전 측정값을 저장하고, 부족하면 현재 각도만 세션에 누적한다.
@@ -331,22 +315,10 @@ export default function ScoliometerScreen() {
       }
     };
   }, []);
+   const moveHome = async () => {
+    router.back();
+  };
 
-  useEffect(() => {
-    // 안드로이드 뒤로가기는 측정 중단 확인창으로 연결해 실수로 세션이 사라지는 것을 막는다.
-    if (Platform.OS !== 'android') {
-      return undefined;
-    }
-
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      showStopConfirm();
-      return true;
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [showStopConfirm]);
 
   if (!isSupported) {
     return (
@@ -362,7 +334,7 @@ export default function ScoliometerScreen() {
     <SafeAreaView style={[styles.screen, { backgroundColor }]} edges={[]}>
       <View style={styles.content}>
         <View style={[styles.topBar, { paddingTop: insets.top + 2 }]}>
-          <Pressable onPress={showStopConfirm} style={styles.backButton}>
+          <Pressable onPress={moveHome} style={styles.backButton}>
             <Text style={styles.backButtonText}>‹</Text>
           </Pressable>
         </View>

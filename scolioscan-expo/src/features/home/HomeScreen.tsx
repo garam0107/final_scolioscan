@@ -20,7 +20,6 @@ import homeHeaderStyles from '@/src/features/home/styles/homeHeader.styles';
 import CurvatureSummaryCardRow from '@/src/features/measurementSummary/components/CurvatureSummaryCardRow';
 import CurvatureTrendChart from '@/src/features/measurementSummary/components/CurvatureTrendChart';
 import TwoIcon from '../../../assets/home/test.svg';
-import ThreeIcon from '../../../assets/home/home_3d_camera.svg';
 import ScoliometerIcon from '../../../assets/home/home_scolio.svg'
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -73,9 +72,9 @@ export default function HomeScreen() {
       title: '정교한 측정하기',
       subtitle: '스콜리오미터로 정교한 측정',
       icon: <ScoliometerIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
-      pro: true,
       subtitleColor: '#2E96FF',
       subtitleBackgroundColor: '#EBF5FF',
+      onPress: () => {router.push('/measure/scoliometer')}
     },
   ], [measurementCardLayout.iconSize, router]);
 
