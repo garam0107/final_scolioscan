@@ -1,8 +1,8 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, BackHandler, Dimensions, Platform, Pressable, StatusBar as NativeStatusBar, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Dimensions, Platform, Pressable, StatusBar as NativeStatusBar, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
@@ -85,7 +85,6 @@ function formatAngle(angle: number) {
 
 function buildRotationPayload(
   samples: ScoliometerSample[],
-  curvatureMeasurementId?: number | null,
 ): RotationCreatePayload {
   // 측정 순서는 화면 가이드 순서와 API 필드 순서가 같아야 하므로 배열 인덱스로 매핑한다.
   const values = samples.map((sample) => sample.angle);
@@ -96,7 +95,6 @@ function buildRotationPayload(
     thoracolumbar_atr: values[2] ?? 0,
     upper_lumbar_atr: values[3] ?? 0,
     lower_lumbar_atr: values[4] ?? 0,
-    curvature_measurement_id: curvatureMeasurementId ?? null,
   };
 }
 
@@ -155,17 +153,12 @@ function getCircleOverlapPath(
 
 export default function ScoliometerScreen() {
   const router = useRouter();
-  const { curvatureMeasurementId: curvatureMeasurementIdParam } = useLocalSearchParams<{
-    curvatureMeasurementId?: string | string[];
-  }>();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [submitting, setSubmitting] = useState(false);
   const samples = useScoliometerSessionStore((state) => state.samples);
-  const curvatureMeasurementId = useScoliometerSessionStore((state) => state.curvatureMeasurementId);
   const addSample = useScoliometerSessionStore((state) => state.addSample);
   const markMeasurementChanged = useMeasurementRefreshStore((state) => state.markMeasurementChanged);
-  const setCurvatureMeasurementId = useScoliometerSessionStore((state) => state.setCurvatureMeasurementId);
   const resetSession = useScoliometerSessionStore((state) => state.resetSession);
   const {
     angle,
@@ -202,7 +195,6 @@ export default function ScoliometerScreen() {
   const flatSvgCenter = flatSvgSize / 2;
   const flatOffsetX = (bubbleX / 100) * flatTravel;
   const flatOffsetY = (bubbleY / 100) * flatTravel;
-  const activeCurvatureMeasurementId = curvatureMeasurementId ?? parsePositiveId(curvatureMeasurementIdParam);
   const screenDimensions = Dimensions.get('screen');
   const physicalLandscapeWidth = Math.max(screenDimensions.width, screenDimensions.height);
   const physicalCenterOffset = Platform.OS === 'android'
@@ -237,14 +229,6 @@ export default function ScoliometerScreen() {
     ? `${measuredCount}회 측정했어요. 이어서 측정해주세요`
     : guideText;
 
-  useEffect(() => {
-    const nextCurvatureMeasurementId = parsePositiveId(curvatureMeasurementIdParam);
-
-    if (nextCurvatureMeasurementId) {
-      setCurvatureMeasurementId(nextCurvatureMeasurementId);
-    }
-  }, [curvatureMeasurementIdParam, setCurvatureMeasurementId]);
-
 
 
   const handleMeasurePress = useCallback(async () => {
@@ -274,16 +258,16 @@ export default function ScoliometerScreen() {
     setSubmitting(true);
 
     try {
-      await rotationAPI.createAnalysis(buildRotationPayload(nextSamples, activeCurvatureMeasurementId));
+      await rotationAPI.createAnalysis(buildRotationPayload(nextSamples));
       markMeasurementChanged();
       resetSession();
-      router.replace('/measure-loading-preview');
+      router.replace('/home');
     } catch {
       Alert.alert('저장 실패', '척추측만계 측정을 저장하지 못했습니다. 다시 시도해주세요.');
     } finally {
       setSubmitting(false);
     }
-  }, [activeCurvatureMeasurementId, addSample, angle, markMeasurementChanged, resetSession, router, samples, submitting]);
+  }, [addSample, angle, markMeasurementChanged, resetSession, router, samples, submitting]);
 
   useEffect(() => {
     // 측만계는 가로 화면에서 측정하므로 진입 시 방향과 안드로이드 내비게이션 바를 조정한다.
