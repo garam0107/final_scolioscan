@@ -291,6 +291,9 @@ const stageStyles = StyleSheet.create({
   stage3DMetricValueBlurred: {
     filter: 'blur(8px)',
   },
+  stage3DMetricColumnBlurred: {
+    filter: 'blur(8px)',
+  },
 });
 
 export default stageStyles;

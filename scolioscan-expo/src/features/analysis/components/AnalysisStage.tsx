@@ -36,6 +36,7 @@ type AnalysisStageProps = {
   loading: boolean;
   viewMode: '2d' | '3d';
   measurementSet: MeasurementSetResponse | null;
+  metricBlurMode: 'none' | 'rotation-only' | 'all';
   screenFocused: boolean;
   error: string | null;
   angleAnimationKey: number;
@@ -60,7 +61,13 @@ function formatDegree(value?: number | null, decimal = false) {
   return `${rounded.toFixed(0)}°`;
 }
 
-function Spine3DMetricOverlay({ metric }: { metric: Spine3DMetric }) {
+function Spine3DMetricOverlay({
+  metric,
+  metricBlurMode,
+}: {
+  metric: Spine3DMetric;
+  metricBlurMode: AnalysisStageProps['metricBlurMode'];
+}) {
   const hasRotationValue =
     typeof metric.rotationValue === 'number' && !Number.isNaN(metric.rotationValue);
 
@@ -72,18 +79,28 @@ function Spine3DMetricOverlay({ metric }: { metric: Spine3DMetric }) {
 
       <View style={styles.stage3DMetricRow}>
         <View style={styles.stage3DMetricValues}>
-          <View style={styles.stage3DMetricCurveColumn}>
+          <View
+            style={[
+              styles.stage3DMetricCurveColumn,
+              metricBlurMode === 'all' && styles.stage3DMetricColumnBlurred,
+            ]}
+          >
             <Text style={styles.stage3DMetricLabel}>만곡도</Text>
             <Text style={styles.stage3DMetricValue}>{formatDegree(metric.curvatureValue)}</Text>
           </View>
 
-          <View style={styles.stage3DMetricRotationColumn}>
+          <View
+            style={[
+              styles.stage3DMetricRotationColumn,
+              metricBlurMode !== 'none' && styles.stage3DMetricColumnBlurred,
+            ]}
+          >
             <Text style={styles.stage3DMetricLabel}>비틀림</Text>
             {/* rotation 미측정 시 0도 값을 보여 주되, 피그마와 같이 값만 블러 처리한다. */}
             <Text
               style={[
                 styles.stage3DMetricValue,
-                !hasRotationValue && styles.stage3DMetricValueBlurred,
+                !hasRotationValue && metricBlurMode === 'none' && styles.stage3DMetricValueBlurred,
               ]}
             >
               {formatDegree(hasRotationValue ? metric.rotationValue : 0, true)}
@@ -112,6 +129,7 @@ export default function AnalysisStage({
   progress,
   viewMode,
   measurementSet,
+  metricBlurMode,
   screenFocused,
   // 측정 때 사용한 이미지 
   backgroundImageSource,
@@ -205,7 +223,11 @@ export default function AnalysisStage({
         {is3DView ? (
       <View style={styles.stage3DOverlay} pointerEvents="none">
         {stage3DMetrics.map((metric) => (
-          <Spine3DMetricOverlay key={metric.key} metric={metric} />
+          <Spine3DMetricOverlay
+            key={metric.key}
+            metric={metric}
+            metricBlurMode={metricBlurMode}
+          />
         ))}
       </View>
     ) : null}

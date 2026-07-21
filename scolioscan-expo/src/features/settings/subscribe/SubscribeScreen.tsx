@@ -8,12 +8,13 @@ import CommonSubscribeHeader from '@/src/features/settings/subscribe/components/
 import CommonSubscriptionPlanCard from '@/src/features/settings/subscribe/components/CommonSubscriptionPlanCard';
 import styles from '@/src/features/settings/subscribe/subscribe.styles';
 
-const STANDARD_FEATURES = ['월 10회 2D 촬영', '주요 정보를 포함한 리포트', '내 측정 정보 7일간 보관'];
+const STANDARD_FEATURES = ['월 10회 측정', '주요 정보를 포함한 리포트', '내 측정 정보 7일간 보관'];
 const PROFESSIONAL_FEATURES = [
-  '무제한 2D, 3D 촬영',
+  '무제한 측정',
+  'AI가 분석한 각도 정보 제공',
   '보다 자세한 리포트',
   '내 측정 정보 평생 보관',
-  '가까운 병원 후속 진료 예약',
+  '앱 내 광고 제거',
 ];
 const MEMBERSHIP_NOTICE_ITEMS = [
   '결제금액은 부가세가 포함된 가격입니다',

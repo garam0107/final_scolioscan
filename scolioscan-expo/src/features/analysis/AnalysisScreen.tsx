@@ -7,6 +7,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useIsFocused, useScrollToTop } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import MeasurementRequiredCard from '@/src/components/MeasurementRequiredCard';
@@ -18,6 +19,7 @@ import styles from './styles/analysis.styles';
 import { createAnalysisPose } from './analysisPose';
 import AiDoctorCard from './components/AiDoctorCard';
 import AnalysisStage from './components/AnalysisStage';
+import AnalysisMeasurementActionCard from './components/AnalysisMeasurementActionCard';
 import CurvePatternCard from './components/CurvePatternCard';
 import DominantCurveCard from './components/DominantCurveCard';
 import InfoCard from './components/InfoCard';
@@ -55,11 +57,13 @@ function getWideStageScale(width: number, height: number) {
 export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const { width, height } = useWindowDimensions();
   const isFocused = useIsFocused();
+  const router = useRouter();
   const { user } = useAuth();
   const scrollRef = useRef<ScrollView>(null);
   const {
     analysis,
     measurementSet,
+    hasActiveSubscription,
     loading,
     error,
     networkError,
@@ -100,6 +104,18 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const infoCardLevel = getInfoCardLevel(maxCobbValue);
   const severityLabel = infoCardLevel;
   const shouldShowMeasurementRequired = !loading && !analysis && !error && !networkError;
+  const hasRotation = measurementSet?.rotation !== null && measurementSet?.rotation !== undefined;
+  const shouldShowMeasurementAction = Boolean(analysis) && (!hasActiveSubscription || !hasRotation);
+  const metricBlurMode = !hasActiveSubscription
+    ? 'all'
+    : !hasRotation
+      ? 'rotation-only'
+      : 'none';
+
+  const handleMeasurementActionPress = () => {
+    // 구독 상태에 맞춰 동일한 안내 카드에서 목적지가 달라진다.
+    router.push(hasActiveSubscription ? '/home' : '/settings/subscribe');
+  };
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);
     if (maxValue < 15) return '정상';
@@ -185,10 +201,17 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
             progress={progress}
             viewMode="3d"
             measurementSet={measurementSet}
+            metricBlurMode={metricBlurMode}
             screenFocused={isFocused}
             backgroundImageSource={null}
             onRetry={reloadAnalysisData}
           />
+          {shouldShowMeasurementAction ? (
+            <AnalysisMeasurementActionCard
+              subscribed={hasActiveSubscription}
+              onPress={handleMeasurementActionPress}
+            />
+          ) : null}
           <InfoCard level={infoCardLevel} />
 
           <SeverityCard metrics={pose.metrics} />

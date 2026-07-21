@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { measurementSetAPI } from '@/src/api/measurementSet';
+import { subscribeAPI } from '@/src/api/subscribe';
 import { isNetworkError } from '@/src/lib/apiError';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
 import type { AnalysisResponse } from '@/src/types/analysis';
@@ -16,6 +17,7 @@ type UseAnalysisDataParams = {
 type UseAnalysisDataResult = {
   analysis: AnalysisResponse | null;
   measurementSet: MeasurementSetResponse | null;
+  hasActiveSubscription: boolean;
   loading: boolean;
   error: string | null;
   networkError: boolean;
@@ -27,6 +29,7 @@ export function useAnalysisData({
 }: UseAnalysisDataParams): UseAnalysisDataResult {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [measurementSet, setMeasurementSet] = useState<MeasurementSetResponse | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [networkError, setNetworkError] = useState(false);
@@ -50,16 +53,30 @@ export function useAnalysisData({
       try {
         let targetMeasurementSet: MeasurementSetResponse | null = null;
 
+        const subscriptionRequest = subscribeAPI.getCurrent();
+
         if (analysisId) {
           // 상세 화면은 전달받은 만곡도 id로 연결된 측정 세트를 불러옵니다.
           // 상세 화면도 만곡도와 비틀림이 묶인 측정 세트를 기준으로 조회합니다.
-          const response = await measurementSetAPI.getByCurvature(analysisId);
-          targetMeasurementSet = response.data;
+          const [measurementSetResponse, subscriptionResponse] = await Promise.all([
+            measurementSetAPI.getByCurvature(analysisId),
+            subscriptionRequest,
+          ]);
+          targetMeasurementSet = measurementSetResponse.data;
+
+          if (!mounted) return;
+          setHasActiveSubscription(subscriptionResponse.data !== null);
         } else {
           // 탭 화면은 최신 2D 결과를 기준으로 연결된 측정 세트를 찾아 보여줍니다.
           // 분석 탭은 최신 측정 세트를 그대로 가져와 2D와 3D가 같은 원본 값을 쓰게 합니다.
-          const response = await measurementSetAPI.getAnalyses({ limit: 1 });
-          targetMeasurementSet = response.data[0] ?? null;
+          const [measurementSetResponse, subscriptionResponse] = await Promise.all([
+            measurementSetAPI.getAnalyses({ limit: 1 }),
+            subscriptionRequest,
+          ]);
+          targetMeasurementSet = measurementSetResponse.data[0] ?? null;
+
+          if (!mounted) return;
+          setHasActiveSubscription(subscriptionResponse.data !== null);
         }
 
         if (!mounted) return;
@@ -74,6 +91,7 @@ export function useAnalysisData({
         if (!mounted) return;
         setMeasurementSet(null);
         setAnalysis(null);
+        setHasActiveSubscription(false);
         if (isNetworkError(loadError)) {
           setNetworkError(true);
         }
@@ -93,6 +111,7 @@ export function useAnalysisData({
   return {
     analysis,
     measurementSet,
+    hasActiveSubscription,
     loading,
     error,
     networkError,
