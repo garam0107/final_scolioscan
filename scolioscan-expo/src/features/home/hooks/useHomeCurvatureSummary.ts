@@ -31,6 +31,7 @@ export function useHomeCurvatureSummary(
   const [weeklyResultValues, setWeeklyResultValues] = useState<WeeklyResultValues>(INITIAL_WEEKLY_RESULT_VALUES);
   const [curvatureTrendRecords, setCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
   const [rawCurvatureTrendRecords, setRawCurvatureTrendRecords] = useState<CurvatureResponse[]>([]);
+  const [hasCurvatureMeasurement, setHasCurvatureMeasurement] = useState<boolean | null>(null);
 
   const weeklyResults: CurvatureSummaryItem<WeeklyResultId>[] = [
     { key: 'upper-thoracic', label: '상부 흉추만곡', value: `${weeklyResultValues.upperThoracic}°` },
@@ -136,10 +137,15 @@ export function useHomeCurvatureSummary(
       // 네트워크가 복구된 뒤 재시도할 때 오류 화면을 내리고 최신 홈 데이터를 다시 채웁니다.
       setNetworkError(false);
       // 최근 측정값과 원본 기록을 함께 보관해 카드, 변화량, 차트가 같은 응답을 기준으로 갱신되게 한다.
-      const response = await curvatureAPI.getAnalyses({
-        limit: 1000,
-        ...getRecentDateRange(RECENT_CURVATURE_DAYS),
-      });
+      const [response, measurementHistoryResponse] = await Promise.all([
+        curvatureAPI.getAnalyses({
+          limit: 1000,
+          ...getRecentDateRange(RECENT_CURVATURE_DAYS),
+        }),
+        // 날짜 필터 없이 최신 1건만 조회해 전체 기간의 2D 측정 이력을 판별한다.
+        curvatureAPI.getAnalyses({ limit: 1 }),
+      ]);
+      setHasCurvatureMeasurement(measurementHistoryResponse.data.length > 0);
       const recentCurvatures = filterRecentCurvatureRecords(response.data);
       const dailyLatestCurvatures = getDailyLatestCurvatureRecords(recentCurvatures);
       const latestCurvature = dailyLatestCurvatures[0];
@@ -165,6 +171,7 @@ export function useHomeCurvatureSummary(
       setWeeklyResultValues(INITIAL_WEEKLY_RESULT_VALUES);
       setRawCurvatureTrendRecords([]);
       setCurvatureTrendRecords([]);
+      setHasCurvatureMeasurement(null);
     }
   }, [setNetworkError]);
 
@@ -176,6 +183,7 @@ export function useHomeCurvatureSummary(
     recentChangeText: formatChangeAngle(recentChange, true),
     trendPath,
     trendAreaPath,
+    hasCurvatureMeasurement,
     loadLatestCurvature,
   };
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import CrownIcon from '../../../../assets/home/crown.svg';
+import { BlurView } from 'expo-blur';
+import ArrowLeftIcon from '../../../../assets/home/arrow_left.svg';
 import type { HomeMeasurementCardLayout } from '@/src/features/home/home.styles';
 import styles from '@/src/features/home/styles/measurementCard.styles';
 
@@ -13,6 +14,7 @@ export type MeasurementItem = {
   pro?: boolean;
   subtitleColor?: string;
   subtitleBackgroundColor?: string;
+  locked?: boolean;
 };
 
 type MeasurementCardProps = MeasurementItem & {
@@ -27,11 +29,13 @@ export default function MeasurementCard({
   pro,
   subtitleColor,
   subtitleBackgroundColor,
+  locked = false,
   layout,
 }: MeasurementCardProps) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={locked}
       style={({ pressed }) => [
         styles.measurementCard,
         {
@@ -40,6 +44,7 @@ export default function MeasurementCard({
           padding: layout.cardPadding,
           borderRadius: layout.cardRadius,
         },
+        locked && styles.lockedCard,
         pressed && styles.pressed,
       ]}
     >
@@ -96,6 +101,24 @@ export default function MeasurementCard({
           </Text>
         </View>
       </View>
+      {locked ? (
+        <>
+          {/* 피그마의 16px 콘텐츠 블러를 네이티브 블러 반경으로 맞춘다. */}
+          <BlurView
+            intensity={64}
+            blurReductionFactor={4}
+            experimentalBlurMethod="dimezisBlurView"
+            style={styles.lockedBlur}
+            pointerEvents="none"
+          />
+          <View style={styles.lockedContent} pointerEvents="none">
+            <View style={styles.lockedArrowWrap}>
+              <ArrowLeftIcon width={64} height={54} />
+            </View>
+            <Text style={styles.lockedText}>카메라로 측정하기를{`\n`}먼저 진행해주세요</Text>
+          </View>
+        </>
+      ) : null}
     </Pressable>
   );
 }

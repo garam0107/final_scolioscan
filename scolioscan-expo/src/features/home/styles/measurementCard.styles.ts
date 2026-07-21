@@ -19,6 +19,35 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
   },
+  lockedCard: {
+    backgroundColor: Colors.gray[75],
+  },
+  lockedBlur: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  lockedContent: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 20,
+    paddingHorizontal: 10,
+  },
+  lockedArrowWrap: {
+    width: 60,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockedText: {
+    ...textFont,
+    color: Colors.gray[900],
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
   measurementCardContent: {
     width: '100%',
     minWidth: 0,

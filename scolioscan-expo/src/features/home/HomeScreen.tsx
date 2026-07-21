@@ -47,6 +47,7 @@ export default function HomeScreen() {
     recentChangeText,
     trendPath,
     trendAreaPath,
+    hasCurvatureMeasurement,
     loadLatestCurvature,
   } = useHomeCurvatureSummary(trendChartWidth, setNetworkError);
     // measure-guide store 가이드 상태 
@@ -74,9 +75,10 @@ export default function HomeScreen() {
       icon: <ScoliometerIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
       subtitleColor: '#2E96FF',
       subtitleBackgroundColor: '#EBF5FF',
+      locked: hasCurvatureMeasurement === false,
       onPress: () => {router.push('/measure/scoliometer')}
     },
-  ], [measurementCardLayout.iconSize, router]);
+  ], [hasCurvatureMeasurement, measurementCardLayout.iconSize, router]);
 
   const handleNetworkRetry = useCallback(() => {
     void loadAlarmCount();
