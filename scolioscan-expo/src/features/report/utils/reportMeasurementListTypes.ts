@@ -1,12 +1,14 @@
-import type { MeasurementSetResponse } from '@/src/types/measurementSet';
+import type { CurvatureResponse } from '@/src/types/curvature';
+import type { RotationResponse } from '@/src/types/rotation';
 
-export type ReportMeasurementFilterKey = 'all' | '2d' | '3d';
+export type ReportMeasurementFilterKey = 'all' | '2d' | 'precise';
 
 export type ReportMeasurementListItem = {
   id: string;
   createdAt: string;
-  category: '2d' | '3d';
-  measurementSet: MeasurementSetResponse;
+  category: '2d' | 'precise';
+  curvature?: CurvatureResponse;
+  rotation?: RotationResponse;
   navigationId?: string;
 };
 
@@ -16,5 +18,5 @@ export const REPORT_MEASUREMENT_FILTERS: {
 }[] = [
   { key: 'all', label: '전체' },
   { key: '2d', label: '2D 측정' },
-  { key: '3d', label: '3D 스캔' },
+  { key: 'precise', label: '정교한 측정' },
 ];

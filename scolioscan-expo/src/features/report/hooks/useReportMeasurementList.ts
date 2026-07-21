@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { measurementSetAPI } from '@/src/api/measurementSet';
+import { curvatureAPI } from '@/src/api/curvature';
+import { rotationAPI } from '@/src/api/rotation';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
-import type { MeasurementSetResponse } from '@/src/types/measurementSet';
+import type { CurvatureResponse } from '@/src/types/curvature';
+import type { RotationResponse } from '@/src/types/rotation';
 import { getMonthDateRange } from '@/src/features/report/utils/reportMonthFilter';
 import type {
   ReportMeasurementFilterKey,
-  ReportMeasurementListItem,
 } from '@/src/features/report/utils/reportMeasurementListTypes';
-import { toMeasurementListItem } from '@/src/features/report/utils/reportMappers';
+import { toMeasurementListItems } from '@/src/features/report/utils/reportMappers';
 import { isNetworkError } from '@/src/lib/apiError';
+import { getMeasurementDate } from '@/src/features/report/reportTrend';
 
 
 type UseReportMeasurementListParams = {
@@ -24,7 +26,8 @@ export function useReportMeasurementList({
   selectedMonth,
   selectedFilter,
 }: UseReportMeasurementListParams) {
-  const [measurementSets, setMeasurementSets] = useState<MeasurementSetResponse[]>([]);
+  const [curvatures, setCurvatures] = useState<CurvatureResponse[]>([]);
+  const [rotations, setRotations] = useState<RotationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const measurementVersion = useMeasurementRefreshStore((state) => state.version);
   const [networkError, setNetworkError] = useState(false);
@@ -36,30 +39,43 @@ export function useReportMeasurementList({
   useEffect(() => {
     let active = true;
 
-    const loadMeasurementSets = async () => {
+    const loadMeasurementList = async () => {
       try {
         setNetworkError(false);
         setLoading(true);
         // 전체는 날짜 파라미터 없이 조회하고, 지정 월은 해당 월의 시작일과 마지막일만 조회한다.
-        const response = await measurementSetAPI.getAnalyses({
-          limit: 1000,
-          ...(monthMode === 'specific' ? getMonthDateRange(selectedYear, selectedMonth) : {}),
-        });
+        const [curvatureResponse, rotationResponse] = await Promise.all([
+          curvatureAPI.getAnalyses({
+            limit: 1000,
+            ...(monthMode === 'specific' ? getMonthDateRange(selectedYear, selectedMonth) : {}),
+          }),
+          rotationAPI.getAnalyses({ limit: 1000 }),
+        ]);
 
         if (!active) return;
 
-        setMeasurementSets(response.data);
+        // rotation 목록 API에는 날짜 필터가 없어 선택한 달은 클라이언트에서 같은 기준으로 거른다.
+        const selectedRotations = monthMode === 'specific'
+          ? rotationResponse.data.filter((rotation) => {
+              const measuredAt = new Date(getMeasurementDate(rotation));
+              return measuredAt.getFullYear() === selectedYear && measuredAt.getMonth() + 1 === selectedMonth;
+            })
+          : rotationResponse.data;
+
+        setCurvatures(curvatureResponse.data);
+        setRotations(selectedRotations);
       } catch (error) {
         if (isNetworkError(error)) {
             setNetworkError(true);
           }
-        setMeasurementSets([]);
+        setCurvatures([]);
+        setRotations([]);
       } finally {
         if (active) setLoading(false);
       }
     };
 
-    void loadMeasurementSets();
+    void loadMeasurementList();
 
     return () => {
       active = false;
@@ -68,14 +84,12 @@ export function useReportMeasurementList({
 
   const listItems = useMemo(() => {
     // 서버 응답을 화면 목록 전용 형태로 바꾸고 최신 측정순으로 정렬한다.
-    const items = measurementSets
-      .map(toMeasurementListItem)
-      .filter((item): item is ReportMeasurementListItem => item !== null);
+    const items = toMeasurementListItems(curvatures, rotations);
 
     return items.sort(
       (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
     );
-  }, [measurementSets]);
+  }, [curvatures, rotations]);
 
   const filteredItems = useMemo(() => {
     if (selectedFilter === 'all') return listItems;
@@ -83,7 +97,6 @@ export function useReportMeasurementList({
   }, [listItems, selectedFilter]);
 
   return {
-    measurementSets,
     networkError,
     reload,
     loading,

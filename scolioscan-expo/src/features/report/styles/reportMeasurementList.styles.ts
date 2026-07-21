@@ -301,6 +301,9 @@ const styles = StyleSheet.create({
     width: 106,
     alignSelf: 'center',
   },
+  measurementValueRowSingle: {
+    justifyContent: 'center',
+  },
   measurementValueBlock: {
     alignItems: 'center',
     justifyContent: 'flex-start',

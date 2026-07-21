@@ -57,33 +57,25 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
   const isDisabled = !item.navigationId;
   const { width } = useWindowDimensions();
   const isWideLayout = width >= WIDE_LAYOUT_MIN_WIDTH;
-  const { curvature, rotation } = item.measurementSet;
+  const isCurvatureMeasurement = item.category === '2d';
+  const measurement = isCurvatureMeasurement ? item.curvature : item.rotation;
   const measurementListLayout = getReportMeasurementListLayout(width);
 
-  if (!curvature) {
+  if (!measurement) {
     return null;
   }
 
-  const regions = [
-    {
-      key: 'upper',
-      label: '상부 흉추',
-      curvatureValue: curvature.secondary_thoracic_cobb,
-      rotationValue: rotation?.upper_thoracic_atr,
-    },
-    {
-      key: 'main',
-      label: '주 흉추',
-      curvatureValue: curvature.main_thoracic_cobb,
-      rotationValue: rotation?.thoracic_atr,
-    },
-    {
-      key: 'lumbar',
-      label: '요추',
-      curvatureValue: curvature.lumbar_cobb,
-      rotationValue: rotation?.lumbar_atr,
-    },
-  ];
+  const regions = isCurvatureMeasurement
+    ? [
+        { key: 'upper', label: '상부 흉추', value: item.curvature!.secondary_thoracic_cobb },
+        { key: 'main', label: '주 흉추', value: item.curvature!.main_thoracic_cobb },
+        { key: 'lumbar', label: '요추', value: item.curvature!.lumbar_cobb },
+      ]
+    : [
+        { key: 'upper', label: '상부 흉추', value: item.rotation!.upper_thoracic_atr },
+        { key: 'main', label: '주 흉추', value: item.rotation!.thoracic_atr },
+        { key: 'lumbar', label: '요추', value: item.rotation!.lumbar_atr },
+      ];
 
   return (
     <Pressable
@@ -142,7 +134,7 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
               },
             ]}
           >
-            2D 측정
+            {isCurvatureMeasurement ? '2D 측정' : '정교한 측정'}
           </Text>
         </View>
       </View>
@@ -182,23 +174,26 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
                 >
                   {region.label}
                 </Text>
-                <View
-                  style={[
-                    styles.measurementRegionDot,
-                    {
-                      width: measurementListLayout.regionDotSize,
-                      height: measurementListLayout.regionDotSize,
-                      borderRadius: measurementListLayout.regionDotRadius,
-                      backgroundColor: getCurvatureDotColor(region.curvatureValue),
-                    },
-                  ]}
-                />
+                {isCurvatureMeasurement ? (
+                  <View
+                    style={[
+                      styles.measurementRegionDot,
+                      {
+                        width: measurementListLayout.regionDotSize,
+                        height: measurementListLayout.regionDotSize,
+                        borderRadius: measurementListLayout.regionDotRadius,
+                        backgroundColor: getCurvatureDotColor(region.value),
+                      },
+                    ]}
+                  />
+                ) : null}
               </View>
 
               <View
                 style={[
                   styles.measurementValueRow,
                   isWideLayout ? styles.measurementValueRowWide : null,
+                  styles.measurementValueRowSingle,
                   {
                     gap: measurementListLayout.valueGap,
                     marginTop: measurementListLayout.valueRowMarginTop,
@@ -216,11 +211,13 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
                       },
                     ]}
                   >
-                    만곡도
+                    {isCurvatureMeasurement ? '만곡도' : '비틀림'}
                   </Text>
                   <Text
                     style={[
-                      styles.measurementCurvatureValue,
+                      isCurvatureMeasurement
+                        ? styles.measurementCurvatureValue
+                        : styles.measurementRotationValue,
                       {
                         fontSize: measurementListLayout.valueFontSize,
                         lineHeight: measurementListLayout.valueLineHeight,
@@ -230,35 +227,9 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
                     adjustsFontSizeToFit
                     minimumFontScale={0.82}
                   >
-                    {formatCurvatureDegree(region.curvatureValue)}
-                  </Text>
-                </View>
-
-                <View style={[styles.measurementValueBlock, { width: measurementListLayout.valueBlockWidth }]}>
-                  <Text
-                    style={[
-                      styles.measurementValueLabel,
-                      {
-                        fontSize: measurementListLayout.valueLabelFontSize,
-                        lineHeight: measurementListLayout.valueLabelLineHeight,
-                      },
-                    ]}
-                  >
-                    비틀림
-                  </Text>
-                  <Text
-                    style={[
-                      styles.measurementRotationValue,
-                      {
-                        fontSize: measurementListLayout.valueFontSize,
-                        lineHeight: measurementListLayout.valueLineHeight,
-                      },
-                    ]}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.82}
-                  >
-                    {formatRotationDegree(region.rotationValue)}
+                    {isCurvatureMeasurement
+                      ? formatCurvatureDegree(region.value)
+                      : formatRotationDegree(region.value)}
                   </Text>
                 </View>
               </View>

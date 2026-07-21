@@ -52,18 +52,10 @@ export default function ReportMeasurementListSection({
 }: ReportMeasurementListSectionProps) {
   const [tabsWidth, setTabsWidth] = useState(0);
   const animatedTab = useMemo(() => new Animated.Value(0), []);
-  const activeTabColor =
-    selectedFilter === '3d'
-      ? '#456EFF'
-      : selectedFilter === '2d'
-        ? '#2C9696'
-        : '#2C9696';
-  const activeIndicatorColor =
-    selectedFilter === '3d'
-      ? '#456EFF'
-      : selectedFilter === '2d'
-        ? '#2C9696'
-        : '#2C9696';
+  const activeTabColor = '#2C9696'
+ 
+  const activeIndicatorColor ='#2C9696'
+   
   const tabWidth = tabsWidth > 0 ? tabsWidth / REPORT_MEASUREMENT_FILTERS.length : 0;
   const translateX = tabWidth
     ? animatedTab.interpolate({
