@@ -15,9 +15,6 @@ class RotationMeasurementCreate(BaseModel):
     thoracolumbar_atr: float = Field(..., ge=-90, le=90)
     upper_lumbar_atr: float = Field(..., ge=-90, le=90)
     lower_lumbar_atr: float = Field(..., ge=-90, le=90)
-    curvature_measurement_id: int | None = Field(default=None, ge=1)
-
-
 class RotationMeasurementResponse(BaseModel):
     id: int
     user_id: str

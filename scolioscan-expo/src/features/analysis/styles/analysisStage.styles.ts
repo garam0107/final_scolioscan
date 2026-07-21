@@ -288,6 +288,9 @@ const stageStyles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 5,
   },
+  stage3DMetricValueBlurred: {
+    filter: 'blur(8px)',
+  },
 });
 
 export default stageStyles;

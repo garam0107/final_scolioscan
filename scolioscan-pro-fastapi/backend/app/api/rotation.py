@@ -34,22 +34,25 @@ def create_rotation(
     lumbar_atr = (payload.upper_lumbar_atr + payload.lower_lumbar_atr) / 2
     zone = compute_zone([thoracic_atr, payload.thoracolumbar_atr, lumbar_atr])
 
-    if payload.curvature_measurement_id is not None:
-        # 요청한 2D 촬영 결과가 존재하고 현재 사용자 소유인지 확인한다.
-        curvature = (
-            db.query(CurvatureMeasurement)
-            .filter(
-                CurvatureMeasurement.id == payload.curvature_measurement_id,
-                CurvatureMeasurement.user_id == str(current_user.id),
-            )
-            .first()
+    # rotation은 클라이언트 ID를 신뢰하지 않고, 저장 시점의 최신 2D 측정 결과에만 연결한다.
+    latest_curvature = (
+        db.query(CurvatureMeasurement)
+        .filter(CurvatureMeasurement.user_id == str(current_user.id))
+        .order_by(
+            CurvatureMeasurement.measured_at.desc(),
+            CurvatureMeasurement.id.desc(),
         )
-        if not curvature:
-            raise HTTPException(status_code=404, detail="Linked curvature measurement not found")
+        .first()
+    )
+    if latest_curvature is None:
+        raise HTTPException(
+            status_code=409,
+            detail="A curvature measurement is required before rotation measurement",
+        )
 
     measurement = RotationMeasurement(
         user_id=str(current_user.id),
-        curvature_measurement_id=payload.curvature_measurement_id,
+        curvature_measurement_id=latest_curvature.id,
         upper_thoracic_atr=payload.upper_thoracic_atr,
         lower_thoracic_atr=payload.lower_thoracic_atr,
         thoracolumbar_atr=payload.thoracolumbar_atr,

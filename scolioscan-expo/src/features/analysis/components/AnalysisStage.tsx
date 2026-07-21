@@ -61,6 +61,9 @@ function formatDegree(value?: number | null, decimal = false) {
 }
 
 function Spine3DMetricOverlay({ metric }: { metric: Spine3DMetric }) {
+  const hasRotationValue =
+    typeof metric.rotationValue === 'number' && !Number.isNaN(metric.rotationValue);
+
   return (
     <View style={[styles.stage3DMetricGroup, { top: metric.top }]} pointerEvents="none">
       <View style={styles.stage3DMetricBadge}>
@@ -76,7 +79,15 @@ function Spine3DMetricOverlay({ metric }: { metric: Spine3DMetric }) {
 
           <View style={styles.stage3DMetricRotationColumn}>
             <Text style={styles.stage3DMetricLabel}>비틀림</Text>
-            <Text style={styles.stage3DMetricValue} >{formatDegree(metric.rotationValue, true)}</Text>
+            {/* rotation 미측정 시 0도 값을 보여 주되, 피그마와 같이 값만 블러 처리한다. */}
+            <Text
+              style={[
+                styles.stage3DMetricValue,
+                !hasRotationValue && styles.stage3DMetricValueBlurred,
+              ]}
+            >
+              {formatDegree(hasRotationValue ? metric.rotationValue : 0, true)}
+            </Text>
           </View>
         </View>
 

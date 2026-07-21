@@ -20,5 +20,4 @@ export type RotationCreatePayload = {
   thoracolumbar_atr: number;
   upper_lumbar_atr: number;
   lower_lumbar_atr: number;
-  curvature_measurement_id?: number | null;
 };
