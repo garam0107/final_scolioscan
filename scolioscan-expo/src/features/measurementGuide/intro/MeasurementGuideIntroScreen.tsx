@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -35,7 +36,7 @@ export default function MeasurementGuideIntroScreen() {
         <Pressable style={styles.headerSide} hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color={Colors.gray[400]} />
         </Pressable>
-        <Text style={styles.headerTitle}>측정 가이드</Text>
+        <Text style={styles.headerTitle}>{i18n.t("측정 가이드")}</Text>
         <View style={styles.headerSide} />
       </View>
 
@@ -50,9 +51,7 @@ export default function MeasurementGuideIntroScreen() {
                 lineHeight: layout.titleLineHeight,
               },
             ]}
-          >
-            ScolioScan을 처음 사용하시는 것 같아요.
-          </Text>
+          >{i18n.t("ScolioScan을 처음 사용하시는 것 같아요.")}</Text>
           <Text
             style={[
               styles.description,
@@ -61,14 +60,12 @@ export default function MeasurementGuideIntroScreen() {
                 lineHeight: layout.descriptionLineHeight,
               },
             ]}
-          >
-            원활한 측정을 위해 안내 가이드를 보시겠어요?
-          </Text>
+          >{i18n.t("원활한 측정을 위해 안내 가이드를 보시겠어요?")}</Text>
         </View>
 
         <View style={[styles.actionGroup, { top: layout.actionTop, width: layout.contentWidth }]}>
           <PrimaryButton
-            title={twoDGuideSeen ? '✓ 2D 카메라 촬영 가이드 보기' : '2D 카메라 촬영 가이드 보기'}
+            title={twoDGuideSeen ? i18n.t("✓ 2D 카메라 촬영 가이드 보기") : i18n.t("2D 카메라 촬영 가이드 보기")}
             onPress={() => router.push('/measure/guide-2d-camera')}
             width="100%"
             height={layout.buttonHeight}
@@ -78,7 +75,7 @@ export default function MeasurementGuideIntroScreen() {
             textStyle={twoDGuideSeen ? styles.completedGuideButtonText : styles.outlineButtonText}  
           />
           <PrimaryButton
-            title={spineGuideSeen ? '✓ 척추측만계 가이드 보기' : '척추측만계 가이드 보기'}
+            title={spineGuideSeen ? i18n.t("✓ 척추측만계 가이드 보기") : i18n.t("척추측만계 가이드 보기")}
             onPress={() => router.push('/measure/guide-spine')}
             width="100%"
             height={layout.buttonHeight}
@@ -95,17 +92,15 @@ export default function MeasurementGuideIntroScreen() {
               router.replace('/measure/2d');
             }}
           >
-            <Text style={styles.skipText}>이미 사용해봤어요</Text>
+            <Text style={styles.skipText}>{i18n.t("이미 사용해봤어요")}</Text>
             <Ionicons name="chevron-forward" size={16} color={Colors.mint[600]} />
           </Pressable>
 
           <View style={styles.noticeBlock}>
             <Text style={styles.noticeText}>
-              {'\u2022  '}‘이미 사용해봤어요’를 누르실 경우, 가이드가 다시 표시되지 않아요.
-            </Text>
+              {'\u2022  '}{i18n.t("‘이미 사용해봤어요’를 누르실 경우, 가이드가 다시 표시되지 않아요.")}</Text>
             <Text style={styles.noticeText}>
-              {'\u2022  '}가이드는 설정 - 가이드 버튼을 눌러서 언제든지 다시 보실 수 있어요.
-            </Text>
+              {'\u2022  '}{i18n.t("가이드는 설정 - 가이드 버튼을 눌러서 언제든지 다시 보실 수 있어요.")}</Text>
           </View>
         </View>
       </View>
@@ -119,7 +114,7 @@ export default function MeasurementGuideIntroScreen() {
         ]}
       >
         <PrimaryButton
-          title="측정하기"
+          title={i18n.t("측정하기")}
           onPress={() => {
             completeMeasurementGuide();
             router.replace('/measure/2d');

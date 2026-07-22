@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -29,15 +30,11 @@ export default function ReportEmptyOverlay({ onPress }: ReportEmptyOverlayProps)
           </View>
 
           <View style={styles.emptyStateBody}>
-            <Text style={styles.emptyStateTitle}>먼저 측정을 해야해요</Text>
-            <Text style={styles.emptyStateMessage}>
-              분석을 위해선 먼저 측정을 해야해요
-              {'\n'}
-              아래 버튼을 눌러서 진행해주세요
-            </Text>
+            <Text style={styles.emptyStateTitle}>{i18n.t("먼저 측정을 해야해요")}</Text>
+            <Text style={styles.emptyStateMessage}>{i18n.t("분석을 위해선 먼저 측정을 해야해요")}{'\n'}{i18n.t("아래 버튼을 눌러서 진행해주세요")}</Text>
             {/* 측정 결과가 없을 때 홈 화면으로 이동해 새 측정을 시작한다. */}
             <Pressable style={styles.emptyStateButton} onPress={onPress}>
-              <Text style={styles.emptyStateButtonText}>홈으로 돌아가기</Text>
+              <Text style={styles.emptyStateButtonText}>{i18n.t("홈으로 돌아가기")}</Text>
             </Pressable>
           </View>
         </View>

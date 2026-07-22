@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Asset } from 'expo-asset';
@@ -314,7 +315,7 @@ export default function Spine3DPreview({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: !autoRotationPaused }}
-      accessibilityLabel={autoRotationPaused ? '3D 모델 자동 회전 시작' : '3D 모델 자동 회전 멈춤'}
+      accessibilityLabel={autoRotationPaused ? i18n.t("3D 모델 자동 회전 시작") : i18n.t("3D 모델 자동 회전 멈춤")}
       style={styles.container}
       onPress={toggleAutoRotation}
     >

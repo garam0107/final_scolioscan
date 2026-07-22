@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -108,9 +109,9 @@ export default function AccountEditForm({
   return (
     <View style={styles.accountSection}>
       <Field
-        label="이름"
+        label={i18n.t("이름")}
         value={name}
-        placeholder="이름을 입력해주세요"
+        placeholder={i18n.t("이름을 입력해주세요")}
         onChangeText={onNameChange}
         textContentType="name"
         autoComplete="name"
@@ -124,7 +125,7 @@ export default function AccountEditForm({
       />
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.fieldLabel}>생년월일</Text>
+        <Text style={styles.fieldLabel}>{i18n.t("생년월일")}</Text>
         <View style={styles.birthRow}>
           <View style={styles.birthInputWrap}>
             <TextInput
@@ -163,26 +164,26 @@ export default function AccountEditForm({
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.fieldLabel}>성별</Text>
+        <Text style={styles.fieldLabel}>{i18n.t("성별")}</Text>
         <View style={styles.genderRow}>
           <Pressable
             onPress={() => onGenderChange('male')}
             style={[styles.genderOption, gender === 'male' && styles.genderOptionActive]}
           >
-            <Text style={[styles.genderText, gender === 'male' && styles.genderTextActive]}>남성</Text>
+            <Text style={[styles.genderText, gender === 'male' && styles.genderTextActive]}>{i18n.t("남성")}</Text>
           </Pressable>
           <Pressable
             onPress={() => onGenderChange('female')}
             style={[styles.genderOption, gender === 'female' && styles.genderOptionActive]}
           >
-            <Text style={[styles.genderText, gender === 'female' && styles.genderTextActive]}>여성</Text>
+            <Text style={[styles.genderText, gender === 'female' && styles.genderTextActive]}>{i18n.t("여성")}</Text>
           </Pressable>
         </View>
       </View>
 
       <View onLayout={onPhoneLayout}>
         <Field
-          label="연락처"
+          label={i18n.t("연락처")}
           value={formatPhoneNumber(phone)}
           placeholder="010-0000-0000"
           onChangeText={(value) => onPhoneChange(normalizePhoneNumber(value))}
@@ -195,7 +196,7 @@ export default function AccountEditForm({
       </View>
 
       <Field
-        label="이메일"
+        label={i18n.t("이메일")}
         value={email}
         onChangeText={onEmailChange}
         keyboardType="email-address"

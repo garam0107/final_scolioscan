@@ -50,6 +50,7 @@
       "./plugins/withBlockedAndroidPermissions.js",
       "./plugins/withPhoneOnlyAndroidScreens.js",
       "./plugins/withFinishBackButtonTask.js",
+      "./plugins/withGoogleSigninCodegenSource.js",
       [
         "expo-splash-screen",
         {
@@ -67,18 +68,17 @@
           "iosUrlScheme": "com.googleusercontent.apps.134913920767-k5n471ojmnjbbh74vg63n4g9ugi47dbk"
         }
       ],
-
       [
-          "@react-native-seoul/naver-login",
+        "@react-native-seoul/naver-login",
         {
-          "urlScheme": "scolioscannaver" 
+          "urlScheme": "scolioscannaver"
         }
       ],
-        [
+      [
         "@react-native-seoul/kakao-login",
         {
           "kakaoAppKey": "928ff7803adb922ff7ecf311fb62e2be",
-          "kotlinVersion" : "2.1.20"
+          "kotlinVersion": "2.1.20"
         }
       ],
       [
@@ -159,23 +159,26 @@
           "cameraPermission": "2D 측정을 위해 카메라로 자세를 촬영합니다."
         }
       ],
-    [
+      [
         "expo-build-properties",
         {
           "ios": {
             "deploymentTarget": "15.5",
-              "extraPods": [
-                { "name": "AppCheckCore", "version": "11.2.0" }
-              ]
+            "extraPods": [
+              {
+                "name": "AppCheckCore",
+                "version": "11.2.0"
+              }
+            ]
           },
           "android": {
             "extraMavenRepos": [
               "https://devrepo.kakao.com/nexus/content/groups/public/"
             ]
           }
-    
         }
-    ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

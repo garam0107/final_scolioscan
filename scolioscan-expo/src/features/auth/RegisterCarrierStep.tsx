@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Pressable, Text, View } from 'react-native';
 import { useAuthStore } from '@/src/store/authStore';
 import AuthField from './AuthField';
@@ -40,7 +41,7 @@ export default function RegisterCarrierStep() {
           <AuthField
             autoComplete="tel"
             autoCorrect={false}
-            label="휴대폰 번호"
+            label={i18n.t("휴대폰 번호")}
             keyboardType="number-pad"
             maxLength={13}
             placeholder="010-0000-0000"
@@ -52,7 +53,7 @@ export default function RegisterCarrierStep() {
             onClear={() => updateRegisterDraft({ phone: '' })}
           />
         {phone.trim().length > 0 && isPhoneNumberComplete(phone) && !isValidPhoneNumber(phone) ? (
-        <Text style={styles.phoneHelperText}>올바른 전화번호를 입력해주세요.</Text>
+        <Text style={styles.phoneHelperText}>{i18n.t("올바른 전화번호를 입력해주세요.")}</Text>
       ) : null}
         </View>
       ) : null}

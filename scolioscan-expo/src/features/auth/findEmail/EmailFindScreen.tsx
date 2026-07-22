@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -56,12 +57,12 @@ export default function EmailFindScreen() {
     }
 
     if (!name.trim()) {
-      showToast('이름을 입력해주세요.');
+      showToast(i18n.t("이름을 입력해주세요."));
       return;
     }
 
     if (!isValidPhoneNumber(phone)) {
-      showToast('휴대전화 번호를 올바르게 입력해주세요.');
+      showToast(i18n.t("휴대전화 번호를 올바르게 입력해주세요."));
       return;
     }
 
@@ -76,7 +77,7 @@ export default function EmailFindScreen() {
       const response = await authAPI.checkEmailFindAccount(payload);
 
       if (!response.data.exists) {
-        showToast('해당 정보로 가입된 이메일이 없어요.');
+        showToast(i18n.t("해당 정보로 가입된 이메일이 없어요."));
         return;
       }
 
@@ -106,7 +107,7 @@ export default function EmailFindScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Ionicons name="chevron-back" size={22} color="#7E89A0" />
           </Pressable>
-          <Text style={styles.headerTitle}>이메일 찾기</Text>
+          <Text style={styles.headerTitle}>{i18n.t("이메일 찾기")}</Text>
           <View style={styles.headerSide} />
         </View>
 
@@ -120,22 +121,22 @@ export default function EmailFindScreen() {
           <View style={styles.guideBoxWrap}>
             <GuideMessageBox
               messages={[
-                '가입하신 이름과 휴대전화 번호를 입력해주세요.',
-                '휴대전화 번호 인증 후 확인하실 수 있어요.',
+                i18n.t("가입하신 이름과 휴대전화 번호를 입력해주세요."),
+                i18n.t("휴대전화 번호 인증 후 확인하실 수 있어요."),
               ]}
             />
           </View>
 
           <FormTextField
-            label="이름"
+            label={i18n.t("이름")}
             value={name}
-            placeholder="이름을 입력하세요"
+            placeholder={i18n.t("이름을 입력하세요")}
             textContentType="name"
             autoComplete="name"
             onChangeText={setName}
           />
           <FormTextField
-            label="휴대전화 번호"
+            label={i18n.t("휴대전화 번호")}
             value={formatPhoneNumber(phone)}
             placeholder="010-0000-0000"
             keyboardType="number-pad"
@@ -149,7 +150,7 @@ export default function EmailFindScreen() {
         {/* 키보드에 화면 높이를 맡기지 않고 하단 버튼만 키보드 위로 붙인다. */}
         <View style={styles.footer}>
           <PrimaryButton
-            title="계속하기"
+            title={i18n.t("계속하기")}
             onPress={handleContinue}
             height={48}
             backgroundColor="#2C9696"

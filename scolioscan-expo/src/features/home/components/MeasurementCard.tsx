@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -32,6 +33,11 @@ export default function MeasurementCard({
   locked = false,
   layout,
 }: MeasurementCardProps) {
+  const useCompactText = i18n.language !== 'ko';
+  const contentGap = useCompactText ? Math.max(3, layout.contentGap * 0.5) : layout.contentGap;
+  const titleLineHeight = useCompactText ? Math.min(18, layout.titleTextLineHeight) : layout.titleTextLineHeight;
+  const badgeLineHeight = useCompactText ? Math.min(16, layout.badgeTextLineHeight) : layout.badgeTextLineHeight;
+  const iconMarginBottom = useCompactText ? Math.min(8, layout.iconMarginBottom) : layout.iconMarginBottom;
   return (
     <Pressable
       onPress={onPress}
@@ -54,25 +60,27 @@ export default function MeasurementCard({
           {
             width: layout.iconSize,
             height: layout.iconSize,
-            marginBottom: layout.iconMarginBottom,
+            marginBottom: iconMarginBottom,
           },
         ]}
       >
         {icon}
       </View>
-      <View style={[styles.measurementCardContent, { gap: layout.contentGap }]}>
+      <View style={[styles.measurementCardContent, { gap: contentGap }]}>
         <Text
           style={[
             styles.measurementTitle,
             {
               fontSize: layout.titleTextFontSize,
-              lineHeight: layout.titleTextLineHeight,
+              lineHeight: titleLineHeight,
             },
           ]}
           numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.78}
           ellipsizeMode="clip"
         >
-          {title}
+          {i18n.t(title)}
         </Text>
         <View
           style={[
@@ -90,14 +98,16 @@ export default function MeasurementCard({
               styles.measurementBadgeText,
               {
                 fontSize: layout.badgeTextFontSize,
-                lineHeight: layout.badgeTextLineHeight,
+                lineHeight: badgeLineHeight,
               },
               subtitleColor ? { color: subtitleColor } : null,
             ]}
             numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
             ellipsizeMode="clip"
           >
-            {subtitle}
+            {i18n.t(subtitle)}
           </Text>
         </View>
       </View>
@@ -115,7 +125,7 @@ export default function MeasurementCard({
             <View style={styles.lockedArrowWrap}>
               <ArrowLeftIcon width={64} height={54} />
             </View>
-            <Text style={styles.lockedText}>카메라로 측정하기를{`\n`}먼저 진행해주세요</Text>
+            <Text style={styles.lockedText}>{i18n.t("카메라로 측정하기를")}{`\n`}{i18n.t("먼저 진행해주세요")}</Text>
           </View>
         </>
       ) : null}

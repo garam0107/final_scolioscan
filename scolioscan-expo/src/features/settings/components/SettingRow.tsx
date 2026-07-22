@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
@@ -64,8 +65,8 @@ export default function SettingRow({
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
     >
       <View style={styles.rowText}>
-        <Text style={[styles.rowTitle, danger && styles.dangerText]}>{title}</Text>
-        {description ? <Text style={styles.rowDescription}>{description}</Text> : null}
+        <Text style={[styles.rowTitle, danger && styles.dangerText]}>{i18n.t(title)}</Text>
+        {description ? <Text style={styles.rowDescription}>{i18n.t(description)}</Text> : null}
       </View>
       {hasSwitch && toggleKey ? (
         <Animated.View

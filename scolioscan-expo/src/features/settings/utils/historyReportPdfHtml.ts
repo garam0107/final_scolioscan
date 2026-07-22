@@ -1,4 +1,5 @@
 import type { MeasurementSetResponse } from '@/src/types/measurementSet';
+import { i18n } from '@/src/i18n';
 
 type HistoryReportPdfParams = {
   userName: string;
@@ -35,11 +36,11 @@ function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}.${month}.${day}`;
+  return new Intl.DateTimeFormat(i18n.language, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
 }
 
 function formatDegree(value?: number | null, precision: 'integer' | 'decimal' = 'integer') {
@@ -82,9 +83,9 @@ function getRegions(measurementSet: MeasurementSetResponse): ReportRegion[] {
 function buildRegionCell(region: ReportRegion) {
   return `
     <td>
-      <div class="metricLabel">${region.label}</div>
-      <div class="metricValue">만곡 ${formatDegree(region.curvatureValue)}</div>
-      <div class="metricValue muted">비틀림 ${formatDegree(region.rotationValue, 'decimal')}</div>
+      <div class="metricLabel">${escapeHtml(i18n.t(region.label))}</div>
+      <div class="metricValue">${escapeHtml(i18n.t('만곡도'))} ${formatDegree(region.curvatureValue)}</div>
+      <div class="metricValue muted">${escapeHtml(i18n.t('비틀림'))} ${formatDegree(region.rotationValue, 'decimal')}</div>
     </td>
   `;
 }
@@ -109,11 +110,11 @@ export function createHistoryReportPdfHtml({
   userName,
   measurementSets,
 }: HistoryReportPdfParams) {
-  const safeUserName = escapeHtml(userName.trim() || '회원');
+  const safeUserName = escapeHtml(userName.trim() || i18n.t('회원'));
 
   return `
     <!doctype html>
-    <html lang="ko">
+    <html lang="${i18n.language}">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -283,23 +284,23 @@ export function createHistoryReportPdfHtml({
           <header class="header">
             <div>
               <div class="brand">ScolioScan</div>
-              <div class="subtitle">측정 리포트</div>
+              <div class="subtitle">${escapeHtml(i18n.t('측정 리포트'))}</div>
             </div>
             <div class="userBox">
-              <div class="userLabel">사용자 이름</div>
+              <div class="userLabel">${escapeHtml(i18n.t('사용자 이름'))}</div>
               <div class="userName">${safeUserName}</div>
             </div>
           </header>
 
           <section>
-            <h1 class="sectionTitle">측정 결과</h1>
+            <h1 class="sectionTitle">${escapeHtml(i18n.t('측정 결과'))}</h1>
             <table>
               <thead>
                 <tr>
-                  <th class="dateHeader">측정 날짜</th>
-                  <th>상부 흉추</th>
-                  <th>주 흉추</th>
-                  <th>요추</th>
+                  <th class="dateHeader">${escapeHtml(i18n.t('측정 날짜'))}</th>
+                  <th>${escapeHtml(i18n.t('상부 흉추'))}</th>
+                  <th>${escapeHtml(i18n.t('주 흉추'))}</th>
+                  <th>${escapeHtml(i18n.t('요추'))}</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,8 +310,8 @@ export function createHistoryReportPdfHtml({
           </section>
 
           <section class="notice">
-            본 자료는 의료 진단 또는 치료 목적이 아닌 참고용 정보입니다.<br />
-            정확한 진단과 치료는 의료 전문가와 상담해주세요.
+            ${escapeHtml(i18n.t('본 자료는 의료 진단 또는 치료 목적이 아닌 참고용 정보입니다.'))}<br />
+            ${escapeHtml(i18n.t('정확한 진단과 치료는 의료 전문가와 상담해주세요.'))}
           </section>
         </main>
       </body>

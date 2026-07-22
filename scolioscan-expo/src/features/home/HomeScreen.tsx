@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fonts/museomoderno';
 import { useFonts as useExpoFonts } from 'expo-font';
 import { useRouter } from 'expo-router';
@@ -36,7 +37,7 @@ export default function HomeScreen() {
   const [isProModalVisible, setIsProModalVisible] = useState(false);
   const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
-  const displayName = user?.name?.trim() || '회원';
+  const displayName = user?.name?.trim() || i18n.t('회원');
   const { alarmCount, loadAlarmCount } = useHomeAlarmCount(user?.alarm_count, setNetworkError);
   const { bannerHeight, bannerWidth } = useHomeBannerPager(width);
   const {
@@ -106,7 +107,7 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={styles.loadingScreen} edges={['top', 'left', 'right']}>
         <View style={styles.loadingBox}>
-          <Text style={styles.loadingText}>화면을 불러오는 중입니다...</Text>
+          <Text style={styles.loadingText}>{i18n.t("화면을 불러오는 중입니다...")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -136,7 +137,7 @@ export default function HomeScreen() {
         >
           <View style={homeHeaderStyles.greetingBlock}>
             <View style={homeHeaderStyles.greetingTitleRow}>
-              <Text style={homeHeaderStyles.greetingTitle}>{displayName} 님 안녕하세요.</Text>
+              <Text style={homeHeaderStyles.greetingTitle}>{displayName}{i18n.t("님 안녕하세요.")}</Text>
                                      {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
               {/* <PrimaryButton
                 title="분석중 보기"
@@ -147,7 +148,7 @@ export default function HomeScreen() {
                 borderRadius={6}
               /> */}
             </View>
-            <Text style={homeHeaderStyles.greetingSubtitle}>점점 좋아지고 있어요. 화이팅! 🔥</Text>
+            <Text style={homeHeaderStyles.greetingSubtitle}>{i18n.t("점점 좋아지고 있어요. 화이팅! 🔥")}</Text>
           </View>
     
           <MeasurementShortcutSection
@@ -159,7 +160,7 @@ export default function HomeScreen() {
           <HomeBanner width={bannerWidth} height={bannerHeight} />
 
           <View style={styles.weeklySection}>
-            <Text style={styles.sectionHeading}>최근 1개월 측정 결과</Text>
+            <Text style={styles.sectionHeading}>{i18n.t("최근 1개월 측정 결과")}</Text>
             <CurvatureSummaryCardRow
               items={weeklyResults}
               selectedKey={selectedWeeklyResultId}

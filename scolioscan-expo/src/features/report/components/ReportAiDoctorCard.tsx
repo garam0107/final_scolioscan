@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Image, Linking, Pressable, Text, View } from 'react-native';
 
 import type { CurvatureResponse } from '@/src/types/curvature';
@@ -150,45 +151,45 @@ export default function ReportAiDoctorCard({ latestCurvature }: ReportAiDoctorCa
 
   return (
     <View style={styles.aiDoctorCard}>
-      <Text style={styles.aiDoctorTitle}>종합 리포트</Text>
+      <Text style={styles.aiDoctorTitle}>{i18n.t("ScolioScan 추천")}</Text>
 
       <View style={styles.aiRiskRow}>
         <View style={styles.aiRiskIconBox}>
           <RiskIcon width={28} height={28} />
         </View>
         <View style={styles.aiRiskTextWrap}>
-          <Text style={styles.aiRiskTitle}>위험도 평가</Text>
+          <Text style={styles.aiRiskTitle}>{i18n.t("위험도 평가")}</Text>
           <Text style={[styles.aiRiskLabel, copy?.labelStyle]}>
-            {copy?.label ?? '측정 데이터 없음'}
+            {i18n.t(copy?.label ?? '측정 데이터 없음')}
           </Text>
         </View>
       </View>
 
       <View style={styles.aiOpinionGroup}>
         <View style={styles.aiOpinionSection}>
-          <Text style={styles.aiOpinionHeading}>예후</Text>
+          <Text style={styles.aiOpinionHeading}>{i18n.t("예후")}</Text>
           <Text style={styles.aiOpinionBody}>
-            {copy?.prognosis ?? '측정 결과가 쌓이면 AI 의사 소견을 확인할 수 있어요.'}
+            {i18n.t(copy?.prognosis ?? '측정 결과가 쌓이면 AI 의사 소견을 확인할 수 있어요.')}
           </Text>
         </View>
 
         <View style={styles.aiOpinionSection}>
-          <Text style={styles.aiOpinionHeading}>보조기 권장 사항</Text>
+          <Text style={styles.aiOpinionHeading}>{i18n.t("보조기 권장 사항")}</Text>
           <Text style={styles.aiOpinionBody}>
-            {copy?.brace ?? '현재는 권장 사항을 판단할 측정 데이터가 부족해요.'}
+            {i18n.t(copy?.brace ?? '현재는 권장 사항을 판단할 측정 데이터가 부족해요.')}
           </Text>
         </View>
 
         <View style={[styles.aiOpinionSection, styles.aiOpinionSectionLast]}>
-          <Text style={styles.aiOpinionHeading}>자세 및 인체 공학</Text>
+          <Text style={styles.aiOpinionHeading}>{i18n.t("자세 및 인체 공학")}</Text>
           <Text style={styles.aiOpinionBody}>
-            {copy?.posture ?? '바른 자세를 유지하고 정기적으로 측정해 주세요.'}
+            {i18n.t(copy?.posture ?? '바른 자세를 유지하고 정기적으로 측정해 주세요.')}
           </Text>
         </View>
       </View>
 
       <View style={styles.aiExerciseBlock}>
-        <Text style={styles.aiExerciseTitle}>권장 운동</Text>
+        <Text style={styles.aiExerciseTitle}>{i18n.t("권장 운동")}</Text>
         <View style={styles.aiExerciseList}>
           {exercises.map((exercise) => (
             <Pressable
@@ -206,8 +207,8 @@ export default function ReportAiDoctorCard({ latestCurvature }: ReportAiDoctorCa
                 <PlayCircleIcon width={28} height={28} />
               </View>
               <View style={styles.aiExerciseTextWrap}>
-                <Text style={styles.aiExerciseName}>{exercise.title}</Text>
-                <Text style={styles.aiExerciseDetail}>{exercise.detail}</Text>
+                <Text style={styles.aiExerciseName}>{i18n.t(exercise.title)}</Text>
+                <Text style={styles.aiExerciseDetail}>{i18n.t(exercise.detail)}</Text>
               </View>
             </Pressable>
           ))}

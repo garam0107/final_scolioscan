@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fonts/museomoderno';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -105,7 +106,7 @@ function Field({
       <View style={styles.fieldBox}>
         <TextInput
           autoCapitalize="none"
-          autoComplete={label === '이메일' ? 'email' : 'password'}
+          autoComplete={label === i18n.t("이메일") ? 'email' : 'password'}
           autoCorrect={false}
           placeholder={placeholder}
           placeholderTextColor="#C7CCD7"
@@ -285,17 +286,17 @@ export default function LoginScreen() {
     }
 
     if (!email.trim()) {
-      showToast('이메일을 입력해 주세요.');
+      showToast(i18n.t("이메일을 입력해 주세요."));
       return;
     }
 
     if (!isValidEmail(email.trim())) {
-      showToast('올바른 이메일 형식이 아닙니다.');
+      showToast(i18n.t("올바른 이메일 형식이 아닙니다."));
       return;
     }
 
     if (!password.trim()) {
-      showToast('비밀번호를 입력해 주세요.');
+      showToast(i18n.t("비밀번호를 입력해 주세요."));
       return;
     }
 
@@ -335,7 +336,7 @@ export default function LoginScreen() {
     }
 
     if (!GOOGLE_WEB_CLIENT_ID) {
-      showToast('구글 로그인 설정이 아직 완료되지 않았어요.');
+      showToast(i18n.t("구글 로그인 설정이 아직 완료되지 않았어요."));
       return;
     }
 
@@ -494,15 +495,11 @@ export default function LoginScreen() {
             <View style={styles.brandArea}>
               <LoginLogo width={60} height={60} />
               <Text style={styles.brandName}>ScolioScan</Text>
-              <Text style={styles.subtitle}>당신의 척추 건강을 측정합니다</Text>
+              <Text style={styles.subtitle}>{i18n.t("당신의 척추 건강을 측정합니다")}</Text>
               {isSocialLinkLoginMode  ? (
               <View style={styles.socialLinkGuideBox}>
-                <Text style={styles.socialLinkGuideText}>
-                  가입하신 ScolioScan 계정으로 로그인하시면
-                </Text>
-                <Text style={styles.socialLinkGuideTextCenter}>
-                  Social 계정을 연동할게요.
-                </Text>
+                <Text style={styles.socialLinkGuideText}>{i18n.t("가입하신 ScolioScan 계정으로 로그인하시면")}</Text>
+                <Text style={styles.socialLinkGuideTextCenter}>{i18n.t("Social 계정을 연동할게요.")}</Text>
               </View>
             ) : null}
             </View>
@@ -510,16 +507,16 @@ export default function LoginScreen() {
 
             <View style={styles.formArea}>
               <Field
-                label="이메일"
+                label={i18n.t("이메일")}
                 value={email}
-                placeholder="이메일을 입력해 주세요"
+                placeholder={i18n.t("이메일을 입력해 주세요")}
                 onChangeText={setEmail}
                 onClear={() => setEmail('')}
               />
               <Field
-                label="비밀번호"
+                label={i18n.t("비밀번호")}
                 value={password}
-                placeholder="비밀번호를 입력해 주세요"
+                placeholder={i18n.t("비밀번호를 입력해 주세요")}
                 secureTextEntry={!passwordVisible}
                 onChangeText={setPassword}
                 onToggleSecure={() => setPasswordVisible((current) => !current)}
@@ -534,19 +531,19 @@ export default function LoginScreen() {
                   <View style={[styles.checkbox, rememberId && styles.checkboxChecked]}>
                     {rememberId ? <Ionicons name="checkmark" size={14} color="#FFFFFF" /> : null}
                   </View>
-                  <Text style={styles.rememberText}>이메일 저장</Text>
+                  <Text style={styles.rememberText}>{i18n.t("이메일 저장")}</Text>
                 </Pressable>
               </View>
 
               <PrimaryButton
-                title="로그인"
+                title={i18n.t("로그인")}
                 onPress={() => void handleLogin()}
                 disabled={isLoginDisabled}
                 active={isLoginReady}
               />
               <View style={styles.dividerWrap}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>또는</Text>
+                <Text style={styles.dividerText}>{i18n.t("또는")}</Text>
                 <View style={styles.dividerLine} />
               </View>
 
@@ -575,9 +572,9 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.signupPrompt}>
-                <Text style={styles.signupPromptText}>아직 계정이 없으신가요?</Text>
+                <Text style={styles.signupPromptText}>{i18n.t("아직 계정이 없으신가요?")}</Text>
                 <Pressable onPress={() => router.push('/register')} hitSlop={8}>
-                  <Text style={styles.signupLink}>회원가입</Text>
+                  <Text style={styles.signupLink}>{i18n.t("회원가입")}</Text>
                 </Pressable>
               </View>
 
@@ -587,7 +584,7 @@ export default function LoginScreen() {
                   disabled={isBusy}
                   hitSlop={8}
                 >
-                  <Text style={styles.findAccountText}>이메일 찾기</Text>
+                  <Text style={styles.findAccountText}>{i18n.t("이메일 찾기")}</Text>
                 </Pressable>
                 <Text style={styles.findAccountDivider}>|</Text>
                 <Pressable
@@ -595,7 +592,7 @@ export default function LoginScreen() {
                   disabled={isBusy}
                   hitSlop={8}
                 >
-                  <Text style={styles.findAccountText}>비밀번호 찾기</Text>
+                  <Text style={styles.findAccountText}>{i18n.t("비밀번호 찾기")}</Text>
                 </Pressable>
               </View>
             </View>

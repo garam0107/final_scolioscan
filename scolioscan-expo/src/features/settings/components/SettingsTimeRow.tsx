@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Pressable, Text, View } from 'react-native';
 
 import styles from '@/src/features/settings/components/settingsTimeRow.styles';
@@ -25,7 +26,7 @@ export default function SettingsTimeRow({
         style={({ pressed }) => [styles.timeField, pressed && styles.timePillPressed]}
         onPress={onPress}
       >
-        <Text style={styles.timeLabel}>시작</Text>
+        <Text style={styles.timeLabel}>{i18n.t("시작")}</Text>
         <View style={styles.timePill}>
           <Text numberOfLines={1} style={styles.timePillText}>
             {formatTimeLabel(startHour, startMinute)}
@@ -37,7 +38,7 @@ export default function SettingsTimeRow({
         style={({ pressed }) => [styles.timeField, pressed && styles.timePillPressed]}
         onPress={onPress}
       >
-        <Text style={styles.timeLabel}>종료</Text>
+        <Text style={styles.timeLabel}>{i18n.t("종료")}</Text>
         <View style={styles.timePill}>
           <Text numberOfLines={1} style={styles.timePillText}>
             {formatTimeLabel(endHour, endMinute)}

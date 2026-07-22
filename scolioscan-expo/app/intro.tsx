@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -100,11 +101,11 @@ export default function IntroPage() {
                   </View>
 
                   <View style={styles.textBlock}>
-                    <Text style={styles.title}>{step.title}</Text>
+                    <Text style={styles.title}>{i18n.t(step.title)}</Text>
                     <View style={styles.bodyLines}>
                       {step.bodyLines.map((line) => (
                         <Text key={line} style={styles.bodyText}>
-                          {line}
+                          {i18n.t(line)}
                         </Text>
                       ))}
                     </View>
@@ -124,7 +125,7 @@ export default function IntroPage() {
 
                 {isLastStep ? (
                   <Pressable onPress={completeIntro} style={styles.startButton}>
-                    <Text style={styles.startButtonText}>시작하기</Text>
+                    <Text style={styles.startButtonText}>{i18n.t("시작하기")}</Text>
                   </Pressable>
                 ) : null}
               </View>

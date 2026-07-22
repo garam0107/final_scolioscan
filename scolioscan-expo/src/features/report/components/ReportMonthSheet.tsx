@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useMemo } from 'react';
 import {
   Modal,
@@ -76,9 +77,7 @@ export default function ReportMonthSheet({
                 lineHeight: monthSheetLayout.titleLineHeight,
               },
             ]}
-          >
-            날짜 선택
-          </Text>
+          >{i18n.t("날짜 선택")}</Text>
           <Text
             style={[
               styles.monthSheetDescription,
@@ -87,9 +86,7 @@ export default function ReportMonthSheet({
                 lineHeight: monthSheetLayout.descriptionLineHeight,
               },
             ]}
-          >
-            보고싶은 리포트의 연월을 설정해주세요
-          </Text>
+          >{i18n.t("보고싶은 리포트의 연월을 설정해주세요")}</Text>
 
           <View
             style={[
@@ -130,9 +127,7 @@ export default function ReportMonthSheet({
                     mode === 'all' ? styles.monthPickerOptionTextSelected : null,
                     mode === 'specific' ? styles.monthPickerOptionTextMuted : null,
                   ]}
-                >
-                  전체
-                </Text>
+                >{i18n.t("전체")}</Text>
               </Pressable>
               <Pressable
                 style={[
@@ -155,9 +150,7 @@ export default function ReportMonthSheet({
                     mode === 'specific' ? styles.monthPickerOptionTextSelected : null,
                     mode === 'all' ? styles.monthPickerOptionTextMuted : null,
                   ]}
-                >
-                  지정
-                </Text>
+                >{i18n.t("지정")}</Text>
               </Pressable>
             </View>
 
@@ -195,8 +188,7 @@ export default function ReportMonthSheet({
                         mode === 'all' ? styles.monthPickerOptionTextMuted : null,
                       ]}
                     >
-                      {year}년
-                    </Text>
+                      {year}{i18n.t("년")}</Text>
                   </Pressable>
                 );
               })}
@@ -246,8 +238,7 @@ export default function ReportMonthSheet({
                         mode === 'all' || disabled ? styles.monthPickerOptionTextMuted : null,
                       ]}
                     >
-                      {month}월
-                    </Text>
+                      {month}{i18n.t("월")}</Text>
                   </Pressable>
                 );
               })}

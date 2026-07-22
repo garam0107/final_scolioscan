@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { View } from 'react-native';
 
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -14,7 +15,7 @@ export default function AccountFooter({ saving, canSave, bottomInset, onSave }: 
   return (
     <View style={[styles.fixedFooter, { paddingBottom: Math.max(bottomInset, 60) }]}>
       <PrimaryButton
-        title={saving ? '저장 중...' : '저장'}
+        title={saving ? i18n.t("저장 중...") : i18n.t("저장")}
         onPress={onSave}
         height={40}
         backgroundColor="#3D9A9A"

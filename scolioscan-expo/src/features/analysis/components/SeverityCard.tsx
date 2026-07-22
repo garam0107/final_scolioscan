@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Text, View } from 'react-native';
 
 import styles from '../styles/analysisCards.styles';
@@ -12,7 +13,7 @@ type SeverityCardProps = {
 export default function SeverityCard({ metrics }: SeverityCardProps) {
   return (
     <View style={styles.severityCard}>
-      <Text style={styles.severityCardTitle}>심각도 분석</Text>
+      <Text style={styles.severityCardTitle}>{i18n.t("심각도 분석")}</Text>
 
       <View style={styles.severityCardInner}>
         {metrics.map((metric, index) => {
@@ -23,11 +24,11 @@ export default function SeverityCard({ metrics }: SeverityCardProps) {
           return (
             <View key={metric.key} style={styles.severityRow}>
               <Text style={styles.severityRegionLabel}>
-                {regionDisplayLabel(metric.key)}
+                {i18n.t(regionDisplayLabel(metric.key))}
               </Text>
 
               <View style={styles.severityValueRow}>
-                <Text style={styles.severityCurvatureLabel}>만곡도</Text>
+                <Text style={styles.severityCurvatureLabel}>{i18n.t("만곡도")}</Text>
                 <Text style={styles.severityValue}>{formatDegree(metric.value)}</Text>
 
                 <View
@@ -42,7 +43,7 @@ export default function SeverityCard({ metrics }: SeverityCardProps) {
                       { color: severity.badgeTextColor },
                     ]}
                   >
-                    {severity.label}
+                    {i18n.t(severity.label)}
                   </Text>
                 </View>
 

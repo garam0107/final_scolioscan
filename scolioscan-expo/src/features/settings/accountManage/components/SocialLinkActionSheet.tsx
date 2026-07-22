@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import CommonSettingsSheet from '@/src/features/settings/components/CommonSettingsSheet';
 import styles from '@/src/features/settings/accountManage/components/accountManageComponents.styles';
 import type { SocialProvider } from '@/src/types/user';
@@ -59,15 +60,17 @@ export default function SocialLinkActionSheet({
   return (
     <CommonSettingsSheet
       visible={visible}
-      title={isUnlinkMode ? `${selectedProvider.label} 연결 해제` : `${selectedProvider.label} 연결하기`}
+      title={i18n.t(isUnlinkMode ? 'social.unlinkTitle' : 'social.linkTitle', {
+        provider: i18n.t(selectedProvider.label),
+      })}
       description={
         isUnlinkMode
           ? email
-            ? `${email} 연결을 해제할게요`
-            : `${selectedProvider.label} 연결을 해제할게요`
+            ? i18n.t('social.unlinkEmailDescription', { email })
+            : i18n.t('social.unlinkDescription', { provider: i18n.t(selectedProvider.label) })
           : email
-            ? `${email} 계정으로 연결할게요`
-            : `${selectedProvider.label} 계정으로 연결할게요`
+            ? i18n.t('social.linkEmailDescription', { email })
+            : i18n.t('social.linkDescription', { provider: i18n.t(selectedProvider.label) })
       }
       headerTopContent={<>{selectedProvider.icon}</>}
       presentation="centerConfirm"
@@ -75,12 +78,12 @@ export default function SocialLinkActionSheet({
       onClose={onClose}
       actions={[
         {
-          label: '취소',
+          label: i18n.t("취소"),
           onPress: onClose,
           disabled: submitting,
         },
         {
-          label: isUnlinkMode ? '해제하기' : '연결하기',
+          label: isUnlinkMode ? i18n.t("해제하기") : i18n.t("연결하기"),
           variant: isUnlinkMode ? 'primary' : getConfirmVariant(provider, mode),
           onPress: onConfirm,
           disabled: submitting,

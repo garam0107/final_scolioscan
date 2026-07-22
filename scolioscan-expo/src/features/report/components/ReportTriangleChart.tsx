@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Text, View } from 'react-native';
 import Svg, {
   Circle,
@@ -180,7 +181,7 @@ export default function ReportTriangleChart({
               fontSize="12"
               fill="#6B7280"
             >
-              {label}
+              {i18n.t(label)}
             </SvgText>
           );
         })}

@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Platform, BackHandler } from 'react-native';
@@ -110,13 +111,13 @@ export default function RegisterScreen() {
     const response = await octomoApi(draft.phone);
 
     if (response.verified) {
-      showToast('휴대전화 번호 인증이 완료되었습니다.');
+      showToast(i18n.t("휴대전화 번호 인증이 완료되었습니다."));
       setSmsRequested(false);
       setStep('email');
       return;
     }
 
-    showToast('휴대전화 번호 인증이 아직 완료되지 않았습니다.');
+    showToast(i18n.t("휴대전화 번호 인증이 아직 완료되지 않았습니다."));
     setSmsRequested(false);
   } catch (error) {
     const message = error instanceof Error ? error.message : '휴대전화 번호 인증 확인에 실패했습니다.';
@@ -246,7 +247,7 @@ useEffect(() => {
     try {
       const exists = await checkEmail(trimmedEmail);
       if (exists) {
-        showToast('이미 가입된 이메일입니다.');
+        showToast(i18n.t("이미 가입된 이메일입니다."));
         return;
       }
 
@@ -268,7 +269,7 @@ useEffect(() => {
     try {
       const exists = await checkPhone(normalizePhoneNumber);
       if (exists) {
-        showToast('이미 가입된 휴대폰 번호입니다.')
+        showToast(i18n.t("이미 가입된 휴대폰 번호입니다."))
         return;
       }
       setStep('message');
@@ -285,7 +286,7 @@ useEffect(() => {
     // 단계별 필수값을 검증하고 다음 가입 단계로 이동한다.
     if (step === 'agreement') {
       if (!requiredAgreed) {
-        showToast('필수 약관에 모두 동의해주세요.');
+        showToast(i18n.t("필수 약관에 모두 동의해주세요."));
         return;
       }
       setStep('carrier');
@@ -294,12 +295,12 @@ useEffect(() => {
 
     if (step === 'carrier') {
       if (!draft.carrier) {
-        showToast('통신사를 선택해주세요.');
+        showToast(i18n.t("통신사를 선택해주세요."));
         return;
       }
 
       if (!isValidPhoneNumber(draft.phone)) {
-        showToast('휴대전화 번호를 올바르게 입력해주세요.');
+        showToast(i18n.t("휴대전화 번호를 올바르게 입력해주세요."));
         return;
       }
       const normalizePhoneNumber = draft.phone.trim();
@@ -311,12 +312,12 @@ useEffect(() => {
     if (step === 'email') {
       const trimmedEmail = draft.email.trim();
       if (!trimmedEmail) {
-        showToast('이메일을 입력해주세요.');
+        showToast(i18n.t("이메일을 입력해주세요."));
         return;
       }
 
       if (!isValidEmail(trimmedEmail)) {
-        showToast('올바른 이메일 형식이 아닙니다.');
+        showToast(i18n.t("올바른 이메일 형식이 아닙니다."));
         return;
       }
 
@@ -326,7 +327,7 @@ useEffect(() => {
 
     if (step === 'password') {
       if (!passwordHasLength || !passwordHasMix) {
-        showToast('비밀번호 조건을 모두 만족해야 합니다.');
+        showToast(i18n.t("비밀번호 조건을 모두 만족해야 합니다."));
         return;
       }
 
@@ -336,7 +337,7 @@ useEffect(() => {
 
     if (step === 'name') {
       if (!draft.name.trim()) {
-        showToast('이름을 입력해주세요.');
+        showToast(i18n.t("이름을 입력해주세요."));
         return;
       }
 
@@ -346,7 +347,7 @@ useEffect(() => {
 
     if (step === 'birthday') {
       if (!birthdayReady) {
-        showToast('생년월일을 올바르게 입력해주세요.');
+        showToast(i18n.t("생년월일을 올바르게 입력해주세요."));
         return;
       }
 
@@ -362,7 +363,7 @@ useEffect(() => {
   const handleStart = async () => {
     // 마지막 단계에서 수집한 가입 정보를 서버 형식에 맞춰 전송한다.
     if (draft.gender === null) {
-      showToast('성별을 선택해주세요.');
+      showToast(i18n.t("성별을 선택해주세요."));
       return;
     }
 
@@ -435,7 +436,7 @@ useEffect(() => {
     });
 
     if (!opened) {
-      showToast('메시지 앱을 열 수 없습니다.');
+      showToast(i18n.t("메시지 앱을 열 수 없습니다."));
       return;
     }
 
@@ -542,7 +543,7 @@ useEffect(() => {
             showsVerticalScrollIndicator={false}
           >
             {step === 'complete' || step === 'agreement' ? null : (
-              <Text style={styles.title}>{stepMeta.title}</Text>
+              <Text style={styles.title}>{i18n.t(stepMeta.title)}</Text>
             )}
 
             {step === 'agreement' ? (
@@ -602,7 +603,7 @@ useEffect(() => {
                   pressed && !primaryDisabled ? styles.pressed : null,
                 ]}
               >
-                <Text style={styles.primaryButtonText}>{stepMeta.buttonText}</Text>
+                <Text style={styles.primaryButtonText}>{i18n.t(stepMeta.buttonText)}</Text>
               </Pressable>
             </View>
           </KeyboardStickyView>

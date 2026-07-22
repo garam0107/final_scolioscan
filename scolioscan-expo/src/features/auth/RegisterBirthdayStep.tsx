@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { TextInput, View } from 'react-native';
 import { useAuthStore } from '@/src/store/authStore';
 import AuthField from './AuthField';
@@ -14,7 +15,7 @@ export default function RegisterBirthdayStep() {
     <>
       <AuthField
         editable={false}
-        label="이름"
+        label={i18n.t("이름")}
         placeholder=""
         value={name}
         variant="text"

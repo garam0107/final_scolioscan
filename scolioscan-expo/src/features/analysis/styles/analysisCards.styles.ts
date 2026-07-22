@@ -349,6 +349,10 @@ const cardStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
   },
+  aiDoctorSubscribeButtonPosition: {
+    position: 'absolute',
+    alignSelf: 'center',
+  },
   aiDoctorSubscribeTitle: {
     ...textFont,
     width: '100%',

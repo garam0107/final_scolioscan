@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -180,7 +181,7 @@ export default function Measure2DScreen() {
       const result = await handleManualCapture();
 
       if (!result) {
-        showToast('촬영에 실패했습니다. 다시 시도해주세요.', 'error');
+        showToast(i18n.t("촬영에 실패했습니다. 다시 시도해주세요."), 'error');
         return;
       }
 
@@ -189,7 +190,7 @@ export default function Measure2DScreen() {
 
       if (nextEvaluation.aligned) {
         // 수동 촬영이 통과하면 자동 촬영과 같은 위치에 Lottie를 띄우고 완료 UI 이후 제출한다.
-        showManualGuideChip('좋아요. 이 자세로 촬영할게요!', 'success');
+        showManualGuideChip(i18n.t("좋아요. 이 자세로 촬영할게요!"), 'success');
         shouldResumeAuto = false;
         startManualCaptureFlow(result.photo.uri);
 
@@ -198,17 +199,17 @@ export default function Measure2DScreen() {
 
 
       if (firstReason.includes('조금 더 가까이 와주세요')) {
-        showManualGuideChip('조금 더 가까이 와주세요.', 'warning');
+        showManualGuideChip(i18n.t("조금 더 가까이 와주세요."), 'warning');
         return;
       }
 
       if (firstReason.includes('조금 더 멀리 떨어져주세요')) {
-        showManualGuideChip('조금 더 멀리 떨어져주세요.', 'warning');
+        showManualGuideChip(i18n.t("조금 더 멀리 떨어져주세요."), 'warning');
         return;
       }
 
       if (firstReason.includes('뒷모습이 보이게 서주세요')) {
-        showManualGuideChip('뒷모습이 보이게 서주세요.', 'warning');
+        showManualGuideChip(i18n.t("뒷모습이 보이게 서주세요."), 'warning');
         return;
       }
 
@@ -271,7 +272,7 @@ export default function Measure2DScreen() {
         }}
         onCameraMountError={(message) => {
           setCameraReady(false);
-          showToast('카메라를 시작하지 못했습니다. 앱을 다시 열어주세요.', 'error');
+          showToast(i18n.t("카메라를 시작하지 못했습니다. 앱을 다시 열어주세요."), 'error');
         }}
       />
 
@@ -287,11 +288,8 @@ export default function Measure2DScreen() {
               >
                 <CloseIcon width={24} height={24} />
               </Pressable>
-              <Text style={styles.closeText}>
-                가이드라인에 맞추면{' '}
-                <Text style={styles.closeTextBold}>자동으로 촬영이 진행</Text>
-                됩니다
-              </Text>
+              <Text style={styles.closeText}>{i18n.t("가이드라인에 맞추면")}{' '}
+                <Text style={styles.closeTextBold}>{i18n.t("자동으로 촬영이 진행")}</Text>{i18n.t("됩니다")}</Text>
               </>
                ) : null}
       </View>

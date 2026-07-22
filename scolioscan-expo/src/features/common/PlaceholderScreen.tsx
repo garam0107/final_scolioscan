@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
@@ -20,7 +21,7 @@ export default function PlaceholderScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
         <PrimaryButton
-          title="홈으로 돌아가기"
+          title={i18n.t("홈으로 돌아가기")}
           onPress={() => router.replace('/home')}
           style={{ marginTop: 22 }}
         />

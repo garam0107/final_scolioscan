@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Image, Text, View } from 'react-native';
 import { styles } from './register.styles';
 
@@ -30,9 +31,7 @@ export default function RegisterMessageStep() {
         />
       </View>
 
-      <Text style={styles.messageFootnote}>
-        • 이용 중인 통신 요금제에 따라 문자 메시지 발송 비용이 청구될 수 있습니다.
-      </Text>
+      <Text style={styles.messageFootnote}>{i18n.t("• 이용 중인 통신 요금제에 따라 문자 메시지 발송 비용이 청구될 수 있습니다.")}</Text>
     </View>
   );
 }

@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Text, View } from 'react-native';
 
 import { getCurvePatternCopy } from '../analysisCopy';
@@ -15,14 +16,14 @@ export default function CurvePatternCard({ dominantCurve }: CurvePatternCardProp
 
   return (
     <View style={styles.curvePatternCard}>
-      <Text style={styles.curvePatternTitle}>곡선 패턴</Text>
+      <Text style={styles.curvePatternTitle}>{i18n.t("곡선 패턴")}</Text>
       <View style={styles.curvePatternContent}>
         <View style={styles.curvePatternIconBox}>
           <CurvePatternIcon width={30} height={30} />
         </View>
         <View style={styles.curvePatternText}>
-          <Text style={styles.curvePatternName}>{copy.title}</Text>
-          <Text style={styles.curvePatternBody}>{copy.body}</Text>
+          <Text style={styles.curvePatternName}>{i18n.t(copy.title)}</Text>
+          <Text style={styles.curvePatternBody}>{i18n.t(copy.body)}</Text>
         </View>
       </View>
     </View>

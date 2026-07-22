@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -74,7 +75,7 @@ function Spine3DMetricOverlay({
   return (
     <View style={[styles.stage3DMetricGroup, { top: metric.top }]} pointerEvents="none">
       <View style={styles.stage3DMetricBadge}>
-        <Text style={styles.stage3DMetricBadgeText}>{metric.label}</Text>
+        <Text style={styles.stage3DMetricBadgeText}>{i18n.t(metric.label)}</Text>
       </View>
 
       <View style={styles.stage3DMetricRow}>
@@ -85,7 +86,7 @@ function Spine3DMetricOverlay({
               metricBlurMode === 'all' && styles.stage3DMetricColumnBlurred,
             ]}
           >
-            <Text style={styles.stage3DMetricLabel}>만곡도</Text>
+            <Text style={styles.stage3DMetricLabel}>{i18n.t("만곡도")}</Text>
             <Text style={styles.stage3DMetricValue}>{formatDegree(metric.curvatureValue)}</Text>
           </View>
 
@@ -95,7 +96,7 @@ function Spine3DMetricOverlay({
               metricBlurMode !== 'none' && styles.stage3DMetricColumnBlurred,
             ]}
           >
-            <Text style={styles.stage3DMetricLabel}>비틀림</Text>
+            <Text style={styles.stage3DMetricLabel}>{i18n.t("비틀림")}</Text>
             {/* rotation 미측정 시 0도 값을 보여 주되, 피그마와 같이 값만 블러 처리한다. */}
             <Text
               style={[
@@ -216,7 +217,7 @@ export default function AnalysisStage({
         {show3DPlaceholder ? (
           <View style={styles.stage3DPlaceholder} pointerEvents="none">
             <ActivityIndicator color={Colors.primary.white} />
-            <Text style={styles.stage3DPlaceholderText}>3D 모델을 불러오는 중입니다...</Text>
+            <Text style={styles.stage3DPlaceholderText}>{i18n.t("3D 모델을 불러오는 중입니다...")}</Text>
           </View>
         ) : null}
       </View>
@@ -254,9 +255,7 @@ export default function AnalysisStage({
             ))}
 
             {!hasAnalysis && !loading ? (
-              <Text style={styles.emptyText}>
-                최근 측정 결과가 없어요. 먼저 측정을 진행해 주세요.
-              </Text>
+              <Text style={styles.emptyText}>{i18n.t("최근 측정 결과가 없어요. 먼저 측정을 진행해 주세요.")}</Text>
             ) : null}
           </>
       
@@ -265,7 +264,7 @@ export default function AnalysisStage({
           <>
             <Text style={styles.errorText}>{error}</Text>
             <Pressable style={styles.retryButton} onPress={onRetry}>
-              <Text style={styles.retryText}>다시 시도</Text>
+              <Text style={styles.retryText}>{i18n.t("다시 시도")}</Text>
             </Pressable>
           </>
         ) : null}

@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useAuthStore } from '@/src/store/authStore';
 import AuthField from './AuthField';
 
@@ -15,8 +16,8 @@ export default function RegisterEmailStep({ onSubmit }: RegisterEmailStepProps) 
       autoCapitalize="none"
       autoComplete="email"
       autoCorrect={false}
-      label="이메일"
-      placeholder="이메일을 입력해주세요"
+      label={i18n.t("이메일")}
+      placeholder={i18n.t("이메일을 입력해주세요")}
       returnKeyType="next"
       textContentType="emailAddress"
       value={email}

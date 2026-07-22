@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useRouter } from 'expo-router';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -176,10 +177,13 @@ export default function ScoliometerScreen() {
   const angleLabel = useMemo(() => formatAngle(angle), [angle]);
   const measuredCount = samples.length;
   const measureButtonLabel = submitting
-    ? '저장 중'
+    ? i18n.t('저장 중')
     : measuredCount >= SCOLIOMETER_REQUIRED_SAMPLE_COUNT
-      ? '저장 재시도'
-      : `측정 ${measuredCount}/${SCOLIOMETER_REQUIRED_SAMPLE_COUNT}`;
+      ? i18n.t('저장 재시도')
+      : i18n.t('scoliometer.measureProgress', {
+          count: measuredCount,
+          total: SCOLIOMETER_REQUIRED_SAMPLE_COUNT,
+        });
   // 가로 모드에서 색상 영역과 흰색 영역이 만나는 기준선이다.
   const horizonY = height * 0.5;
   
@@ -223,10 +227,10 @@ export default function ScoliometerScreen() {
   const landscapeGuideAnchorWidth = Math.min(width * 0.74, 360);
 
   // 측정 횟수에 따라 변하도록 text 변경 필요
-  const guideText = '측정을 진행해주세요';
+  const guideText = i18n.t('측정을 진행해주세요');
   
   const displayGuideText = measuredCount > 0
-    ? `${measuredCount}회 측정했어요. 이어서 측정해주세요`
+    ? i18n.t('scoliometer.measuredProgress', { count: measuredCount })
     : guideText;
 
 
@@ -263,7 +267,7 @@ export default function ScoliometerScreen() {
       resetSession();
       router.replace('/home');
     } catch {
-      Alert.alert('저장 실패', '척추측만계 측정을 저장하지 못했습니다. 다시 시도해주세요.');
+      Alert.alert(i18n.t("저장 실패"), i18n.t("척추측만계 측정을 저장하지 못했습니다. 다시 시도해주세요."));
     } finally {
       setSubmitting(false);
     }
@@ -308,7 +312,7 @@ export default function ScoliometerScreen() {
     return (
       <SafeAreaView style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
         <View style={styles.unsupported}>
-          <Text style={styles.unsupportedText}>이 기기에서는 움직임 센서를 사용할 수 없습니다.</Text>
+          <Text style={styles.unsupportedText}>{i18n.t("이 기기에서는 움직임 센서를 사용할 수 없습니다.")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -447,9 +451,7 @@ export default function ScoliometerScreen() {
         <View style={[styles.bottomActions, { left: bottomActionsLeft, width: bottomActionsWidth }]}>
           <View style={styles.bottomActionSlot}>
             <Pressable onPress={calibrate} style={styles.zeroButton}>
-              <Text style={styles.zeroButtonText} numberOfLines={1} adjustsFontSizeToFit>
-                0° 보정
-              </Text>
+              <Text style={styles.zeroButtonText} numberOfLines={1} adjustsFontSizeToFit>{i18n.t("0° 보정")}</Text>
             </Pressable>
           </View>
           <View style={styles.bottomActionCenter}>

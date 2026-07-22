@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useState } from 'react';
 import {
@@ -44,8 +45,8 @@ export default function RegisterAgreementStep({ state, onToggle, onToggleAll }: 
   return (
     <View style={s.wrap}>
       <View style={s.titleBlock}>
-        <Text style={s.title}>ScolioScan에 오신 것을 환영합니다!</Text>
-        <Text style={s.subtitle}>회원가입 전, ScolioScan 약관들을 동의해주세요</Text>
+        <Text style={s.title}>{i18n.t("ScolioScan에 오신 것을 환영합니다!")}</Text>
+        <Text style={s.subtitle}>{i18n.t("회원가입 전, ScolioScan 약관들을 동의해주세요")}</Text>
       </View>
 
       <View style={s.list}>
@@ -60,7 +61,7 @@ export default function RegisterAgreementStep({ state, onToggle, onToggleAll }: 
               color={allChecked ? '#22BCB7' : '#C5CCD8'}
             />
           </View>
-          <Text style={s.allLabel}>전체 약관동의</Text>
+          <Text style={s.allLabel}>{i18n.t("전체 약관동의")}</Text>
         </Pressable>
 
         {AGREEMENTS.map((item) => {
@@ -79,10 +80,10 @@ export default function RegisterAgreementStep({ state, onToggle, onToggleAll }: 
                     color={checked ? '#22BCB7' : '#C5CCD8'}
                   />
                 </View>
-                <Text style={s.itemLabel}>{item.label}</Text>
+                <Text style={s.itemLabel}>{i18n.t(`agreements.${item.key}.label`)}</Text>
               </Pressable>
               <Pressable onPress={() => setOpenKey(item.key)} hitSlop={8}>
-                <Text style={s.moreLink}>더보기</Text>
+                <Text style={s.moreLink}>{i18n.t("더보기")}</Text>
               </Pressable>
             </View>
           );
@@ -98,18 +99,20 @@ export default function RegisterAgreementStep({ state, onToggle, onToggleAll }: 
         <SafeAreaView style={s.modalRoot} edges={['top', 'bottom']}>
           <View style={s.modalHeader}>
             <Text style={s.modalTitle} numberOfLines={1}>
-              {openItem?.label ?? ''}
+              {openItem ? i18n.t(`agreements.${openItem.key}.label`) : ''}
             </Text>
             <Pressable onPress={() => setOpenKey(null)} hitSlop={12}>
               <Ionicons name="close" size={26} color="#3B4049" />
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={s.modalBody}>
-            <Text style={s.modalText}>{openItem?.body ?? ''}</Text>
+            <Text style={s.modalText}>
+              {openItem ? i18n.t(`agreements.${openItem.key}.body`) : ''}
+            </Text>
           </ScrollView>
           <View style={s.modalFooter}>
             <PrimaryButton
-              title="동의하기"
+              title={i18n.t("동의하기")}
               onPress={handleAgreeFromModal}
               width="100%"
               height={48}

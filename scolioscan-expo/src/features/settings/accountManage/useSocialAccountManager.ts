@@ -3,6 +3,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { login as kakaoLogin, unlink as unlinkKakao } from '@react-native-seoul/kakao-login';
 import NaverLogin from '@react-native-seoul/naver-login';
 import { useEffect, useState } from 'react';
+import { i18n } from '@/src/i18n';
 
 import { authAPI } from '@/src/api/auth';
 import { userAPI } from '@/src/api/user';
@@ -344,7 +345,9 @@ export function useSocialAccountManager({
       const verifyResponse = await verifySocialLogin(provider);
 
       if (verifyResponse.status === 'login_success') {
-        showToast(`${getSocialProviderLabel(provider)} 소셜 계정은 이미 다른 계정에 연결되어 있습니다.`, 'warning');
+        showToast(i18n.t('social.alreadyLinked', {
+          provider: i18n.t(getSocialProviderLabel(provider)),
+        }), 'warning');
         return;
       }
 
@@ -356,7 +359,9 @@ export function useSocialAccountManager({
         social_temp_token: verifyResponse.social_temp_token,
       });
       await refreshSession();
-      showToast(`${getSocialProviderLabel(provider)} 소셜 연동이 완료되었습니다.`, 'success');
+      showToast(i18n.t('social.linkComplete', {
+        provider: i18n.t(getSocialProviderLabel(provider)),
+      }), 'success');
     } finally {
       setLinkingProvider(null);
     }
@@ -375,7 +380,9 @@ export function useSocialAccountManager({
       await userAPI.deleteSocialAccount(provider);
       await removePendingSocialUnlink(provider);
       await refreshSession();
-      showToast(`${getSocialProviderLabel(provider)} 소셜 연동이 해제되었습니다.`, 'success');
+      showToast(i18n.t('social.unlinkComplete', {
+        provider: i18n.t(getSocialProviderLabel(provider)),
+      }), 'success');
     } catch (error) {
       const sdkMessage = extractSocialSdkErrorMessage(error);
       showToast(sdkMessage || normalizeApiError(error), 'error');

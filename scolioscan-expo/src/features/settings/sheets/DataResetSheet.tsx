@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
@@ -35,16 +36,16 @@ export default function DataResetSheet({ visible, onClose, onReset }: DataResetS
   return (
     <CommonSettingsSheet
       visible={visible}
-      title="데이터를 초기화할까요!?"
+      title={i18n.t("데이터를 초기화할까요!?")}
       titleTone="danger"
-      description="이 작업은 되돌릴 수 없어요"
+      description={i18n.t("이 작업은 되돌릴 수 없어요")}
       bottomPlacement="safeArea"
       avoidKeyboard
       onClose={closeSheet}
       actions={[
-        { label: '취소', onPress: closeSheet },
+        { label: i18n.t("취소"), onPress: closeSheet },
         {
-          label: '초기화',
+          label: i18n.t("초기화"),
           variant: 'danger',
           disabled: !canReset,
           onPress: handleReset,
@@ -52,17 +53,17 @@ export default function DataResetSheet({ visible, onClose, onReset }: DataResetS
       ]}
     >
       <View style={styles.resetDeleteBox}>
-        <Text style={styles.resetDeleteTitle}>삭제되는 항목</Text>
+        <Text style={styles.resetDeleteTitle}>{i18n.t("삭제되는 항목")}</Text>
         {RESET_DELETED_ITEMS.map((item) => (
-          <Text key={item} style={styles.resetDeleteItem}>{`• ${item}`}</Text>
+          <Text key={item} style={styles.resetDeleteItem}>{`• ${i18n.t(item)}`}</Text>
         ))}
       </View>
-      <Text style={styles.resetConfirmLabel}>확인을 위해 아래에 초기화 라고 입력해주세요</Text>
+      <Text style={styles.resetConfirmLabel}>{i18n.t("확인을 위해 아래에 초기화 라고 입력해주세요")}</Text>
       <View style={styles.resetInputWrap}>
         <TextInput
           value={confirmText}
           onChangeText={setConfirmText}
-          placeholder="초기화"
+          placeholder={i18n.t("초기화")}
           placeholderTextColor="#B6BECE"
           style={styles.resetInput}
         />

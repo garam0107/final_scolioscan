@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useAuthStore } from '@/src/store/authStore';
 import AuthField from './AuthField';
 
@@ -14,9 +15,9 @@ export default function RegisterNameStep({ onSubmit }: RegisterNameStepProps) {
       autoCapitalize="words"
       autoComplete="name"
       autoCorrect={false}
-      label="이름"
+      label={i18n.t("이름")}
       maxLength={8}
-      placeholder="이름을 입력해주세요"
+      placeholder={i18n.t("이름을 입력해주세요")}
       returnKeyType="next"
       textContentType="name"
       value={name}

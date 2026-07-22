@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useMemo, useRef } from 'react';
 import {
   ScrollView,
@@ -90,7 +91,7 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const stageBoneSize = SPINE_BONE_SIZE * wideStageScale;
   const stageBoneSpacing = SPINE_BONE_SPACING * wideStageScale;
   const metricSideInset = isWideLayout ? 52 * wideStageScale : 52;
-  const summaryName = user?.name?.trim() || '회원';
+  const summaryName = user?.name?.trim() || i18n.t('회원');
   const upperValue = pose.metrics.find((metric) => metric.key === 'upper')?.value ?? 0;
   const mainValue = pose.metrics.find((metric) => metric.key === 'main')?.value ?? 0;
   const lumbarValue = pose.metrics.find((metric) => metric.key === 'lumbar')?.value ?? 0;
@@ -140,7 +141,7 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
           <StatusBar style="dark" backgroundColor="#F4F6F7" translucent={false} />
           <View style={styles.loadingBox}>
             <ActivityIndicator color="#69B7BC" />
-            <Text style={styles.loadingText}>분석 결과를 불러오는 중입니다...</Text>
+            <Text style={styles.loadingText}>{i18n.t("분석 결과를 불러오는 중입니다...")}</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -180,9 +181,12 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
           ) : (
             <>
           <View style={styles.summaryTextBlock}>
-            <Text style={styles.summaryNameLine}>{summaryName} 님은</Text>
+            <Text style={styles.summaryNameLine}>{summaryName}{i18n.t("님은")}</Text>
             <Text style={styles.summaryDiagnosisLine}>
-              <Text style={styles.summarySeverityBold}>{severityLabel} 척추측만증</Text>으로 예상 됩니다
+              <Text style={styles.summarySeverityBold}>
+                {i18n.t('analysis.scoliosisAssessment', { severity: i18n.t(severityLabel) })}
+              </Text>
+              {i18n.t("으로 예상 됩니다")}
             </Text>
           </View>
 

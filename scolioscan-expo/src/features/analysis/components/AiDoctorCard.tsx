@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useRouter } from 'expo-router';
 import { Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
@@ -38,7 +39,7 @@ export default function AiDoctorCard() {
   return (
     <View style={[styles.aiDoctorSection, { height: sectionHeight }]}>
       <View style={styles.aiDoctorLockedContent}>
-        <Text style={styles.aiDoctorLockedTitle}>종합 리포트</Text>
+        <Text style={styles.aiDoctorLockedTitle}>{i18n.t("ScolioScan 추천")}</Text>
 
         <View style={styles.aiDoctorRiskRow}>
           <View style={styles.aiDoctorRiskIconBox}>
@@ -54,22 +55,22 @@ export default function AiDoctorCard() {
             </Svg>
           </View>
           <View>
-            <Text style={styles.aiDoctorRiskLabel}>위험도 평가</Text>
-            <Text style={styles.aiDoctorRiskValue}>보통</Text>
+            <Text style={styles.aiDoctorRiskLabel}>{i18n.t("위험도 평가")}</Text>
+            <Text style={styles.aiDoctorRiskValue}>{i18n.t("보통")}</Text>
           </View>
         </View>
 
         <View style={styles.aiDoctorDivider} />
-        <Text style={styles.aiDoctorSectionLabel}>예후</Text>
-        <Text style={styles.aiDoctorBodyText}>적절한 관찰과 생활 습관 관리가 필요해요.</Text>
+        <Text style={styles.aiDoctorSectionLabel}>{i18n.t("예후")}</Text>
+        <Text style={styles.aiDoctorBodyText}>{i18n.t("적절한 관찰과 생활 습관 관리가 필요해요.")}</Text>
 
         <View style={styles.aiDoctorDivider} />
-        <Text style={styles.aiDoctorSectionLabel}>보조기 권장 사항</Text>
-        <Text style={styles.aiDoctorBodyText}>전문의 상담을 통해 보조기 착용 여부를 확인해요.</Text>
+        <Text style={styles.aiDoctorSectionLabel}>{i18n.t("보조기 권장 사항")}</Text>
+        <Text style={styles.aiDoctorBodyText}>{i18n.t("전문의 상담을 통해 보조기 착용 여부를 확인해요.")}</Text>
 
         <View style={styles.aiDoctorDivider} />
-        <Text style={styles.aiDoctorSectionLabel}>자세 및 인체 공학</Text>
-        <Text style={styles.aiDoctorBodyText}>바른 자세와 규칙적인 스트레칭을 유지해 주세요.</Text>
+        <Text style={styles.aiDoctorSectionLabel}>{i18n.t("자세 및 인체 공학")}</Text>
+        <Text style={styles.aiDoctorBodyText}>{i18n.t("바른 자세와 규칙적인 스트레칭을 유지해 주세요.")}</Text>
       </View>
 
       <Svg pointerEvents="none" style={styles.aiDoctorGradient} width="100%" height="100%">
@@ -127,24 +128,42 @@ export default function AiDoctorCard() {
           </View>
         </View>
 
-        <View style={styles.aiDoctorSubscribeTextBlock}>
-          <Text style={styles.aiDoctorSubscribeTitle}>
-            종합 리포트를 보려면 구독해야해요
+        <View
+          style={[
+            styles.aiDoctorSubscribeTextBlock,
+            // 긴 번역문은 아이콘과 버튼 위치를 유지한 채 텍스트 영역만 위로 올린다.
+            i18n.language !== 'ko' ? { transform: [{ translateY: -16 * sectionScale }] } : null,
+          ]}
+        >
+          <Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
+            style={styles.aiDoctorSubscribeTitle}
+          >
+            {i18n.t("ScolioScan 추천을 보려면 구독해야해요")}
           </Text>
-          <Text style={styles.aiDoctorSubscribeDescription}>
-            처음 구독하시면 50% 할인해드려요!
+          <Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
+            style={styles.aiDoctorSubscribeDescription}
+          >
+            {i18n.t("처음 구독하시면 50% 할인해드려요!")}
           </Text>
         </View>
 
-        <PrimaryButton
-          title="구독하러 가기"
-          onPress={handleSubscribePress}
-          width={105}
-          height={40}
-          backgroundColor="#2C9696"
-          borderRadius={6}
-          textStyle={styles.aiDoctorSubscribeButtonText}
-        />
+        <View style={[styles.aiDoctorSubscribeButtonPosition, { bottom: 24 * sectionScale }]}>
+          <PrimaryButton
+            title={i18n.t("구독하러 가기")}
+            onPress={handleSubscribePress}
+            width={105}
+            height={40}
+            backgroundColor="#2C9696"
+            borderRadius={6}
+            textStyle={styles.aiDoctorSubscribeButtonText}
+          />
+        </View>
       </View>
     </View>
   );

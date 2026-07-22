@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -114,8 +115,10 @@ export default function ReportScreen() {
   const selectedPeriodLabel = getPeriodOption(selectedTrendPeriod).label;
   const measurementListMonthLabel =
     measurementListMonthMode === 'all'
-      ? '전체'
-      : `${selectedMeasurementListYear}년 ${selectedMeasurementListMonth}월`;
+      ? i18n.t('전체')
+      : new Intl.DateTimeFormat(i18n.language, { year: 'numeric', month: 'long' }).format(
+          new Date(selectedMeasurementListYear, selectedMeasurementListMonth - 1, 1),
+        );
   // 측정 목록 제목이 상단 기준점까지 올라오는 외부 스크롤 위치다.
   const measurementListLockY = Math.max(0, measurementListY - MEASUREMENT_LIST_STICKY_TOP);
   // 측정 목록 제목과 탭이 위쪽에 자리 잡은 뒤, 실제 카드 리스트가 사용할 수 있는 화면 높이다.
@@ -238,7 +241,7 @@ export default function ReportScreen() {
         <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
           <View style={styles.screenLoadingBox}>
             <ActivityIndicator color="#69B7BC" />
-            <Text style={styles.screenLoadingText}>리포트를 불러오는 중입니다...</Text>
+            <Text style={styles.screenLoadingText}>{i18n.t("리포트를 불러오는 중입니다...")}</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -275,29 +278,29 @@ export default function ReportScreen() {
             <MeasurementRequiredCard onPress={handleGoHome} />
           ) : (
             <>
-          <Text style={styles.pageTitle}>척추 균형 분석</Text>
+          <Text style={styles.pageTitle}>{i18n.t("척추 균형 분석")}</Text>
 
           <View style={styles.chartCard}>
              <ReportTriangleChart
               myValues={myValues}
               avgValues={avgValues}
-              labels={['상부 흉추 각도', '주 흉추 각도', '요추 각도']}
-              myMeasurementLabel="내 측정값"
-              avgLabel="한국인 평균 측정값"
-              chartDescriptionText="중심에 가까울수록 정상 범위에 가깝습니다."
+              labels={[i18n.t("상부 흉추 각도"), i18n.t("주 흉추 각도"), i18n.t("요추 각도")]}
+              myMeasurementLabel={i18n.t("내 측정값")}
+              avgLabel={i18n.t("한국인 평균 측정값")}
+              chartDescriptionText={i18n.t("중심에 가까울수록 정상 범위에 가깝습니다.")}
             />
 
             {!loading && !hasCurvatureData ? <ReportEmptyOverlay onPress={handleGoHome} /> : null}
           </View>
 
           <View style={styles.resultHeader}>
-            <Text style={styles.resultTitle}>최근 측정 결과</Text>
+            <Text style={styles.resultTitle}>{i18n.t("최근 측정 결과")}</Text>
             <View style={styles.periodSelectorWrap}>
               <Pressable
                 style={({ pressed }) => [styles.periodSelectButton, pressed && styles.pressed]}
                 onPress={() => setPeriodDropdownVisible((visible) => !visible)}
               >
-                <Text style={styles.periodSelectText}>{selectedPeriodLabel}</Text>
+                <Text style={styles.periodSelectText}>{i18n.t(selectedPeriodLabel)}</Text>
                 <Ionicons name="chevron-down" size={16} color="#B6BECE" />
               </Pressable>
 
@@ -313,7 +316,7 @@ export default function ReportScreen() {
                         onPress={() => handlePeriodSelect(option.key)}
                       >
                         <Text style={[styles.periodDropdownOptionText, selected ? styles.periodDropdownOptionTextActive : null]}>
-                          {option.label}
+                          {i18n.t(option.label)}
                         </Text>
                       </Pressable>
                     );

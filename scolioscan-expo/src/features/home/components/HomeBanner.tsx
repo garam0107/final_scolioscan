@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Text, View } from 'react-native';
 import styles from '@/src/features/home/styles/homeBanner.styles';
 
@@ -11,7 +12,7 @@ export default function HomeBanner({ width, height }: HomeBannerProps) {
     <View style={styles.bannerWrap}>
       <View style={[styles.bannerPager, { width, height }]}>
         <View style={[styles.banner, { width, height }]}>
-          <Text style={styles.bannerPlaceholderText}>광고 준비중</Text>
+          <Text style={styles.bannerPlaceholderText}>{i18n.t("광고 준비중")}</Text>
         </View>
       </View>
     </View>

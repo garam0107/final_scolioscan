@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -59,7 +60,7 @@ export default function PasswordFindMessageScreen() {
     }
 
     if (!accountInfo.user_id || !accountInfo.name || !accountInfo.phone) {
-      showToast('비밀번호 찾기 정보를 다시 입력해주세요.');
+      showToast(i18n.t("비밀번호 찾기 정보를 다시 입력해주세요."));
       return;
     }
 
@@ -68,7 +69,7 @@ export default function PasswordFindMessageScreen() {
     try {
       const response = await authAPI.verifyPasswordReset(accountInfo);
       setSmsRequested(false);
-      showToast('휴대전화 번호가 인증되었어요.');
+      showToast(i18n.t("휴대전화 번호가 인증되었어요."));
       setTimeout(() => {
         router.push({
           pathname: '/password-find-reset',
@@ -108,7 +109,7 @@ export default function PasswordFindMessageScreen() {
 
   async function handleMessagePress() {
     if (!accountInfo.phone) {
-      showToast('휴대전화 번호를 찾을 수 없습니다.');
+      showToast(i18n.t("휴대전화 번호를 찾을 수 없습니다."));
       return;
     }
 
@@ -120,7 +121,7 @@ export default function PasswordFindMessageScreen() {
       });
 
       if (!opened) {
-        showToast('메시지 앱을 열 수 없습니다.');
+        showToast(i18n.t("메시지 앱을 열 수 없습니다."));
         return;
       }
 
@@ -143,18 +144,18 @@ export default function PasswordFindMessageScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Ionicons name="chevron-back" size={22} color="#7E89A0" />
           </Pressable>
-          <Text style={styles.headerTitle}>비밀번호 찾기</Text>
+          <Text style={styles.headerTitle}>{i18n.t("비밀번호 찾기")}</Text>
           <View style={styles.headerSide} />
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>인증을 위해 메시지 앱을 실행할게요</Text>
+          <Text style={styles.title}>{i18n.t("인증을 위해 메시지 앱을 실행할게요")}</Text>
           <SmsVerificationGuide />
         </View>
 
         <View style={styles.footer}>
           <PrimaryButton
-            title="동의 및 휴대전화 번호 확인"
+            title={i18n.t("동의 및 휴대전화 번호 확인")}
             onPress={() => void handleMessagePress()}
             height={48}
             backgroundColor="#2C9696"

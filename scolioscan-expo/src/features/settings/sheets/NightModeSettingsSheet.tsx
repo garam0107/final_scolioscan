@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import React, { useMemo, useState } from 'react';
 import {
   Pressable,
@@ -132,7 +133,7 @@ export default function NightModeSettingsSheet({
       >
         {options.map((opt) => {
           const selected = currentValue === opt;
-          const label = opt === 0 && suffix === '분' ? '정각' : `${opt}${suffix}`;
+          const label = opt === 0 && suffix === i18n.t("분") ? i18n.t("정각") : `${opt}${suffix}`;
 
           return (
             <Pressable
@@ -199,9 +200,7 @@ export default function NightModeSettingsSheet({
                     lineHeight: nightModeLayout.optionLineHeight,
                   },
                 ]}
-              >
-                오전
-              </Text>
+              >{i18n.t("오전")}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -226,7 +225,7 @@ export default function NightModeSettingsSheet({
               },
             ]}
           >
-            {isPM ? '오후' : '오전'}
+            {isPM ? i18n.t("오후") : i18n.t("오전")}
           </Text>
         </View>
 
@@ -249,9 +248,7 @@ export default function NightModeSettingsSheet({
                     lineHeight: nightModeLayout.optionLineHeight,
                   },
                 ]}
-              >
-                오후
-              </Text>
+              >{i18n.t("오후")}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -294,8 +291,8 @@ export default function NightModeSettingsSheet({
         </Text>
 
         {renderAmPmPicker(isPM, setIsPM)}
-        {renderPicker(HOURS, hour, setHour, '시')}
-        {renderPicker(MINUTES, minute, setMinute, '분')}
+        {renderPicker(HOURS, hour, setHour, i18n.t("시"))}
+        {renderPicker(MINUTES, minute, setMinute, i18n.t("분"))}
       </View>
     );
   };
@@ -303,12 +300,12 @@ export default function NightModeSettingsSheet({
   return (
     <CommonSettingsSheet
       visible={visible}
-      title="야간 모드 시간 설정"
-      description="야간 모드로 설정하고싶은 시간을 설정해주세요"
+      title={i18n.t("야간 모드 시간 설정")}
+      description={i18n.t("야간 모드로 설정하고싶은 시간을 설정해주세요")}
       onClose={onClose}
       actions={[
-        { label: '취소', onPress: onClose, variant: 'default' },
-        { label: '적용', onPress: handleApply, variant: 'primary' },
+        { label: i18n.t("취소"), onPress: onClose, variant: 'default' },
+        { label: i18n.t("적용"), onPress: handleApply, variant: 'primary' },
       ]}
     >
       <View
@@ -321,7 +318,7 @@ export default function NightModeSettingsSheet({
         ]}
       >
         {renderTimeSection(
-          '시작',
+          i18n.t("시작"),
           isStartPM,
           setIsStartPM,
           localStartHour,
@@ -331,7 +328,7 @@ export default function NightModeSettingsSheet({
         )}
 
         {renderTimeSection(
-          '종료',
+          i18n.t("종료"),
           isEndPM,
           setIsEndPM,
           localEndHour,

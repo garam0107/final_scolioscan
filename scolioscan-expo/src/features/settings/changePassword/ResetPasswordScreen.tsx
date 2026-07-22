@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -79,7 +80,7 @@ export default function ResetPasswordScreen() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      showToast('비밀번호가 변경되었습니다.', 'success');
+      showToast(i18n.t("비밀번호가 변경되었습니다."), 'success');
       setTimeout(() => {
         router.dismissTo('/settings/account?toast=passwordChanged');
       }, 700);
@@ -140,7 +141,7 @@ export default function ResetPasswordScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
           <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
         </Pressable>
-        <Text style={styles.headerTitle}>비밀번호 변경</Text>
+        <Text style={styles.headerTitle}>{i18n.t("비밀번호 변경")}</Text>
         <View style={styles.headerSide} />
       </View>
 
@@ -151,14 +152,14 @@ export default function ResetPasswordScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.guideBox}>
-          <Text style={styles.guideText}>새로 사용할 비밀번호를 입력해주세요.</Text>
-          <Text style={styles.guideText}>보안을 위해 다른 기기에서는 자동 로그아웃 돼요.</Text>
+          <Text style={styles.guideText}>{i18n.t("새로 사용할 비밀번호를 입력해주세요.")}</Text>
+          <Text style={styles.guideText}>{i18n.t("보안을 위해 다른 기기에서는 자동 로그아웃 돼요.")}</Text>
         </View>
 
         <View style={styles.inputCard}>
           {renderPasswordField(
-            '현재 비밀번호',
-            '현재 비밀번호를 입력하세요',
+            i18n.t("현재 비밀번호"),
+            i18n.t("현재 비밀번호를 입력하세요"),
             currentPassword,
             setCurrentPassword,
             currentPasswordVisible,
@@ -166,8 +167,8 @@ export default function ResetPasswordScreen() {
           )}
 
           {renderPasswordField(
-            '새 비밀번호',
-            '새 비밀번호를 입력해주세요',
+            i18n.t("새 비밀번호"),
+            i18n.t("새 비밀번호를 입력해주세요"),
             newPassword,
             setNewPassword,
             newPasswordVisible,
@@ -182,9 +183,7 @@ export default function ResetPasswordScreen() {
                 size={14}
                 color={passwordMixReady ? '#5F9F9D' : '#C0CAD8'}
               />
-              <Text style={[styles.ruleText, passwordMixReady ? styles.ruleTextActive : null]}>
-                영문자, 숫자, 특수문자 포함
-              </Text>
+              <Text style={[styles.ruleText, passwordMixReady ? styles.ruleTextActive : null]}>{i18n.t("영문자, 숫자, 특수문자 포함")}</Text>
             </View>
             <View style={styles.ruleRow}>
               <Ionicons
@@ -192,15 +191,13 @@ export default function ResetPasswordScreen() {
                 size={14}
                 color={passwordLengthReady ? '#5F9F9D' : '#C0CAD8'}
               />
-              <Text style={[styles.ruleText, passwordLengthReady ? styles.ruleTextActive : null]}>
-                최소 8자 이상
-              </Text>
+              <Text style={[styles.ruleText, passwordLengthReady ? styles.ruleTextActive : null]}>{i18n.t("최소 8자 이상")}</Text>
             </View>
           </View>
 
           {renderPasswordField(
-            '비밀번호 확인',
-            '한 번 더 입력해주세요',
+            i18n.t("비밀번호 확인"),
+            i18n.t("한 번 더 입력해주세요"),
             confirmPassword,
             setConfirmPassword,
             confirmPasswordVisible,
@@ -213,7 +210,7 @@ export default function ResetPasswordScreen() {
         {/* 키보드에 화면 높이를 맡기지 않고 하단 버튼만 키보드 위로 붙인다. */}
         <View style={styles.footer}>
           <PrimaryButton
-            title="비밀번호 변경하기"
+            title={i18n.t("비밀번호 변경하기")}
             onPress={handleChange}
             height={48}
             backgroundColor="#5F9F9D"

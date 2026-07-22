@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
@@ -142,7 +143,7 @@ export default function ReportTrendChart({
       xAxisLabels={xAxisLabels}
       gradientId="reportTrendAreaGradient"
       hasData={hasData}
-      emptyText="선택한 기간의 측정 데이터가 없습니다."
+      emptyText={i18n.t("선택한 기간의 측정 데이터가 없습니다.")}
     />
   );
 }

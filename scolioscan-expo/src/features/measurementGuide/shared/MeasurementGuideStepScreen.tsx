@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 // import { VideoView, useVideoPlayer, type VideoSource } from 'expo-video';
@@ -75,7 +76,7 @@ export default function MeasurementGuideStepScreen({
         <Pressable style={styles.headerSide} hitSlop={12} onPress={onBack}>
           <Ionicons name="chevron-back" size={24} color={Colors.gray[400]} />
         </Pressable>
-        <Text style={styles.headerTitle}>측정 가이드</Text>
+        <Text style={styles.headerTitle}>{i18n.t("측정 가이드")}</Text>
         <View style={styles.headerSide} />
       </View>
 
@@ -98,7 +99,7 @@ export default function MeasurementGuideStepScreen({
             },
           ]}
         >
-          <Text style={styles.guideTitle}>{title}</Text>
+          <Text style={styles.guideTitle}>{i18n.t(title)}</Text>
           {/* lottie,mp4 파일 중 나중에 최종 결정하는 것으로 수정 */}
             {/* <View style={[styles.mediaCard, { height: layout.mediaHeight }]}>
               <View style={styles.mediaClip}>
@@ -128,8 +129,8 @@ export default function MeasurementGuideStepScreen({
               ) : null}
           </View>
           <View style={styles.descriptionGroup}>
-            <Text style={styles.description}>{description}</Text>
-            {subDescription ? <Text style={styles.subDescription}>{subDescription}</Text> : null}
+            <Text style={styles.description}>{i18n.t(description)}</Text>
+            {subDescription ? <Text style={styles.subDescription}>{i18n.t(subDescription)}</Text> : null}
           </View>
         </Animated.View>
       </ScrollView>
@@ -137,7 +138,7 @@ export default function MeasurementGuideStepScreen({
       <View style={[styles.bottomArea, { bottom: layout.bottomOffset }]}>
         <View style={styles.bottomButtonSpacer} />
         <PrimaryButton
-          title={nextLabel}
+          title={i18n.t(nextLabel)}
           onPress={onNext}
           width="100%"
           height={48}

@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
@@ -79,7 +80,7 @@ export default function AccountManageScreen() {
       return;
     }
 
-    showToast('비밀번호가 변경되었습니다.', 'success');
+    showToast(i18n.t("비밀번호가 변경되었습니다."), 'success');
     router.setParams({ toast: undefined });
   }, [params.toast, router]);
 
@@ -94,7 +95,7 @@ export default function AccountManageScreen() {
         const permission = await Location.requestForegroundPermissionsAsync();
 
         if (permission.status !== 'granted') {
-          if (isMounted) setDeviceMeta('위치 권한 필요 • 로그인 중');
+          if (isMounted) setDeviceMeta(i18n.t("위치 권한 필요 • 로그인 중"));
           return;
         }
 
@@ -113,7 +114,7 @@ export default function AccountManageScreen() {
           setDeviceMeta(`${formatLocationAddress(address)} • 방금 전`);
         }
       } catch {
-        if (isMounted) setDeviceMeta('위치 확인 실패 • 로그인 중');
+        if (isMounted) setDeviceMeta(i18n.t("위치 확인 실패 • 로그인 중"));
       }
     }
 
@@ -181,15 +182,15 @@ export default function AccountManageScreen() {
     // 저장 전에 필수값과 형식을 다시 확인해 잘못된 프로필 갱신을 막는다.
     if (!canSave) return;
     if (!name.trim()) {
-      showToast('이름을 입력해주세요.', 'warning');
+      showToast(i18n.t("이름을 입력해주세요."), 'warning');
       return;
     }
     if (!isValidPhoneNumber(phone)) {
-      showToast('연락처를 올바르게 입력해주세요.', 'warning');
+      showToast(i18n.t("연락처를 올바르게 입력해주세요."), 'warning');
       return;
     }
     if (!isValidBirthday(birthYear, birthMonth, birthDay)) {
-      showToast('생년월일을 올바르게 입력해주세요.', 'warning');
+      showToast(i18n.t("생년월일을 올바르게 입력해주세요."), 'warning');
       return;
     }
 
@@ -204,7 +205,7 @@ export default function AccountManageScreen() {
         sex: gender === 'male',
       });
       await refreshSession();
-      showToast('사용자 정보가 변경되었습니다.', 'success');
+      showToast(i18n.t("사용자 정보가 변경되었습니다."), 'success');
     } catch (error) {
       showToast(normalizeApiError(error), 'error');
     } finally {
@@ -291,7 +292,7 @@ export default function AccountManageScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
           <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
         </Pressable>
-        <Text style={styles.headerTitle}>계정 관리</Text>
+        <Text style={styles.headerTitle}>{i18n.t("계정 관리")}</Text>
         <View style={styles.headerSide} />
       </View>
 
@@ -303,7 +304,7 @@ export default function AccountManageScreen() {
         automaticallyAdjustKeyboardInsets
         keyboardDismissMode="interactive"
       >
-        <Text style={styles.sectionTitle}>계정 정보</Text>
+        <Text style={styles.sectionTitle}>{i18n.t("계정 정보")}</Text>
 
         <AccountEditForm
           name={name}

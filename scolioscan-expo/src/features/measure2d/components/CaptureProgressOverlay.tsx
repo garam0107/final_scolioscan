@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import React, { useRef } from 'react';
 import { Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -92,7 +93,7 @@ export function CaptureProgressOverlay({
 
       {completeVisible ? (
         <View style={styles.captureCompleteToast} pointerEvents="none">
-          <Text style={styles.captureCompleteToastText}>촬영이 완료되었어요!</Text>
+          <Text style={styles.captureCompleteToastText}>{i18n.t("촬영이 완료되었어요!")}</Text>
         </View>
       ) : null}
     </>

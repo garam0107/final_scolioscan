@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -27,16 +28,12 @@ export default function MeasurementRequiredCard({ onPress }: MeasurementRequired
       <CameraImage width={60} height={60} />
 
       <View style={styles.textWrap}>
-        <Text style={styles.title}>먼저 측정을 해야해요!</Text>
-        <Text style={styles.description}>
-          분석을 위해선 먼저 측정을 해야해요
-          {'\n'}
-          아래 버튼을 눌러서 진행해주세요
-        </Text>
+        <Text style={styles.title}>{i18n.t("먼저 측정을 해야해요!")}</Text>
+        <Text style={styles.description}>{i18n.t("분석을 위해선 먼저 측정을 해야해요")}{'\n'}{i18n.t("아래 버튼을 눌러서 진행해주세요")}</Text>
       </View>
 
       <Pressable style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={handlePress}>
-        <Text style={styles.buttonText}>측정하러 가기</Text>
+        <Text style={styles.buttonText}>{i18n.t("측정하러 가기")}</Text>
       </Pressable>
     </View>
   );

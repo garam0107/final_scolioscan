@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Linking, Pressable, Text, View } from 'react-native';
 
 import { getInfoCardCopy, type InfoCardLevel } from '../analysisCopy';
@@ -15,10 +16,10 @@ export default function InfoCard({ level }: InfoCardProps) {
   return (
     <View style={styles.infoCard}>
       <View style={styles.infoCardText}>
-        <Text style={styles.infoCardTitle}>{copy.title}</Text>
-        <Text style={styles.infoCardBody}>{copy.body}</Text>
+        <Text style={styles.infoCardTitle}>{i18n.t(copy.title)}</Text>
+        <Text style={styles.infoCardBody}>{i18n.t(copy.body)}</Text>
         <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
-          <Text style={styles.infoCardLink}>더 알아보기</Text>
+          <Text style={styles.infoCardLink}>{i18n.t("더 알아보기")}</Text>
         </Pressable>
       </View>
 

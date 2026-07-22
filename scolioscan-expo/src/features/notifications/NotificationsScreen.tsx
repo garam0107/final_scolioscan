@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -105,7 +106,7 @@ export default function NotificationsScreen() {
           <Pressable onPress={handleBack} hitSlop={12} style={styles.headerSideButton}>
             <Ionicons name="chevron-back" size={26} color="#A4A9B6" />
           </Pressable>
-          <Text style={styles.headerTitle}>알림</Text>
+          <Text style={styles.headerTitle}>{i18n.t("알림")}</Text>
           <Pressable
             onPress={handleMarkAllAsRead}
             disabled={alarms.length === 0}
@@ -116,18 +117,18 @@ export default function NotificationsScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.headerActionText}>모두읽음</Text>
+            <Text style={styles.headerActionText}>{i18n.t("모두읽음")}</Text>
           </Pressable>
         </View>
 
         {loading ? (
           <View style={styles.centerState}>
-            <Text style={styles.emptyText}>알림을 불러오는 중이에요</Text>
+            <Text style={styles.emptyText}>{i18n.t("알림을 불러오는 중이에요")}</Text>
           </View>
         ) : alarms.length === 0 ? (
           <View style={styles.centerState}>
             <Ionicons name="notifications-off-outline" size={56} color="#CBD2E1" />
-            <Text style={styles.emptyText}>아직 알림이 없어요</Text>
+            <Text style={styles.emptyText}>{i18n.t("아직 알림이 없어요")}</Text>
           </View>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>

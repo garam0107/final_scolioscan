@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import {
@@ -83,7 +84,7 @@ export default function AuthField({
 
   return (
     <View style={[styles.fieldGroup, containerStyle]}>
-      <Text style={[styles.fieldLabel, labelStyle]}>{label}</Text>
+      <Text style={[styles.fieldLabel, labelStyle]}>{i18n.t(label)}</Text>
       <View style={[styles.fieldBox, fieldBoxStyle]}>
         <TextInput
           autoCapitalize={autoCapitalize ?? 'none'}

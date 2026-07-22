@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -45,41 +46,41 @@ export default function SubscribeScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
       <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <CommonSubscribeHeader title="구독 관리" onBack={() => router.back()} />
+        <CommonSubscribeHeader title={i18n.t("구독 관리")} onBack={() => router.back()} />
 
         <CommonSubscriptionPlanCard
-          title="스탠다드"
+          title={i18n.t("스탠다드")}
           features={STANDARD_FEATURES}
-          buttonLabel="현재 이용 중"
+          buttonLabel={i18n.t("현재 이용 중")}
           disabled
         />
 
         <CommonSubscriptionPlanCard
-          title="프로페셔널"
+          title={i18n.t("프로페셔널")}
           features={PROFESSIONAL_FEATURES}
           variant="professional"
-          price="월 14,900원"
-          buttonLabel="준비중"
+          price={i18n.t("월 14,900원")}
+          buttonLabel={i18n.t("준비중")}
           onPress={() => undefined}
         />
 
         <Pressable style={styles.membershipNoticeRow} onPress={toggleNoticeExpanded}>
-          <Text style={styles.membershipNoticeText}>멤버십 유의사항</Text>
+          <Text style={styles.membershipNoticeText}>{i18n.t("멤버십 유의사항")}</Text>
           <Ionicons name={noticeExpanded ? 'chevron-up' : 'chevron-down'} size={24} color="#7E899F" />
         </Pressable>
         {noticeExpanded ? (
           <View style={styles.membershipNoticeBody}>
-            <Text style={styles.membershipNoticeSectionTitle}>구매안내</Text>
+            <Text style={styles.membershipNoticeSectionTitle}>{i18n.t("구매안내")}</Text>
             {MEMBERSHIP_NOTICE_ITEMS.map((item) => (
               <Text key={`purchase-${item}`} style={styles.membershipNoticeItem}>
-                {`• ${item}`}
+                {`• ${i18n.t(item)}`}
               </Text>
             ))}
 
-            <Text style={[styles.membershipNoticeSectionTitle, styles.membershipNoticeRefundTitle]}>환불안내</Text>
+            <Text style={[styles.membershipNoticeSectionTitle, styles.membershipNoticeRefundTitle]}>{i18n.t("환불안내")}</Text>
             {MEMBERSHIP_NOTICE_ITEMS.map((item) => (
               <Text key={`refund-${item}`} style={styles.membershipNoticeItem}>
-                {`• ${item}`}
+                {`• ${i18n.t(item)}`}
               </Text>
             ))}
           </View>

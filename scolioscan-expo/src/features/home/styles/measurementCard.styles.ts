@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     height: '100%',
     padding: 12,
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000000',
@@ -51,6 +51,7 @@ const styles = StyleSheet.create({
   measurementCardContent: {
     width: '100%',
     minWidth: 0,
+    flexShrink: 1,
     alignItems: 'center',
     gap: 6,
   },

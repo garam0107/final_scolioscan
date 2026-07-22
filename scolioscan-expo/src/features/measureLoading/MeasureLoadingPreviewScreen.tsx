@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useFonts as useExpoFonts } from 'expo-font';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -270,7 +271,7 @@ export default function MeasureLoadingPreviewScreen() {
 
         <View style={styles.textBlock}>
           <Text style={styles.title}>
-            {analysisError ? '분석 요청에 실패했어요' : isComplete ? '분석이 완료되었어요!' : '척추 정보를 분석 중이에요'}
+            {i18n.t(analysisError ? '분석 요청에 실패했어요' : isComplete ? '분석이 완료되었어요!' : '척추 정보를 분석 중이에요')}
           </Text>
           {analysisError ? <Text style={styles.errorText}>{analysisError}</Text> : null}
           {isComplete ? null : (
@@ -285,7 +286,7 @@ export default function MeasureLoadingPreviewScreen() {
                   },
                 ]}
               >
-                {currentMessage}
+                {i18n.t(currentMessage)}
               </Animated.Text>
             </View>
           )}
@@ -293,12 +294,9 @@ export default function MeasureLoadingPreviewScreen() {
 
         <View style={styles.tipBlock}>
           <View style={styles.tipBadge}>
-            <Text style={styles.tipBadgeText}>척추관리 Tip</Text>
+            <Text style={styles.tipBadgeText}>{i18n.t("척추관리 Tip")}</Text>
           </View>
-          <Text style={styles.tipText}>
-            1시간에 1분씩, 허리를 쭉 펴주는 스트레칭만으로도{'\n'}
-            척추측만증을 예방할 수 있어요.
-          </Text>
+          <Text style={styles.tipText}>{i18n.t("1시간에 1분씩, 허리를 쭉 펴주는 스트레칭만으로도")}{'\n'}{i18n.t("척추측만증을 예방할 수 있어요.")}</Text>
         </View>
       </View>
 
@@ -313,7 +311,7 @@ export default function MeasureLoadingPreviewScreen() {
         ]}
       >
         <PrimaryButton
-          title={analysisError ? '다시 촬영하기' : '분석 결과 보기'}
+          title={analysisError ? i18n.t("다시 촬영하기") : i18n.t("분석 결과 보기")}
           onPress={() => analysisError ? router.replace('/measure/2d') : router.push('/analysis')}
           width={width - 32}
           height={56}

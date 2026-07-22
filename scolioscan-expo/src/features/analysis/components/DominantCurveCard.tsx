@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Linking, Pressable, Text, View } from 'react-native';
 
 import styles from '../styles/analysisCards.styles';
@@ -58,18 +59,18 @@ export default function DominantCurveCard({
       ]}
     >
       <View style={styles.dominantCurveText}>
-        <Text style={styles.dominantCurveTitle}>척추 지배만곡 유형</Text>
+        <Text style={styles.dominantCurveTitle}>{i18n.t("척추 지배만곡 유형")}</Text>
 
         <Text style={styles.dominantCurveBody}>
-          {summaryName} 님의 척추 지배만곡 유형은 {'\n'}
+          {summaryName}{i18n.t("님의 척추 지배만곡 유형은")}{'\n'}
           <Text style={styles.dominantCurveDiagnosis}>
-            {dominantCurve.diagnosisName}
+            {i18n.t(dominantCurve.diagnosisName)}
           </Text>{' '}
-          {dominantCurve.key === 'Normal' ? '이에요' : '이에요'}
+          {i18n.t('이에요')}
         </Text>
 
         <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
-          <Text style={styles.dominantCurveLink}>더 알아보기</Text>
+          <Text style={styles.dominantCurveLink}>{i18n.t("더 알아보기")}</Text>
         </Pressable>
       </View>
 

@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -103,12 +104,12 @@ export default function ReportMeasurementListSection({
   return (
     <View style={styles.section} onLayout={onSectionLayout}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>측정 목록</Text>
+        <Text style={styles.sectionTitle}>{i18n.t("측정 목록")}</Text>
         <Pressable
           style={({ pressed }) => [styles.monthSelectButton, pressed && styles.pressed]}
           onPress={onMonthPress}
         >
-          <Text style={styles.monthSelectText}>{monthLabel}</Text>
+          <Text style={styles.monthSelectText}>{i18n.t(monthLabel)}</Text>
         </Pressable>
       </View>
 
@@ -128,7 +129,7 @@ export default function ReportMeasurementListSection({
                 onPress={() => onFilterChange(filter.key)}
                 style={styles.tabButton}
               >
-                <Animated.Text style={[styles.tabText, { color }]}>{filter.label}</Animated.Text>
+                <Animated.Text style={[styles.tabText, { color }]}>{i18n.t(filter.label)}</Animated.Text>
               </Pressable>
             );
           })}
@@ -178,7 +179,7 @@ export default function ReportMeasurementListSection({
         ) : (
           <View style={styles.emptyBox}>
       
-            <Text style={styles.emptyText}>측정 결과가 없어요.</Text>
+            <Text style={styles.emptyText}>{i18n.t("측정 결과가 없어요.")}</Text>
           </View>
         )}
       </View>

@@ -25,6 +25,9 @@ import { measurementSetAPI } from '@/src/api/measurementSet';
 import { userAPI } from '@/src/api/user';
 import ToastAlert, { type ToastTone } from '@/src/components/ui/ToastAlert';
 import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore';
+import { getAppLanguage, i18n, setAppLanguage } from '@/src/i18n';
+import type { AppLanguage } from '@/src/i18n/resources';
+import { useTranslation } from 'react-i18next';
 type SettingsSheetType = 'language' | 'reset' | 'guide' | 'historyExport' | 'nightMode' | null;
 
 const DEFAULT_TOGGLES: Record<SettingsToggleKey, boolean> = {
@@ -46,6 +49,7 @@ function formatTimeLabel(hour: number, minute: number) {
 }
 
 export default function SettingsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user, refreshSession } = useAuth();
   const cellularDataAllowed = useAppSettingsStore((state) => state.cellularDataAllowed);
@@ -61,7 +65,7 @@ export default function SettingsScreen() {
   const resetSettings = useAppSettingsStore((state) => state.resetSettings);
   const [toggles, setToggles] = useState(DEFAULT_TOGGLES);
   const [settingsSheetType, setSettingsSheetType] = useState<SettingsSheetType>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('한국어');
+  const [selectedLanguage, setSelectedLanguage] = useState<AppLanguage>(getAppLanguage());
   const [historyExporting, setHistoryExporting] = useState(false);
   const [historyPdfUri, setHistoryPdfUri] = useState<string | null>(null);
   const [historySharing, setHistorySharing] = useState(false);
@@ -89,9 +93,9 @@ export default function SettingsScreen() {
     await userAPI.deleteUserData();
     markMeasurementChanged();
     await resetSettings();
-    showToast('데이터가 초기화되었습니다.', 'success');
+    showToast(i18n.t("데이터가 초기화되었습니다."), 'success');
   } catch {
-    showToast('데이터 초기화에 실패했습니다. 다시 시도해주세요.', 'error');
+    showToast(i18n.t("데이터 초기화에 실패했습니다. 다시 시도해주세요."), 'error');
   }
   }
   const profile = useMemo(
@@ -117,7 +121,7 @@ export default function SettingsScreen() {
     if (key === 'cellular') {
       // 모바일 데이터 허용 여부는 앱을 다시 켜도 유지되도록 저장소에 반영한다.
       void setCellularDataAllowed(!cellularDataAllowed).catch(() => {
-        Alert.alert('설정 저장 실패', '셀룰러 데이터 사용 설정을 저장하지 못했어요. 다시 시도해주세요.');
+        Alert.alert(i18n.t("설정 저장 실패"), i18n.t("셀룰러 데이터 사용 설정을 저장하지 못했어요. 다시 시도해주세요."));
       });
       return;
     }
@@ -125,7 +129,7 @@ export default function SettingsScreen() {
     if (key === 'nightMode') {
       // 야간 모드 사용 여부도 앱 재실행 후 유지되도록 저장소에 반영한다.
       void setNightModeEnabled(!nightModeEnabled).catch(() => {
-        Alert.alert('설정 저장 실패', '야간 모드 설정을 저장하지 못했어요. 다시 시도해주세요.');
+        Alert.alert(i18n.t("설정 저장 실패"), i18n.t("야간 모드 설정을 저장하지 못했어요. 다시 시도해주세요."));
       });
       return;
     }
@@ -138,7 +142,16 @@ export default function SettingsScreen() {
   };
 
   const showComingSoon = (label: string) => {
-    Alert.alert(label, '아직 준비중이에요.');
+    Alert.alert(label, i18n.t("아직 준비중이에요."));
+  };
+
+  const handleLanguageSelect = (language: AppLanguage) => {
+    setSelectedLanguage(language);
+    // 저장 실패 시 화면 상태도 이전 언어로 되돌려 선택 표시가 실제 언어와 어긋나지 않게 한다.
+    void setAppLanguage(language).catch(() => {
+      setSelectedLanguage(getAppLanguage());
+      Alert.alert(t('common.error'), i18n.t("언어 설정을 저장하지 못했습니다. 다시 시도해주세요."));
+    });
   };
 
   const handleHistoryExportPress = async () => {
@@ -156,7 +169,7 @@ export default function SettingsScreen() {
       const measurementSets = response.data;
 
       if (measurementSets.length === 0) {
-        Alert.alert('측정 결과 없음', '내보낼 측정 결과가 없습니다.');
+        Alert.alert(i18n.t("측정 결과 없음"), i18n.t("내보낼 측정 결과가 없습니다."));
         return;
       }
 
@@ -184,7 +197,7 @@ export default function SettingsScreen() {
     }
 
     if (!historyPdfUri) {
-      Alert.alert('PDF 파일 없음', '공유할 PDF 파일이 없습니다. 다시 시도해주세요.');
+      Alert.alert(i18n.t("PDF 파일 없음"), i18n.t("공유할 PDF 파일이 없습니다. 다시 시도해주세요."));
       return;
     }
 
@@ -193,7 +206,7 @@ export default function SettingsScreen() {
       const available = await Sharing.isAvailableAsync();
 
       if (!available) {
-        Alert.alert('공유 기능 사용 불가', '이 기기에서는 파일 공유 기능을 사용할 수 없습니다.');
+        Alert.alert(i18n.t("공유 기능 사용 불가"), i18n.t("이 기기에서는 파일 공유 기능을 사용할 수 없습니다."));
         return;
       }
 
@@ -204,7 +217,7 @@ export default function SettingsScreen() {
         dialogTitle: '측정 리포트 공유',
       });
     } catch {
-      Alert.alert('공유 실패', 'PDF 파일을 공유하지 못했어요. 다시 시도해주세요.');
+      Alert.alert(i18n.t("공유 실패"), i18n.t("PDF 파일을 공유하지 못했어요. 다시 시도해주세요."));
     } finally {
       setHistorySharing(false);
     }
@@ -217,13 +230,13 @@ export default function SettingsScreen() {
   const handleNightModeApply = (startHour: number, startMinute: number, endHour: number, endMinute: number) => {
     // 시작과 종료 시간이 같으면 야간 모드 범위가 사라지므로 선택을 막는다.
     if (startHour === endHour && startMinute === endMinute) {
-      Alert.alert('시간 설정', '시작 시간과 종료 시간은 같을 수 없습니다.');
+      Alert.alert(i18n.t("시간 설정"), i18n.t("시작 시간과 종료 시간은 같을 수 없습니다."));
       return;
     }
 
     // 야간 모드 시간도 앱을 다시 켜도 유지되도록 저장한다.
     void setNightModeHours(startHour, startMinute, endHour, endMinute).catch(() => {
-      Alert.alert('설정 저장 실패', '야간 모드 시간을 저장하지 못했어요. 다시 시도해주세요.');
+      Alert.alert(i18n.t("설정 저장 실패"), i18n.t("야간 모드 시간을 저장하지 못했어요. 다시 시도해주세요."));
     });
   };
 
@@ -266,7 +279,7 @@ export default function SettingsScreen() {
 
       // 4. 세션 갱신 및 알림
       await refreshSession();
-      showToast('프로필 이미지가 변경되었습니다.', 'success');
+      showToast(i18n.t("프로필 이미지가 변경되었습니다."), 'success');
     } catch (error: any) {
       
 
@@ -279,7 +292,7 @@ export default function SettingsScreen() {
       }
 
   
-      showToast('이미지 업로드에 실패했습니다.', 'error');
+      showToast(i18n.t("이미지 업로드에 실패했습니다."), 'error');
     }
   };
 
@@ -311,25 +324,25 @@ export default function SettingsScreen() {
         />
         <SubscriptionCard onManagePress={() => router.push('/settings/subscribe')} />
 
-        <SettingsSection title="앱 설정">
+        <SettingsSection title={i18n.t("앱 설정")}>
           <SettingRow
-            title="언어 설정"
-            description="앱 표시 언어"
-            value="한국어"
+            title={t('settings.language.title')}
+            description={t('settings.language.display')}
+            value={t(`settings.language.${selectedLanguage === 'ko' ? 'korean' : selectedLanguage === 'en' ? 'english' : 'japanese'}`)}
             onPress={() => setSettingsSheetType('language')}
           />
           <SettingRow
-            title="셀룰러 데이터 사용"
+            title={i18n.t("셀룰러 데이터 사용")}
             toggleKey="cellular"
             toggles={displayedToggles}
             onToggle={handleToggle}
           />
         </SettingsSection>
         {/* 알림  */}
-        <SettingsSection title="알림 설정">
+        <SettingsSection title={i18n.t("알림 설정")}>
           <SettingRow
-            title="야간 모드"
-            description="설정 시간 동안 알림 끄기"
+            title={i18n.t("야간 모드")}
+            description={i18n.t("설정 시간 동안 알림 끄기")}
             toggleKey="nightMode"
             toggles={displayedToggles}
             onToggle={handleToggle}
@@ -366,7 +379,7 @@ export default function SettingsScreen() {
           /> */}
         </SettingsSection>
 
-        <SettingsSection title="데이터">
+        <SettingsSection title={i18n.t("데이터")}>
           {/* 나중에 기능 개발하면 추가 */}
           {/* <SettingRow
             title="클라우드 백업"
@@ -376,18 +389,18 @@ export default function SettingsScreen() {
             onToggle={handleToggle}
           /> */}
           <SettingRow
-            title="히스토리 내보내기"
-            description="PDF 파일로 저장"
+            title={i18n.t("히스토리 내보내기")}
+            description={i18n.t("PDF 파일로 저장")}
             onPress={handleHistoryExportPress}
           />
         </SettingsSection>
 
-        <SettingsSection title="정보">
-          <SettingRow title="가이드 다시보기" onPress={() => showComingSoon('가이드')} />
-          <SettingRow title="버전 정보" value="v.1.0.0" />
-          <SettingRow title="앱 평가" description="스토어에 리뷰 남기기" onPress={() => showComingSoon('앱 평가')} />
-          <SettingRow title="문의 / 피드백" description="개발팀에 의견 보내기" onPress={() => router.push('/settings/contact')} />
-          <SettingRow title="데이터 초기화" danger onPress={() => setSettingsSheetType('reset')} />
+        <SettingsSection title={i18n.t("정보")}>
+          <SettingRow title={i18n.t("가이드 다시보기")} onPress={() => showComingSoon(i18n.t("가이드"))} />
+          <SettingRow title={i18n.t("버전 정보")} value="v.1.0.0" />
+          <SettingRow title={i18n.t("앱 평가")} description={i18n.t("스토어에 리뷰 남기기")} onPress={() => showComingSoon(i18n.t("앱 평가"))} />
+          <SettingRow title={i18n.t("문의 / 피드백")} description={i18n.t("개발팀에 의견 보내기")} onPress={() => router.push('/settings/contact')} />
+          <SettingRow title={i18n.t("데이터 초기화")} danger onPress={() => setSettingsSheetType('reset')} />
           {/* <SettingRow title="데이터 초기화" danger onPress={() => showComingSoon('초기화')} /> */}
         </SettingsSection>
       </ScrollView>
@@ -395,7 +408,7 @@ export default function SettingsScreen() {
       <LanguageSettingsSheet
         visible={settingsSheetType === 'language'}
         selectedLanguage={selectedLanguage}
-        onSelect={setSelectedLanguage}
+        onSelect={handleLanguageSelect}
         onClose={closeSettingsSheet}
       />
 

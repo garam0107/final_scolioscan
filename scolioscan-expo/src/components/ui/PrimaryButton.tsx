@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import React from 'react';
 import { Pressable, StyleSheet, Text, type TextStyle, type ViewStyle } from 'react-native';
 import { textFont } from '@/src/constants/fonts';
@@ -51,7 +52,7 @@ export default function PrimaryButton({
         minimumFontScale={0.9}
         style={[styles.text, textStyle]}
       >
-        {title}
+        {i18n.t(title)}
       </Text>
     </Pressable>
   );

@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useEffect, useRef } from 'react';
 import { BackHandler, Platform, ToastAndroid } from 'react-native';
 import { Tabs, usePathname } from 'expo-router';
@@ -28,7 +29,7 @@ export default function TabsLayout() {
       }
 
       lastBackPressedAt.current = now;
-      ToastAndroid.show('한 번 더 누르면 앱이 종료됩니다.', ToastAndroid.SHORT);
+      ToastAndroid.show(i18n.t("한 번 더 누르면 앱이 종료됩니다."), ToastAndroid.SHORT);
       return true;
     });
 

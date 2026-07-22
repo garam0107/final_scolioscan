@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
@@ -68,7 +69,7 @@ export default function MeasurementGuideSpineScreen() {
       title={currentPage.title}
       description={currentPage.description}
       subDescription={currentPage.subDescription}
-      nextLabel={pageIndex === guidePages.length - 1 && isReplayMode ? '닫기' : currentPage.buttonLabel}
+      nextLabel={pageIndex === guidePages.length - 1 && isReplayMode ? i18n.t("닫기") : currentPage.buttonLabel}
       onBack={handleBack}
       onNext={handleNext}
     />

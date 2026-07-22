@@ -1,17 +1,28 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Alert, Pressable, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import CommonSettingsSheet from '@/src/features/settings/components/CommonSettingsSheet';
 import styles from '@/src/features/settings/sheets/settingsSheets.styles';
+import type { AppLanguage } from '@/src/i18n/resources';
 
 type LanguageSettingsSheetProps = {
   visible: boolean;
-  selectedLanguage: string;
-  onSelect: (language: string) => void;
+  selectedLanguage: AppLanguage;
+  onSelect: (language: AppLanguage) => void;
   onClose: () => void;
 };
 
-const LANGUAGE_OPTIONS = ['한국어', 'English', '日本語', '中文'];
+type LanguageOption =
+  | { value: AppLanguage; labelKey: string }
+  | { value: 'zh-Hans'; label: string };
+
+const LANGUAGE_OPTIONS: LanguageOption[] = [
+  { value: 'ko', labelKey: 'settings.language.korean' },
+  { value: 'en', labelKey: 'settings.language.english' },
+  { value: 'ja', labelKey: 'settings.language.japanese' },
+  { value: 'zh-Hans', label: '中文' },
+];
 
 export default function LanguageSettingsSheet({
   visible,
@@ -19,35 +30,43 @@ export default function LanguageSettingsSheet({
   onSelect,
   onClose,
 }: LanguageSettingsSheetProps) {
-  // 현재는 한국어만 실제 적용하고 다른 언어는 준비 중 안내만 보여준다.
+  const { t } = useTranslation();
+
   return (
     <CommonSettingsSheet
       visible={visible}
-      title="언어 설정"
-      description="앱에 표시할 언어를 선택해주세요"
+      title={t('settings.language.title')}
+      description={t('settings.language.description')}
       height={302}
       bottomPlacement="safeArea"
       onClose={onClose}
     >
       <View style={styles.languageOptionList}>
         {LANGUAGE_OPTIONS.map((language) => {
-          const selected = selectedLanguage === language;
+          const selected = language.value !== 'zh-Hans' && selectedLanguage === language.value;
 
           return (
             <Pressable
-              key={language}
+              key={language.value}
               style={styles.languageOptionRow}
               onPress={() => {
-                if (language !== '한국어') {
-                  Alert.alert('준비중입니다');
+                // 선택 즉시 전역 언어를 전환한 뒤 설정 시트를 닫는다.
+                // 중국어는 목록 균형을 유지하되, 실제 번역 제공 전에는 선택을 저장하지 않는다.
+                if (language.value === 'zh-Hans') {
+                  Alert.alert(
+                    t('settings.language.comingSoonTitle'),
+                    t('settings.language.chineseComingSoon'),
+                  );
                   return;
                 }
 
-                onSelect(language);
+                onSelect(language.value);
                 onClose();
               }}
             >
-              <Text style={styles.languageOptionText}>{language}</Text>
+              <Text style={styles.languageOptionText}>
+                {'labelKey' in language ? t(language.labelKey) : language.label}
+              </Text>
               {selected ? <Ionicons name="checkmark" size={24} color="#22BCB7" /> : null}
             </Pressable>
           );

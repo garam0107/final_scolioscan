@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Colors } from '@/src/constants/theme';
@@ -13,7 +14,7 @@ export default function GuideMessageBox({ messages }: GuideMessageBoxProps) {
     <View style={styles.guideBox}>
       {messages.map((message) => (
         <Text key={message} style={styles.guideText}>
-          {message}
+          {i18n.t(message)}
         </Text>
       ))}
     </View>

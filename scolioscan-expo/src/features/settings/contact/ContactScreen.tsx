@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -54,14 +55,14 @@ export default function ContactScreen() {
 		const remainingCount = MAX_SCREENSHOT_COUNT - screenshots.length;
 
 		if (remainingCount <= 0) {
-			Alert.alert('스크린샷', `스크린샷은 최대 ${MAX_SCREENSHOT_COUNT}장까지 추가할 수 있어요.`);
+			Alert.alert(i18n.t("스크린샷"), `스크린샷은 최대 ${MAX_SCREENSHOT_COUNT}장까지 추가할 수 있어요.`);
 			return;
 		}
 
 		const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
 		if (!permissionResult.granted) {
-			Alert.alert('권한 필요', '스크린샷을 추가하려면 사진 접근 권한이 필요해요.');
+			Alert.alert(i18n.t("권한 필요"), i18n.t("스크린샷을 추가하려면 사진 접근 권한이 필요해요."));
 			return;
 		}
 
@@ -87,7 +88,7 @@ export default function ContactScreen() {
 	const handleSubmit = async () => {
 		// 문의 유형, 내용, 선택 이메일, 첨부 이미지를 한 번에 서버로 전송한다.
 		if (!contactMessage.trim()) {
-			Alert.alert('문의 내용', '문의 내용을 작성해주세요.');
+			Alert.alert(i18n.t("문의 내용"), i18n.t("문의 내용을 작성해주세요."));
 			return;
 		}
 
@@ -108,9 +109,9 @@ export default function ContactScreen() {
 			setContactMessage('');
 			onChangeTextInput2('');
 			setScreenshots([]);
-			Alert.alert('문의하기', '문의가 전송되었습니다.');
+			Alert.alert(i18n.t("문의하기"), i18n.t("문의가 전송되었습니다."));
 		} catch {
-			Alert.alert('문의하기', '문의 전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+			Alert.alert(i18n.t("문의하기"), i18n.t("문의 전송에 실패했습니다. 잠시 후 다시 시도해주세요."));
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -122,7 +123,7 @@ export default function ContactScreen() {
 				<Pressable hitSlop={12} onPress={() => router.back()} style={styles.headerBackButton}>
 					<Ionicons name="chevron-back" size={24} color="#7E899F" />
 				</Pressable>
-				<Text style={styles.headerTitle}>문의하기</Text>
+				<Text style={styles.headerTitle}>{i18n.t("문의하기")}</Text>
 				<View style={styles.headerSide} />
 			</View>
 
@@ -134,12 +135,12 @@ export default function ContactScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.infoBox}>
-					<Text style={styles.infoText}>불편한 점이나 개선 아이디어를 {"\n"}개발팀에 직접 전달할 수 있어요</Text>
+					<Text style={styles.infoText}>{i18n.t("불편한 점이나 개선 아이디어를")}{"\n"}{i18n.t("개발팀에 직접 전달할 수 있어요")}</Text>
 				</View>
 				<View style={styles.column}>
 					<View style={styles.column2}>
 						<Text style={styles.text2}>
-							{"문의 유형"}
+							{i18n.t("문의 유형")}
 						</Text>
 						<View style={styles.row2}>
 							{CONTACT_TYPES.slice(0, 2).map((contactType, index) => {
@@ -186,11 +187,11 @@ export default function ContactScreen() {
 					</View>
 					<View style={styles.column2}>
 						<Text style={styles.text2}>
-							{"문의 내용"}
+							{i18n.t("문의 내용")}
 						</Text>
 						<TextInput
 							underlineColorAndroid="transparent"
-							placeholder="문의 내용을 작성해주세요"
+							placeholder={i18n.t("문의 내용을 작성해주세요")}
 							placeholderTextColor="#B5BDCE"
 							value={contactMessage}
 							onChangeText={setContactMessage}
@@ -200,12 +201,11 @@ export default function ContactScreen() {
 						/>
 					</View>
 					<View style={styles.column2}>
-						<Text style={styles.text2}>
-							답변 받으실 이메일 <Text style={styles.text4}>(선택)</Text>
+						<Text style={styles.text2}>{i18n.t("답변 받으실 이메일")}<Text style={styles.text4}>{i18n.t("(선택)")}</Text>
 						</Text>
 						<TextInput
 							underlineColorAndroid="transparent"
-							placeholder={"이메일 주소를 적어주세요"}
+							placeholder={i18n.t("이메일 주소를 적어주세요")}
 							placeholderTextColor="#B5BDCE"
 							value={textInput2}
 							onChangeText={onChangeTextInput2}
@@ -213,8 +213,7 @@ export default function ContactScreen() {
 						/>
 					</View>
 					<View >
-						<Text style={styles.text6}>
-							스크린샷 <Text style={styles.text4}>(선택)</Text>
+						<Text style={styles.text6}>{i18n.t("스크린샷")}<Text style={styles.text4}>{i18n.t("(선택)")}</Text>
 						</Text>
 						<View style={styles.row4}>
 							{screenshots.map((screenshot) => (
@@ -237,7 +236,7 @@ export default function ContactScreen() {
 										style={styles.image3}
 									/>
 									<Text style={styles.text7}>
-										{"추가"}
+										{i18n.t("추가")}
 									</Text>
 								</TouchableOpacity>
 							)}
@@ -252,7 +251,7 @@ export default function ContactScreen() {
 					onPress={handleSubmit}
 				>
 					<Text style={styles.text8}>
-						{isSubmitting ? "전송 중" : "문의하기"}
+						{isSubmitting ? i18n.t("전송 중") : i18n.t("문의하기")}
 					</Text>
 				</TouchableOpacity>
 			</View>

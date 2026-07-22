@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Modal, Pressable, Text, TextInput, View } from 'react-native';
 
 import styles from '@/src/features/settings/accountManage/components/accountManageComponents.styles';
@@ -35,25 +36,25 @@ export default function DeleteAccountModal({
       >
         <Pressable style={styles.withdrawModalOverlay} onPress={onClose}>
           <Pressable style={styles.withdrawModalCard} onPress={(event) => event.stopPropagation()}>
-            <Text style={styles.withdrawModalTitle}>떠나신다니 아쉬워요.</Text>
-            <Text style={styles.withdrawModalDescription}>탈퇴하신다면 아래 정보가 삭제돼요.</Text>
+            <Text style={styles.withdrawModalTitle}>{i18n.t("떠나신다니 아쉬워요.")}</Text>
+            <Text style={styles.withdrawModalDescription}>{i18n.t("탈퇴하신다면 아래 정보가 삭제돼요.")}</Text>
 
             <View style={styles.withdrawDeleteBox}>
-              <Text style={styles.withdrawDeleteTitle}>삭제되는 항목</Text>
-              <Text style={styles.withdrawDeleteText}>• 가입 계정 및 비밀번호</Text>
-              <Text style={styles.withdrawDeleteText}>• 이름 및 전화번호 등의 개인정보</Text>
-              <Text style={styles.withdrawDeleteText}>• 2D, 3D 촬영 기록</Text>
-              <Text style={styles.withdrawDeleteText}>• 척추측만계 측정 기록</Text>
-              <Text style={styles.withdrawDeleteText}>• 분석 및 리포트 히스토리</Text>
-              <Text style={styles.withdrawDeleteText}>• 앱 설정 (알림 등)</Text>
+              <Text style={styles.withdrawDeleteTitle}>{i18n.t("삭제되는 항목")}</Text>
+              <Text style={styles.withdrawDeleteText}>{i18n.t("• 가입 계정 및 비밀번호")}</Text>
+              <Text style={styles.withdrawDeleteText}>{i18n.t("• 이름 및 전화번호 등의 개인정보")}</Text>
+              <Text style={styles.withdrawDeleteText}>{i18n.t("• 2D, 3D 촬영 기록")}</Text>
+              <Text style={styles.withdrawDeleteText}>{i18n.t("• 척추측만계 측정 기록")}</Text>
+              <Text style={styles.withdrawDeleteText}>{i18n.t("• 분석 및 리포트 히스토리")}</Text>
+              <Text style={styles.withdrawDeleteText}>{i18n.t("• 앱 설정 (알림 등)")}</Text>
             </View>
 
-            <Text style={styles.withdrawConfirmText}>확인을 위해 아래에 비밀번호를 입력해주세요</Text>
+            <Text style={styles.withdrawConfirmText}>{i18n.t("확인을 위해 아래에 비밀번호를 입력해주세요")}</Text>
             <View style={styles.withdrawPasswordWrap}>
               <TextInput
                 value={password}
                 onChangeText={onPasswordChange}
-                placeholder="비밀번호를 입력해주세요"
+                placeholder={i18n.t("비밀번호를 입력해주세요")}
                 placeholderTextColor="#B6BECE"
                 secureTextEntry
                 autoCapitalize="none"
@@ -66,7 +67,7 @@ export default function DeleteAccountModal({
 
             <View style={styles.withdrawButtonRow}>
               <Pressable style={styles.withdrawCancelButton} onPress={onClose}>
-                <Text style={styles.withdrawCancelText}>취소</Text>
+                <Text style={styles.withdrawCancelText}>{i18n.t("취소")}</Text>
               </Pressable>
               <Pressable
                 disabled={!password.trim() || withdrawing}
@@ -76,7 +77,7 @@ export default function DeleteAccountModal({
                 ]}
                 onPress={onWithdraw}
               >
-                <Text style={styles.withdrawConfirmButtonText}>{withdrawing ? '처리 중...' : '회원탈퇴'}</Text>
+                <Text style={styles.withdrawConfirmButtonText}>{withdrawing ? i18n.t("처리 중...") : i18n.t("회원탈퇴")}</Text>
               </Pressable>
             </View>
           </Pressable>
@@ -91,9 +92,9 @@ export default function DeleteAccountModal({
       >
         <View style={styles.withdrawModalOverlay}>
           <View style={styles.withdrawCompleteCard}>
-            <Text style={styles.withdrawCompleteTitle}>회원 탈퇴가 완료되었습니다.</Text>
+            <Text style={styles.withdrawCompleteTitle}>{i18n.t("회원 탈퇴가 완료되었습니다.")}</Text>
             <Pressable style={styles.withdrawCompleteButton} onPress={onCompleteConfirm}>
-              <Text style={styles.withdrawCompleteButtonText}>확인</Text>
+              <Text style={styles.withdrawCompleteButtonText}>{i18n.t("확인")}</Text>
             </Pressable>
           </View>
         </View>

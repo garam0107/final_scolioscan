@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
@@ -32,8 +33,8 @@ export default function GuideReplaySheet({ visible, onClose }: GuideReplaySheetP
   return (
     <CommonSettingsSheet
       visible={visible}
-      title="가이드 다시보기"
-      description="다시 보고 싶으신 가이드를 눌러주세요"
+      title={i18n.t("가이드 다시보기")}
+      description={i18n.t("다시 보고 싶으신 가이드를 눌러주세요")}
       onClose={onClose}
       bottomPlacement="safeArea"
     >

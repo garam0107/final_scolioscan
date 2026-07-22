@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Rect, Stop } from 'react-native-svg';
 import ThreeDCameraIcon from '../../../../assets/icons/home/3d_sub.svg';
@@ -39,16 +40,14 @@ export default function HomeProModal({
           </View>
 
           <View style={styles.proModalBody}>
-            <Text style={styles.proModalTitle}>
-              3D 동영상 측정을 이용하시려면{'\n'}Pro 모델을 구독해주세요.
-            </Text>
-            <Text style={styles.proModalSubtitle}>처음 구독하시면 50% 할인해요!</Text>
+            <Text style={styles.proModalTitle}>{i18n.t("3D 동영상 측정을 이용하시려면")}{'\n'}{i18n.t("Pro 모델을 구독해주세요.")}</Text>
+            <Text style={styles.proModalSubtitle}>{i18n.t("처음 구독하시면 50% 할인해요!")}</Text>
 
             <Pressable
               onPress={onSubscribePress}
               style={({ pressed }) => [styles.proModalButton, pressed && styles.pressed]}
             >
-              <Text style={styles.proModalButtonText}>구독하러 가기</Text>
+              <Text style={styles.proModalButtonText}>{i18n.t("구독하러 가기")}</Text>
             </Pressable>
           </View>
         </View>

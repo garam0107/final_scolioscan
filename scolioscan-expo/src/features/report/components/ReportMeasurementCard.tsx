@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Fragment } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { Colors } from '@/src/constants/theme';
@@ -57,6 +58,7 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
   const isDisabled = !item.navigationId;
   const { width } = useWindowDimensions();
   const isWideLayout = width >= WIDE_LAYOUT_MIN_WIDTH;
+  const isEnglish = i18n.language.startsWith('en');
   const isCurvatureMeasurement = item.category === '2d';
   const measurement = isCurvatureMeasurement ? item.curvature : item.rotation;
   const measurementListLayout = getReportMeasurementListLayout(width);
@@ -134,7 +136,7 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
               },
             ]}
           >
-            {isCurvatureMeasurement ? '2D 측정' : '정교한 측정'}
+            {i18n.t(isCurvatureMeasurement ? '2D 측정' : '정교한 측정')}
           </Text>
         </View>
       </View>
@@ -171,8 +173,10 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
                     },
                   ]}
                   numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.72}
                 >
-                  {region.label}
+                  {i18n.t(region.label)}
                 </Text>
                 {isCurvatureMeasurement ? (
                   <View
@@ -201,7 +205,16 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
                   },
                 ]}
               >
-                <View style={[styles.measurementValueBlock, { width: measurementListLayout.valueBlockWidth }]}>
+                <View
+                  style={[
+                    styles.measurementValueBlock,
+                    {
+                      width: isEnglish
+                        ? Math.min(52, measurementListLayout.valueBlockWidth + 14)
+                        : measurementListLayout.valueBlockWidth,
+                    },
+                  ]}
+                >
                   <Text
                     style={[
                       styles.measurementValueLabel,
@@ -210,8 +223,11 @@ export default function ReportMeasurementCard({ item, onPress }: ReportMeasureme
                         lineHeight: measurementListLayout.valueLabelLineHeight,
                       },
                     ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.82}
                   >
-                    {isCurvatureMeasurement ? '만곡도' : '비틀림'}
+                    {i18n.t(isCurvatureMeasurement ? '만곡도' : '비틀림')}
                   </Text>
                   <Text
                     style={[

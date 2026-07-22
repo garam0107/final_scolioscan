@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Animated, Text, View } from 'react-native';
 
 import styles from '../styles/analysisStage.styles';
@@ -49,7 +50,7 @@ export default function MetricBlock({
       ]}
     >
       <View style={side === 'left' ? styles.metricLeft : styles.metricRight}>
-        <Text style={styles.metricLabel}>{label}</Text>
+        <Text style={styles.metricLabel}>{i18n.t(label)}</Text>
         <View
           style={[
             styles.valueRow,

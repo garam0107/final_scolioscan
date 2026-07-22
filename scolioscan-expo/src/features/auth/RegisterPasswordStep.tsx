@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text, View } from 'react-native';
 import { useAuthStore } from '@/src/store/authStore';
@@ -26,8 +27,8 @@ export default function RegisterPasswordStep({
         autoCapitalize="none"
         autoComplete="password"
         autoCorrect={false}
-        label="비밀번호"
-        placeholder="비밀번호를 입력해주세요"
+        label={i18n.t("비밀번호")}
+        placeholder={i18n.t("비밀번호를 입력해주세요")}
         returnKeyType="next"
         secureTextEntry={!passwordVisible}
         textContentType="password"
@@ -49,9 +50,7 @@ export default function RegisterPasswordStep({
               styles.passwordRuleText,
               passwordHasMix ? styles.passwordRuleTextActive : null,
             ]}
-          >
-            영문, 숫자, 특수문자 포함
-          </Text>
+          >{i18n.t("영문, 숫자, 특수문자 포함")}</Text>
         </View>
         <View style={styles.passwordRuleRow}>
           <Ionicons
@@ -65,9 +64,7 @@ export default function RegisterPasswordStep({
               styles.passwordRuleText,
               passwordHasLength ? styles.passwordRuleTextActive : null,
             ]}
-          >
-            최소 8자 이상
-          </Text>
+          >{i18n.t("최소 8자 이상")}</Text>
         </View>
       </View>
     </>

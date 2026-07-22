@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Pressable, Text, View } from 'react-native';
 import { useAuthStore } from '@/src/store/authStore';
 import { styles } from './register.styles';
@@ -17,9 +18,7 @@ export default function RegisterGenderStep() {
             pressed ? styles.pressed : null,
           ]}
         >
-          <Text style={[styles.genderText, gender === true ? styles.genderTextActive : null]}>
-            남성
-          </Text>
+          <Text style={[styles.genderText, gender === true ? styles.genderTextActive : null]}>{i18n.t("남성")}</Text>
         </Pressable>
         <Pressable
           onPress={() => updateRegisterDraft({ gender: false })}
@@ -29,9 +28,7 @@ export default function RegisterGenderStep() {
             pressed ? styles.pressed : null,
           ]}
         >
-          <Text style={[styles.genderText, gender === false ? styles.genderTextActive : null]}>
-            여성
-          </Text>
+          <Text style={[styles.genderText, gender === false ? styles.genderTextActive : null]}>{i18n.t("여성")}</Text>
         </Pressable>
       </View>
     </View>

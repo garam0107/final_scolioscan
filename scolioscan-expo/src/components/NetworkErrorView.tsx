@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { Colors } from '@/src/constants/theme';
@@ -26,8 +27,8 @@ export default function NetworkErrorView({
         <NotNetworkIcon  />
       <View style={styles.content}>
       
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.message}>{message}</Text>
+        <Text style={styles.title}>{i18n.t(title)}</Text>
+        <Text style={styles.message}>{i18n.t(message)}</Text>
         {/* 네트워크가 복구된 뒤 각 화면의 데이터 재요청 함수를 실행한다. */}
         <PrimaryButton
           title={buttonTitle}

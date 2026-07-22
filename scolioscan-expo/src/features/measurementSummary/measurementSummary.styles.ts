@@ -159,10 +159,22 @@ const styles = StyleSheet.create({
   },
   trendXAxisText: {
     ...textFont,
+    flex: 1,
     color: Colors.gray[300],
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400',
+    textAlign: 'center',
+  },
+  trendXAxisTextEnglish: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  trendXAxisTextStart: {
+    textAlign: 'left',
+  },
+  trendXAxisTextEnd: {
+    textAlign: 'right',
   },
   trendEmptyState: {
     height: 120,

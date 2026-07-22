@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Pressable, Text } from 'react-native';
 import styles from '@/src/features/measurementSummary/measurementSummary.styles';
 
@@ -23,7 +24,7 @@ export default function CurvatureSummaryCard({
         pressed && { opacity: 0.92 },
       ]}
     >
-      <Text style={[styles.summaryLabel, selected ? styles.summaryLabelActive : null]}>{label}</Text>
+      <Text style={[styles.summaryLabel, selected ? styles.summaryLabelActive : null]}>{i18n.t(label)}</Text>
       <Text style={[styles.summaryValue, selected ? styles.summaryValueActive : null]}>{value}</Text>
     </Pressable>
   );

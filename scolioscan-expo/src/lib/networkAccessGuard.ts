@@ -1,4 +1,5 @@
 import { Alert } from 'react-native';
+import { i18n } from '@/src/i18n';
 
 import { useAppSettingsStore } from '@/src/store/appSettingsStore';
 
@@ -24,7 +25,7 @@ function showCellularDataBlockedAlert() {
   }
 
   lastCellularBlockedAlertAt = now;
-  Alert.alert('셀룰러 데이터 사용 꺼짐', CELLULAR_DATA_BLOCKED_MESSAGE);
+  Alert.alert(i18n.t('셀룰러 데이터 사용 꺼짐'), i18n.t(CELLULAR_DATA_BLOCKED_MESSAGE));
 }
 
 export class CellularDataBlockedError extends Error {

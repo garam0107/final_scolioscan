@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 import CrownIcon from '../../../../../assets/icons/crown_white.svg';
@@ -32,7 +33,7 @@ export default function CommonSubscriptionPlanCard({
             <CrownIcon />
           </View>
         ) : null}
-        <Text style={[styles.planTitle, isProfessional && styles.professionalText]}>{title}</Text>
+        <Text style={[styles.planTitle, isProfessional && styles.professionalText]}>{i18n.t(title)}</Text>
       </View>
 
       <View style={[styles.planDivider, isProfessional && styles.professionalDivider]} />
@@ -48,7 +49,7 @@ export default function CommonSubscriptionPlanCard({
                 isProfessional && styles.professionalFeatureText,
               ]}
             >
-              {feature}
+              {i18n.t(feature)}
             </Text>
           </View>
         ))}
@@ -56,7 +57,7 @@ export default function CommonSubscriptionPlanCard({
 
       {price ? (
         <View style={styles.priceRow}>
-          <Text style={styles.priceText}>{price}</Text>
+          <Text style={styles.priceText}>{i18n.t(price)}</Text>
         </View>
       ) : null}
 
@@ -69,7 +70,7 @@ export default function CommonSubscriptionPlanCard({
           disabled && styles.disabledPlanButton,
         ]}
       >
-        <Text style={styles.planButtonText}>{buttonLabel}</Text>
+        <Text style={styles.planButtonText}>{i18n.t(buttonLabel)}</Text>
       </Pressable>
     </View>
   );

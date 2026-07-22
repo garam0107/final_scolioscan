@@ -8,7 +8,8 @@ import 'react-native-reanimated';
 import NaverLogin from '@react-native-seoul/naver-login'
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { i18n, initializeLanguage } from '@/src/i18n';
 
 // const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
 
@@ -51,11 +52,15 @@ applyDefaultFont(TextInput);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [languageRevision, setLanguageRevision] = useState(0);
   const [museoLoaded] = useMuseoFonts({
     MuseoModerno_700Bold,
   });
 
   useEffect(() => {
+    // 앱을 열 때 저장된 언어를 먼저 복원하고, 없으면 기기 언어를 적용한다.
+    void initializeLanguage();
+
     const consumerKey = process.env.EXPO_PUBLIC_NAVER_CLIENT_ID;
     const consumerSecret = process.env.EXPO_PUBLIC_NAVER_CLIENT_SECRET;
     const serviceUrlSchemeIOS = process.env.EXPO_PUBLIC_NAVER_URL_SCHEME_IOS;
@@ -72,6 +77,14 @@ export default function RootLayout() {
       serviceUrlSchemeIOS,
     });
   }, []);
+
+  useEffect(() => {
+    // 언어 변경 시 현재 열린 화면도 즉시 다시 렌더링해 번역을 반영한다.
+    // 언어가 바뀌면 현재 라우트 화면을 다시 생성해 즉시 번역을 반영한다.
+    const handleLanguageChanged = () => setLanguageRevision((revision) => revision + 1);
+    i18n.on('languageChanged', handleLanguageChanged);
+    return () => i18n.off('languageChanged', handleLanguageChanged);
+  }, []);
   
   if (!museoLoaded) {
     return null;
@@ -81,7 +94,9 @@ export default function RootLayout() {
     <KeyboardProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AuthProvider>
-          <Stack screenOptions={{
+          <Stack
+            key={`language-${languageRevision}`}
+            screenOptions={{
             headerShown: false,
             contentStyle: {
               backgroundColor: '#FFFFFF',

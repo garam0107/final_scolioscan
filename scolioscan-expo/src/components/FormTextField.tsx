@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewProps } from 'react-native';
 
@@ -50,7 +51,7 @@ export default function FormTextField({
 
   return (
     <View style={styles.fieldGroup} onLayout={onLayout}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+      <Text style={styles.fieldLabel}>{i18n.t(label)}</Text>
       <View style={styles.inputWrap}>
         <TextInput
           autoCapitalize={autoCapitalize}

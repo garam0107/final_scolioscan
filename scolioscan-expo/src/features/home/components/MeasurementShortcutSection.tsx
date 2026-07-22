@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { View } from 'react-native';
 import MeasurementCard, { type MeasurementItem } from '@/src/features/home/components/MeasurementCard';
 import type { HomeMeasurementCardLayout } from '@/src/features/home/home.styles';
@@ -20,6 +21,8 @@ export default function MeasurementShortcutSection({
         <MeasurementCard
           key={item.id}
           {...item}
+          title={i18n.t(item.title)}
+          subtitle={i18n.t(item.subtitle)}
           layout={layout}
           onPress={item.id === '3d' ? onProPress : item.onPress}
         />

@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
 
@@ -85,7 +86,7 @@ export function AutoGuideStatusChip({ message, tone, toastKey, bottomOffset, onD
         minimumFontScale={0.78}
         style={[styles.autoGuideChipText, isSuccess ? styles.autoGuideChipSuccessText : styles.autoGuideChipInfoText]}
       >
-        {message}
+        {i18n.t(message)}
       </Text>
     </Animated.View>
   );

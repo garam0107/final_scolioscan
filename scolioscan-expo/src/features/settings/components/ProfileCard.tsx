@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View, Image } from 'react-native';
 import ProfileIcon from '@/assets/images/basic_profile_image.svg';
@@ -55,7 +56,7 @@ export default function ProfileCard({ name, email, profileImage, onAccountPress,
         onPress={onAccountPress}
         style={({ pressed }) => [styles.accountManagePill, pressed && styles.accountManagePillPressed]}
       >
-        <Text style={styles.accountManageText}>계정 관리</Text>
+        <Text style={styles.accountManageText}>{i18n.t("계정 관리")}</Text>
         <Ionicons name="chevron-forward" size={12} color="#B8C0CA" />
       </Pressable>
     </View>

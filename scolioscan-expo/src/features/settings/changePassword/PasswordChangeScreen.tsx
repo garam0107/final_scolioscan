@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -30,17 +31,17 @@ export default function PasswordChangeScreen() {
     const normalizedUserPhone = normalizePhoneNumber(user?.phone || '');
 
     if (!normalizedUserPhone) {
-      showToast('현재 사용자 휴대전화 번호를 찾을 수 없습니다.');
+      showToast(i18n.t("현재 사용자 휴대전화 번호를 찾을 수 없습니다."));
       return;
     }
 
     if (!canContinue) {
-      showToast('휴대전화 번호를 올바르게 입력해주세요.');
+      showToast(i18n.t("휴대전화 번호를 올바르게 입력해주세요."));
       return;
     }
 
     if (normalizedInputPhone !== normalizedUserPhone) {
-      showToast('입력한 휴대전화 번호가 현재 사용자 번호와 일치하지 않습니다.');
+      showToast(i18n.t("입력한 휴대전화 번호가 현재 사용자 번호와 일치하지 않습니다."));
       return;
     }
 
@@ -59,7 +60,7 @@ export default function PasswordChangeScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Ionicons name="chevron-back" size={22} color="#B9C1CC" />
           </Pressable>
-          <Text style={styles.headerTitle}>비밀번호 변경</Text>
+          <Text style={styles.headerTitle}>{i18n.t("비밀번호 변경")}</Text>
           <View style={styles.headerSide} />
         </View>
 
@@ -70,17 +71,17 @@ export default function PasswordChangeScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.guideBox}>
-            <Text style={styles.guideText}>휴대전화 인증 후 비밀번호를 변경해주세요.</Text>
-            <Text style={styles.guideText}>보안을 위해 다른 기기에서는 자동 로그아웃 돼요.</Text>
+            <Text style={styles.guideText}>{i18n.t("휴대전화 인증 후 비밀번호를 변경해주세요.")}</Text>
+            <Text style={styles.guideText}>{i18n.t("보안을 위해 다른 기기에서는 자동 로그아웃 돼요.")}</Text>
           </View>
 
           <View style={styles.inputCard}>
-            <Text style={styles.fieldLabel}>휴대전화 번호</Text>
+            <Text style={styles.fieldLabel}>{i18n.t("휴대전화 번호")}</Text>
             <View style={styles.inputWrap}>
               <TextInput
                 value={formatPhoneNumber(phone)}
                 onChangeText={(value) => setPhone(normalizePhoneNumber(value))}
-                placeholder="전화번호를 입력해주세요"
+                placeholder={i18n.t("전화번호를 입력해주세요")}
                 placeholderTextColor="#B6BECE"
                 keyboardType="number-pad"
                 maxLength={13}
@@ -97,7 +98,7 @@ export default function PasswordChangeScreen() {
         {/* 키보드에 화면 높이를 맡기지 않고 하단 버튼만 키보드 위로 붙인다. */}
         <View style={styles.footer}>
           <PrimaryButton
-            title="계속하기"
+            title={i18n.t("계속하기")}
             onPress={handleContinue}
             height={48}
             backgroundColor="#5F9F9D"

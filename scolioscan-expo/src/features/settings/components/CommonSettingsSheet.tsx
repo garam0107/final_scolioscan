@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Modal, Pressable, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 import type { ViewStyle } from 'react-native';
@@ -77,11 +78,11 @@ export default function CommonSettingsSheet({
             titleTone === 'danger' && styles.dangerTitle,
           ]}
         >
-          {title}
+          {i18n.t(title)}
         </Text>
         {description ? (
           <Text style={[styles.description, isCenterConfirm && styles.centerConfirmDescription]}>
-            {description}
+            {i18n.t(description)}
           </Text>
         ) : null}
       </View>
@@ -126,7 +127,7 @@ export default function CommonSettingsSheet({
                     action.disabled && styles.disabledButtonText,
                   ]}
                 >
-                  {action.label}
+                  {i18n.t(action.label)}
                 </Text>
               </Pressable>
             );

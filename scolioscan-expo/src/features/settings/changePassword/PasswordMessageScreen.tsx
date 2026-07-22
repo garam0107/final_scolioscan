@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -38,7 +39,7 @@ export default function PasswordMessageScreen() {
     const normalizedPhone = normalizePhoneNumber(user?.phone || '');
 
     if (!normalizedPhone) {
-      showToast('현재 사용자 휴대전화 번호를 찾을 수 없습니다.', 'error');
+      showToast(i18n.t("현재 사용자 휴대전화 번호를 찾을 수 없습니다."), 'error');
       return;
     }
 
@@ -48,13 +49,13 @@ export default function PasswordMessageScreen() {
       const response = await octomoApi(normalizedPhone);
 
       if (response.verified) {
-        showToast('휴대전화 번호 인증이 완료되었습니다.', 'success');
+        showToast(i18n.t("휴대전화 번호 인증이 완료되었습니다."), 'success');
         setSmsRequested(false);
         router.push('/settings/password-reset')
         return;
       }
 
-      showToast('아직 휴대전화 번호 인증이 완료되지 않았습니다.', 'warning');
+      showToast(i18n.t("아직 휴대전화 번호 인증이 완료되지 않았습니다."), 'warning');
     } catch (error) {
       const message = error instanceof Error ? error.message : '휴대전화 번호 인증 확인에 실패했습니다.';
       showToast(normalizeRegisterMessage(message), 'error');
@@ -90,7 +91,7 @@ export default function PasswordMessageScreen() {
     // 서버에서 받은 인증 문구로 문자 앱을 열고, 복귀 후 검증할 수 있게 상태를 남긴다.
     try {
       if (!user?.phone) {
-        showToast('현재 사용자 휴대전화 번호를 찾을 수 없습니다.', 'error');
+        showToast(i18n.t("현재 사용자 휴대전화 번호를 찾을 수 없습니다."), 'error');
         return;
       }
 
@@ -102,7 +103,7 @@ export default function PasswordMessageScreen() {
       });
 
       if (!opened) {
-        showToast('메시지 앱을 열 수 없습니다.', 'error');
+        showToast(i18n.t("메시지 앱을 열 수 없습니다."), 'error');
         return;
       }
 
@@ -130,13 +131,13 @@ export default function PasswordMessageScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>인증을 위해 메시지 어플을 실행할게요</Text>
+          <Text style={styles.title}>{i18n.t("인증을 위해 메시지 어플을 실행할게요")}</Text>
           <PasswordMessage />
         </View>
 
         <View style={styles.footer}>
           <PrimaryButton
-            title="동의 및 휴대전화 번호 확인"
+            title={i18n.t("동의 및 휴대전화 번호 확인")}
             onPress={handleMessagePress}
             // onPress={() => router.push('/settings/password-reset') }
             height={48}

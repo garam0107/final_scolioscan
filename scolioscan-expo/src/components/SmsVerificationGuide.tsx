@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { textFont } from '@/src/constants/fonts';
 
@@ -20,7 +21,7 @@ export default function SmsVerificationGuide({ steps = defaultSteps }: SmsVerifi
             <View style={styles.messageGuideNumber}>
               <Text style={styles.messageGuideNumberText}>{index + 1}</Text>
             </View>
-            <Text style={styles.messageGuideText}>{text}</Text>
+            <Text style={styles.messageGuideText}>{i18n.t(text)}</Text>
           </View>
         ))}
       </View>
@@ -33,9 +34,7 @@ export default function SmsVerificationGuide({ steps = defaultSteps }: SmsVerifi
         />
       </View>
 
-      <Text style={styles.messageFootnote}>
-        • 이용 중인 통신 요금제에 따라 문자 메시지 발송 비용이 청구될 수 있습니다.
-      </Text>
+      <Text style={styles.messageFootnote}>{i18n.t("• 이용 중인 통신 요금제에 따라 문자 메시지 발송 비용이 청구될 수 있습니다.")}</Text>
     </View>
   );
 }

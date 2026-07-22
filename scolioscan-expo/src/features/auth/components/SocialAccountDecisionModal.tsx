@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import React from 'react';
 import { Image, Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -42,14 +43,14 @@ export default function SocialAccountDecisionModal({
             />
 
             <View style={styles.socialDecisionTextGroup}>
-              <Text style={styles.socialDecisionTitle}>ScolioScan에 가입한 계정이 있으신가요?</Text>
-              <Text style={styles.socialDecisionMessage}>소셜 아이디와 ScolioScan 계정을 연동할게요.</Text>
+              <Text style={styles.socialDecisionTitle}>{i18n.t("ScolioScan에 가입한 계정이 있으신가요?")}</Text>
+              <Text style={styles.socialDecisionMessage}>{i18n.t("소셜 아이디와 ScolioScan 계정을 연동할게요.")}</Text>
             </View>
           </View>
 
           <View style={styles.socialDecisionButtonGroup}>
             <PrimaryButton
-              title="ScolioScan 계정으로 로그인"
+              title={i18n.t("ScolioScan 계정으로 로그인")}
               onPress={onHasAccount}
               disabled={loading}
               width="100%"
@@ -60,7 +61,7 @@ export default function SocialAccountDecisionModal({
             />
 
             <PrimaryButton
-              title="ScolioScan 계정 만들기"
+              title={i18n.t("ScolioScan 계정 만들기")}
               onPress={onNeedSignup}
               disabled={loading}
               width="100%"

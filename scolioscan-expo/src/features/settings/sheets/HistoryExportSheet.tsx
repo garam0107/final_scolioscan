@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import CommonSettingsSheet from '@/src/features/settings/components/CommonSettingsSheet';
 
 type HistoryExportSheetProps = {
@@ -10,15 +11,15 @@ export default function HistoryExportSheet({ visible, onClose, onShare }: Histor
   return (
     <CommonSettingsSheet
       visible={visible}
-      title="히스토리를 PDF로 저장했어요"
-      description="저장한 PDF 파일을 다른 사람에게 공유할까요?"
+      title={i18n.t("히스토리를 PDF로 저장했어요")}
+      description={i18n.t("저장한 PDF 파일을 다른 사람에게 공유할까요?")}
       presentation="centerConfirm"
       bottomPlacement="safeArea"
       onClose={onClose}
       actions={[
-        { label: '취소', onPress: onClose },
+        { label: i18n.t("취소"), onPress: onClose },
         {
-          label: '공유하기',
+          label: i18n.t("공유하기"),
           variant: 'primary',
           onPress: onShare,
         },

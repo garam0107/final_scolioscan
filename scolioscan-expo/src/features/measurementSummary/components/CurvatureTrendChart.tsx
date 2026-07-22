@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Line, Path, Stop } from 'react-native-svg';
 import { Colors } from '@/src/constants/theme';
@@ -41,11 +42,11 @@ export default function CurvatureTrendChart({
     <View style={styles.trendCard}>
       <View style={styles.trendHeader}>
         <View style={styles.trendSummary}>
-          <Text style={styles.trendTitle}>평균 변화량</Text>
+          <Text style={styles.trendTitle}>{i18n.t("평균 변화량")}</Text>
           <View style={styles.trendValueRow}>
             <Text style={styles.trendValue}>{averageChangeText}</Text>
             <View style={styles.trendBadge}>
-              <Text style={styles.trendBadgeText}>최근 변화 {recentChangeText}</Text>
+              <Text style={styles.trendBadgeText}>{i18n.t("최근 변화")}{recentChangeText}</Text>
             </View>
           </View>
         </View>
@@ -53,15 +54,15 @@ export default function CurvatureTrendChart({
         <View style={styles.trendLegend}>
           <View style={styles.trendLegendRow}>
             <View style={[styles.trendLegendLine, styles.trendLegendDanger]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>위험</Text>
+            <Text style={[styles.trendLegendText, styles.trendLegendDangerText]}>{i18n.t("위험")}</Text>
           </View>
           <View style={styles.trendLegendRow}>
             <View style={[styles.trendLegendLine, styles.trendLegendWarning]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>보통</Text>
+            <Text style={[styles.trendLegendText, styles.trendLegendWarningText]}>{i18n.t("보통")}</Text>
           </View>
           <View style={styles.trendLegendRow}>
             <View style={[styles.trendLegendLine, styles.trendLegendNormal]} />
-            <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>정상</Text>
+            <Text style={[styles.trendLegendText, styles.trendLegendNormalText]}>{i18n.t("정상")}</Text>
           </View>
         </View>
       </View>
@@ -100,8 +101,21 @@ export default function CurvatureTrendChart({
       )}
 
       <View style={styles.trendXAxis}>
-        {xAxisLabels.map((label) => (
-          <Text key={label} style={styles.trendXAxisText}>{label}</Text>
+        {xAxisLabels.map((label, index) => (
+          <Text
+            key={label}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.72}
+            style={[
+              styles.trendXAxisText,
+              i18n.language.startsWith('en') ? styles.trendXAxisTextEnglish : null,
+              index === 0 ? styles.trendXAxisTextStart : null,
+              index === xAxisLabels.length - 1 ? styles.trendXAxisTextEnd : null,
+            ]}
+          >
+            {i18n.t(label)}
+          </Text>
         ))}
       </View>
     </View>

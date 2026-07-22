@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
@@ -47,20 +48,20 @@ export default function EmailFindResultScreen() {
           <Pressable onPress={resetToLogin} hitSlop={12} style={styles.backButton}>
             <Ionicons name="chevron-back" size={22} color="#7E89A0" />
           </Pressable>
-          <Text style={styles.headerTitle}>이메일 찾기</Text>
+          <Text style={styles.headerTitle}>{i18n.t("이메일 찾기")}</Text>
           <View style={styles.headerSide} />
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>이메일을 찾았어요!</Text>
-          <Text style={styles.description}>가입하신 이메일은</Text>
+          <Text style={styles.title}>{i18n.t("이메일을 찾았어요!")}</Text>
+          <Text style={styles.description}>{i18n.t("가입하신 이메일은")}</Text>
 
           <View style={styles.emailCard}>
             <Text style={styles.emailText}>{email}</Text>
           </View>
 
           <PrimaryButton
-            title="비밀번호 찾기"
+            title={i18n.t("비밀번호 찾기")}
             onPress={resetToPasswordFind}
             height={48}
             backgroundColor="#F9FAFB"
@@ -70,7 +71,7 @@ export default function EmailFindResultScreen() {
           />
 
           <PrimaryButton
-            title="로그인 하러가기"
+            title={i18n.t("로그인 하러가기")}
             onPress={resetToLogin}
             height={48}
             backgroundColor="#2C9696"

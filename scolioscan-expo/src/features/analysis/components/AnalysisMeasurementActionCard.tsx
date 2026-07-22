@@ -1,3 +1,4 @@
+import { i18n } from '@/src/i18n';
 import { Pressable, Text, View } from 'react-native';
 
 import styles from '../styles/analysisMeasurementActionCard.styles';
@@ -22,15 +23,15 @@ export default function AnalysisMeasurementActionCard({
   return (
     <View style={styles.card}>
       <View style={styles.copy}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+        <Text style={styles.title}>{i18n.t(title)}</Text>
+        <Text style={styles.description}>{i18n.t(description)}</Text>
       </View>
       <Pressable
         accessibilityRole="button"
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
         onPress={onPress}
       >
-        <Text style={styles.buttonText}>{buttonLabel}</Text>
+        <Text style={styles.buttonText}>{i18n.t(buttonLabel)}</Text>
       </Pressable>
     </View>
   );
