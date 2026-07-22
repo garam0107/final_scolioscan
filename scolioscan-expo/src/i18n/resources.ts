@@ -27,6 +27,10 @@ export const resources = {
       'social.unlinkComplete': '{{provider}} 소셜 연동이 해제되었습니다.',
       'scoliometer.measureProgress': '측정 {{count}}/{{total}}',
       'scoliometer.measuredProgress': '{{count}}회 측정했어요. 이어서 측정해주세요',
+      'bottomTab.home': '홈',
+      'bottomTab.analysis': '분석',
+      'bottomTab.report': '리포트',
+      'bottomTab.more': '설정',
       settings: {
         language: {
           title: '언어 설정',
@@ -75,6 +79,10 @@ export const resources = {
       'social.unlinkComplete': 'Your {{provider}} account has been disconnected.',
       'scoliometer.measureProgress': 'Measure {{count}}/{{total}}',
       'scoliometer.measuredProgress': '{{count}} measurement(s) complete. Continue measuring.',
+      'bottomTab.home': 'Home',
+      'bottomTab.analysis': 'Analysis',
+      'bottomTab.report': 'Report',
+      'bottomTab.more': 'Settings',
       settings: {
         language: {
           title: 'Language',
@@ -123,6 +131,10 @@ export const resources = {
       'social.unlinkComplete': '{{provider}}との連携を解除しました。',
       'scoliometer.measureProgress': '測定 {{count}}/{{total}}',
       'scoliometer.measuredProgress': '{{count}}回測定しました。続けて測定してください。',
+      'bottomTab.home': 'ホーム',
+      'bottomTab.analysis': '分析',
+      'bottomTab.report': 'レポート',
+      'bottomTab.more': '設定',
       settings: {
         language: {
           title: '言語設定',

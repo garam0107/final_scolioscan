@@ -1,61 +1,72 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SvgProps } from 'react-native-svg';
+import { i18n } from '@/src/i18n';
+import { Colors } from '@/src/constants/theme';
+import { textFont } from '@/src/constants/fonts';
 
-// 새로운 바텀 탭 아이콘
-import NewSelectOffHome from '../../assets/icons/BottomTab/new_home_2.svg'
-import NewSelectOffAnalysis from '../../assets/icons/BottomTab/new_analysis_2.svg'
-import NewSelectOffReport from '../../assets/icons/BottomTab/new_report_2.svg'
-import NewSelcetOffSetting from '../../assets/icons/BottomTab/new_setting_2.svg'
-import NewSelectOnHome from '../../assets/icons/BottomTab/new_home_1.svg'
-import NewSelectOnAnalysis from '../../assets/icons/BottomTab/new_analysis_1.svg'
-import NewSelectOnReport from '../../assets/icons/BottomTab/new_report_1.svg'
-import NewSelcetOnSetting from '../../assets/icons/BottomTab/new_setting_1.svg'
+import HomeIcon from '../../assets/icons/BottomTab/home_tab.svg';
+import SelectHomeIcon from '../../assets/icons/BottomTab/select_home.svg';
+import AnalysisIcon from '../../assets/icons/BottomTab/search_tab.svg';
+import SelectAnalysisIcon from '../../assets/icons/BottomTab/select_search.svg';
+import ReportIcon from '../../assets/icons/BottomTab/report_tab.svg';
+import SelectReportIcon from '../../assets/icons/BottomTab/select_report.svg';
+import MoreIcon from '../../assets/icons/BottomTab/setting_tab.svg';
+import SelectMoreIcon from '../../assets/icons/BottomTab/select_setting.svg';
 
 type TabKey = 'home' | 'analysis' | 'report' | 'more';
 
 type TabItem = {
   key: TabKey;
-  OnIcon: React.ComponentType<SvgProps>;
-  OffIcon: React.ComponentType<SvgProps>;
+  labelKey: string;
+  selectedIcon: React.ComponentType<SvgProps>;
+  unselectedIcon: React.ComponentType<SvgProps>;
 };
 
 const TAB_ITEMS: Record<TabKey, TabItem> = {
   home: {
     key: 'home',
-    OnIcon: NewSelectOnHome,
-    OffIcon: NewSelectOffHome,
+    labelKey: 'bottomTab.home',
+    selectedIcon: SelectHomeIcon,
+    unselectedIcon: HomeIcon,
   },
   analysis: {
     key: 'analysis',
-    OnIcon: NewSelectOnAnalysis,
-    OffIcon: NewSelectOffAnalysis,
+    labelKey: 'bottomTab.analysis',
+    selectedIcon: SelectAnalysisIcon,
+    unselectedIcon: AnalysisIcon,
   },
   report: {
     key: 'report',
-    OnIcon: NewSelectOnReport,
-    OffIcon: NewSelectOffReport,
+    labelKey: 'bottomTab.report',
+    selectedIcon: SelectReportIcon,
+    unselectedIcon: ReportIcon,
   },
   more: {
     key: 'more',
-    OnIcon: NewSelcetOnSetting,
-    OffIcon: NewSelcetOffSetting,
+    labelKey: 'bottomTab.more',
+    selectedIcon: SelectMoreIcon,
+    unselectedIcon: MoreIcon,
   },
 };
 
 function TabIcon({
   active,
-  OnIcon,
-  OffIcon,
+  selectedIcon: SelectedIcon,
+  unselectedIcon: UnselectedIcon,
 }: {
   active: boolean;
-  OnIcon: React.ComponentType<SvgProps>;
-  OffIcon: React.ComponentType<SvgProps>;
+  selectedIcon: React.ComponentType<SvgProps>;
+  unselectedIcon: React.ComponentType<SvgProps>;
 }) {
-  // 현재 선택된 탭에 맞춰 활성 아이콘과 비활성 아이콘을 바꿔 그린다.
-  const Icon = active ? OnIcon : OffIcon;
-  return <Icon width={80} height={60} />;
+  const Icon = active ? SelectedIcon : UnselectedIcon;
+
+  return (
+    <View style={[styles.tabContent, active ? styles.selectedTabContent : null]}>
+      <Icon width={30} height={30} />
+    </View>
+  );
 }
 
 export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
@@ -88,7 +99,10 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
 
         return (
         <Pressable key={route.key} onPress={onPress} style={styles.tab}>
-          <TabIcon active={active} OnIcon={tab.OnIcon} OffIcon={tab.OffIcon} />
+          <TabIcon active={active} selectedIcon={tab.selectedIcon} unselectedIcon={tab.unselectedIcon} />
+          <Text style={[styles.tabLabel, active ? styles.selectedTabLabel : null]}>
+            {i18n.t(tab.labelKey)}
+          </Text>
         </Pressable>
         );
       })}
@@ -120,9 +134,40 @@ const styles = StyleSheet.create({
   },
 
   tab: {
+    width: '25%',
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 64,
+  },
+
+  tabContent: {
+    width: 78,
+    height: 55,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 4.5,
+  },
+
+  selectedTabContent: {
+    borderWidth: 0.5,
+    borderColor: 'rgba(37, 39, 45, 0.03)',
+    borderRadius: 50,
+    backgroundColor: 'rgba(212, 217, 226, 0.6)',
+  },
+
+  tabLabel: {
+    ...textFont,
+    position: 'absolute',
+    // Figma의 라벨 기준점(top 42.5px, line-height 16px)에 맞춘 위치다.
+    bottom: 7,
+    color: 'rgba(37, 39, 45, 0.75)',
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+  },
+
+  selectedTabLabel: {
+    color: Colors.primary[500],
   },
 });
 
