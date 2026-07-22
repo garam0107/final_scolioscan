@@ -244,7 +244,8 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     setLoading(true);
     captureInFlightRef.current = true;
     try {
-      return await analyzeCapture(MANUAL_CHECK_QUALITY, true);
+      // 최종 crop 좌표와 이미지 방향이 일치하도록 처리된 사진을 사용한다.
+      return await analyzeCapture(MANUAL_CHECK_QUALITY, false);
     } finally {
       captureInFlightRef.current = false;
       setLoading(false);
@@ -319,7 +320,8 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
           autoCaptureCompletedRef.current = true;
           const finalPhoto = await capturePhotoWithTimeout(camera, {
             quality: AUTO_FINAL_QUALITY,
-            skipProcessing: true,
+            // 최종 사진은 Pose 좌표와 crop 파일이 같은 방향을 보도록 처리된 상태로 저장한다.
+            skipProcessing: false,
             shutterSound: false,
           });
 

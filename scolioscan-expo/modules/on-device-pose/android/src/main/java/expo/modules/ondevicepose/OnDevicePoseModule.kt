@@ -1,6 +1,11 @@
 package expo.modules.ondevicepose
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
@@ -13,6 +18,8 @@ import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import java.io.File
+import java.io.FileOutputStream
 
 class OnDevicePoseModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -20,7 +27,8 @@ class OnDevicePoseModule : Module() {
 
     AsyncFunction("detectPoseOnDevice") { imageUri: String, promise: Promise ->
       val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
-      val image = InputImage.fromFilePath(context, Uri.parse(imageUri))
+      // 카메라 JPEG의 EXIF 방향을 실제 Bitmap에 반영해 Pose 좌표와 JS crop 좌표계를 맞춘다.
+      val image = InputImage.fromBitmap(loadExifNormalizedBitmap(context, Uri.parse(imageUri)), 0)
       val options = PoseDetectorOptions.Builder()
         .setDetectorMode(PoseDetectorOptions.SINGLE_IMAGE_MODE)
         .build()
@@ -51,6 +59,68 @@ class OnDevicePoseModule : Module() {
           promise.reject("ERR_ON_DEVICE_POSE", error.message ?: "온디바이스 포즈 분석에 실패했습니다.", error)
         }
     }
+
+    AsyncFunction("normalizeImageForPose") { imageUri: String, promise: Promise ->
+      try {
+        val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+        val bitmap = loadExifNormalizedBitmap(context, Uri.parse(imageUri))
+        val outputFile = File.createTempFile("pose-normalized-", ".jpg", context.cacheDir)
+
+        FileOutputStream(outputFile).use { output ->
+          if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 100, output)) {
+            throw IllegalStateException("Unable to save normalized image bitmap")
+          }
+        }
+
+        promise.resolve(
+          mapOf(
+            "uri" to Uri.fromFile(outputFile).toString(),
+            "width" to bitmap.width,
+            "height" to bitmap.height,
+          )
+        )
+      } catch (error: Exception) {
+        promise.reject("ERR_NORMALIZE_IMAGE", error.message ?: "Failed to normalize image", error)
+      }
+    }
+  }
+
+  private fun loadExifNormalizedBitmap(context: Context, uri: Uri): Bitmap {
+    val orientation = context.contentResolver.openInputStream(uri)?.use { input ->
+      ExifInterface(input).getAttributeInt(
+        ExifInterface.TAG_ORIENTATION,
+        ExifInterface.ORIENTATION_NORMAL,
+      )
+    } ?: ExifInterface.ORIENTATION_NORMAL
+
+    val bitmap = context.contentResolver.openInputStream(uri)?.use { input ->
+      BitmapFactory.decodeStream(input)
+    } ?: throw IllegalArgumentException("Unable to decode image bitmap")
+
+    return applyExifOrientation(bitmap, orientation)
+  }
+
+  private fun applyExifOrientation(bitmap: Bitmap, orientation: Int): Bitmap {
+    val matrix = Matrix()
+
+    when (orientation) {
+      ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.setScale(-1f, 1f)
+      ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
+      ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.setScale(1f, -1f)
+      ExifInterface.ORIENTATION_TRANSPOSE -> {
+        matrix.setRotate(90f)
+        matrix.postScale(-1f, 1f)
+      }
+      ExifInterface.ORIENTATION_ROTATE_90 -> matrix.setRotate(90f)
+      ExifInterface.ORIENTATION_TRANSVERSE -> {
+        matrix.setRotate(-90f)
+        matrix.postScale(-1f, 1f)
+      }
+      ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(-90f)
+      else -> return bitmap
+    }
+
+    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
   }
 
   private fun buildResponse(pose: Pose, imageWidth: Int, imageHeight: Int, faces: List<Face>): Map<String, Any?> {

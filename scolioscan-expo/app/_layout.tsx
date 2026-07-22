@@ -121,6 +121,7 @@ export default function RootLayout() {
             <Stack.Screen name="measure/guide-3d-camera" />
             <Stack.Screen name="measure/guide-spine" />
             <Stack.Screen name="measure/2d" />
+            <Stack.Screen name="measure-crop-preview" />
             <Stack.Screen name="measure/scoliometer" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="settings/password" />

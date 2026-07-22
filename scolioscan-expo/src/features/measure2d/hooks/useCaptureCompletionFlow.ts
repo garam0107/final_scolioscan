@@ -12,7 +12,8 @@ type UseCaptureCompletionFlowParams = {
   autoAligned: boolean;
   autoCaptureResult: AutoCaptureResult | null;
   clearAutoCaptureResult: () => void;
-  goToNextMeasurement: (photoUri: string) => void;
+  goToNextMeasurement: (photoUri: string) => Promise<boolean>;
+  onPrepareFailed: () => void;
 };
 
 const CAPTURE_COMPLETE_DELAY_MS = 1000;
@@ -22,6 +23,7 @@ export function useCaptureCompletionFlow({
   autoCaptureResult,
   clearAutoCaptureResult,
   goToNextMeasurement,
+  onPrepareFailed,
 }: UseCaptureCompletionFlowParams) {
   const lottieCompletedRef = useRef(false);
   const captureSubmitInFlightRef = useRef(false);
@@ -76,13 +78,22 @@ export function useCaptureCompletionFlow({
         return;
       }
 
+      const prepared = await goToNextMeasurement(pendingCapturePhotoUri);
+
+      if (cancelled) {
+        return;
+      }
+
       captureSubmitInFlightRef.current = false;
 
       setPendingCapturePhotoUri(null);
       setManualCaptureProgressVisible(false);
       setActiveCaptureLottieType(null);
       setCaptureCompleteVisible(false);
-      goToNextMeasurement(pendingCapturePhotoUri);
+
+      if (!prepared) {
+        onPrepareFailed();
+      }
     };
 
     void submitAfterComplete();
@@ -94,6 +105,7 @@ export function useCaptureCompletionFlow({
   }, [
     captureCompleteVisible,
     goToNextMeasurement,
+    onPrepareFailed,
     pendingCapturePhotoUri,
   ]);
 

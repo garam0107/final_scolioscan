@@ -16,8 +16,15 @@ export type OnDevicePoseResult = {
   face_count?: number;
 };
 
+export type NormalizedPoseImage = {
+  uri: string;
+  width: number;
+  height: number;
+};
+
 type OnDevicePoseNativeModule = {
   detectPoseOnDevice(imageUri: string): Promise<OnDevicePoseResult>;
+  normalizeImageForPose(imageUri: string): Promise<NormalizedPoseImage>;
 };
 
 let nativeModule: OnDevicePoseNativeModule | null = null;
@@ -29,4 +36,8 @@ function getNativeModule(): OnDevicePoseNativeModule {
 
 export async function detectPoseOnDevice(imageUri: string): Promise<OnDevicePoseResult> {
   return getNativeModule().detectPoseOnDevice(imageUri);
+}
+
+export async function normalizeImageForPose(imageUri: string): Promise<NormalizedPoseImage> {
+  return getNativeModule().normalizeImageForPose(imageUri);
 }

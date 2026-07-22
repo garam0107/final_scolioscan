@@ -1,10 +1,11 @@
 import { i18n } from '@/src/i18n';
 import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fonts/museomoderno';
 import { useFonts as useExpoFonts } from 'expo-font';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useFocusEffect, useScrollToTop } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NetworkErrorView from '@/src/components/NetworkErrorView';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -24,6 +25,8 @@ import TwoIcon from '../../../assets/home/test.svg';
 import ScoliometerIcon from '../../../assets/home/home_scolio.svg'
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
+import { Colors } from '@/src/constants/theme';
+import { createPoseCrop, PoseCropError } from '@/src/features/measure2d/services/poseCrop';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 
 export default function HomeScreen() {
@@ -35,6 +38,7 @@ export default function HomeScreen() {
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
   const [networkError, setNetworkError] = useState(false);
   const [isProModalVisible, setIsProModalVisible] = useState(false);
+  const [cropPreparing, setCropPreparing] = useState(false);
   const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || i18n.t('회원');
@@ -85,6 +89,35 @@ export default function HomeScreen() {
     void loadAlarmCount();
     void loadLatestCurvature();
   }, [loadAlarmCount, loadLatestCurvature]);
+
+  const handlePickCropTestImage = useCallback(async () => {
+    if (cropPreparing) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (result.canceled || !result.assets[0]?.uri) return;
+
+    setCropPreparing(true);
+    try {
+      // 앨범 원본도 서버 전송 없이 기기에서 Pose 기반 crop만 생성한다.
+      const cropped = await createPoseCrop(result.assets[0].uri);
+      router.push({
+        pathname: '/measure-crop-preview',
+        params: { photoUri: cropped.uri },
+      } as any);
+    } catch (error) {
+      const message = error instanceof PoseCropError
+        ? error.message
+        : '사진을 자르지 못했습니다. 다른 사진으로 다시 시도해주세요.';
+      Alert.alert('Crop 실패', message);
+    } finally {
+      setCropPreparing(false);
+    }
+  }, [cropPreparing, router]);
 
   useFocusEffect(
     useCallback(() => {
@@ -138,6 +171,16 @@ export default function HomeScreen() {
           <View style={homeHeaderStyles.greetingBlock}>
             <View style={homeHeaderStyles.greetingTitleRow}>
               <Text style={homeHeaderStyles.greetingTitle}>{displayName}{i18n.t("님 안녕하세요.")}</Text>
+              <PrimaryButton
+                title={cropPreparing ? 'Crop 중' : '앨범 Crop'}
+                onPress={() => void handlePickCropTestImage()}
+                width={96}
+                height={32}
+                backgroundColor={Colors.primary[500]}
+                borderRadius={6}
+                textStyle={homeHeaderStyles.previewButtonText}
+                disabled={cropPreparing}
+              />
                                      {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
               {/* <PrimaryButton
                 title="분석중 보기"

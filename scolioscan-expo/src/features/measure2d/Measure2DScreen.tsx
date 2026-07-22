@@ -9,6 +9,7 @@ import ToastAlert from '@/src/components/ui/ToastAlert';
 import { createGuidelineGeometry } from './domain/guidelineGeometry';
 import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
 import { useMeasure2D } from './hooks/useMeasure2D';
+import { createPoseCrop, PoseCropError } from './services/poseCrop';
 import CloseIcon from '../../../assets/icons/close.svg'
 import { useCaptureCompletionFlow } from './hooks/useCaptureCompletionFlow';
 import { CaptureProgressOverlay } from './components/CaptureProgressOverlay';
@@ -23,7 +24,7 @@ type GuideChipState = {
   key: number;
 };
 
-const NEXT_MEASUREMENT_ROUTE = '/measure-loading-preview';
+const NEXT_MEASUREMENT_ROUTE = '/measure-crop-preview';
 const GUIDE_TOP_BAR_HEIGHT = 116;
 const SHUTTER_BUTTON_SIZE = 78;
 const SHUTTER_BOTTOM_PADDING = 34;
@@ -148,14 +149,25 @@ export default function Measure2DScreen() {
     }, [requestCameraPermission]),
   );
 
-  const goToNextMeasurement = useCallback((photoUri: string) => {
-    router.replace({
-      pathname: NEXT_MEASUREMENT_ROUTE,
-      params: {
-        photoUri,
-      },
-    });
-  }, [router]);
+  const goToNextMeasurement = useCallback(async (photoUri: string) => {
+    try {
+      // 가이드 판정을 통과한 최종 사진을 다시 Pose 기반으로 잘라 실제 crop 결과만 미리보기로 전달한다.
+      const cropped = await createPoseCrop(photoUri);
+      router.replace({
+        pathname: NEXT_MEASUREMENT_ROUTE,
+        params: {
+          photoUri: cropped.uri,
+        },
+      } as any);
+      return true;
+    } catch (error) {
+      const message = error instanceof PoseCropError
+        ? error.message
+        : '사진을 자르지 못했습니다. 다시 촬영해주세요.';
+      showToast(message, 'error');
+      return false;
+    }
+  }, [router, showToast]);
 
   const {
     activeCaptureLottieType,
@@ -168,6 +180,7 @@ export default function Measure2DScreen() {
     autoCaptureResult,
     clearAutoCaptureResult,
     goToNextMeasurement,
+    onPrepareFailed: resumeAutoCapture,
   });
 
   const handlePressCapture = async () => {
