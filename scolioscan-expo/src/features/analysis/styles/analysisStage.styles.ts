@@ -291,8 +291,16 @@ const stageStyles = StyleSheet.create({
   stage3DMetricValueBlurred: {
     filter: 'blur(8px)',
   },
-  stage3DMetricColumnBlurred: {
-    filter: 'blur(8px)',
+  stage3DMetricValueBlurWrapper: {
+    alignSelf: 'flex-start',
+    position: 'relative',
+  },
+  stage3DMetricValueBlurOverlay: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    bottom: -4,
+    left: -8,
   },
 });
 

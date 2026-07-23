@@ -1,9 +1,11 @@
 import { i18n } from '@/src/i18n';
 import { useCallback, useEffect, useState } from 'react';
+import { BlurView } from 'expo-blur';
 import {
   ActivityIndicator,
   Animated,
   ImageBackground,
+  Platform,
   Pressable,
   Text,
   View,
@@ -62,6 +64,29 @@ function formatDegree(value?: number | null, decimal = false) {
   return `${rounded.toFixed(0)}°`;
 }
 
+function BlurredMetricValue({ value, blurred }: { value: string; blurred: boolean }) {
+  if (!blurred) {
+    return <Text style={styles.stage3DMetricValue}>{value}</Text>;
+  }
+
+  if (Platform.OS !== 'ios') {
+    return <Text style={[styles.stage3DMetricValue, styles.stage3DMetricValueBlurred]}>{value}</Text>;
+  }
+
+  return (
+    <View style={styles.stage3DMetricValueBlurWrapper}>
+      <Text style={styles.stage3DMetricValue}>{value}</Text>
+      {/* iOS는 실제 숫자 위에 네이티브 블러를 겹쳐 피그마와 같은 흐림 형태를 유지한다. */}
+      <BlurView
+        intensity={64}
+        tint="dark"
+        style={styles.stage3DMetricValueBlurOverlay}
+        pointerEvents="none"
+      />
+    </View>
+  );
+}
+
 function Spine3DMetricOverlay({
   metric,
   metricBlurMode,
@@ -80,32 +105,22 @@ function Spine3DMetricOverlay({
 
       <View style={styles.stage3DMetricRow}>
         <View style={styles.stage3DMetricValues}>
-          <View
-            style={[
-              styles.stage3DMetricCurveColumn,
-              metricBlurMode === 'all' && styles.stage3DMetricColumnBlurred,
-            ]}
-          >
+          <View style={styles.stage3DMetricCurveColumn}>
             <Text style={styles.stage3DMetricLabel}>{i18n.t("만곡도")}</Text>
-            <Text style={styles.stage3DMetricValue}>{formatDegree(metric.curvatureValue)}</Text>
+            {/* 피그마 기준으로 라벨은 유지하고 각도 값에만 블러를 적용한다. */}
+            <BlurredMetricValue
+              value={formatDegree(metric.curvatureValue)}
+              blurred={metricBlurMode === 'all'}
+            />
           </View>
 
-          <View
-            style={[
-              styles.stage3DMetricRotationColumn,
-              metricBlurMode !== 'none' && styles.stage3DMetricColumnBlurred,
-            ]}
-          >
+          <View style={styles.stage3DMetricRotationColumn}>
             <Text style={styles.stage3DMetricLabel}>{i18n.t("비틀림")}</Text>
             {/* rotation 미측정 시 0도 값을 보여 주되, 피그마와 같이 값만 블러 처리한다. */}
-            <Text
-              style={[
-                styles.stage3DMetricValue,
-                !hasRotationValue && metricBlurMode === 'none' && styles.stage3DMetricValueBlurred,
-              ]}
-            >
-              {formatDegree(hasRotationValue ? metric.rotationValue : 0, true)}
-            </Text>
+            <BlurredMetricValue
+              value={formatDegree(hasRotationValue ? metric.rotationValue : 0, true)}
+              blurred={metricBlurMode !== 'none' || !hasRotationValue}
+            />
           </View>
         </View>
 
