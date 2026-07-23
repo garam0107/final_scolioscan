@@ -1,41 +1,38 @@
 import { i18n } from '@/src/i18n';
-import { useRouter } from 'expo-router';
 import { Text, View, useWindowDimensions } from 'react-native';
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
-import PrimaryButton from '@/src/components/ui/PrimaryButton';
 import styles from '../styles/analysisCards.styles';
-import LoadingChartIcon from '../../../../assets/icons/home/loading_chart.svg';
-import LoadingSearchIcon from '../../../../assets/icons/home/loading_search.svg';
+// 구독 상품 재개 시 아래 잠금 카드 주석을 해제하고 함께 복구한다.
+// import PrimaryButton from '@/src/components/ui/PrimaryButton';
+// import { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+// import LoadingChartIcon from '../../../../assets/icons/home/loading_chart.svg';
+// import LoadingSearchIcon from '../../../../assets/icons/home/loading_search.svg';
 
 const BASE_SECTION_WIDTH = 328;
 const BASE_SECTION_HEIGHT = 635;
 const SCREEN_HORIZONTAL_PADDING = 32;
-const BASE_LOCK_CARD_WIDTH = 264;
-const BASE_LOCK_CARD_HEIGHT = 456;
+// const BASE_LOCK_CARD_WIDTH = 264;
+// const BASE_LOCK_CARD_HEIGHT = 456;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
 export default function AiDoctorCard() {
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const availableCardWidth = width - SCREEN_HORIZONTAL_PADDING;
   const sectionScale = clamp(availableCardWidth / BASE_SECTION_WIDTH, 0.8, 1.08);
   const sectionHeight = Math.round(BASE_SECTION_HEIGHT * sectionScale);
-  const cardWidth = Math.round(BASE_LOCK_CARD_WIDTH * sectionScale);
-  const cardHeight = Math.round(BASE_LOCK_CARD_HEIGHT * sectionScale);
-  const visualWidth = 180 * sectionScale;
-  const visualHeight = 220 * sectionScale;
-  const chartSize = 120 * sectionScale;
-  const searchSize = 115 * sectionScale;
+  // 구독 상품 재개 시 잠금 카드 주석과 함께 아래 크기 계산도 복구한다.
+  // const cardWidth = Math.round(BASE_LOCK_CARD_WIDTH * sectionScale);
+  // const cardHeight = Math.round(BASE_LOCK_CARD_HEIGHT * sectionScale);
+  // const visualWidth = 180 * sectionScale;
+  // const visualHeight = 220 * sectionScale;
+  // const chartSize = 120 * sectionScale;
+  // const searchSize = 115 * sectionScale;
 
-  const handleSubscribePress = () => {
-    router.push('/settings/subscribe');
-  };
-
-  // 구독 전에는 추천 내용을 흐리게 두고, Figma 잠금 오버레이를 코드로 올린다.
+  // 구독 상품 재개 시 아래 잠금 오버레이와 구독 카드 주석을 해제한다.
   return (
     <View style={[styles.aiDoctorSection, { height: sectionHeight }]}>
       <View style={styles.aiDoctorLockedContent}>
@@ -73,6 +70,7 @@ export default function AiDoctorCard() {
         <Text style={styles.aiDoctorBodyText}>{i18n.t("바른 자세와 규칙적인 스트레칭을 유지해 주세요.")}</Text>
       </View>
 
+      {/* 구독 상품이 없으므로 현재는 추천 내용을 모든 사용자에게 그대로 표시한다.
       <Svg pointerEvents="none" style={styles.aiDoctorGradient} width="100%" height="100%">
         <Defs>
           <LinearGradient id="aiDoctorLockGradient" x1="0" y1="0" x2="0" y2="1">
@@ -165,6 +163,7 @@ export default function AiDoctorCard() {
           />
         </View>
       </View>
+      */}
     </View>
   );
 }

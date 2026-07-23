@@ -18,9 +18,9 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import type { InfoCardLevel } from './analysisCopy';
 import styles from './styles/analysis.styles';
 import { createAnalysisPose } from './analysisPose';
-import AiDoctorCard from './components/AiDoctorCard';
 import AnalysisStage from './components/AnalysisStage';
 import AnalysisMeasurementActionCard from './components/AnalysisMeasurementActionCard';
+import ReportAiDoctorCard from '@/src/features/report/components/ReportAiDoctorCard';
 import CurvePatternCard from './components/CurvePatternCard';
 import DominantCurveCard from './components/DominantCurveCard';
 import InfoCard from './components/InfoCard';
@@ -64,7 +64,8 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const {
     analysis,
     measurementSet,
-    hasActiveSubscription,
+    // 구독 상품 재개 시 아래 구독 상태를 다시 사용한다.
+    // hasActiveSubscription,
     loading,
     error,
     networkError,
@@ -106,16 +107,23 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
   const severityLabel = infoCardLevel;
   const shouldShowMeasurementRequired = !loading && !analysis && !error && !networkError;
   const hasRotation = measurementSet?.rotation !== null && measurementSet?.rotation !== undefined;
-  const shouldShowMeasurementAction = Boolean(analysis) && (!hasActiveSubscription || !hasRotation);
-  const metricBlurMode = !hasActiveSubscription
-    ? 'all'
-    : !hasRotation
-      ? 'rotation-only'
-      : 'none';
+  // 구독 상품이 다시 생기면 아래 구독 분기와 안내 카드 주석을 해제한다.
+  // const shouldShowMeasurementAction = Boolean(analysis) && (!hasActiveSubscription || !hasRotation);
+  // const metricBlurMode = !hasActiveSubscription
+  //   ? 'all'
+  //   : !hasRotation
+  //     ? 'rotation-only'
+  //     : 'none';
+  // const handleMeasurementActionPress = () => {
+  //   router.push(hasActiveSubscription ? '/home' : '/settings/subscribe');
+  // };
+  // 현재는 구독 없이 모든 사용자가 분석 수치를 볼 수 있도록 블러를 사용하지 않는다.
+  const metricBlurMode = 'none' as const;
+  const shouldShowRotationMeasurementAction = Boolean(analysis) && !hasRotation;
 
-  const handleMeasurementActionPress = () => {
-    // 구독 상태에 맞춰 동일한 안내 카드에서 목적지가 달라진다.
-    router.push(hasActiveSubscription ? '/home' : '/settings/subscribe');
+  const handleRotationMeasurementPress = () => {
+    // 비틀림이 없는 경우에는 기존 측정 화면으로 이동한다.
+    router.push('/home');
   };
   function getInfoCardLevel(value: number): InfoCardLevel {
     const maxValue = Math.abs(value);
@@ -210,10 +218,10 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
             backgroundImageSource={null}
             onRetry={reloadAnalysisData}
           />
-          {shouldShowMeasurementAction ? (
+          {shouldShowRotationMeasurementAction ? (
             <AnalysisMeasurementActionCard
-              subscribed={hasActiveSubscription}
-              onPress={handleMeasurementActionPress}
+              subscribed
+              onPress={handleRotationMeasurementPress}
             />
           ) : null}
           <InfoCard level={infoCardLevel} />
@@ -229,7 +237,7 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
 
           <CurvePatternCard dominantCurve={dominantCurve} />
 
-          <AiDoctorCard />
+          <ReportAiDoctorCard latestCurvature={measurementSet?.curvature ?? null} />
             </>
           )}
         </ScrollView>
