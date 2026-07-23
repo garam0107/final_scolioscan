@@ -36,13 +36,60 @@ public class OnDevicePoseModule: Module {
 
       let poses = try await poseResult
       let faces = try await faceResult
+      let isNormalizedPoseImage = url.lastPathComponent.hasPrefix("pose-normalized-") && image.imageOrientation == .up
 
       return self.buildResponse(
         poses: poses ?? [],
         imageWidth: image.size.width,
         imageHeight: image.size.height,
+        isNormalizedPoseImage: isNormalizedPoseImage,
         faces: faces ?? []
       )
+    }
+
+    AsyncFunction("normalizeImageForPose") { (imageUri: String) async throws -> [String: Any] in
+      guard let url = URL(string: imageUri),
+            let data = try? Data(contentsOf: url),
+            let image = UIImage(data: data),
+            let cgImage = image.cgImage else {
+        throw NSError(
+          domain: "OnDevicePose",
+          code: 2,
+          userInfo: [NSLocalizedDescriptionKey: "Failed to load image for normalization"]
+        )
+      }
+
+      let swapsWidthAndHeight: Bool
+      switch image.imageOrientation {
+      case .left, .leftMirrored, .right, .rightMirrored:
+        swapsWidthAndHeight = true
+      default:
+        swapsWidthAndHeight = false
+      }
+
+      let normalizedSize = CGSize(
+        width: CGFloat(swapsWidthAndHeight ? cgImage.height : cgImage.width),
+        height: CGFloat(swapsWidthAndHeight ? cgImage.width : cgImage.height)
+      )
+
+      // 기기 화면 배율과 무관하게 원본 픽셀 크기로 렌더링하고 EXIF 방향을 실제 픽셀에 반영한다.
+      let format = UIGraphicsImageRendererFormat()
+      format.scale = 1
+      format.opaque = true
+      let renderer = UIGraphicsImageRenderer(size: normalizedSize, format: format)
+      let normalizedData = renderer.jpegData(withCompressionQuality: 1) { _ in
+        image.draw(in: CGRect(origin: .zero, size: normalizedSize))
+      }
+
+      let outputUrl = FileManager.default.temporaryDirectory
+        .appendingPathComponent("pose-normalized-\(UUID().uuidString).jpg")
+      try normalizedData.write(to: outputUrl, options: .atomic)
+
+      return [
+        "uri": outputUrl.absoluteString,
+        "width": Int(normalizedSize.width),
+        "height": Int(normalizedSize.height)
+      ]
     }
   }
 
@@ -74,6 +121,7 @@ public class OnDevicePoseModule: Module {
     poses: [Pose],
     imageWidth: CGFloat,
     imageHeight: CGFloat,
+    isNormalizedPoseImage: Bool,
     faces: [Face]
   ) -> [String: Any] {
     let faceCount = faces.count
@@ -144,16 +192,23 @@ public class OnDevicePoseModule: Module {
     let landmarks: [[String: Any]] = landmarkTypes.map { item in
       let landmark = pose.landmark(ofType: item.type)
       let position = landmark.position
-      let normalizedX = position.x / imageHeight
-      let normalizedY = position.y / imageWidth
+      let normalizedX: CGFloat
+      let normalizedY: CGFloat
 
-      let rotatedX = 1 - normalizedY
-      let rotatedY = normalizedX
+      if isNormalizedPoseImage {
+        // crop용 정규화 이미지는 이미 세로 방향이므로 좌표를 다시 회전하지 않는다.
+        normalizedX = position.x / imageWidth
+        normalizedY = position.y / imageHeight
+      } else {
+        // 기존 iOS 촬영 이미지의 EXIF 방향 보정은 유지해 가이드 판정 동작을 바꾸지 않는다.
+        normalizedX = 1 - (position.y / imageWidth)
+        normalizedY = position.x / imageHeight
+      }
  
       return [
         "name": item.name,
-        "x": Double(max(0, min(1, rotatedX))),
-        "y": Double(max(0, min(1, rotatedY))),
+        "x": Double(max(0, min(1, normalizedX))),
+        "y": Double(max(0, min(1, normalizedY))),
         "z": Double(position.z),
         "visibility": Double(landmark.inFrameLikelihood)
       ]
