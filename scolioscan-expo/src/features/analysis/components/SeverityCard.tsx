@@ -1,5 +1,6 @@
 import { i18n } from '@/src/i18n';
-import { Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Platform, Text, View } from 'react-native';
 
 import styles from '../styles/analysisCards.styles';
 import type { AnalysisPose } from '../analysisPose';
@@ -8,9 +9,33 @@ import { formatDegree, regionDisplayLabel } from '../utils/analysisFormat';
 
 type SeverityCardProps = {
   metrics: AnalysisPose['metrics'];
+  metricBlurMode: 'none' | 'rotation-only' | 'all';
 };
 
-export default function SeverityCard({ metrics }: SeverityCardProps) {
+function BlurredSeverityValue({ value, blurred }: { value: string; blurred: boolean }) {
+  if (!blurred) {
+    return <Text style={styles.severityValue}>{value}</Text>;
+  }
+
+  if (Platform.OS !== 'ios') {
+    return <Text style={[styles.severityValue, styles.severityValueBlurred]}>{value}</Text>;
+  }
+
+  return (
+    <View style={styles.severityValueBlurWrapper}>
+      <Text style={styles.severityValue}>{value}</Text>
+      {/* iOS는 숫자 텍스트 위에 네이티브 블러를 겹쳐 Android와 같은 잠금 표시를 만든다. */}
+      <BlurView
+        intensity={64}
+        tint="light"
+        style={styles.severityValueBlurOverlay}
+        pointerEvents="none"
+      />
+    </View>
+  );
+}
+
+export default function SeverityCard({ metrics, metricBlurMode }: SeverityCardProps) {
   return (
     <View style={styles.severityCard}>
       <Text style={styles.severityCardTitle}>{i18n.t("심각도 분석")}</Text>
@@ -29,7 +54,10 @@ export default function SeverityCard({ metrics }: SeverityCardProps) {
 
               <View style={styles.severityValueRow}>
                 <Text style={styles.severityCurvatureLabel}>{i18n.t("만곡도")}</Text>
-                <Text style={styles.severityValue}>{formatDegree(metric.value)}</Text>
+                <BlurredSeverityValue
+                  value={formatDegree(metric.value)}
+                  blurred={metricBlurMode === 'all'}
+                />
 
                 <View
                   style={[

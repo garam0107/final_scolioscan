@@ -218,7 +218,7 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
           ) : null}
           <InfoCard level={infoCardLevel} />
 
-          <SeverityCard metrics={pose.metrics} />
+          <SeverityCard metrics={pose.metrics} metricBlurMode={metricBlurMode} />
 
           <DominantCurveCard
             dominantCurve={dominantCurve}

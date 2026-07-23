@@ -107,6 +107,20 @@ const cardStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  severityValueBlurred: {
+    filter: 'blur(8px)',
+  },
+  severityValueBlurWrapper: {
+    alignSelf: 'flex-start',
+    position: 'relative',
+  },
+  severityValueBlurOverlay: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    bottom: -4,
+    left: -8,
+  },
   severityBadge: {
     borderRadius: 999,
     paddingHorizontal: 10,
