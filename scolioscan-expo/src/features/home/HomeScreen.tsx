@@ -13,7 +13,7 @@ import HomeHeader from '@/src/features/home/components/HomeHeader';
 import HomeProModal from '@/src/features/home/components/HomeProModal';
 import MeasurementShortcutSection from '@/src/features/home/components/MeasurementShortcutSection';
 import type { MeasurementItem } from '@/src/features/home/components/MeasurementCard';
-import { useHomeAlarmCount } from '@/src/features/home/hooks/useHomeAlarmCount';
+
 import { useHomeBannerPager } from '@/src/features/home/hooks/useHomeBannerPager';
 import { useHomeCurvatureSummary } from '@/src/features/home/hooks/useHomeCurvatureSummary';
 import styles, { getHomeMeasurementCardLayout } from '@/src/features/home/home.styles';
@@ -37,7 +37,6 @@ export default function HomeScreen() {
   const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || i18n.t('회원');
-  const { alarmCount, loadAlarmCount } = useHomeAlarmCount(user?.alarm_count, setNetworkError);
   const { bannerHeight, bannerWidth } = useHomeBannerPager(width);
   const {
     selectedWeeklyResultId,
@@ -81,16 +80,15 @@ export default function HomeScreen() {
   ], [hasCurvatureMeasurement, measurementCardLayout.iconSize, router]);
 
   const handleNetworkRetry = useCallback(() => {
-    void loadAlarmCount();
+
     void loadLatestCurvature();
-  }, [loadAlarmCount, loadLatestCurvature]);
+  }, [ loadLatestCurvature]);
 
   useFocusEffect(
     useCallback(() => {
       // 홈으로 돌아올 때 알림 수와 최신 측정 결과를 다시 불러와 탭 간 데이터 차이를 줄인다.
-      void loadAlarmCount();
       void loadLatestCurvature();
-    }, [loadAlarmCount, loadLatestCurvature]),
+    }, [loadLatestCurvature]),
   );
 
   // 현재 선택된 홈 탭을 다시 누르면 홈 메인 스크롤만 맨 위로 이동한다.
@@ -124,9 +122,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <View style={styles.page}>
         <HomeHeader
-          alarmCount={alarmCount}
           showFontWarning={Boolean(pretendardError)}
-          onNotificationPress={() => router.push('/notifications')}
         />
 
         <ScrollView
