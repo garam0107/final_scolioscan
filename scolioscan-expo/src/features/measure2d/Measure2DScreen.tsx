@@ -24,7 +24,7 @@ type GuideChipState = {
   key: number;
 };
 
-const NEXT_MEASUREMENT_ROUTE = '/measure-crop-preview';
+const NEXT_MEASUREMENT_ROUTE = '/measure-loading-preview';
 const GUIDE_TOP_BAR_HEIGHT = 116;
 const SHUTTER_BUTTON_SIZE = 78;
 const SHUTTER_BOTTOM_PADDING = 34;
@@ -151,7 +151,7 @@ export default function Measure2DScreen() {
 
   const goToNextMeasurement = useCallback(async (photoUri: string) => {
     try {
-      // 가이드 판정을 통과한 최종 사진을 다시 Pose 기반으로 잘라 실제 crop 결과만 미리보기로 전달한다.
+      // 가이드 판정을 통과한 최종 사진을 Pose 기반으로 자른 뒤 운영 분석 화면으로 전달한다.
       const cropped = await createPoseCrop(photoUri);
       router.replace({
         pathname: NEXT_MEASUREMENT_ROUTE,

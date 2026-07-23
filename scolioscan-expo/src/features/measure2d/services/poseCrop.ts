@@ -10,9 +10,12 @@ const RIGHT_ELBOW = 14;
 const LEFT_HIP = 23;
 const RIGHT_HIP = 24;
 const MIN_VISIBILITY = 0.6;
-const TARGET_ASPECT_RATIO = 0.86;
+const MIN_WIDTH_ASPECT_RATIO = 0.86;
 const TOP_TORSO_PADDING_RATIO = 0.32;
-const BOTTOM_TORSO_PADDING_RATIO = 0.22;
+// 11점 좌표 테스트에서 하체 포함량을 줄여 모델 예측 변화를 비교한다.
+
+// 세로 하단 조절(수치를 높일수록 골반보다 위에서 잘리고, 낮출수록 아래까지 포함된다)
+const BOTTOM_TORSO_PADDING_RATIO = 0.08;
 const SIDE_SHOULDER_PADDING_RATIO = 0.12;
 const MIN_IMAGE_EDGE_RATIO = 0.02;
 
@@ -85,29 +88,15 @@ function createCropRect(landmarks: LandmarkPoint[], imageSize: ImageSize): CropR
   const rawLeft = Math.min(...xPoints) - shoulderWidth * SIDE_SHOULDER_PADDING_RATIO;
   const rawRight = Math.max(...xPoints) + shoulderWidth * SIDE_SHOULDER_PADDING_RATIO;
   const rawTop = shoulderCenterY - torsoHeight * TOP_TORSO_PADDING_RATIO;
-  const rawBottom = hipCenterY + torsoHeight * BOTTOM_TORSO_PADDING_RATIO;
+  const rawBottom = hipCenterY - torsoHeight * BOTTOM_TORSO_PADDING_RATIO;
 
   let width = (rawRight - rawLeft) * imageSize.width;
   let height = (rawBottom - rawTop) * imageSize.height;
   let centerX = ((rawLeft + rawRight) / 2) * imageSize.width;
   let centerY = ((rawTop + rawBottom) / 2) * imageSize.height;
 
-  // 인체를 포함한 최초 영역은 줄이지 않고, 성공 샘플과 같은 세로 상체 비율로만 확장한다.
-  if (width / height < TARGET_ASPECT_RATIO) {
-    width = height * TARGET_ASPECT_RATIO;
-  } else {
-    height = width / TARGET_ASPECT_RATIO;
-  }
-
-  if (width > imageSize.width) {
-    width = imageSize.width;
-    height = Math.max(height, width / TARGET_ASPECT_RATIO);
-  }
-
-  if (height > imageSize.height) {
-    height = imageSize.height;
-    width = Math.max(width, height * TARGET_ASPECT_RATIO);
-  }
+  // 세로는 줄인 값을 유지하고, 팔꿈치가 잘리지 않도록 최소 가로 폭만 확보한다.
+  width = Math.max(width, height * MIN_WIDTH_ASPECT_RATIO);
 
   width = Math.min(width, imageSize.width);
   height = Math.min(height, imageSize.height);
@@ -117,7 +106,7 @@ function createCropRect(landmarks: LandmarkPoint[], imageSize: ImageSize): CropR
   const marginX = width * MIN_IMAGE_EDGE_RATIO;
   const marginY = height * MIN_IMAGE_EDGE_RATIO;
 
-  const pixelPoints = [leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip].map((point) => ({
+  const pixelPoints = [leftShoulder, rightShoulder, leftElbow, rightElbow].map((point) => ({
     x: point.x * imageSize.width,
     y: point.y * imageSize.height,
   }));

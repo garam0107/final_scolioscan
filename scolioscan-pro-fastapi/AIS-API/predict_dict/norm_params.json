@@ -1,0 +1,27 @@
+{
+    "point_count": 11,
+    "output_dim": 22,
+    "img_size": 256,
+    "u_min": -0.49927079677581787,
+    "u_max": 0.4997771978378296,
+    "v_min": -0.49994683265686035,
+    "v_max": 0.49526137113571167,
+    "loaded_old_norm": false,
+    "center_formula": {
+        "x_centered": "(x - image_width / 2) / image_width",
+        "y_centered": "(-y + image_height / 2) / image_height"
+    },
+    "inverse_formula": {
+        "x": "x_centered * image_width + image_width / 2",
+        "y": "image_height / 2 - y_centered * image_height"
+    },
+    "augmentation": {
+        "add_augmented_data": true,
+        "aug_per_image": 3,
+        "rotate_deg": 8.0,
+        "scale_min": 0.92,
+        "scale_max": 1.08,
+        "translate_ratio": 0.04,
+        "flip_prob": 0.35
+    }
+}
