@@ -12,7 +12,7 @@ import ProfileCard from '@/src/features/settings/components/ProfileCard';
 import SettingRow, { type SettingsToggleKey } from '@/src/features/settings/components/SettingRow';
 import SettingsSection from '@/src/features/settings/components/SettingsSection';
 import SettingsTimeRow from '@/src/features/settings/components/SettingsTimeRow';
-import SubscriptionCard from '@/src/features/settings/components/SubscriptionCard';
+// import SubscriptionCard from '@/src/features/settings/components/SubscriptionCard';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
 import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
 import HistoryExportSheet from '@/src/features/settings/sheets/HistoryExportSheet';
@@ -322,7 +322,7 @@ export default function SettingsScreen() {
           onAccountPress={() => router.push('/settings/account')}
           onImagePress={handleImageUpdate} 
         />
-        <SubscriptionCard onManagePress={() => router.push('/settings/subscribe')} />
+        {/* <SubscriptionCard onManagePress={() => router.push('/settings/subscribe')} /> */}
 
         <SettingsSection title={i18n.t("앱 설정")}>
           <SettingRow
