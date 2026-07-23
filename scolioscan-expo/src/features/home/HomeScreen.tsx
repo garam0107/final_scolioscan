@@ -23,7 +23,6 @@ import CurvatureTrendChart from '@/src/features/measurementSummary/components/Cu
 import TwoIcon from '../../../assets/home/test.svg';
 import ScoliometerIcon from '../../../assets/home/home_scolio.svg'
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
-import PrimaryButton from '@/src/components/ui/PrimaryButton';
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 
 export default function HomeScreen() {

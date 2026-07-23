@@ -1,6 +1,6 @@
 import httpx
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from ..config import settings
 
@@ -22,7 +22,7 @@ async def predict_angle(image_path: Path) -> AngleResult:
 
     Raises httpx.HTTPError on network/server errors.
     """
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=90.0) as client:
         with open(image_path, "rb") as f:
             files = {"file": (image_path.name, f, "image/jpeg")}
             response = await client.post(f"{_ais_api_url()}/ais/angle", files=files)
@@ -35,5 +35,4 @@ async def predict_angle(image_path: Path) -> AngleResult:
             "severity": data.get("severity", "normal"),
             "back_type": data.get("back_type", "Unknown"),
         }
-
 

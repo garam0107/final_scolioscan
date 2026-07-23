@@ -12,7 +12,8 @@ from app.models.user import User
 from app.schemas.curvature import CurvatureMeasurementResponse
 from app.utils.auth import get_current_user
 from app.services.ais_client import predict_angle
-from app.services.s3_service import upload_image_to_s3, create_presigned_get_url
+# s3 저장 로직 제거하기 위해 하단 s3_service에서 upload_image_to_s3 import 제거
+from app.services.s3_service import create_presigned_get_url
 
 router = APIRouter(prefix="/api/curvature", tags=["curvature"])
 def _curvature_response_with_presigned_image(
@@ -77,15 +78,15 @@ async def create_curvature(
     finally:
         if tmp_path and tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
-
-    try:
-        image_key = upload_image_to_s3(
-            contents,
-            image.content_type,
-            "curvature",
-        )
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"S3 upload failed: {exc}")
+# s3 저장 로직 주석 처리 
+    # try:
+    #     image_key = upload_image_to_s3(
+    #         contents,
+    #         image.content_type,
+    #         "curvature",
+    #     )
+    # except Exception as exc:
+    #     raise HTTPException(status_code=500, detail=f"S3 upload failed: {exc}")
 
     severity = _severity_from_max_angle([
         result["main_thoracic"], result["secondary_thoracic"], result["lumbar"],
@@ -100,7 +101,7 @@ async def create_curvature(
         severity=severity,
         back_type=back_type,
         score=None,
-        image_path=image_key,
+        image_path=None,
     )
     db.add(measurement)
     db.commit()
