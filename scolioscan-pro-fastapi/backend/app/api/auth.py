@@ -44,6 +44,7 @@ from ..services.octomo_verification import (
     verify_verification_code_with_octomo,
 )
 from ..utils import create_access_token, get_password_hash
+from ..services.curvature_limit import next_curvature_limit_reset_at
 
 router = APIRouter()
 
@@ -70,6 +71,8 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
         address=user_data.address,
         detail_address=user_data.detail_address,
         alarm_count=0,
+        curvature_limit=10,
+        curvature_limit_reset_at=next_curvature_limit_reset_at(),
         setting={"voice_alarm": False},
     )
 

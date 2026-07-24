@@ -17,6 +17,7 @@ from ..schemas import (
 )
 from ..utils import get_current_user, get_password_hash, verify_password
 from app.services.s3_service import upload_image_to_s3, create_presigned_get_url, delete_s3_object
+from app.services.curvature_limit import reset_curvature_limit_if_expired
 router = APIRouter()
 
 
@@ -57,6 +58,8 @@ def _user_response_with_presigned_image(user: User) -> UserResponse:
         detail_address=user.detail_address,
         profile_image=user.profile_image,
         alarm_count=user.alarm_count,
+        curvature_limit=user.curvature_limit,
+        curvature_limit_reset_at=user.curvature_limit_reset_at,
         setting=user.setting,
         is_admin=user.is_admin,
         created_at=user.created_at,
@@ -69,9 +72,11 @@ def _user_response_with_presigned_image(user: User) -> UserResponse:
     return response
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """현재 로그인한 사용자 정보 조회"""
+    reset_curvature_limit_if_expired(db, current_user)
     return _user_response_with_presigned_image(current_user)
 
 

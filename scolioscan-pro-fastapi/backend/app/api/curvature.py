@@ -12,6 +12,7 @@ from app.models.user import User
 from app.schemas.curvature import CurvatureMeasurementResponse
 from app.utils.auth import get_current_user
 from app.services.ais_client import predict_angle
+from app.services.curvature_limit import consume_curvature_limit
 # s3 저장 로직 제거하기 위해 하단 s3_service에서 upload_image_to_s3 import 제거
 from app.services.s3_service import create_presigned_get_url
 
@@ -92,6 +93,12 @@ async def create_curvature(
         result["main_thoracic"], result["secondary_thoracic"], result["lumbar"],
     ])
     back_type = _backtype_from_string(result["back_type"])
+
+    if not consume_curvature_limit(db, str(current_user.id)):
+        raise HTTPException(
+            status_code=429,
+            detail="Monthly curvature measurement limit exceeded",
+        )
 
     measurement = CurvatureMeasurement(
         user_id=str(current_user.id),

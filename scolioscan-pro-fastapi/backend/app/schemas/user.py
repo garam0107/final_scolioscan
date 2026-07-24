@@ -121,6 +121,8 @@ class UserResponse(BaseModel):
     detail_address: Optional[str]
     profile_image: Optional[str]
     alarm_count: int
+    curvature_limit: int
+    curvature_limit_reset_at: datetime
     setting: Dict
     is_admin: bool = False  # 관리자 여부
     created_at: datetime

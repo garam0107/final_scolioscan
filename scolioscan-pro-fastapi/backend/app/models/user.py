@@ -21,6 +21,8 @@ class User(Base):
     detail_address = Column(String(128), nullable=True)
     profile_image = Column(String(256), nullable=True)  # 프로필 이미지 URL
     alarm_count = Column(Integer, nullable=False, default=0)
+    curvature_limit = Column(Integer, nullable=False, default=10)
+    curvature_limit_reset_at = Column(DateTime, nullable=False)
     setting = Column(JSON, nullable=False, default=dict)
     is_admin = Column(Boolean, nullable=False, default=False)  # 관리자 여부
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

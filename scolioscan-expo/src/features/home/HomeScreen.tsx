@@ -29,7 +29,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
-  const { loading, isAuthenticated, user } = useAuth();
+  const { loading, isAuthenticated, user, refreshCurrentUser } = useAuth();
   const [museoLoaded] = useMuseoFonts({ MuseoModerno_700Bold });
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
   const [networkError, setNetworkError] = useState(false);
@@ -59,6 +59,7 @@ export default function HomeScreen() {
       id: '2d',
       title: '카메라 측정하기',
       subtitle: '사진 한 장으로 간편하게 측정',
+      remainingText: user ? `${user.curvature_limit}${i18n.t('회 남음')}` : undefined,
       icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
   // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
   // onPress: () => {
@@ -77,7 +78,7 @@ export default function HomeScreen() {
       locked: hasCurvatureMeasurement === false,
       onPress: () => {router.push('/measure/scoliometer')}
     },
-  ], [hasCurvatureMeasurement, measurementCardLayout.iconSize, router]);
+  ], [hasCurvatureMeasurement, measurementCardLayout.iconSize, router, user]);
 
   const handleNetworkRetry = useCallback(() => {
 
@@ -88,7 +89,10 @@ export default function HomeScreen() {
     useCallback(() => {
       // 홈으로 돌아올 때 알림 수와 최신 측정 결과를 다시 불러와 탭 간 데이터 차이를 줄인다.
       void loadLatestCurvature();
-    }, [loadLatestCurvature]),
+      void refreshCurrentUser().catch((error) => {
+        console.log('[home] 사용자 측정 횟수 갱신 실패', error);
+      });
+    }, [loadLatestCurvature, refreshCurrentUser]),
   );
 
   // 현재 선택된 홈 탭을 다시 누르면 홈 메인 스크롤만 맨 위로 이동한다.

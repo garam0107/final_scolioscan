@@ -19,6 +19,9 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
   },
+  measurementCardWithRemaining: {
+    justifyContent: 'flex-end',
+  },
   lockedCard: {
     backgroundColor: Colors.gray[75],
   },
@@ -62,6 +65,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#25272D',
     textAlign: 'center',
+  },
+  measurementRemainingText: {
+    ...textFont,
+    fontSize: 10,
+    lineHeight: 20,
+    fontWeight: '500',
+    color: Colors.gray[500],
+    textAlign: 'center',
+  },
+  measurementTitleGroup: {
+    alignItems: 'center',
   },
   proBadge: {
     position: 'absolute',

@@ -29,7 +29,7 @@ export type HomeMeasurementCardLayout = {
 
 const HOME_MEASUREMENT_HORIZONTAL_PADDING = 20;
 const HOME_MEASUREMENT_CARD_GAP = 8;
-const HOME_MEASUREMENT_REFERENCE_SCREEN_WIDTH = 383;
+const HOME_MEASUREMENT_REFERENCE_SCREEN_WIDTH = 360;
 const HOME_MEASUREMENT_REFERENCE_CARD_WIDTH =
   (HOME_MEASUREMENT_REFERENCE_SCREEN_WIDTH - HOME_MEASUREMENT_HORIZONTAL_PADDING * 2 - HOME_MEASUREMENT_CARD_GAP) / 2;
 
@@ -43,11 +43,11 @@ export function getHomeMeasurementCardLayout(screenWidth: number): HomeMeasureme
   const spaceScale = Math.min(Math.max(cardWidth / HOME_MEASUREMENT_REFERENCE_CARD_WIDTH, 0.8), 1.16);
   const cardPadding = roundLayoutValue(12 * spaceScale);
   const badgePaddingHorizontal = roundLayoutValue(8 * spaceScale);
-  const badgeTextFontSize = roundLayoutValue(13 * spaceScale);
+  const badgeTextFontSize = roundLayoutValue(12 * spaceScale);
 
   return {
     cardWidth,
-    cardHeight: roundLayoutValue(180 * spaceScale),
+    cardHeight: roundLayoutValue(201 * spaceScale),
     cardPadding,
     cardRadius: roundLayoutValue(12 * spaceScale),
     proBadgeLeft: roundLayoutValue(12 * spaceScale),
@@ -67,7 +67,7 @@ export function getHomeMeasurementCardLayout(screenWidth: number): HomeMeasureme
     badgePaddingVertical: roundLayoutValue(4 * spaceScale),
     badgeRadius: roundLayoutValue(6 * spaceScale),
     badgeTextFontSize,
-    badgeTextLineHeight: roundLayoutValue(badgeTextFontSize * (18 / 13)),
+    badgeTextLineHeight: roundLayoutValue(badgeTextFontSize * (16 / 12)),
   };
 }
 

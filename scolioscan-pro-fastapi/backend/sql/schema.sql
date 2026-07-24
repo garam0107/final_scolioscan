@@ -14,6 +14,8 @@ CREATE TABLE `users` (
   `detail_address` VARCHAR(128) NULL,
   `profile_image` VARCHAR(256) NULL,
   `alarm_count` INT NOT NULL,
+  `curvature_limit` INT NOT NULL DEFAULT 10,
+  `curvature_limit_reset_at` DATETIME NOT NULL,
   `setting` JSON NOT NULL,
   `is_admin` BOOL NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

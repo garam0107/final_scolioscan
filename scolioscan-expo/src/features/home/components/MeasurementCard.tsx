@@ -15,6 +15,7 @@ export type MeasurementItem = {
   pro?: boolean;
   subtitleColor?: string;
   subtitleBackgroundColor?: string;
+  remainingText?: string;
   locked?: boolean;
 };
 
@@ -30,14 +31,36 @@ export default function MeasurementCard({
   pro,
   subtitleColor,
   subtitleBackgroundColor,
+  remainingText,
   locked = false,
   layout,
 }: MeasurementCardProps) {
   const useCompactText = i18n.language !== 'ko';
-  const contentGap = useCompactText ? Math.max(3, layout.contentGap * 0.5) : layout.contentGap;
+  const contentGap = remainingText
+    ? layout.contentGap
+    : useCompactText
+      ? Math.max(3, layout.contentGap * 0.5)
+      : layout.contentGap;
   const titleLineHeight = useCompactText ? Math.min(18, layout.titleTextLineHeight) : layout.titleTextLineHeight;
   const badgeLineHeight = useCompactText ? Math.min(16, layout.badgeTextLineHeight) : layout.badgeTextLineHeight;
   const iconMarginBottom = useCompactText ? Math.min(8, layout.iconMarginBottom) : layout.iconMarginBottom;
+  const titleContent = (
+    <Text
+      style={[
+        styles.measurementTitle,
+        {
+          fontSize: layout.titleTextFontSize,
+          lineHeight: titleLineHeight,
+        },
+      ]}
+      numberOfLines={2}
+      adjustsFontSizeToFit
+      minimumFontScale={0.78}
+      ellipsizeMode="clip"
+    >
+      {i18n.t(title)}
+    </Text>
+  );
   return (
     <Pressable
       onPress={onPress}
@@ -50,6 +73,7 @@ export default function MeasurementCard({
           padding: layout.cardPadding,
           borderRadius: layout.cardRadius,
         },
+        remainingText && styles.measurementCardWithRemaining,
         locked && styles.lockedCard,
         pressed && styles.pressed,
       ]}
@@ -67,21 +91,12 @@ export default function MeasurementCard({
         {icon}
       </View>
       <View style={[styles.measurementCardContent, { gap: contentGap }]}>
-        <Text
-          style={[
-            styles.measurementTitle,
-            {
-              fontSize: layout.titleTextFontSize,
-              lineHeight: titleLineHeight,
-            },
-          ]}
-          numberOfLines={2}
-          adjustsFontSizeToFit
-          minimumFontScale={0.78}
-          ellipsizeMode="clip"
-        >
-          {i18n.t(title)}
-        </Text>
+        {remainingText ? (
+          <View style={styles.measurementTitleGroup}>
+            <Text style={styles.measurementRemainingText}>{remainingText}</Text>
+            {titleContent}
+          </View>
+        ) : titleContent}
         <View
           style={[
             styles.measurementBadge,

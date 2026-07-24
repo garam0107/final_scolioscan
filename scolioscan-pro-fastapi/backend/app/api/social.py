@@ -34,6 +34,7 @@ from ..services.social_auth_service import (
     verify_social_temp_token,
 )
 from ..utils import create_access_token, get_current_user, get_password_hash
+from ..services.curvature_limit import next_curvature_limit_reset_at
 
 router = APIRouter()
 
@@ -332,6 +333,8 @@ async def signup_with_social_account(
         address=payload.address,
         detail_address=payload.detail_address,
         alarm_count=0,
+        curvature_limit=10,
+        curvature_limit_reset_at=next_curvature_limit_reset_at(),
         setting={"voice_alarm": False},
     )
     db.add(user)

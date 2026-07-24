@@ -43,6 +43,7 @@ type AuthContextValue = {
   octomoApi: (phone: string) => Promise<OctomoApiResponse>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
+  refreshCurrentUser: () => Promise<void>;
   refreshSession: () => Promise<void>;
 };
 
@@ -120,6 +121,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 현재 access token으로 사용자 정보를 다시 받아 전역 인증 상태를 맞춘다.
     const userResponse = await userAPI.getCurrentUser();
     await loadUserScopedLocalState(userResponse.data.id);
+    setUser(userResponse.data);
+  }, []);
+
+  const refreshCurrentUser = useCallback(async () => {
+    const userResponse = await userAPI.getCurrentUser();
     setUser(userResponse.data);
   }, []);
 
@@ -405,6 +411,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       octomoApi,
       register,
       logout,
+      refreshCurrentUser,
       refreshSession,
     }),
     [
@@ -423,6 +430,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       octomoApi,
       register,
       logout,
+      refreshCurrentUser,
       refreshSession,
     ],
   );

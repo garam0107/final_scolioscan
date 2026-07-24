@@ -20,6 +20,8 @@ export interface UserResponse {
   detail_address?: string | null;
   profile_image?: string | null;
   alarm_count: number;
+  curvature_limit: number;
+  curvature_limit_reset_at: string;
   setting: Record<string, unknown>;
   is_admin: boolean;
   created_at: string;
