@@ -88,3 +88,24 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+// 홈 측정 제한 알림창의 크기와 간격을 한 곳에서 관리한다.
+export const HomeMeasurementLimitModalTokens = {
+  overlayBackgroundColor: 'rgba(20, 28, 36, 0.28)',
+  overlayHorizontalPadding: 24,
+  cardMaxWidth: 330,
+  cardRadius: 20,
+  cardHorizontalPadding: 24,
+  cardTopPadding: 28,
+  cardBottomPadding: 20,
+  titleFontSize: 18,
+  titleLineHeight: 26,
+  descriptionMarginTop: 12,
+  descriptionFontSize: 14,
+  descriptionLineHeight: 21,
+  buttonMarginTop: 24,
+  buttonHeight: 44,
+  buttonRadius: 10,
+  buttonFontSize: 15,
+  pressedOpacity: 0.92,
+} as const;

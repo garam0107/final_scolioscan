@@ -11,6 +11,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import HomeBanner from '@/src/features/home/components/HomeBanner';
 import HomeHeader from '@/src/features/home/components/HomeHeader';
 import HomeProModal from '@/src/features/home/components/HomeProModal';
+import MeasurementLimitModal from '@/src/features/home/components/MeasurementLimitModal';
 import MeasurementShortcutSection from '@/src/features/home/components/MeasurementShortcutSection';
 import type { MeasurementItem } from '@/src/features/home/components/MeasurementCard';
 
@@ -34,6 +35,7 @@ export default function HomeScreen() {
   const [pretendardLoaded, pretendardError] = useExpoFonts({ PretendardVariable: pretendardFont });
   const [networkError, setNetworkError] = useState(false);
   const [isProModalVisible, setIsProModalVisible] = useState(false);
+  const [isMeasurementLimitModalVisible, setIsMeasurementLimitModalVisible] = useState(false);
   const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || i18n.t('회원');
@@ -67,7 +69,14 @@ export default function HomeScreen() {
   //   if (!guideHydrated) return;
   //   router.push(measurementGuideCompleted ? '/measure/2d' : '/measure/guide');
   // }
-      onPress: () => { router.push('/measure/2d'); },
+      onPress: () => {
+        // 남은 횟수가 없으면 측정 화면으로 이동하지 않고 갱신 일정을 안내한다.
+        if (user?.curvature_limit === 0) {
+          setIsMeasurementLimitModalVisible(true);
+          return;
+        }
+        router.push('/measure/2d');
+      },
     },
     {
       id: 'scoliometer',
@@ -189,6 +198,11 @@ export default function HomeScreen() {
             router.push('/settings/subscribe');
             setIsProModalVisible(false);
           }}
+        />
+        <MeasurementLimitModal
+          visible={isMeasurementLimitModalVisible}
+          resetAt={user?.curvature_limit_reset_at}
+          onClose={() => setIsMeasurementLimitModalVisible(false)}
         />
       </View>
     </SafeAreaView>
