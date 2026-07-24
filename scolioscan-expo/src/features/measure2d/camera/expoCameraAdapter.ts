@@ -10,7 +10,6 @@ export function createExpoCameraAdapter(cameraRef: RefObject<ExpoCameraRef | nul
   return {
     capturePhoto: async (options) => {
       if (!cameraRef.current) {
-        console.log('[measure2d] 수동 촬영 실패 원인: 카메라 ref 없음');
         return null;
       }
 

@@ -167,16 +167,12 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
 
 
     if (!photo?.uri) {
-      console.log('[measure2d] 수동 촬영 실패 원인: 사진 URI 없음');
+    
       return null;
     }
 
     if (!guidePoints || !guideRect || !previewSize) {
-      console.log('[measure2d] 수동 촬영 실패 원인: 가이드 좌표 또는 화면 크기 미준비', {
-        hasGuidePoints: Boolean(guidePoints),
-        hasGuideRect: Boolean(guideRect),
-        hasPreviewSize: Boolean(previewSize),
-      });
+  
       return null;
     }
 
@@ -249,8 +245,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     manualInProgressRef.current = true;
     resetAutoAlignment();
     if (!cameraReady) {
-      console.log('[measure2d] 수동 촬영 실패 원인: 카메라 미준비');
-      console.error('[measure2d] 수동 촬영 중단: 카메라가 아직 준비되지 않음');
+
       manualInProgressRef.current = false;
       return { status: 'failed' };
     }
@@ -261,10 +256,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     }
 
     if (captureInFlightRef.current) {
-      console.log('[measure2d] 수동 촬영 지연 원인: 자동 촬영 또는 분석이 제한 시간 안에 끝나지 않음', {
-        captureInFlight: captureInFlightRef.current,
-        waitedMs: Date.now() - waitStart,
-      });
+  
       manualInProgressRef.current = false;
       return { status: 'busy-timeout' };
     }

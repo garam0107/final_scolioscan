@@ -90,7 +90,7 @@ async function loadUserScopedLocalState(userId: string) {
 
   results.forEach((result) => {
     if (result.status === 'rejected') {
-      console.log('[auth] 사용자별 로컬 상태 로딩 실패', result.reason);
+
     }
   });
 }
@@ -276,24 +276,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         device_id: deviceId,
         device_name: deviceName,
       });
-      console.log('[auth][naver] verify response =', response);
-      console.log('[auth][naver] http status =', response.status);
-      console.log('[auth][naver] api status =', response.data.status);
-      console.log('[auth][naver] social temp token =', response.data.social_temp_token);
-      console.log('[auth][naver] app access token =', response.data.access_token);
+ 
       if (response.data.status === 'login_success') {
         await applyLoginSession(response.data);
       }
       if (response.data.status === 'need_account_decision') {
-      console.log('[auth][naver] branch = need_account_decision');
+     
       }
       return response.data;
     } catch (error) {
-      console.log('[auth][naver] verify error raw =', error);
-      console.log(
-      '[auth][naver] verify error message =',
-      error instanceof Error ? error.message : String(error)
-    );
+      
       throw new Error(normalizeApiError(error));
     }
   }, [applyLoginSession]);
@@ -387,7 +379,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await authAPI.logout({ refresh_token: refreshToken });
       }
     } catch (error) {
-      console.log('[auth] 로그아웃 revoke 실패', error);
+   
     } finally {
       await clearAuthState();
     }

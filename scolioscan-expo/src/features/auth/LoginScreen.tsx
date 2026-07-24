@@ -375,25 +375,20 @@ export default function LoginScreen() {
 
     try {
       // 카카오 SDK 로그인 결과의 access token을 백엔드 verify API로 전달한다.
-      console.log('[kakao] login start');
+      
       const token = await kakaoLogin();
-      console.log('[kakao] login success raw =', token);
-      console.log('[kakao] accessToken =', token?.accessToken);
-      console.log('[kakao] idToken =', token?.idToken);
+     
       if (!token.accessToken) {
         throw new Error('카카오 access token을 받지 못했습니다.');
       }
-      console.log('[kakao] verify request start');
-      console.log('[kakao] verify accessToken exists =', !!token?.accessToken);
+ 
       const response = await verifyKakaoSocialLogin(token.accessToken);
       await handleSocialAuthResponse(response);
     } catch (error) {
-      console.log('[kakao] login error raw =', error);
-      console.log('[kakao] login error message =', error instanceof Error ? error.message : String(error));
-      console.log('[kakao] login error json =', JSON.stringify(error, null, 2));
+    
       const message = error instanceof Error ? error.message : '카카오 로그인에 실패했습니다.';
       if (message.includes('cancelled') || message.includes('canceled')) {
-        console.log('[카카오] 바로 취소')
+       
         return;
       }
       showToast(normalizeLoginToastMessage(message));

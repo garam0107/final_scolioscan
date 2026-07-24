@@ -210,7 +210,7 @@ export default function Measure2DScreen() {
       }
 
       if (attempt.status === 'failed') {
-        console.log('[measure2d] 수동 촬영 실패 토스트 표시');
+
         showToast(i18n.t("촬영에 실패했습니다. 다시 시도해주세요."), 'error');
         return;
       }
