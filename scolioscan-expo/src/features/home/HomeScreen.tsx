@@ -57,7 +57,7 @@ export default function HomeScreen() {
   const measurementItems: MeasurementItem[] = useMemo(() => [
     {
       id: '2d',
-      title: '2D 측정하기',
+      title: '카메라 측정하기',
       subtitle: '사진 한 장으로 간편하게 측정',
       icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
   // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
