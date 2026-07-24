@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     height: '100%',
     padding: 12,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000000',
@@ -18,9 +18,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 16,
     boxShadow: '0px 0px 16px rgba(0, 0, 0, 0.04)',
-  },
-  measurementCardWithRemaining: {
-    justifyContent: 'flex-end',
   },
   lockedCard: {
     backgroundColor: Colors.gray[75],
@@ -99,7 +96,7 @@ const styles = StyleSheet.create({
     color: '#DA981C',
   },
   measurementBadge: {
-    maxWidth: '100%',
+    width: '100%',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,

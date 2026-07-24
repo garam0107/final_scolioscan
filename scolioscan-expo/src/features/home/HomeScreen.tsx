@@ -57,6 +57,7 @@ export default function HomeScreen() {
   const measurementItems: MeasurementItem[] = useMemo(() => [
     {
       id: '2d',
+      subtitleLineBreakAfter: '사진 한 장으로',
       title: '카메라 측정하기',
       subtitle: '사진 한 장으로 간편하게 측정',
       remainingText: user ? `${user.curvature_limit}${i18n.t('회 남음')}` : undefined,
@@ -70,6 +71,7 @@ export default function HomeScreen() {
     },
     {
       id: 'scoliometer',
+      subtitleLineBreakAfter: '스콜리오미터로',
       title: '정교한 측정하기',
       subtitle: '스콜리오미터로 정교한 측정',
       icon: <ScoliometerIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,

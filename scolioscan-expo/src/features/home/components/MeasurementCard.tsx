@@ -15,6 +15,7 @@ export type MeasurementItem = {
   pro?: boolean;
   subtitleColor?: string;
   subtitleBackgroundColor?: string;
+  subtitleLineBreakAfter?: string;
   remainingText?: string;
   locked?: boolean;
 };
@@ -31,6 +32,7 @@ export default function MeasurementCard({
   pro,
   subtitleColor,
   subtitleBackgroundColor,
+  subtitleLineBreakAfter,
   remainingText,
   locked = false,
   layout,
@@ -44,6 +46,15 @@ export default function MeasurementCard({
   const titleLineHeight = useCompactText ? Math.min(18, layout.titleTextLineHeight) : layout.titleTextLineHeight;
   const badgeLineHeight = useCompactText ? Math.min(16, layout.badgeTextLineHeight) : layout.badgeTextLineHeight;
   const iconMarginBottom = useCompactText ? Math.min(8, layout.iconMarginBottom) : layout.iconMarginBottom;
+  const translatedSubtitle = i18n.t(subtitle);
+  // 한국어 라벨은 화면 너비와 관계없이 지정된 위치에서 두 줄로 표시한다.
+  const displaySubtitle =
+    i18n.language.startsWith('ko') && subtitleLineBreakAfter
+      ? translatedSubtitle.replace(
+          `${subtitleLineBreakAfter} `,
+          `${subtitleLineBreakAfter}\n`,
+        )
+      : translatedSubtitle;
   const titleContent = (
     <Text
       style={[
@@ -73,7 +84,6 @@ export default function MeasurementCard({
           padding: layout.cardPadding,
           borderRadius: layout.cardRadius,
         },
-        remainingText && styles.measurementCardWithRemaining,
         locked && styles.lockedCard,
         pressed && styles.pressed,
       ]}
@@ -91,12 +101,11 @@ export default function MeasurementCard({
         {icon}
       </View>
       <View style={[styles.measurementCardContent, { gap: contentGap }]}>
-        {remainingText ? (
-          <View style={styles.measurementTitleGroup}>
-            <Text style={styles.measurementRemainingText}>{remainingText}</Text>
-            {titleContent}
-          </View>
-        ) : titleContent}
+        <View style={styles.measurementTitleGroup}>
+          {/* 횟수 문구가 없어도 동일한 한 줄 높이를 유지해 두 카드의 아이콘 위치를 맞춘다. */}
+          <Text style={styles.measurementRemainingText}>{remainingText ?? ' '}</Text>
+          {titleContent}
+        </View>
         <View
           style={[
             styles.measurementBadge,
@@ -122,7 +131,7 @@ export default function MeasurementCard({
             minimumFontScale={0.78}
             ellipsizeMode="clip"
           >
-            {i18n.t(subtitle)}
+            {displaySubtitle}
           </Text>
         </View>
       </View>
