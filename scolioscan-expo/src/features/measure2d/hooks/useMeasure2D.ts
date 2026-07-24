@@ -26,6 +26,12 @@ type ManualCaptureResult = {
   evaluation: LandmarkEvaluation;
 };
 
+type ManualCaptureAttemptResult =
+  | { status: 'captured'; result: ManualCaptureResult }
+  | { status: 'busy-timeout' }
+  | { status: 'failed' }
+  | { status: 'ignored' };
+
 type AutoToast = {
   message: string;
   tone: 'info' | 'success' | 'warning' | 'error';
@@ -37,7 +43,7 @@ const AUTO_CHECK_INTERVAL_MS = 750;
 // 자동 촬영 시간
 const AUTO_HOLD_MS = 1600;
 // 수동 촬영 클릭 후, 이미 자동 체크 촬영 진행 중이면 얼마까지 기다릴지 정하는 시간
-const MANUAL_WAIT_TIMEOUT_MS = 1500;
+const MANUAL_WAIT_TIMEOUT_MS = 8000;
 // 촬영 타임아웃 상수 (카메라 촬영 요청에 걸리는 최대 시간)
 const CAMERA_CAPTURE_TIMEOUT_MS = 5000;
 
@@ -87,6 +93,7 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
   const captureInFlightRef = useRef(false);
   const manualInProgressRef = useRef(false);
   const autoPausedRef = useRef(false);
+  const autoRunGenerationRef = useRef(0);
   const alignedSinceRef = useRef<number | null>(null);
   const autoCaptureCompletedRef = useRef(false);
   const toastKeyRef = useRef(0);
@@ -105,8 +112,9 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
 
   const pauseAutoCapture = useCallback(() => {
     // 사용자가 직접 촬영을 누른 동안 자동 촬영 루프가 끼어들지 못하게 잠시 멈춘다.
-    // 수동 촬영 결과를 기다리는 동안 자동 체크가 새로 시작되지 않도록 외부에서 잠글 수 있다.
+    // 이미 시작된 자동 분석 결과도 재개 시점과 관계없이 폐기하도록 실행 세대를 변경한다.
     autoPausedRef.current = true;
+    autoRunGenerationRef.current += 1;
     resetAutoAlignment();
   }, [resetAutoAlignment]);
 
@@ -158,7 +166,17 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
 
 
 
-    if (!photo?.uri || !guidePoints || !guideRect || !previewSize) {
+    if (!photo?.uri) {
+      console.log('[measure2d] 수동 촬영 실패 원인: 사진 URI 없음');
+      return null;
+    }
+
+    if (!guidePoints || !guideRect || !previewSize) {
+      console.log('[measure2d] 수동 촬영 실패 원인: 가이드 좌표 또는 화면 크기 미준비', {
+        hasGuidePoints: Boolean(guidePoints),
+        hasGuideRect: Boolean(guideRect),
+        hasPreviewSize: Boolean(previewSize),
+      });
       return null;
     }
 
@@ -221,37 +239,50 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
     }
   }, [camera, guidePoints, guideRect, previewSize]);
 
-  const handleManualCapture = useCallback(async (): Promise<ManualCaptureResult | null> => {
-    // 자동 분석 요청이 진행 중이면 잠깐 기다린 뒤, 수동 촬영 결과를 우선 처리한다.
-    // 사용자가 직접 촬영하면 자동 체크 루프와 겹치지 않도록 잠시 기다린 뒤 수동 촬영을 우선한다.
+  const handleManualCapture = useCallback(async (): Promise<ManualCaptureAttemptResult> => {
+    // 빠른 연속 탭은 새 촬영이나 실패 안내를 만들지 않고 기존 수동 요청만 유지한다.
+    if (manualInProgressRef.current) {
+      return { status: 'ignored' };
+    }
+
+    // 이미 시작된 자동 분석은 제한 시간 동안 마무리한 뒤 수동 촬영을 우선 실행한다.
     manualInProgressRef.current = true;
     resetAutoAlignment();
     if (!cameraReady) {
+      console.log('[measure2d] 수동 촬영 실패 원인: 카메라 미준비');
       console.error('[measure2d] 수동 촬영 중단: 카메라가 아직 준비되지 않음');
       manualInProgressRef.current = false;
-      return null;
+      return { status: 'failed' };
     }
+
     const waitStart = Date.now();
     while (captureInFlightRef.current && Date.now() - waitStart < MANUAL_WAIT_TIMEOUT_MS) {
       await new Promise((resolve) => setTimeout(resolve, 60));
     }
 
-    if (loading || captureInFlightRef.current) {
+    if (captureInFlightRef.current) {
+      console.log('[measure2d] 수동 촬영 지연 원인: 자동 촬영 또는 분석이 제한 시간 안에 끝나지 않음', {
+        captureInFlight: captureInFlightRef.current,
+        waitedMs: Date.now() - waitStart,
+      });
       manualInProgressRef.current = false;
-      return null;
+      return { status: 'busy-timeout' };
     }
 
     setLoading(true);
     captureInFlightRef.current = true;
     try {
       // 최종 crop 좌표와 이미지 방향이 일치하도록 처리된 사진을 사용한다.
-      return await analyzeCapture(MANUAL_CHECK_QUALITY, false);
+      const result = await analyzeCapture(MANUAL_CHECK_QUALITY, false);
+      return result
+        ? { status: 'captured', result }
+        : { status: 'failed' };
     } finally {
       captureInFlightRef.current = false;
       setLoading(false);
       manualInProgressRef.current = false;
     }
-  }, [analyzeCapture, cameraReady, loading, resetAutoAlignment]);
+  }, [analyzeCapture, cameraReady, resetAutoAlignment]);
   // 자동 촬영
   useEffect(() => {
     if (!cameraReady || !guidePoints || !guideRect || !previewSize) {
@@ -276,11 +307,18 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
         return;
       }
 
+      const autoRunGeneration = autoRunGenerationRef.current;
       captureInFlightRef.current = true;
       try {
         const result = await analyzeCapture(AUTO_CHECK_QUALITY, false);
 
-        if (!result || disposed || autoPausedRef.current || manualInProgressRef.current) {
+        if (
+          !result ||
+          disposed ||
+          autoPausedRef.current ||
+          manualInProgressRef.current ||
+          autoRunGeneration !== autoRunGenerationRef.current
+        ) {
           resetAutoAlignment();
           return;
         }
@@ -325,7 +363,12 @@ export function useMeasure2D({ camera, guidePoints, guideRect, previewSize, came
             shutterSound: false,
           });
 
-          const captureCompleted = Boolean(finalPhoto?.uri && !disposed);
+          const captureCompleted = Boolean(
+            finalPhoto?.uri &&
+            !disposed &&
+            !autoPausedRef.current &&
+            autoRunGeneration === autoRunGenerationRef.current
+          );
 
           if (captureCompleted) {
               setAutoCaptureResult({

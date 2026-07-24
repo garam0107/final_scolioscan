@@ -316,6 +316,7 @@ const screenText: Record<string, ScreenTextPair> = {
   '생년월일을 올바르게 입력해주세요.': ['Enter a valid date of birth.', '正しい生年月日を入力してください。'],
   '성별을 선택해주세요.': ['Select your gender.', '性別を選択してください。'],
   '촬영에 실패했습니다. 다시 시도해주세요.': ['Capture failed. Please try again.', '撮影に失敗しました。もう一度お試しください。'],
+  '카메라 처리 중입니다. 잠시 후 다시 시도해주세요.': ['The camera is still processing. Please try again shortly.', 'カメラで処理中です。しばらくしてからもう一度お試しください。'],
   '좋아요. 이 자세로 촬영할게요!': ["Great. We'll capture in this position!", 'その姿勢で撮影します！'],
   '조금 더 가까이 와주세요.': ['Move a little closer.', 'もう少し近づいてください。'],
   '조금 더 멀리 떨어져주세요.': ['Move a little farther away.', 'もう少し離れてください。'],

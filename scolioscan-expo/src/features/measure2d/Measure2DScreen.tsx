@@ -1,11 +1,12 @@
 import { i18n } from '@/src/i18n';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import ToastAlert from '@/src/components/ui/ToastAlert';
+import { Colors } from '@/src/constants/theme';
 import { createGuidelineGeometry } from './domain/guidelineGeometry';
 import { createExpoCameraAdapter } from './camera/expoCameraAdapter';
 import { useMeasure2D } from './hooks/useMeasure2D';
@@ -45,6 +46,7 @@ export default function Measure2DScreen() {
   const [toastTone, setToastTone] = useState<ToastTone>('info');
   const [manualGuideChip, setManualGuideChip] = useState<GuideChipState | null>(null);
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  const manualSubmittingRef = useRef(false);
   const [toastKey, setToastKey] = useState(0);
   const camera = useMemo(() => createExpoCameraAdapter(cameraRef), []);
   const guidelineGeometry = useMemo(() => {
@@ -185,19 +187,35 @@ export default function Measure2DScreen() {
 
   const handlePressCapture = async () => {
     // 수동 촬영은 자동 촬영을 잠시 멈추고, 현재 사진이 가이드 조건을 만족할 때만 분석 요청으로 이어진다.
-    // 셔터 버튼은 자동 촬영과 같은 판정 로직을 사용하되, 사용자가 누른 시점의 사진을 즉시 검사한다.
+    // 상태 렌더링 전에 들어오는 빠른 연속 탭도 동기 ref로 조용히 무시한다.
+    if (manualSubmittingRef.current) {
+      return;
+    }
+
     let shouldResumeAuto = true;
+    manualSubmittingRef.current = true;
     pauseAutoCapture();
     setManualSubmitting(true);
 
     try {
-      const result = await handleManualCapture();
+      const attempt = await handleManualCapture();
 
-      if (!result) {
+      if (attempt.status === 'ignored') {
+        return;
+      }
+
+      if (attempt.status === 'busy-timeout') {
+        showToast(i18n.t("카메라 처리 중입니다. 잠시 후 다시 시도해주세요."), 'info');
+        return;
+      }
+
+      if (attempt.status === 'failed') {
+        console.log('[measure2d] 수동 촬영 실패 토스트 표시');
         showToast(i18n.t("촬영에 실패했습니다. 다시 시도해주세요."), 'error');
         return;
       }
 
+      const result = attempt.result;
       const nextEvaluation = result.evaluation;
       const firstReason = nextEvaluation.reasons[0] ?? '';
 
@@ -228,6 +246,7 @@ export default function Measure2DScreen() {
 
       showManualGuideChip(firstReason || '가이드라인에 맞춰 다시 서주세요.', 'warning');
     } finally {
+      manualSubmittingRef.current = false;
       setManualSubmitting(false);
       if (shouldResumeAuto) {
         resumeAutoCapture();
@@ -329,7 +348,11 @@ export default function Measure2DScreen() {
             onPress={handlePressCapture}
             disabled={captureActionDisabled}
           >
-            <View style={styles.shutterInner} />
+            {manualSubmitting ? (
+              <ActivityIndicator color={Colors.primary[500]} />
+            ) : (
+              <View style={styles.shutterInner} />
+            )}
           </Pressable>
         </View>
       </SafeAreaView>
