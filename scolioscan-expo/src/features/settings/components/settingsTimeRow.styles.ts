@@ -24,11 +24,12 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     ...textFont,
-    color: '#646F85',
+    color: Colors.gray[500],
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
   },
+
   timePill: {
     alignItems: 'center',
     backgroundColor: '#F2F4F6',
@@ -43,9 +44,10 @@ const styles = StyleSheet.create({
   timePillPressed: {
     backgroundColor: Colors.gray[75],
   },
+  // 시간 텍스트
   timePillText: {
     ...textFont,
-    color: '#24272C',
+    color: 'red',
     fontSize: 12,
     fontWeight: '400',
     includeFontPadding: false,
@@ -53,10 +55,36 @@ const styles = StyleSheet.create({
   },
   timeSeparator: {
     ...textFont,
-    color: '#646F85',
+    color: 'red',
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 18,
+  },
+  notToggleTimePill : {
+    backgroundColor : Colors.gray[25],
+    borderColor : Colors.gray[75]
+  },
+  toggleTimePill : {
+    backgroundColor : Colors.gray[50],
+    borderColor : Colors.gray[100]
+  },
+  notToggleText: {
+    color : Colors.gray[100]
+  },
+  toggleText: {
+    color : Colors.gray[900]
+  },
+  notToggleTimeSeparator: {
+    color : Colors.gray[100]
+  },
+  toggleTimeSeparator: {
+    color : Colors.gray[500]
+  },
+  notToggleTimeLabel : {
+    color: Colors.gray[100]
+  },
+  toggleTimeLabel : {
+    color: Colors.gray[500]
   },
 });
 

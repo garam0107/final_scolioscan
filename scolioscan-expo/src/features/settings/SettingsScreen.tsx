@@ -354,6 +354,7 @@ export default function SettingsScreen() {
             endMinute={nightEndMinute}
             formatTimeLabel={formatTimeLabel}
             onPress={() => setSettingsSheetType('nightMode')}
+            isToggled={nightModeEnabled}
           />
           {/* API 개발 되면 추가 */}
           {/* <SettingRow
