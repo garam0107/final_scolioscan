@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
   banner: {
     height: 112,
     overflow: 'hidden',
-    backgroundColor: '#EAF7F6',
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -84,27 +84,30 @@ Information may be provided with the user's explicit consent, when connecting to
 8. Processing Contractors
 The Company may outsource processing for operation of the Service, including cloud services such as AWS or GCP and messaging services such as Firebase.
 
-9. Overseas Transfer
+9. Advertising Services and Third-Party Processing
+The Company uses Google AdMob to provide in-app advertisements, measure advertising performance, and prevent invalid activity. In this process, advertising identifiers, IP addresses, device information, and app usage data may be transmitted to and processed by Google. The availability of personalized ads and privacy choices can be managed through the in-app privacy choices screen where required by applicable law and the user's region. Google Privacy Policy: https://policies.google.com/privacy
+
+10. Overseas Transfer
 Information may be transferred abroad while providing the Service. Example destination: United States; information transferred: service usage data; purpose: service operation.
 
-10. User Rights
+11. User Rights
 Users may request access, correction, deletion, or suspension of processing of their personal information.
 
-11. Cookies and Tracking Technologies
+12. Cookies and Tracking Technologies
 The Company may use cookies and SDKs to improve the user experience.
 
-12. Security Measures
+13. Security Measures
 The Company uses data encryption, access controls, and security systems.
 
-13. Children's Privacy
+14. Children's Privacy
 Children under 14 require consent from a legal representative.
 
-14. Privacy Officer
+15. Privacy Officer
 Name: Hee-chang Lim
 Title: CEO
 Email: ceo@nextvinetech.com
 
-15. Policy Changes
+16. Policy Changes
 This policy may be revised in response to changes in laws or the Service. Advance notice will be provided.`,
   'agreements.sensitive.label': '(Required) Consent to Collection and Use of Sensitive Information',
   'agreements.sensitive.body': `The Company collects and uses health-related information to improve convenience when using the Service.
@@ -236,27 +239,30 @@ const ja = {
 8. 取扱いの委託
 サービス運営のため、AWS・GCPなどのクラウドサービスやFirebaseなどのメッセージングサービスへ処理を委託する場合があります。
 
-9. 国外移転
+9. 広告サービスおよび第三者による取扱い
+当社は、アプリ内広告の提供、広告効果の測定および不正利用の防止のため、Google AdMobを利用します。この過程で、広告ID、IPアドレス、端末情報およびアプリ利用情報がGoogleに送信され、処理される場合があります。パーソナライズド広告の可否およびプライバシーに関する選択は、適用法令および利用者の地域に応じて必要な場合、アプリ内のプライバシー選択画面で管理できます。Google プライバシーポリシー: https://policies.google.com/privacy
+
+10. 国外移転
 サービス提供の過程で情報が国外へ移転される場合があります。移転先の例：米国、移転項目：サービス利用データ、目的：サービス運営。
 
-10. ユーザーの権利
+11. ユーザーの権利
 ユーザーは個人情報の閲覧、訂正、削除、処理停止を請求できます。
 
-11. Cookieおよび追跡技術
+12. Cookieおよび追跡技術
 ユーザー体験の改善のため、CookieおよびSDKを使用する場合があります。
 
-12. 安全管理措置
+13. 安全管理措置
 データ暗号化、アクセス権限管理、セキュリティシステムの運用を実施します。
 
-13. 児童の個人情報
+14. 児童の個人情報
 14歳未満の児童は法定代理人の同意が必要です。
 
-14. 個人情報保護責任者
+15. 個人情報保護責任者
 氏名：イム・ヒチャン
 役職：CEO
 メール：ceo@nextvinetech.com
 
-15. ポリシーの変更
+16. ポリシーの変更
 法令またはサービスの変更に応じて改定する場合があり、事前に告知します。`,
   'agreements.sensitive.label': '（必須）要配慮情報の収集・利用への同意',
   'agreements.sensitive.body': `会社は、サービス利用の利便性向上のため、ユーザーの健康関連情報を収集・利用します。

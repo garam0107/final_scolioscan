@@ -174,11 +174,20 @@
           "android": {
             "extraMavenRepos": [
               "https://devrepo.kakao.com/nexus/content/groups/public/"
-            ]
+            ],
+            "extraProguardRules": "-keep class com.google.android.gms.internal.consent_sdk.** { *; }"
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3142664726693803~7730146315",
+          "iosAppId": "ca-app-pub-3142664726693803~3651446298",
+          "delayAppMeasurementInit": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

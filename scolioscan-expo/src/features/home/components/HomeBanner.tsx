@@ -1,5 +1,9 @@
-import { i18n } from '@/src/i18n';
-import { Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { useAds } from '@/src/contexts/AdsContext';
+import {
+  BannerAd,
+  BannerAdSize,
+} from 'react-native-google-mobile-ads';
 import styles from '@/src/features/home/styles/homeBanner.styles';
 
 type HomeBannerProps = {
@@ -7,12 +11,28 @@ type HomeBannerProps = {
   height: number;
 };
 
+const TEST_AD_ID = Platform.select({
+  android: 'ca-app-pub-3940256099942544/9214589741',
+  ios: 'ca-app-pub-3940256099942544/2435281174',
+})!;
 export default function HomeBanner({ width, height }: HomeBannerProps) {
+  const { isAdsReady } = useAds();
+
   return (
     <View style={styles.bannerWrap}>
       <View style={[styles.bannerPager, { width, height }]}>
         <View style={[styles.banner, { width, height }]}>
-          <Text style={styles.bannerPlaceholderText}>{i18n.t("광고 준비중")}</Text>
+          {isAdsReady ? (
+            <BannerAd
+              unitId={TEST_AD_ID}
+              size={BannerAdSize.INLINE_ADAPTIVE_BANNER}
+              width={width}
+              maxHeight={height}
+              onAdFailedToLoad={(error) => {
+                console.warn('[admob] 홈 테스트 배너 로드 실패', error);
+              }}
+            />
+          ) : null}
         </View>
       </View>
     </View>

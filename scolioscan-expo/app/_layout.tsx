@@ -6,10 +6,13 @@ import { StyleSheet, Text, TextInput } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import NaverLogin from '@react-native-seoul/naver-login'
+import { AdsProvider } from '@/src/contexts/AdsContext';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { i18n, initializeLanguage } from '@/src/i18n';
+// 애드몹 SDK
+import mobileAds, { AdsConsent } from 'react-native-google-mobile-ads';
 
 // const pretendardFont = require('../assets/fonts/PretendardVariable.ttf');
 
@@ -56,7 +59,36 @@ export default function RootLayout() {
   const [museoLoaded] = useMuseoFonts({
     MuseoModerno_700Bold,
   });
+  const mobileAdsInitializedRef = useRef(false);
+  const [isAdsReady, setIsAdsReady] = useState(false);
 
+  useEffect(() => {
+    const startGoogleMobileAds = async () => {
+      try {
+        const { canRequestAds } = await AdsConsent.getConsentInfo();
+
+        if (!canRequestAds || mobileAdsInitializedRef.current) {
+          return;
+        }
+
+        mobileAdsInitializedRef.current = true;
+
+        await mobileAds().initialize();
+        setIsAdsReady(true);
+      } catch (error) {
+        console.warn('[admob] 광고 SDK 초기화 실패', error);
+      }
+    };
+
+    // 앱 실행마다 최신 동의 상태를 확인하고, 필요하면 UMP 동의 화면을 표시한다.
+    void AdsConsent.gatherConsent()
+      .catch((error) => {
+        console.warn('[ump] 개인정보 동의 처리 실패', error);
+      })
+      .finally(() => {
+        void startGoogleMobileAds();
+      });
+  }, []);
   useEffect(() => {
     // 앱을 열 때 저장된 언어를 먼저 복원하고, 없으면 기기 언어를 적용한다.
     void initializeLanguage();
@@ -93,15 +125,16 @@ export default function RootLayout() {
   return (
     <KeyboardProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AuthProvider>
-          <Stack
-            key={`language-${languageRevision}`}
-            screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: '#FFFFFF',
-            },
-          }}>
+        <AdsProvider isAdsReady={isAdsReady}>
+          <AuthProvider>
+            <Stack
+              key={`language-${languageRevision}`}
+              screenOptions={{
+              headerShown: false,
+              contentStyle: {
+                backgroundColor: '#FFFFFF',
+              },
+            }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="intro" />
@@ -129,9 +162,10 @@ export default function RootLayout() {
             <Stack.Screen name="profile/edit" />
             <Stack.Screen name="settings/contact" />
             <Stack.Screen name="oauth/index" options={{ gestureEnabled: false }} />
-          </Stack>
-          {/* {hideTopSeparator ? null : <TopSeparator />} */}
-        </AuthProvider>
+            </Stack>
+            {/* {hideTopSeparator ? null : <TopSeparator />} */}
+          </AuthProvider>
+        </AdsProvider>
         <StatusBar style="auto" />
       </ThemeProvider>
     </KeyboardProvider>
