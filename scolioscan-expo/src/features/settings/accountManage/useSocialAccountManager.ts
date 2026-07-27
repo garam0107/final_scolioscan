@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { login as kakaoLogin, unlink as unlinkKakao } from '@react-native-seoul/kakao-login';
 import NaverLogin from '@react-native-seoul/naver-login';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { i18n } from '@/src/i18n';
 
 import { authAPI } from '@/src/api/auth';
@@ -24,6 +24,9 @@ type UseSocialAccountManagerParams = {
 };
 
 const PENDING_SOCIAL_UNLINK_STORAGE_KEY = 'pending_social_unlinks';
+// 사용자별로 대기 중인 연동 해제 목록을 분리해 다른 계정에 적용되지 않도록 한다.
+const getPendingSocialUnlinksStorageKey = (userId: string) =>
+  `${PENDING_SOCIAL_UNLINK_STORAGE_KEY}:${userId}`;
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
@@ -37,6 +40,8 @@ export function useSocialAccountManager({
   const [syncingPendingUnlinks, setSyncingPendingUnlinks] = useState(false);
   const [socialSheetProvider, setSocialSheetProvider] = useState<SocialProvider | null>(null);
   const [socialSheetMode, setSocialSheetMode] = useState<SocialSheetMode>('unlink');
+  const activeUserIdRef = useRef<string | null>(user?.id ? String(user.id) : null);
+  activeUserIdRef.current = user?.id ? String(user.id) : null;
 
   useEffect(() => {
     // 계정 관리 화면에서도 구글 SDK 로그인 화면을 바로 띄울 수 있게 설정을 맞춘다.
@@ -56,12 +61,14 @@ export function useSocialAccountManager({
       return;
     }
 
-    void retryPendingSocialUnlinks();
+    // 기존 전역 키는 소유자를 확인할 수 없으므로 재시도하지 않고 폐기한다.
+    void AsyncStorage.removeItem(PENDING_SOCIAL_UNLINK_STORAGE_KEY);
+    void retryPendingSocialUnlinks(String(user.id));
   }, [syncingPendingUnlinks, unlinkingProvider, user?.id]);
 
-  async function loadPendingSocialUnlinks() {
+  async function loadPendingSocialUnlinks(userId: string) {
     // 부분 성공 상태를 복구할 수 있게 provider 목록을 로컬에 저장한다.
-    const rawValue = await AsyncStorage.getItem(PENDING_SOCIAL_UNLINK_STORAGE_KEY);
+    const rawValue = await AsyncStorage.getItem(getPendingSocialUnlinksStorageKey(userId));
 
     if (!rawValue) {
       return [] as SocialProvider[];
@@ -83,24 +90,27 @@ export function useSocialAccountManager({
     }
   }
 
-  async function savePendingSocialUnlinks(providers: SocialProvider[]) {
+  async function savePendingSocialUnlinks(userId: string, providers: SocialProvider[]) {
     // 같은 provider가 중복 저장되지 않게 정리해서 보관한다.
     const uniqueProviders = Array.from(new Set(providers));
-    await AsyncStorage.setItem(PENDING_SOCIAL_UNLINK_STORAGE_KEY, JSON.stringify(uniqueProviders));
+    await AsyncStorage.setItem(
+      getPendingSocialUnlinksStorageKey(userId),
+      JSON.stringify(uniqueProviders),
+    );
   }
 
-  async function addPendingSocialUnlink(provider: SocialProvider) {
-    const providers = await loadPendingSocialUnlinks();
-    await savePendingSocialUnlinks([...providers, provider]);
+  async function addPendingSocialUnlink(userId: string, provider: SocialProvider) {
+    const providers = await loadPendingSocialUnlinks(userId);
+    await savePendingSocialUnlinks(userId, [...providers, provider]);
   }
 
-  async function removePendingSocialUnlink(provider: SocialProvider) {
-    const providers = await loadPendingSocialUnlinks();
-    await savePendingSocialUnlinks(providers.filter((item) => item !== provider));
+  async function removePendingSocialUnlink(userId: string, provider: SocialProvider) {
+    const providers = await loadPendingSocialUnlinks(userId);
+    await savePendingSocialUnlinks(userId, providers.filter((item) => item !== provider));
   }
 
-  async function retryPendingSocialUnlinks() {
-    const providers = await loadPendingSocialUnlinks();
+  async function retryPendingSocialUnlinks(userId: string) {
+    const providers = await loadPendingSocialUnlinks(userId);
 
     if (providers.length === 0) {
       return;
@@ -112,10 +122,18 @@ export function useSocialAccountManager({
       let hasResolvedPendingUnlink = false;
 
       for (const provider of providers) {
+        // 계정이 전환되면 이전 계정의 재시도를 즉시 중단해 현재 계정에 적용되지 않게 한다.
+        if (activeUserIdRef.current !== userId) {
+          break;
+        }
+
         try {
           // SDK는 이미 해제됐을 수 있으므로 DB row 삭제만 멱등적으로 재시도한다.
           await userAPI.deleteSocialAccount(provider);
-          await removePendingSocialUnlink(provider);
+          if (activeUserIdRef.current !== userId) {
+            break;
+          }
+          await removePendingSocialUnlink(userId, provider);
           hasResolvedPendingUnlink = true;
         } catch {
           // 실패한 항목은 다음 진입에서도 다시 재시도할 수 있게 남겨둔다.
@@ -375,12 +393,21 @@ export function useSocialAccountManager({
       return;
     }
 
+    const userId = user?.id ? String(user.id) : null;
+    if (!userId) {
+      showToast('로그인 정보를 확인할 수 없습니다.', 'error');
+      return;
+    }
+
     try {
       setUnlinkingProvider(provider);
       await unlinkSocialWithSdk(provider);
-      await addPendingSocialUnlink(provider);
+      if (activeUserIdRef.current !== userId) {
+        return;
+      }
+      await addPendingSocialUnlink(userId, provider);
       await userAPI.deleteSocialAccount(provider);
-      await removePendingSocialUnlink(provider);
+      await removePendingSocialUnlink(userId, provider);
       await refreshSession();
       showToast(i18n.t('social.unlinkComplete', {
         provider: i18n.t(getSocialProviderLabel(provider)),

@@ -246,6 +246,18 @@ async def delete_my_account(
         if user is None:
             return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+        profile_image_key = user.profile_image
+        if profile_image_key:
+            try:
+                # 계정 삭제 전에 S3 프로필 이미지를 먼저 삭제해 고아 객체가 남지 않도록 한다.
+                delete_s3_object(profile_image_key)
+            except Exception as error:
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="프로필 이미지 삭제에 실패했습니다.",
+                ) from error
+
         db.delete(user)
         db.commit()
 
