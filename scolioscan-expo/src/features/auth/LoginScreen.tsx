@@ -34,6 +34,7 @@ import styles from './login.styles';
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
 function isValidEmail(email: string) {
   // 서버 요청 전에 기본 이메일 형식을 먼저 확인해 불필요한 요청을 줄인다.
@@ -199,6 +200,7 @@ export default function LoginScreen() {
     // 구글 SDK가 id_token을 반환하도록 웹 클라이언트 ID를 설정한다.
     GoogleSignin.configure({
       webClientId: GOOGLE_WEB_CLIENT_ID,
+      iosClientId: GOOGLE_IOS_CLIENT_ID,
     });
   }, []);
 

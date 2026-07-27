@@ -25,6 +25,7 @@ type UseSocialAccountManagerParams = {
 
 const PENDING_SOCIAL_UNLINK_STORAGE_KEY = 'pending_social_unlinks';
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
 export function useSocialAccountManager({
   refreshSession,
@@ -45,6 +46,7 @@ export function useSocialAccountManager({
 
     GoogleSignin.configure({
       webClientId: GOOGLE_WEB_CLIENT_ID,
+      iosClientId: GOOGLE_IOS_CLIENT_ID,
     });
   }, []);
 
