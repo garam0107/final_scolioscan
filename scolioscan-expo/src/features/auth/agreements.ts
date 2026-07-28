@@ -128,7 +128,7 @@ export const AGREEMENTS: AgreementItem[] = [
 
 8. 처리 위탁
 회사는 서비스 운영을 위해 개인정보 처리를 위탁할 수 있습니다.
-  • 클라우드 서비스: [AWS/GCP]
+  • 클라우드 서비스: Amazon Web Services, Inc. (AWS)
 
 9. 광고 서비스 및 제3자 처리
 회사는 앱 내 광고 제공, 광고 성과 측정 및 부정 사용 방지를 위해 Google AdMob을 이용합니다.

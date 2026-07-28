@@ -11,9 +11,9 @@ type HomeBannerProps = {
   height: number;
 };
 
-const TEST_AD_ID = Platform.select({
-  android: 'ca-app-pub-3940256099942544/9214589741',
-  ios: 'ca-app-pub-3940256099942544/2435281174',
+const AD_ID = Platform.select({
+  android: 'ca-app-pub-3142664726693803/5115591269',
+  ios: 'ca-app-pub-3142664726693803/3802509592',
 })!;
 export default function HomeBanner({ width, height }: HomeBannerProps) {
   const { isAdsReady } = useAds();
@@ -24,7 +24,7 @@ export default function HomeBanner({ width, height }: HomeBannerProps) {
         <View style={[styles.banner, { width, height }]}>
           {isAdsReady ? (
             <BannerAd
-              unitId={TEST_AD_ID}
+              unitId={AD_ID}
               size={BannerAdSize.INLINE_ADAPTIVE_BANNER}
               width={width}
               maxHeight={height}

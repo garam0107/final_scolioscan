@@ -20,7 +20,7 @@ const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
 // 피그마의 블러와 외곽 그림자 효과를 유지하기 위해 차트는 PNG로 표시한다.
 const loadingChartImage4x = require('../../../assets/icons/home/loading_chart_4x.png');
 const loadingMessages = [
-  'AI 의사가 진단하는 중이에요',
+  'AI가 분석중이에요',
   '척추 각도 정보를 확인하고 있어요',
   '최근 측정 데이터와 비교하고 있어요',
   '분석 결과를 정리하고 있어요',
