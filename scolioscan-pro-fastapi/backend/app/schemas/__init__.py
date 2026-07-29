@@ -4,6 +4,7 @@ from .curvature import BackType, CurvatureMeasurementResponse, Severity
 from .octomo import OctomoIssueCodeRequest, OctomoIssueCodeResponse, OctomoVerifyRequest, OctomoVerifyResponse
 from .rotation import RotationMeasurementCreate, RotationMeasurementResponse, SeverityZone, compute_zone
 from .social_auth import (
+    AppleVerifyRequest,
     GoogleVerifyRequest,
     KakaoVerifyRequest,
     NaverVerifyRequest,
@@ -69,6 +70,7 @@ __all__ = [
     "Severity",
     "BackType",
     "GoogleVerifyRequest",
+    "AppleVerifyRequest",
     "KakaoVerifyRequest",
     "NaverVerifyRequest",
     "SocialLinkCurrentRequest",

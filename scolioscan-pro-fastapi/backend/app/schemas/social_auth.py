@@ -4,7 +4,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
-SocialProvider = Literal["google", "kakao", "naver"]
+SocialProvider = Literal["google", "kakao", "naver", "apple"]
 SocialTicketExchangeStatus = Literal["login_success", "need_account_decision"]
 
 
@@ -22,6 +22,13 @@ class KakaoVerifyRequest(BaseModel):
 
 class NaverVerifyRequest(BaseModel):
     access_token: str = Field(..., min_length=1)
+    device_id: str = Field(..., min_length=1, max_length=128)
+    device_name: str = Field(..., min_length=1, max_length=128)
+
+
+class AppleVerifyRequest(BaseModel):
+    identity_token: str = Field(..., min_length=1)
+    authorization_code: str = Field(..., min_length=1)
     device_id: str = Field(..., min_length=1, max_length=128)
     device_name: str = Field(..., min_length=1, max_length=128)
 

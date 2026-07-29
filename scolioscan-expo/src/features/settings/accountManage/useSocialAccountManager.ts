@@ -2,7 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { login as kakaoLogin, unlink as unlinkKakao } from '@react-native-seoul/kakao-login';
 import NaverLogin from '@react-native-seoul/naver-login';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { i18n } from '@/src/i18n';
 
 import { authAPI } from '@/src/api/auth';
@@ -83,7 +85,10 @@ export function useSocialAccountManager({
 
       return parsedValue.filter(
         (provider): provider is SocialProvider =>
-          provider === 'google' || provider === 'naver' || provider === 'kakao',
+          provider === 'google' ||
+          provider === 'naver' ||
+          provider === 'kakao' ||
+          provider === 'apple',
       );
     } catch {
       return [] as SocialProvider[];
@@ -151,13 +156,15 @@ export function useSocialAccountManager({
   function getSocialProviderLabel(provider: SocialProvider) {
     if (provider === 'google') return '구글';
     if (provider === 'naver') return '네이버';
-    return '카카오';
+    if (provider === 'kakao') return '카카오';
+    return '애플';
   }
 
   function getSocialProviderEmail(provider: SocialProvider) {
     if (provider === 'google') return user?.social_accounts.google.email ?? null;
     if (provider === 'naver') return user?.social_accounts.naver.email ?? null;
-    return user?.social_accounts.kakao.email ?? null;
+    if (provider === 'kakao') return user?.social_accounts.kakao.email ?? null;
+    return user?.social_accounts.apple.email ?? null;
   }
 
   function extractSocialSdkErrorMessage(error: unknown) {
@@ -252,6 +259,31 @@ export function useSocialAccountManager({
       return response.data;
     }
 
+    if (provider === 'apple') {
+      if (Platform.OS !== 'ios' || !(await AppleAuthentication.isAvailableAsync())) {
+        throw new Error('이 기기에서는 애플 로그인을 사용할 수 없습니다.');
+      }
+
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!credential.identityToken || !credential.authorizationCode) {
+        throw new Error('애플 인증 정보를 받지 못했습니다.');
+      }
+
+      const response = await authAPI.verifyAppleSocialLogin({
+        identity_token: credential.identityToken,
+        authorization_code: credential.authorizationCode,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+
+      return response.data;
+    }
+
     const result = await NaverLogin.login();
     const successResponse = (result as { successResponse?: { accessToken?: string } }).successResponse;
     const failureResponse = (result as { failureResponse?: { message?: string; isCancel?: boolean } }).failureResponse;
@@ -316,6 +348,11 @@ export function useSocialAccountManager({
 
   async function unlinkSocialWithSdk(provider: SocialProvider) {
     // SDK 해제가 성공한 경우에만 백엔드 row 삭제 단계로 넘긴다.
+    if (provider === 'apple') {
+      // Apple authorization은 암호화 refresh token을 가진 서버에서 취소한다.
+      return;
+    }
+
     if (provider === 'google') {
       await GoogleSignin.revokeAccess();
       return;
@@ -342,6 +379,16 @@ export function useSocialAccountManager({
 
     if (provider === 'kakao') {
       await kakaoLogin();
+      return;
+    }
+
+    if (provider === 'apple') {
+      await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
       return;
     }
 
@@ -489,6 +536,20 @@ export function useSocialAccountManager({
           ? () => openSocialLinkSheet('kakao', user?.social_accounts.kakao.is_linked ? 'unlink' : 'link')
           : undefined,
     },
+    ...(Platform.OS === 'ios'
+      ? [{
+          provider: 'apple' as const,
+          isLinked: user?.social_accounts.apple.is_linked ?? false,
+          email: user?.social_accounts.apple.email ?? null,
+          onPress:
+            unlinkingProvider === null && !syncingPendingUnlinks
+              ? () => openSocialLinkSheet(
+                  'apple',
+                  user?.social_accounts.apple.is_linked ? 'unlink' : 'link',
+                )
+              : undefined,
+        }]
+      : []),
   ];
 
   return {

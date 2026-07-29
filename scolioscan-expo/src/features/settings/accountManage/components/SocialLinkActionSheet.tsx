@@ -5,6 +5,8 @@ import type { SocialProvider } from '@/src/types/user';
 import GoogleIcon from '../../../../../assets/icons/setting/setting_google.svg';
 import KakaoIcon from '../../../../../assets/icons/setting/setting_kakao.svg';
 import NaverIcon from '../../../../../assets/icons/setting/setting_naver.svg';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/src/constants/theme';
 
 type SocialLinkSheetMode = 'link' | 'unlink';
 
@@ -24,7 +26,8 @@ function getConfirmVariant(provider: SocialProvider, mode: SocialLinkSheetMode) 
 
   if (provider === 'google') return 'google';
   if (provider === 'naver') return 'naver';
-  return 'kakao';
+  if (provider === 'kakao') return 'kakao';
+  return 'primary';
 }
 export default function SocialLinkActionSheet({
   visible,
@@ -51,6 +54,10 @@ export default function SocialLinkActionSheet({
     kakao: {
       label: '카카오',
       icon: <KakaoIcon width={24} height={24} />,
+    },
+    apple: {
+      label: '애플',
+      icon: <Ionicons name="logo-apple" size={24} color={Colors.primary.black} />,
     },
   } as const;
 

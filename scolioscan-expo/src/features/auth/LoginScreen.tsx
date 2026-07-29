@@ -4,6 +4,7 @@ import { MuseoModerno_700Bold, useFonts as useMuseoFonts } from '@expo-google-fo
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
 import NaverLogin from '@react-native-seoul/naver-login';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { loadAsync } from 'expo-font';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -13,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   TouchableWithoutFeedback,
@@ -30,6 +32,7 @@ import KakaoIcon from '../../../assets/icons/kakao.svg';
 import LoginLogo from '../../../assets/icons/login_logo.svg';
 import NaverIcon from '../../../assets/icons/naver.svg';
 import styles from './login.styles';
+import { AppleLoginButtonTokens } from '@/src/constants/theme';
 
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
@@ -171,6 +174,7 @@ export default function LoginScreen() {
     verifyGoogleSocialLogin,
     verifyKakaoSocialLogin,
     verifyNaverSocialLogin,
+    verifyAppleSocialLogin,
     linkSocialAccount,
     isAuthenticated,
     loading: authLoading,
@@ -186,6 +190,7 @@ export default function LoginScreen() {
   const [toastKey, setToastKey] = useState(0);
   const [isSocialLinkLoginMode, setIsSocialLinkLoginMode] = useState(false);
   const [showSocialDecisionModal, setShowSocialDecisionModal] = useState(false);
+  const [appleLoginAvailable, setAppleLoginAvailable] = useState(false);
   const socialDecision = useAuthStore((state) => state.pendingSocialDecision);
   const setPendingSocialDecision = useAuthStore((state) => state.setPendingSocialDecision);
 
@@ -194,6 +199,33 @@ export default function LoginScreen() {
     loadAsync({ PretendardVariable: pretendardFont })
       .then(() => setPretendardLoaded(true))
       .catch(() => setPretendardLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    if (Platform.OS !== 'ios') {
+      return () => {
+        active = false;
+      };
+    }
+
+    // 실제 기기에서 Apple 인증 사용 가능 여부를 확인한 뒤에만 공식 버튼을 노출한다.
+    void AppleAuthentication.isAvailableAsync()
+      .then((isAvailable) => {
+        if (active) {
+          setAppleLoginAvailable(isAvailable);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setAppleLoginAvailable(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -250,7 +282,11 @@ export default function LoginScreen() {
       return '카카오';
     }
 
-    return '네이버';
+    if (socialDecision.provider === 'naver') {
+      return '네이버';
+    }
+
+    return '애플';
   }, [socialDecision]);
 
   const showToast = (message: string) => {
@@ -434,6 +470,48 @@ export default function LoginScreen() {
     }
   };
 
+  const handleAppleLogin = async () => {
+    if (isBusy || !appleLoginAvailable) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken || !credential.authorizationCode) {
+        throw new Error(i18n.t('애플 인증 정보를 받지 못했습니다.'));
+      }
+
+      const response = await verifyAppleSocialLogin(
+        credential.identityToken,
+        credential.authorizationCode,
+      );
+      await handleSocialAuthResponse(response);
+    } catch (error) {
+      const errorCode =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String((error as { code?: unknown }).code)
+          : '';
+
+      if (errorCode === 'ERR_REQUEST_CANCELED') {
+        return;
+      }
+
+      const message =
+        error instanceof Error ? error.message : i18n.t('애플 로그인에 실패했습니다.');
+      showToast(normalizeLoginToastMessage(message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleMoveToSocialSignup = () => {
     if (!socialDecision) {
       return;
@@ -488,7 +566,11 @@ export default function LoginScreen() {
         style={styles.keyboardWrap}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.content}>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <View style={styles.brandArea}>
               <LoginLogo width={60} height={60} />
               <Text style={styles.brandName}>ScolioScan</Text>
@@ -567,6 +649,23 @@ export default function LoginScreen() {
                   <KakaoIcon width={40} height={40} />
                 </Pressable>
               </View>
+              {appleLoginAvailable ? (
+                <View
+                  pointerEvents={isBusy ? 'none' : 'auto'}
+                  style={[
+                    styles.appleButtonWrap,
+                    isBusy ? styles.appleButtonDisabled : null,
+                  ]}
+                >
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                    cornerRadius={AppleLoginButtonTokens.radius}
+                    style={styles.appleButton}
+                    onPress={() => void handleAppleLogin()}
+                  />
+                </View>
+              ) : null}
 
               <View style={styles.signupPrompt}>
                 <Text style={styles.signupPromptText}>{i18n.t("아직 계정이 없으신가요?")}</Text>
@@ -593,7 +692,7 @@ export default function LoginScreen() {
                 </Pressable>
               </View>
             </View>
-          </View>
+          </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>

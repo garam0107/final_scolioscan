@@ -69,6 +69,7 @@ def create_social_temp_token(
     provider: str,
     provider_user_id: str,
     provider_email: str | None,
+    provider_refresh_token: str | None = None,
 ) -> str:
     """소셜 검증 이후 계정 연결 또는 신규 가입 단계로 넘길 임시 JWT를 발급한다."""
     expire = datetime.utcnow() + timedelta(minutes=settings.SOCIAL_TEMP_TOKEN_EXPIRE_MINUTES)
@@ -77,6 +78,7 @@ def create_social_temp_token(
         "provider": provider,
         "provider_user_id": provider_user_id,
         "provider_email": provider_email,
+        "provider_refresh_token": provider_refresh_token,
         "exp": expire,
     }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
@@ -100,8 +102,9 @@ def verify_social_temp_token(token: str) -> dict:
     provider = payload.get("provider")
     provider_user_id = payload.get("provider_user_id")
     provider_email = payload.get("provider_email")
+    provider_refresh_token = payload.get("provider_refresh_token")
 
-    if provider not in {"google", "kakao", "naver"}:
+    if provider not in {"google", "kakao", "naver", "apple"}:
         raise credentials_exception
 
     if not isinstance(provider_user_id, str) or not provider_user_id.strip():
@@ -109,11 +112,18 @@ def verify_social_temp_token(token: str) -> dict:
 
     if provider_email is not None and (not isinstance(provider_email, str) or not provider_email.strip()):
         raise credentials_exception
+    if provider_refresh_token is not None and (
+        not isinstance(provider_refresh_token, str) or not provider_refresh_token.strip()
+    ):
+        raise credentials_exception
+    if provider != "apple" and provider_refresh_token is not None:
+        raise credentials_exception
 
     return {
         "provider": provider,
         "provider_user_id": provider_user_id,
         "provider_email": provider_email,
+        "provider_refresh_token": provider_refresh_token,
     }
 
 
@@ -159,6 +169,7 @@ def create_social_account(
     provider_user_id: str,
     provider_email: str | None,
     linked_at: datetime,
+    provider_refresh_token: str | None = None,
 ) -> SocialAccount:
     """기존 사용자 또는 신규 사용자 계정에 소셜 연결 정보를 생성한다."""
     social_account = SocialAccount(
@@ -166,6 +177,8 @@ def create_social_account(
         provider=provider,
         provider_user_id=provider_user_id,
         provider_email=provider_email,
+        apple_refresh_token=provider_refresh_token if provider == "apple" else None,
+        apple_token_updated_at=linked_at if provider == "apple" else None,
         linked_at=linked_at,
         last_login_at=linked_at,
     )
@@ -181,6 +194,7 @@ def build_social_ticket_exchange_response(
     access_token: str | None = None,
     refresh_token: str | None = None,
     user: User | None = None,
+    provider_refresh_token: str | None = None,
 ) -> SocialTicketExchangeResponse:
     """ticket 교환 결과를 linked 여부에 따라 로그인 성공 또는 계정 선택 단계로 정리한다."""
     if social_account is None:
@@ -188,6 +202,7 @@ def build_social_ticket_exchange_response(
             provider=provider,
             provider_user_id=provider_user_id,
             provider_email=provider_email,
+            provider_refresh_token=provider_refresh_token,
         )
         return SocialTicketExchangeResponse(
             status="need_account_decision",

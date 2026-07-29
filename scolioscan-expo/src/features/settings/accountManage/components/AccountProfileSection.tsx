@@ -1,6 +1,6 @@
 import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import AccountInfoRow from '@/src/features/settings/accountManage/components/AccountInfoRow';
 import LoginMethodRow from '@/src/features/settings/accountManage/components/LoginMethodRow';
 import styles from '@/src/features/settings/accountManage/components/accountManageComponents.styles';
@@ -8,6 +8,7 @@ import type { SocialLoginMethod } from '@/src/features/settings/accountManage/co
 import GoogleIcon from '../../../../../assets/icons/setting/setting_google.svg';
 import KakaoIcon from '../../../../../assets/icons/setting/setting_kakao.svg';
 import NaverIcon from '../../../../../assets/icons/setting/setting_naver.svg';
+import { Colors } from '@/src/constants/theme';
 
 type AccountProfileSectionProps = {
   email: string;
@@ -33,6 +34,9 @@ export default function AccountProfileSection({
     { provider: 'google', isLinked: false },
     { provider: 'naver', isLinked: false },
     { provider: 'kakao', isLinked: false },
+    ...(Platform.OS === 'ios'
+      ? [{ provider: 'apple' as const, isLinked: false }]
+      : []),
   ];
 
   const providerMeta = {
@@ -47,6 +51,10 @@ export default function AccountProfileSection({
     kakao: {
       title: '카카오',
       icon: <KakaoIcon width={22} height={22} />,
+    },
+    apple: {
+      title: 'Apple',
+      icon: <Ionicons name="logo-apple" size={22} color={Colors.primary.black} />,
     },
   } as const;
 

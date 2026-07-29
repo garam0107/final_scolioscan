@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -17,11 +17,14 @@ class SocialAccount(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     provider = Column(
-        Enum("google", "kakao", "naver", name="social_provider"),
+        Enum("google", "kakao", "naver", "apple", name="social_provider"),
         nullable=False,
     )
     provider_user_id = Column(String(128), nullable=False)
     provider_email = Column(String(128), nullable=True)
+    # Apple refresh token은 전용 Fernet 키로 암호화한 문자열만 저장한다.
+    apple_refresh_token = Column(Text, nullable=True)
+    apple_token_updated_at = Column(DateTime(timezone=True), nullable=True)
     linked_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

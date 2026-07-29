@@ -14,7 +14,7 @@ export interface LoginResponse {
   email: string;
 }
 
-export type SocialProvider = 'google' | 'kakao' | 'naver';
+export type SocialProvider = 'google' | 'kakao' | 'naver' | 'apple';
 
 export interface SocialLoginSuccessResponse {
   status: 'login_success';
@@ -64,6 +64,13 @@ export interface KakaoVerifyRequest {
 
 export interface NaverVerifyRequest {
   access_token: string;
+  device_id: string;
+  device_name: string;
+}
+
+export interface AppleVerifyRequest {
+  identity_token: string;
+  authorization_code: string;
   device_id: string;
   device_name: string;
 }

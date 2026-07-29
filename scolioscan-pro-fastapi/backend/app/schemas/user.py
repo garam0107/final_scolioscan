@@ -108,6 +108,7 @@ class UserSocialAccountsResponse(BaseModel):
     google: SocialAccountInfo
     naver: SocialAccountInfo
     kakao: SocialAccountInfo
+    apple: SocialAccountInfo
 
 
 class UserResponse(BaseModel):

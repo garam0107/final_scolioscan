@@ -1,4 +1,4 @@
-export type SocialProvider = 'google' | 'naver' | 'kakao'
+export type SocialProvider = 'google' | 'naver' | 'kakao' | 'apple'
 
 export interface SocialAccountStatus {
   is_linked: boolean;
@@ -8,6 +8,7 @@ export interface UserSocialAccounts {
   google: SocialAccountStatus;
   naver: SocialAccountStatus;
   kakao: SocialAccountStatus;
+  apple: SocialAccountStatus;
 }
 export interface UserResponse {
   id: string;

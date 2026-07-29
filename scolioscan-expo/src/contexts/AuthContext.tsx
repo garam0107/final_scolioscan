@@ -35,6 +35,7 @@ type AuthContextValue = {
   verifyGoogleSocialLogin: (idToken: string) => Promise<SocialAuthResponse>;
   verifyKakaoSocialLogin: (accessToken: string) => Promise<SocialAuthResponse>;
   verifyNaverSocialLogin: (accessToken: string) => Promise<SocialAuthResponse>;
+  verifyAppleSocialLogin: (identityToken: string, authorizationCode: string) => Promise<SocialAuthResponse>;
   linkSocialAccount: (payload: Omit<SocialLinkExistingRequest, 'device_id' | 'device_name'>) => Promise<void>;
   signupWithSocialAccount: (payload: Omit<SocialSignupRequest, 'device_id' | 'device_name'>) => Promise<void>;
   checkEmail: (email: string) => Promise<boolean>;
@@ -290,6 +291,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyLoginSession]);
 
+  const verifyAppleSocialLogin = useCallback(async (
+    identityToken: string,
+    authorizationCode: string,
+  ) => {
+    try {
+      // Apple에서 받은 서명 토큰과 일회성 코드는 서버에서 함께 검증한다.
+      const deviceId = await getOrCreateDeviceId();
+      const deviceName = getCurrentDeviceLabel();
+      const response = await authAPI.verifyAppleSocialLogin({
+        identity_token: identityToken,
+        authorization_code: authorizationCode,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
+
+      if (response.data.status === 'login_success') {
+        await applyLoginSession(response.data);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw new Error(normalizeApiError(error));
+    }
+  }, [applyLoginSession]);
+
   const linkSocialAccount = useCallback(async (payload: Omit<SocialLinkExistingRequest, 'device_id' | 'device_name'>) => {
     try {
       // 기존 계정 연결도 최종적으로는 로그인 응답을 돌려주므로 같은 세션 저장 로직을 쓴다.
@@ -395,6 +421,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       verifyGoogleSocialLogin,
       verifyKakaoSocialLogin,
       verifyNaverSocialLogin,
+      verifyAppleSocialLogin,
       linkSocialAccount,
       signupWithSocialAccount,
       checkEmail,
@@ -414,6 +441,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       verifyGoogleSocialLogin,
       verifyKakaoSocialLogin,
       verifyNaverSocialLogin,
+      verifyAppleSocialLogin,
       linkSocialAccount,
       signupWithSocialAccount,
       checkEmail,

@@ -57,6 +57,11 @@ class Settings(BaseSettings):
     NAVER_CLIENT_ID: str
     NAVER_CLIENT_SECRET: str
     NAVER_REDIRECT_URI: str
+    APPLE_CLIENT_ID: str = ""
+    APPLE_TEAM_ID: str = ""
+    APPLE_KEY_ID: str = ""
+    APPLE_PRIVATE_KEY: str = ""
+    APPLE_TOKEN_ENCRYPTION_KEY: str = ""
     SOCIAL_AUTH_HTTP_TIMEOUT_SECONDS: float = 10.0
     SOCIAL_TEMP_TOKEN_EXPIRE_MINUTES: int = 10
     SOCIAL_OAUTH_STATE_EXPIRE_MINUTES: int = 10

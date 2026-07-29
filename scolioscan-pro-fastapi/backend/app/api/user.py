@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from typing import List, Literal
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -18,7 +19,9 @@ from ..schemas import (
 from ..utils import get_current_user, get_password_hash, verify_password
 from app.services.s3_service import upload_image_to_s3, create_presigned_get_url, delete_s3_object
 from app.services.curvature_limit import reset_curvature_limit_if_expired
+from app.services.apple_auth_service import revoke_apple_refresh_token
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _build_social_accounts_response(user: User) -> UserSocialAccountsResponse:
@@ -27,6 +30,7 @@ def _build_social_accounts_response(user: User) -> UserSocialAccountsResponse:
         "google": SocialAccountInfo(is_linked=False, email=None),
         "naver": SocialAccountInfo(is_linked=False, email=None),
         "kakao": SocialAccountInfo(is_linked=False, email=None),
+        "apple": SocialAccountInfo(is_linked=False, email=None),
     }
 
     for social_account in user.social_accounts:
@@ -42,6 +46,7 @@ def _build_social_accounts_response(user: User) -> UserSocialAccountsResponse:
         google=social_accounts["google"],
         naver=social_accounts["naver"],
         kakao=social_accounts["kakao"],
+        apple=social_accounts["apple"],
     )
 
 
@@ -108,7 +113,7 @@ async def update_user_profile(
 
 @router.delete("/me/social/{provider}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_my_social_account(
-    provider: Literal["google", "naver", "kakao"],
+    provider: Literal["google", "naver", "kakao", "apple"],
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -122,6 +127,10 @@ async def delete_my_social_account(
     if social_account is None:
         # 이미 삭제된 상태여도 재시도를 성공으로 처리해 프론트가 안전하게 복구할 수 있게 한다.
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    if provider == "apple" and social_account.apple_refresh_token:
+        # Apple 연결은 DB 행을 지우기 전에 공급자 authorization까지 취소한다.
+        await revoke_apple_refresh_token(social_account.apple_refresh_token)
 
     try:
         db.delete(social_account)
@@ -247,6 +256,24 @@ async def delete_my_account(
             return Response(status_code=status.HTTP_204_NO_CONTENT)
 
         profile_image_key = user.profile_image
+        apple_social_account = next(
+            (
+                social_account
+                for social_account in user.social_accounts
+                if social_account.provider == "apple"
+            ),
+            None,
+        )
+        if apple_social_account and apple_social_account.apple_refresh_token:
+            try:
+                # 외부 Apple 장애가 회원 탈퇴 자체를 막지 않도록 취소를 우선 시도하고 로컬 삭제는 계속한다.
+                await revoke_apple_refresh_token(apple_social_account.apple_refresh_token)
+            except HTTPException as error:
+                logger.warning(
+                    "Apple token revocation failed during account deletion: status=%s",
+                    error.status_code,
+                )
+
         if profile_image_key:
             try:
                 # 계정 삭제 전에 S3 프로필 이미지를 먼저 삭제해 고아 객체가 남지 않도록 한다.

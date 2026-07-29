@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import User
 from ..schemas import (
+    AppleVerifyRequest,
     GoogleVerifyRequest,
     KakaoVerifyRequest,
     LoginResponse,
@@ -20,6 +21,11 @@ from ..services.auth_service import (
     issue_refresh_token,
     utcnow,
     verify_user_password,
+)
+from ..services.apple_auth_service import (
+    encrypt_apple_refresh_token,
+    exchange_apple_authorization_code,
+    verify_apple_identity,
 )
 from ..services.octomo_verification import normalize_phone_number
 from ..services.social_auth_service import (
@@ -37,6 +43,68 @@ from ..utils import create_access_token, get_current_user, get_password_hash
 from ..services.curvature_limit import next_curvature_limit_reset_at
 
 router = APIRouter()
+
+
+@router.post("/social/apple/verify", response_model=SocialTicketExchangeResponse)
+async def verify_apple_social_login(
+    payload: AppleVerifyRequest,
+    db: Session = Depends(get_db),
+):
+    """Apple 서명 토큰과 일회성 코드를 검증한 뒤 기존 소셜 계정 흐름으로 분기한다."""
+    provider_user_id, provider_email = await verify_apple_identity(payload.identity_token)
+    apple_tokens = await exchange_apple_authorization_code(payload.authorization_code)
+    exchanged_user_id, exchanged_email = await verify_apple_identity(apple_tokens["id_token"])
+
+    if exchanged_user_id != provider_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Apple authorization_code identity mismatch",
+        )
+
+    encrypted_refresh_token = encrypt_apple_refresh_token(apple_tokens["refresh_token"])
+    provider_email = provider_email or exchanged_email
+    social_account = get_social_account(db, "apple", provider_user_id)
+
+    if social_account is None:
+        return build_social_ticket_exchange_response(
+            provider="apple",
+            provider_user_id=provider_user_id,
+            provider_email=provider_email,
+            social_account=None,
+            provider_refresh_token=encrypted_refresh_token,
+        )
+
+    user = db.get(User, social_account.user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Linked user not found",
+        )
+
+    now = utcnow()
+    social_account.provider_email = provider_email or social_account.provider_email
+    social_account.apple_refresh_token = encrypted_refresh_token
+    social_account.apple_token_updated_at = now
+    social_account.last_login_at = now
+    access_token = create_access_token(data={"sub": user.user_id})
+    refresh_token, _ = issue_refresh_token(
+        db=db,
+        user=user,
+        device_id=payload.device_id,
+        device_name=payload.device_name,
+    )
+    db.commit()
+
+    return build_social_ticket_exchange_response(
+        provider="apple",
+        provider_user_id=provider_user_id,
+        provider_email=provider_email,
+        social_account=social_account,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=user,
+    )
+
 
 @router.post("/social/google/verify", response_model=SocialTicketExchangeResponse)
 async def verify_google_social_login(
@@ -207,6 +275,7 @@ async def link_existing_social_account(
         provider_user_id=social_identity["provider_user_id"],
         provider_email=social_identity["provider_email"],
         linked_at=now,
+        provider_refresh_token=social_identity["provider_refresh_token"],
     )
     try:
         # 동시에 같은 소셜 계정이 먼저 연결되면 unique 제약 에러를 409로 바꾼다.
@@ -279,6 +348,7 @@ async def connect_social_account(
         provider_user_id=provider_user_id,
         provider_email=social_identity["provider_email"],
         linked_at=utcnow(),
+        provider_refresh_token=social_identity["provider_refresh_token"],
     )
     try:
         # 동시 요청으로 unique 제약이 걸리는 경우도 409로 응답한다.
@@ -356,6 +426,7 @@ async def signup_with_social_account(
         provider_user_id=social_identity["provider_user_id"],
         provider_email=social_identity["provider_email"],
         linked_at=now,
+        provider_refresh_token=social_identity["provider_refresh_token"],
     )
     try:
         # 임시 토큰이 남아 있어도 먼저 연결된 소셜 계정이면 두 번째 flush에서 막는다.

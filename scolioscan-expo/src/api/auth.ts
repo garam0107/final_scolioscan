@@ -19,6 +19,7 @@ import type {
   GoogleVerifyRequest,
   KakaoVerifyRequest,
   NaverVerifyRequest,
+  AppleVerifyRequest,
   SocialAuthResponse,
   SocialLinkCurrentRequest,
   SocialLinkExistingRequest,
@@ -50,6 +51,8 @@ export const authAPI = {
     api.post<SocialAuthResponse>('/auth/social/kakao/verify', data),
   verifyNaverSocialLogin: (data: NaverVerifyRequest) =>
     api.post<SocialAuthResponse>('/auth/social/naver/verify', data),
+  verifyAppleSocialLogin: (data: AppleVerifyRequest) =>
+    api.post<SocialAuthResponse>('/auth/social/apple/verify', data),
   linkCurrentSocialAccount: (data: SocialLinkCurrentRequest) =>
     api.post('/auth/social/link-current', data),
   linkExistingSocialAccount: (data: SocialLinkExistingRequest) =>
