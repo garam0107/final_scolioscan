@@ -1,6 +1,7 @@
 import asyncio
 import base64
 from datetime import datetime, timedelta, timezone
+import hashlib
 import os
 import unittest
 from unittest.mock import AsyncMock, patch
@@ -123,6 +124,56 @@ class AppleAuthServiceTest(unittest.TestCase):
 
         self.assertEqual(provider_user_id, "apple-user-id")
         self.assertEqual(provider_email, "relay@privaterelay.appleid.com")
+
+    def test_exchanged_identity_token_verifies_access_token_hash(self) -> None:
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        public_numbers = private_key.public_key().public_numbers()
+        key_id = "apple-exchange-key"
+        apple_jwk = {
+            "kty": "RSA",
+            "kid": key_id,
+            "use": "sig",
+            "alg": "RS256",
+            "n": _base64url_uint(public_numbers.n),
+            "e": _base64url_uint(public_numbers.e),
+        }
+        access_token = "apple-access-token"
+        access_token_hash = base64.urlsafe_b64encode(
+            hashlib.sha256(access_token.encode("ascii")).digest()[:16]
+        ).rstrip(b"=").decode("ascii")
+        now = datetime.now(timezone.utc)
+        identity_token = jwt.encode(
+            {
+                "iss": apple_auth_service.APPLE_ISSUER,
+                "aud": settings.APPLE_CLIENT_ID,
+                "sub": "apple-user-id",
+                "iat": now,
+                "exp": now + timedelta(minutes=5),
+                "at_hash": access_token_hash,
+            },
+            private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption(),
+            ),
+            algorithm="RS256",
+            headers={"kid": key_id},
+        )
+
+        with patch.object(
+            apple_auth_service,
+            "_get_apple_jwks",
+            new=AsyncMock(return_value={"keys": [apple_jwk]}),
+        ):
+            provider_user_id, provider_email = asyncio.run(
+                apple_auth_service.verify_apple_identity(
+                    identity_token,
+                    access_token=access_token,
+                )
+            )
+
+        self.assertEqual(provider_user_id, "apple-user-id")
+        self.assertIsNone(provider_email)
 
     def test_client_secret_uses_apple_identifiers(self) -> None:
         private_key = ec.generate_private_key(ec.SECP256R1())

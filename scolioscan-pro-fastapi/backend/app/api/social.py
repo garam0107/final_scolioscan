@@ -53,7 +53,10 @@ async def verify_apple_social_login(
     """Apple 서명 토큰과 일회성 코드를 검증한 뒤 기존 소셜 계정 흐름으로 분기한다."""
     provider_user_id, provider_email = await verify_apple_identity(payload.identity_token)
     apple_tokens = await exchange_apple_authorization_code(payload.authorization_code)
-    exchanged_user_id, exchanged_email = await verify_apple_identity(apple_tokens["id_token"])
+    exchanged_user_id, exchanged_email = await verify_apple_identity(
+        apple_tokens["id_token"],
+        access_token=apple_tokens["access_token"],
+    )
 
     if exchanged_user_id != provider_user_id:
         raise HTTPException(

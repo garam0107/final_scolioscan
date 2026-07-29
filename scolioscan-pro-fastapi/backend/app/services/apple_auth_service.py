@@ -136,7 +136,10 @@ async def _get_apple_jwks(force_refresh: bool = False) -> dict:
     return payload
 
 
-async def verify_apple_identity(identity_token: str) -> tuple[str, str | None]:
+async def verify_apple_identity(
+    identity_token: str,
+    access_token: str | None = None,
+) -> tuple[str, str | None]:
     try:
         token_header = jwt.get_unverified_header(identity_token)
     except JWTError as error:
@@ -179,6 +182,9 @@ async def verify_apple_identity(identity_token: str) -> tuple[str, str | None]:
             algorithms=["RS256"],
             audience=client_id,
             issuer=APPLE_ISSUER,
+            access_token=access_token,
+            # Apple token 교환 응답은 access_token이 있을 때만 at_hash를 함께 검증한다.
+            options={"verify_at_hash": access_token is not None},
         )
     except JWTError as error:
         raise HTTPException(
@@ -234,6 +240,7 @@ async def exchange_apple_authorization_code(authorization_code: str) -> dict:
         )
 
     refresh_token = payload.get("refresh_token")
+    access_token = payload.get("access_token")
     identity_token = payload.get("id_token")
     if not isinstance(refresh_token, str) or not refresh_token.strip():
         raise HTTPException(
@@ -244,6 +251,11 @@ async def exchange_apple_authorization_code(authorization_code: str) -> dict:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Apple token response does not contain id_token",
+        )
+    if not isinstance(access_token, str) or not access_token.strip():
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Apple token response does not contain access_token",
         )
 
     return payload
