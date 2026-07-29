@@ -14,6 +14,7 @@
     "ios": {
       "icon": "./assets/icons/scolioscan_icon_ios.png",
       "bundleIdentifier": "com.nextvine.scolioscan",
+      "usesAppleSignIn": true,
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
@@ -45,6 +46,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       "./plugins/withShortCmakePath.js",
       "./plugins/withCleartextTraffic.js",
       "./plugins/withBlockedAndroidPermissions.js",
