@@ -195,6 +195,7 @@ const screenText: Record<string, ScreenTextPair> = {
   '네이버': ['Naver', 'Naver'],
   '카카오': ['Kakao', 'Kakao'],
   '애플': ['Apple', 'Apple'],
+  'Apple로 로그인': ['Sign in with Apple', 'Appleでサインイン'],
   '연결됨': ['Connected', '連携済み'],
   '연결되지 않음': ['Not connected', '未連携'],
   '연결해제': ['Disconnect', '連携解除'],

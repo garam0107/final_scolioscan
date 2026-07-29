@@ -27,12 +27,12 @@ import SocialAccountDecisionModal from '@/src/features/auth/components/SocialAcc
 import { clearSavedEmail, loadSavedEmail, saveSavedEmail } from '@/src/lib/savedEmailStorage';
 import { useAuthStore } from '@/src/store/authStore';
 import type { SocialAuthResponse } from '@/src/types/auth';
+import AppleIcon from '../../../assets/icons/apple.svg';
 import GoogleIcon from '../../../assets/icons/google.svg';
 import KakaoIcon from '../../../assets/icons/kakao.svg';
 import LoginLogo from '../../../assets/icons/login_logo.svg';
 import NaverIcon from '../../../assets/icons/naver.svg';
 import styles from './login.styles';
-import { AppleLoginButtonTokens } from '@/src/constants/theme';
 
 
 const pretendardFont = require('../../../assets/fonts/PretendardVariable.ttf');
@@ -648,24 +648,21 @@ export default function LoginScreen() {
                 >
                   <KakaoIcon width={40} height={40} />
                 </Pressable>
-              </View>
-              {appleLoginAvailable ? (
-                <View
-                  pointerEvents={isBusy ? 'none' : 'auto'}
-                  style={[
-                    styles.appleButtonWrap,
-                    isBusy ? styles.appleButtonDisabled : null,
-                  ]}
-                >
-                  <AppleAuthentication.AppleAuthenticationButton
-                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                    cornerRadius={AppleLoginButtonTokens.radius}
-                    style={styles.appleButton}
+                {appleLoginAvailable ? (
+                  <Pressable
+                    accessibilityLabel={i18n.t('Apple로 로그인')}
+                    accessibilityRole="button"
                     onPress={() => void handleAppleLogin()}
-                  />
-                </View>
-              ) : null}
+                    disabled={isBusy}
+                    style={({ pressed }) => [
+                      styles.socialButton,
+                      pressed ? styles.buttonPressed : null,
+                    ]}
+                  >
+                    <AppleIcon width={40} height={40} />
+                  </Pressable>
+                ) : null}
+              </View>
 
               <View style={styles.signupPrompt}>
                 <Text style={styles.signupPromptText}>{i18n.t("아직 계정이 없으신가요?")}</Text>

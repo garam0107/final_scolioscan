@@ -110,11 +110,7 @@ export const HomeMeasurementLimitModalTokens = {
   pressedOpacity: 0.92,
 } as const;
 
-// Apple 공식 로그인 버튼의 네이티브 크기와 화면 간격을 한곳에서 관리한다.
-export const AppleLoginButtonTokens = {
-  height: 44,
-  radius: 8,
-  marginTop: 12,
+// 로그인 화면의 공통 세로 여백을 한곳에서 관리한다.
+export const LoginScreenTokens = {
   screenVerticalPadding: 24,
-  pressedOpacity: 0.55,
 } as const;

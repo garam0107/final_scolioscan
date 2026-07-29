@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { textFont } from '@/src/constants/fonts';
-import { AppleLoginButtonTokens, Colors } from '@/src/constants/theme';
+import { Colors, LoginScreenTokens } from '@/src/constants/theme';
 
 const styles = StyleSheet.create({
   loadingPage: {
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
-    paddingVertical: AppleLoginButtonTokens.screenVerticalPadding,
+    paddingVertical: LoginScreenTokens.screenVerticalPadding,
   },
   brandArea: {
     alignItems: 'center',
@@ -183,17 +183,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: 48,
     width: 48,
-  },
-  appleButtonWrap: {
-    marginTop: AppleLoginButtonTokens.marginTop,
-    width: '100%',
-  },
-  appleButton: {
-    height: AppleLoginButtonTokens.height,
-    width: '100%',
-  },
-  appleButtonDisabled: {
-    opacity: AppleLoginButtonTokens.pressedOpacity,
   },
   signupPrompt: {
     alignItems: 'center',
