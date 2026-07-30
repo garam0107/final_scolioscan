@@ -158,7 +158,7 @@ export default function ContactScreen() {
 										onPress={() => setSelectedContactType(contactType.key)}
 									>
 										<Icon width={24} height={24} style={styles.image2} />
-										<Text style={styles.text3}>{contactType.label}</Text>
+										<Text style={styles.text3}>{i18n.t(contactType.label)}</Text>
 									</TouchableOpacity>
 								);
 							})}
@@ -179,7 +179,7 @@ export default function ContactScreen() {
 										onPress={() => setSelectedContactType(contactType.key)}
 									>
 										<Icon width={24} height={24} style={styles.image2} />
-										<Text style={styles.text3}>{contactType.label}</Text>
+										<Text style={styles.text3}>{i18n.t(contactType.label)}</Text>
 									</TouchableOpacity>
 								);
 							})}

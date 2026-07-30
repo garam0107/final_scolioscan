@@ -47,6 +47,7 @@ const screenText: Record<string, ScreenTextPair> = {
   '비표준 만곡': ['Unclassified Curve', '非標準カーブ'],
   '일반적인 분류에 딱 맞지 않는 만곡 패턴이에요.': ['The curve pattern does not fit a standard category.', '一般的な分類に当てはまらないカーブパターンです。'],
   '카메라 측정하기': ['Camera Measurement', 'カメラ 測定'],
+  '카메라로 측정 이용 방법': ['How to Use Camera Measurement', 'カメラ測定の使い方'],
   '회 남음': [' remaining', '回 残り'],
   '월 10회 이용 횟수를 모두 사용했습니다.': [
     'You have used all 10 measurements available this month.',
@@ -58,6 +59,7 @@ const screenText: Record<string, ScreenTextPair> = {
   ],
   '사진 한 장으로 간편하게 측정': ['Quick measurement with a single photo', '写真1枚でかんたん測定'],
   '정교한 측정하기': ['Detailed Measurement', '詳細測定'],
+  '정교한 측정 이용 방법': ['How to Use Detailed Measurement', '詳細測定の使い方'],
   '스콜리오미터로 정교한 측정': ['Detailed measurement with a scoliometer', 'スコリオメーターで詳細測定'],
   '한 달 전': ['1 month ago', '1か月前'],
   '3주 전': ['3 weeks ago', '3週間前'],
