@@ -1,7 +1,6 @@
 import { i18n } from '@/src/i18n';
-import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '@/src/components/ui/PrimaryButton';
@@ -12,23 +11,15 @@ import styles, { getMeasurementGuideIntroLayout } from '@/src/features/measureme
 export default function MeasurementGuideIntroScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
-  const layout = getMeasurementGuideIntroLayout(width, height, insets.bottom);
-  const twoDGuideSeen = useMeasurementGuideStore((state) => state.twoDGuideSeen);
-  const spineGuideSeen = useMeasurementGuideStore((state) => state.spineGuideSeen);
-  const resetGuideSeen = useMeasurementGuideStore((state) => state.resetGuideSeen);
-  const canStartMeasure = twoDGuideSeen && spineGuideSeen;
-  // 가이드를 봤다고 store에 상태 저장하는 함수
-  const completeMeasurementGuide = useMeasurementGuideStore(
-  (state) => state.completeMeasurementGuide,
-  );
-  useEffect(() => {
-    return () => {
-      // 인트로 화면을 벗어나면 다시 진입할 때 새로 가이드를 확인하도록 임시 체크 상태를 초기화한다.
-      resetGuideSeen();
-    };
-  }, [resetGuideSeen]);
-  
+  const { width } = useWindowDimensions();
+  const layout = getMeasurementGuideIntroLayout(width, insets.bottom);
+  const { measurementType } = useLocalSearchParams<{ measurementType?: string }>();
+  const isScoliometer = measurementType === 'scoliometer';
+  const guideRoute = isScoliometer ? '/measure/guide-spine' : '/measure/guide-2d-camera';
+  const guideButtonTitle = isScoliometer ? '정교한 측정 가이드 보기' : '카메라로 측정 가이드 보기';
+  const measureRoute = isScoliometer ? '/measure/scoliometer' : '/measure/2d';
+  const completeTwoDGuide = useMeasurementGuideStore((state) => state.completeTwoDGuide);
+  const completeScoliometerGuide = useMeasurementGuideStore((state) => state.completeScoliometerGuide);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right', 'bottom']}>
@@ -63,33 +54,20 @@ export default function MeasurementGuideIntroScreen() {
           >{i18n.t("원활한 측정을 위해 안내 가이드를 보시겠어요?")}</Text>
         </View>
 
-        <View style={[styles.actionGroup, { top: layout.actionTop, width: layout.contentWidth }]}>
-          <PrimaryButton
-            title={twoDGuideSeen ? i18n.t("✓ 2D 카메라 촬영 가이드 보기") : i18n.t("2D 카메라 촬영 가이드 보기")}
-            onPress={() => router.push('/measure/guide-2d-camera')}
-            width="100%"
-            height={layout.buttonHeight}
-            backgroundColor={twoDGuideSeen ? Colors.mint[25] : Colors.gray[50]}
-            borderRadius={6}
-            style={twoDGuideSeen ? styles.completedGuideButton : styles.outlineButton} 
-            textStyle={twoDGuideSeen ? styles.completedGuideButtonText : styles.outlineButtonText}  
-          />
-          <PrimaryButton
-            title={spineGuideSeen ? i18n.t("✓ 척추측만계 가이드 보기") : i18n.t("척추측만계 가이드 보기")}
-            onPress={() => router.push('/measure/guide-spine')}
-            width="100%"
-            height={layout.buttonHeight}
-            backgroundColor={spineGuideSeen ? Colors.mint[25] : Colors.gray[50]}
-            borderRadius={6}
-            style={spineGuideSeen ? styles.completedGuideButton : styles.outlineButton} 
-            textStyle={spineGuideSeen ? styles.completedGuideButtonText : styles.outlineButtonText} 
-          />
+      </View>
 
+      <View style={[styles.bottomContent, { paddingBottom: layout.bottomOffset }]}>
+        <View style={[styles.actionGroup, { width: layout.contentWidth }]}>
           <Pressable
             style={({ pressed }) => [styles.skipButton, pressed && styles.pressed]}
             onPress={() => {
-              completeMeasurementGuide();
-              router.replace('/measure/2d');
+              // 건너뛰기는 현재 선택한 측정 방식의 가이드만 완료 처리한다.
+              if (isScoliometer) {
+                completeScoliometerGuide();
+              } else {
+                completeTwoDGuide();
+              }
+              router.replace(measureRoute);
             }}
           >
             <Text style={styles.skipText}>{i18n.t("이미 사용해봤어요")}</Text>
@@ -103,30 +81,18 @@ export default function MeasurementGuideIntroScreen() {
               {'\u2022  '}{i18n.t("가이드는 설정 - 가이드 버튼을 눌러서 언제든지 다시 보실 수 있어요.")}</Text>
           </View>
         </View>
-      </View>
 
-      <View
-        style={[
-          styles.bottomArea,
-          {
-            bottom: layout.bottomOffset,
-          },
-        ]}
-      >
-        <PrimaryButton
-          title={i18n.t("측정하기")}
-          onPress={() => {
-            completeMeasurementGuide();
-            router.replace('/measure/2d');
-          }}
-          width="100%"
-          height={layout.buttonHeight}
-          disabled={!canStartMeasure}
-          backgroundColor={canStartMeasure ? Colors.primary[500] : Colors.gray[100]}
-          disabledBackgroundColor={Colors.gray[100]}
-          borderRadius={6}
-          textStyle={styles.measureButtonText}
-        />
+        <View style={[styles.bottomArea, { width: layout.contentWidth }]}>
+          <PrimaryButton
+            title={i18n.t(guideButtonTitle)}
+            onPress={() => router.push(guideRoute)}
+            width="100%"
+            height={layout.buttonHeight}
+            backgroundColor={Colors.primary[500]}
+            borderRadius={6}
+            textStyle={styles.measureButtonText}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );

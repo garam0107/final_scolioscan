@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 type MeasurementGuidePersistedState = {
-  measurementGuideCompleted: boolean;
+  twoDGuideCompleted: boolean;
+  scoliometerGuideCompleted: boolean;
 };
 
 type MeasurementGuideState = MeasurementGuidePersistedState & {
@@ -11,8 +12,8 @@ type MeasurementGuideState = MeasurementGuidePersistedState & {
   spineGuideSeen: boolean;
   markTwoDGuideSeen: () => void;
   markSpineGuideSeen: () => void;
-  completeMeasurementGuide: () => void;
-  clearMeasurementGuideCompleted: () => void;
+  completeTwoDGuide: () => void;
+  completeScoliometerGuide: () => void;
   resetGuideSeen: () => void;
   resetCurrentUserState: () => void;
   setCurrentUserId: (userId: string) => Promise<void>;
@@ -21,7 +22,8 @@ type MeasurementGuideState = MeasurementGuidePersistedState & {
 };
 
 const DEFAULT_GUIDE_STATE: MeasurementGuidePersistedState = {
-  measurementGuideCompleted: false,
+  twoDGuideCompleted: false,
+  scoliometerGuideCompleted: false,
 };
 
 function getStorageKey(userId: string) {
@@ -35,9 +37,14 @@ function parseStoredGuideState(value: string | null): MeasurementGuidePersistedS
   }
 
   try {
-    const parsed = JSON.parse(value) as Partial<MeasurementGuidePersistedState>;
+    const parsed = JSON.parse(value) as Partial<MeasurementGuidePersistedState> & {
+      measurementGuideCompleted?: boolean;
+    };
+    // 기존 단일 완료 상태는 두 가이드를 모두 본 상태였으므로 다시 노출하지 않는다.
+    const legacyCompleted = parsed.measurementGuideCompleted === true;
     return {
-      measurementGuideCompleted: parsed.measurementGuideCompleted === true,
+      twoDGuideCompleted: parsed.twoDGuideCompleted === true || legacyCompleted,
+      scoliometerGuideCompleted: parsed.scoliometerGuideCompleted === true || legacyCompleted,
     };
   } catch {
     return DEFAULT_GUIDE_STATE;
@@ -63,19 +70,25 @@ export const useMeasurementGuideStore = create<MeasurementGuideState>()((set, ge
   hasHydrated: true,
   markTwoDGuideSeen: () => set({ twoDGuideSeen: true }),
   markSpineGuideSeen: () => set({ spineGuideSeen: true }),
-  completeMeasurementGuide: () => {
-    set({ measurementGuideCompleted: true });
-    persistGuideState(get().activeUserId, { measurementGuideCompleted: true });
+  completeTwoDGuide: () => {
+    const currentState = get();
+    const nextState = {
+      twoDGuideCompleted: true,
+      scoliometerGuideCompleted: currentState.scoliometerGuideCompleted,
+    };
+    set(nextState);
+    persistGuideState(currentState.activeUserId, nextState);
+  },
+  completeScoliometerGuide: () => {
+    const currentState = get();
+    const nextState = {
+      twoDGuideCompleted: currentState.twoDGuideCompleted,
+      scoliometerGuideCompleted: true,
+    };
+    set(nextState);
+    persistGuideState(currentState.activeUserId, nextState);
   },
   resetGuideSeen: () => set({ twoDGuideSeen: false, spineGuideSeen: false }),
-  clearMeasurementGuideCompleted: () => {
-    set({
-      measurementGuideCompleted: false,
-      twoDGuideSeen: false,
-      spineGuideSeen: false,
-    });
-    persistGuideState(get().activeUserId, { measurementGuideCompleted: false });
-  },
   resetCurrentUserState: () => {
     set({
       ...DEFAULT_GUIDE_STATE,

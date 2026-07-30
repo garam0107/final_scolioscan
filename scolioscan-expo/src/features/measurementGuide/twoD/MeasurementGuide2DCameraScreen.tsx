@@ -3,28 +3,26 @@ import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMeasurementGuideStore } from '@/src/store/measurementGuideStore';
 import MeasurementGuideStepScreen from '@/src/features/measurementGuide/shared/MeasurementGuideStepScreen';
+import TwoDguideFirstPageLottie from '../../../../assets/lottie/2dGuide_firstPage.json';
+import TwoDguideSecondPageLottie from '../../../../assets/lottie/2dGuide_secondPage.json';
 
-const TwoDguideFirstPageLottie = require('../../../../assets/lottie/2dGuide_firstPage.json')
 
 const guidePages = [
   {
-    title: '2D 카메라 촬영 방법',
+    title: '카메라로 측정 이용 방법',
     description: '화면 속 가이드라인에 맞춰 등을 찍어주세요.',
     buttonLabel: '다음',
     lottieSource : TwoDguideFirstPageLottie,
   },
   {
-    title: '2D 카메라 촬영 방법',
+    title: '카메라로 측정 이용 방법',
     description: '자동 촬영을 지원하지만, 수동 촬영도 가능해요.',
-    buttonLabel: '다음',
-  },
-  {
-    title: '2D 카메라 촬영 방법',
-    description: '촬영이 끝나면, ScolioScan이 알아서 분석하고 결과를 알려드릴게요!',
     subDescription:
-      '의료 관련 안내\n본 서비스는 의료행위 또는 의료기기가 아니며,\n진단, 치료 또는 예방을 목적으로 하지 않습니다.\n제공되는 정보는 참고용이며,\n건강 관련 판단은 반드시 의료 전문가와 상담하시기 바랍니다.',
+    '의료 관련 안내\n본 서비스는 의료행위 또는 의료기기가 아니며,\n진단, 치료 또는 예방을 목적으로 하지 않습니다.\n제공되는 정보는 참고용이며,\n건강 관련 판단은 반드시 의료 전문가와 상담하시기 바랍니다.',
     buttonLabel: '시작하기',
+    lottieSource: TwoDguideSecondPageLottie
   },
+
 ];
 
 export default function MeasurementGuide2DCameraScreen() {
@@ -33,7 +31,7 @@ export default function MeasurementGuide2DCameraScreen() {
   const [pageIndex, setPageIndex] = useState(0);
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
   const currentPage = guidePages[pageIndex];
-  const markTwoDGuideSeen = useMeasurementGuideStore((state) => state.markTwoDGuideSeen);
+  const completeTwoDGuide = useMeasurementGuideStore((state) => state.completeTwoDGuide);
   const isReplayMode = mode === 'replay';
   function handleBack() {
     if (pageIndex > 0) {
@@ -52,11 +50,14 @@ export default function MeasurementGuide2DCameraScreen() {
     return;
   }
 
-  // 설정의 가이드 다시보기에서는 인트로의 임시 체크 상태를 바꾸지 않고 화면만 닫는다.
-  if (!isReplayMode) {
-    markTwoDGuideSeen();
+  if (isReplayMode) {
+    router.back();
+    return;
   }
-  router.back();
+
+  // 최초 가이드 완료 후에는 카메라 측정 화면으로 바로 이동한다.
+  completeTwoDGuide();
+  router.replace('/measure/2d');
 }
 
   return (

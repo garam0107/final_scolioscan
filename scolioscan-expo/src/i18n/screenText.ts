@@ -67,7 +67,7 @@ const screenText: Record<string, ScreenTextPair> = {
   '척추측만계 이용 방법': ['How to Use the Scoliometer', 'スコリオメーターの使い方'],
   '파란 반원 (가로 모드) / 흰 원 (평면 모드) 을 척추에 대어주세요.': ['Place the blue semicircle (landscape mode) or white circle (flat mode) against your spine.', '青い半円（横向きモード）または白い円（平面モード）を背骨に当ててください。'],
   '척추에 휴대전화를 댄 채로 등 각도를 재어주세요.': ['Keep the phone against your spine and measure the angle of your back.', 'スマートフォンを背骨に当てたまま、背中の角度を測定してください。'],
-  '각도가 가장 큰 곳을 위에서부터 최대 3곳까지 측정해주세요.': ['Starting from the top, measure up to three points with the largest angles.', '上から順に、角度が最も大きい箇所を最大3か所測定してください。'],
+  '각도가 가장 큰 곳을 위에서부터 최대 5곳까지 측정해주세요.': ['Starting from the top, measure up to five points with the largest angles.', '上から順に、角度が最も大きい箇所を最大5か所測定してください。'],
   '촬영이 끝나면, ScolioScan이 알아서 분석하고 결과를 알려드릴게요!': ['After capture, ScolioScan will analyze the data and show your results.', '撮影後、ScolioScanがデータを分析して結果を表示します。'],
   '의료 관련 안내\n본 서비스는 의료행위 또는 의료기기가 아니며,\n진단, 치료 또는 예방을 목적으로 하지 않습니다.\n제공되는 정보는 참고용이며,\n건강 관련 판단은 반드시 의료 전문가와 상담하시기 바랍니다.': ['Medical Notice\nThis service is not a medical procedure or medical device and is not intended for diagnosis, treatment, or prevention. The information provided is for reference only. Consult a qualified healthcare professional for medical decisions.', '医療に関するご案内\n本サービスは医療行為または医療機器ではなく、診断・治療・予防を目的としていません。提供される情報は参考用です。健康に関する判断は、必ず医療専門家にご相談ください。'],
   '3D 카메라 촬영 방법': ['How to Capture a 3D Video', '3Dカメラ撮影方法'],

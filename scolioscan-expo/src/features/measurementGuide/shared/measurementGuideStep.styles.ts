@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   },
   descriptionGroup: {
     width: '100%',
-    gap: 12,
+    gap: 24,
     alignItems: 'center',
   },
   description: {

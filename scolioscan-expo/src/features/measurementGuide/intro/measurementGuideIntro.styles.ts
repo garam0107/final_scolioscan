@@ -7,7 +7,6 @@ export type MeasurementGuideIntroLayout = {
   titleWidth: number;
   headerHeight: number;
   heroTop: number;
-  actionTop: number;
   bottomOffset: number;
   titleFontSize: number;
   titleLineHeight: number;
@@ -17,12 +16,9 @@ export type MeasurementGuideIntroLayout = {
 };
 
 const FIGMA_BASE_WIDTH = 360;
-const FIGMA_ACTION_TOP = 334;
 const FIGMA_HEADER_HEIGHT = 64;
 const FIGMA_CONTENT_HORIZONTAL_PADDING = 16;
 const FIGMA_TITLE_WIDTH = 320;
-const ACTION_GROUP_RESERVED_HEIGHT = 310;
-
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
@@ -33,7 +29,6 @@ function roundLayoutValue(value: number) {
 
 export function getMeasurementGuideIntroLayout(
   screenWidth: number,
-  screenHeight: number,
   bottomInset: number,
 ): MeasurementGuideIntroLayout {
   // 피그마 360 기준을 따르되 버튼은 컨테이너 전체 폭을 쓰고 세로 간격은 기준값을 유지한다.
@@ -42,18 +37,13 @@ export function getMeasurementGuideIntroLayout(
   const titleWidth = Math.min(roundLayoutValue(FIGMA_TITLE_WIDTH * widthScale), contentWidth);
   const headerHeight = FIGMA_HEADER_HEIGHT;
   const bottomOffset = bottomInset + 16;
-  const bottomButtonTop = screenHeight - bottomOffset - 48;
   const preferredHeroTop = 16;
-  const preferredActionTop = FIGMA_ACTION_TOP - headerHeight;
-  const maxActionTop = bottomButtonTop - ACTION_GROUP_RESERVED_HEIGHT;
-  const actionTop = clamp(preferredActionTop, preferredHeroTop + 116, maxActionTop);
 
   return {
     contentWidth,
     titleWidth,
     headerHeight: roundLayoutValue(headerHeight),
     heroTop: roundLayoutValue(preferredHeroTop),
-    actionTop: roundLayoutValue(actionTop),
     bottomOffset,
     titleFontSize: roundLayoutValue(28 * clamp(widthScale, 0.96, 1.04)),
     titleLineHeight: roundLayoutValue(38 * clamp(widthScale, 0.96, 1.04)),
@@ -97,6 +87,7 @@ const styles = StyleSheet.create({
   },
   heroTextBlock: {
     position: 'absolute',
+    paddingHorizontal: 4,
     gap: 14,
     alignItems: 'flex-start',
   },
@@ -116,9 +107,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionGroup: {
-    position: 'absolute',
-    alignItems: 'center',
-    gap: 16,
+    alignItems: 'flex-end',
   },
   outlineButton: {
     borderWidth: 1,
@@ -143,7 +132,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   skipButton: {
-    marginTop: 2,
+    alignSelf: 'flex-end',
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -160,7 +149,6 @@ const styles = StyleSheet.create({
   },
   noticeBlock: {
     width: '100%',
-    marginTop: 2,
     paddingVertical: 12,
     gap: 4,
   },
@@ -172,11 +160,14 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   bottomArea: {
+    marginTop: 16,
+  },
+  bottomContent: {
     position: 'absolute',
     left: 0,
     right: 0,
-    alignItems: 'stretch',
-    paddingHorizontal: 16,
+    bottom: 0,
+    alignItems: 'center',
   },
   measureButtonText: {
     ...textFont,

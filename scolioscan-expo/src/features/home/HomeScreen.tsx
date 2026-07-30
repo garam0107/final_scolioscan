@@ -52,10 +52,13 @@ export default function HomeScreen() {
     loadLatestCurvature,
   } = useHomeCurvatureSummary(trendChartWidth, setNetworkError);
     // measure-guide store 가이드 상태 
-  // const measurementGuideCompleted = useMeasurementGuideStore(
-  // (state) => state.measurementGuideCompleted,
-  // );
-  // const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
+  const twoDGuideCompleted = useMeasurementGuideStore(
+  (state) => state.twoDGuideCompleted,
+  );
+  const scoliometerGuideCompleted = useMeasurementGuideStore(
+  (state) => state.scoliometerGuideCompleted,
+  );
+  const guideHydrated = useMeasurementGuideStore((state) => state.hasHydrated);
   const measurementItems: MeasurementItem[] = useMemo(() => [
     {
       id: '2d',
@@ -65,17 +68,18 @@ export default function HomeScreen() {
       remainingText: user ? `${user.curvature_limit}${i18n.t('회 남음')}` : undefined,
       icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,
   // 가이드 안봤으면 가이드 화면으로 아니면 바로 측정하기로 가도록 변경
-  // onPress: () => {
-  //   if (!guideHydrated) return;
-  //   router.push(measurementGuideCompleted ? '/measure/2d' : '/measure/guide');
-  // }
       onPress: () => {
-        // 남은 횟수가 없으면 측정 화면으로 이동하지 않고 갱신 일정을 안내한다.
+        if (!guideHydrated) return;
+
+        // 잔여 측정 횟수가 없으면 이동하지 않는다.
         if (user?.curvature_limit === 0) {
           setIsMeasurementLimitModalVisible(true);
           return;
         }
-        router.push('/measure/2d');
+
+        router.push(
+          twoDGuideCompleted ? '/measure/2d' : '/measure/guide?measurementType=2d',
+        );
       },
     },
     {
@@ -87,9 +91,25 @@ export default function HomeScreen() {
       subtitleColor: '#2E96FF',
       subtitleBackgroundColor: '#EBF5FF',
       locked: hasCurvatureMeasurement === false,
-      onPress: () => {router.push('/measure/scoliometer')}
+      onPress: () => {
+        if (!guideHydrated) return;
+
+        router.push(
+          scoliometerGuideCompleted
+            ? '/measure/scoliometer'
+            : '/measure/guide?measurementType=scoliometer',
+        );
+      },
     },
-  ], [hasCurvatureMeasurement, measurementCardLayout.iconSize, router, user]);
+  ], [
+    guideHydrated,
+    hasCurvatureMeasurement,
+    measurementCardLayout.iconSize,
+    router,
+    scoliometerGuideCompleted,
+    twoDGuideCompleted,
+    user,
+  ]);
 
   const handleNetworkRetry = useCallback(() => {
 
@@ -148,6 +168,7 @@ export default function HomeScreen() {
           <View style={homeHeaderStyles.greetingBlock}>
             <View style={homeHeaderStyles.greetingTitleRow}>
               <Text style={homeHeaderStyles.greetingTitle}>{displayName}{i18n.t("님 안녕하세요.")}</Text>
+
                                      {/* 분석 중 화면 테스트로 바로 볼려면 주석 해제 */}
               {/* <PrimaryButton
                 title="분석중 보기"
