@@ -12,8 +12,8 @@ type HomeBannerProps = {
 };
 
 const AD_ID = Platform.select({
-  android: 'ca-app-pub-3940256099942544/9214589741',
-  ios: 'ca-app-pub-3940256099942544/2435281174',
+  android: 'ca-app-pub-3142664726693803/5115591269',
+  ios: 'ca-app-pub-3142664726693803/3802509592',
 })!;
 export default function HomeBanner({ width, height }: HomeBannerProps) {
   const { isAdsReady } = useAds();
