@@ -80,7 +80,8 @@ async def verify_apple_social_login(
             or len(user_id) > 64
             or db.query(User).filter(User.user_id == user_id).first() is not None
         ):
-            user_id = f"apple-{hashlib.sha256(provider_user_id.encode()).hexdigest()}@scolioscan.local"
+            # users.user_id가 VARCHAR(64)이므로 해시 일부만 사용해 내부 이메일 길이를 보장한다.
+            user_id = f"apple-{hashlib.sha256(provider_user_id.encode()).hexdigest()[:32]}@scolioscan.local"
 
         user = User(
             user_id=user_id,
