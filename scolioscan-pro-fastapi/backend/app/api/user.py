@@ -148,12 +148,11 @@ async def delete_my_social_account(
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     if provider == "apple" and current_user.is_apple_direct_signup:
-        linked_social_count = sum(1 for account in current_user.social_accounts if account.provider)
-        if linked_social_count <= 1:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="다른 로그인 방법을 연결한 뒤 Apple 연결을 해제할 수 있습니다.",
-            )
+        # 비밀번호를 제공하지 않는 Apple 직접 가입 계정은 Apple 연결을 항상 유지한다.
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Apple 직접 가입 계정은 Apple 연결을 해제할 수 없습니다.",
+        )
 
     if provider == "apple" and social_account.apple_refresh_token:
         # Apple 연결은 DB 행을 지우기 전에 공급자 authorization까지 취소한다.

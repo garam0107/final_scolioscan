@@ -102,10 +102,12 @@ export default function SettingsScreen() {
     // 세션의 사용자 정보가 없을 때도 설정 화면이 빈 값으로 깨지지 않게 기본값을 둔다.
     () => ({
       name: user?.name || 'ooo',
-      email: user?.user_id || 'abcd@example.com',
+      // Apple 직접 가입 계정은 내부 식별자 대신 Apple relay 이메일을 표시한다.
+      // Apple이 이메일을 제공하지 않은 경우 내부 식별자나 임의 이메일을 노출하지 않는다.
+      email: user?.display_email || '-',
       profileImage : user?.profile_image,
     }),
-    [user?.name, user?.user_id, user?.profile_image],
+    [user?.name, user?.display_email, user?.profile_image],
   );
 
   const displayedToggles = useMemo(

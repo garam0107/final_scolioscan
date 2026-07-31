@@ -90,11 +90,7 @@ export default function DeleteAccountModal({
                 onPress={requiresAppleReauthentication ? onAppleWithdraw : onWithdraw}
               >
                 <Text style={styles.withdrawConfirmButtonText}>
-                  {withdrawing
-                    ? i18n.t("처리 중...")
-                    : requiresAppleReauthentication
-                      ? i18n.t('Apple로 인증하고 회원탈퇴')
-                      : i18n.t("회원탈퇴")}
+                  {withdrawing ? i18n.t("처리 중...") : i18n.t("회원탈퇴")}
                 </Text>
               </Pressable>
             </View>
