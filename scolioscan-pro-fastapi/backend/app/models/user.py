@@ -14,11 +14,14 @@ class User(Base):
     user_id = Column(String(64), unique=True, nullable=False, index=True)  # email
     user_pw = Column(String(512), nullable=False)
     name = Column(String(32), nullable=False)
-    phone = Column(String(64), nullable=False)
-    birthday = Column(DateTime, nullable=False)
-    sex = Column(Boolean, nullable=False)  # True: Male, False: Female
-    address = Column(String(128), nullable=False)
+    # Apple 직접 가입은 휴대폰 본인인증 정보를 받지 않으므로 프로필 필수값을 비워 둘 수 있다.
+    phone = Column(String(64), nullable=True)
+    birthday = Column(DateTime, nullable=True)
+    sex = Column(Boolean, nullable=True)  # True: Male, False: Female
+    address = Column(String(128), nullable=True)
     detail_address = Column(String(128), nullable=True)
+    # 비밀번호를 발급하지 않는 Apple 직접 가입 계정을 일반 계정과 구분한다.
+    is_apple_direct_signup = Column(Boolean, nullable=False, default=False)
     profile_image = Column(String(256), nullable=True)  # 프로필 이미지 URL
     alarm_count = Column(Integer, nullable=False, default=0)
     curvature_limit = Column(Integer, nullable=False, default=10)

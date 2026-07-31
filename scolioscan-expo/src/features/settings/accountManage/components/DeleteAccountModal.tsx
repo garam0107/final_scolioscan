@@ -9,9 +9,11 @@ type DeleteAccountModalProps = {
   password: string;
   errorMessage: string;
   withdrawing: boolean;
+  requiresAppleReauthentication: boolean;
   onClose: () => void;
   onPasswordChange: (value: string) => void;
   onWithdraw: () => void;
+  onAppleWithdraw: () => void;
   onCompleteConfirm: () => void;
 };
 
@@ -21,9 +23,11 @@ export default function DeleteAccountModal({
   password,
   errorMessage,
   withdrawing,
+  requiresAppleReauthentication,
   onClose,
   onPasswordChange,
   onWithdraw,
+  onAppleWithdraw,
   onCompleteConfirm,
 }: DeleteAccountModalProps) {
   return (
@@ -49,20 +53,26 @@ export default function DeleteAccountModal({
               <Text style={styles.withdrawDeleteText}>{i18n.t("• 앱 설정 (알림 등)")}</Text>
             </View>
 
-            <Text style={styles.withdrawConfirmText}>{i18n.t("확인을 위해 아래에 비밀번호를 입력해주세요")}</Text>
-            <View style={styles.withdrawPasswordWrap}>
-              <TextInput
-                value={password}
-                onChangeText={onPasswordChange}
-                placeholder={i18n.t("비밀번호를 입력해주세요")}
-                placeholderTextColor="#B6BECE"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="password"
-                style={styles.withdrawPasswordInput}
-              />
-            </View>
+            <Text style={styles.withdrawConfirmText}>
+              {requiresAppleReauthentication
+                ? i18n.t('확인을 위해 Apple로 다시 인증해주세요')
+                : i18n.t("확인을 위해 아래에 비밀번호를 입력해주세요")}
+            </Text>
+            {!requiresAppleReauthentication ? (
+              <View style={styles.withdrawPasswordWrap}>
+                <TextInput
+                  value={password}
+                  onChangeText={onPasswordChange}
+                  placeholder={i18n.t("비밀번호를 입력해주세요")}
+                  placeholderTextColor="#B6BECE"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="password"
+                  style={styles.withdrawPasswordInput}
+                />
+              </View>
+            ) : null}
             {errorMessage ? <Text style={styles.withdrawErrorText}>{errorMessage}</Text> : null}
 
             <View style={styles.withdrawButtonRow}>
@@ -70,14 +80,22 @@ export default function DeleteAccountModal({
                 <Text style={styles.withdrawCancelText}>{i18n.t("취소")}</Text>
               </Pressable>
               <Pressable
-                disabled={!password.trim() || withdrawing}
+                disabled={(!requiresAppleReauthentication && !password.trim()) || withdrawing}
                 style={[
                   styles.withdrawConfirmButton,
-                  password.trim() ? styles.withdrawConfirmButtonActive : null,
+                  requiresAppleReauthentication || password.trim()
+                    ? styles.withdrawConfirmButtonActive
+                    : null,
                 ]}
-                onPress={onWithdraw}
+                onPress={requiresAppleReauthentication ? onAppleWithdraw : onWithdraw}
               >
-                <Text style={styles.withdrawConfirmButtonText}>{withdrawing ? i18n.t("처리 중...") : i18n.t("회원탈퇴")}</Text>
+                <Text style={styles.withdrawConfirmButtonText}>
+                  {withdrawing
+                    ? i18n.t("처리 중...")
+                    : requiresAppleReauthentication
+                      ? i18n.t('Apple로 인증하고 회원탈퇴')
+                      : i18n.t("회원탈퇴")}
+                </Text>
               </Pressable>
             </View>
           </Pressable>

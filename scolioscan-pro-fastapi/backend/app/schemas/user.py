@@ -96,7 +96,9 @@ class UserUpdate(BaseModel):
 
 
 class UserDeleteRequest(BaseModel):
-    password: str = Field(..., min_length=1, max_length=128)
+    password: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    apple_identity_token: Optional[str] = Field(default=None, min_length=1)
+    apple_authorization_code: Optional[str] = Field(default=None, min_length=1)
 
 
 class SocialAccountInfo(BaseModel):
@@ -114,11 +116,12 @@ class UserSocialAccountsResponse(BaseModel):
 class UserResponse(BaseModel):
     id: UUID
     user_id: str
+    display_email: Optional[str]
     name: str
-    phone: str
-    birthday: datetime
-    sex: bool
-    address: str
+    phone: Optional[str]
+    birthday: Optional[datetime]
+    sex: Optional[bool]
+    address: Optional[str]
     detail_address: Optional[str]
     profile_image: Optional[str]
     alarm_count: int
@@ -126,6 +129,7 @@ class UserResponse(BaseModel):
     curvature_limit_reset_at: datetime
     setting: Dict
     is_admin: bool = False  # 관리자 여부
+    is_apple_direct_signup: bool = False
     created_at: datetime
     social_accounts: UserSocialAccountsResponse
 

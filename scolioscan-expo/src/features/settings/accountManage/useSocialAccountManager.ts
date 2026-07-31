@@ -541,12 +541,39 @@ export function useSocialAccountManager({
           provider: 'apple' as const,
           isLinked: user?.social_accounts.apple.is_linked ?? false,
           email: user?.social_accounts.apple.email ?? null,
+          actionLabel:
+            user?.is_apple_direct_signup &&
+            user.social_accounts.apple.is_linked &&
+            [
+              user.social_accounts.google,
+              user.social_accounts.naver,
+              user.social_accounts.kakao,
+            ].every((account) => !account.is_linked)
+              ? i18n.t('해제 불가')
+              : undefined,
           onPress:
             unlinkingProvider === null && !syncingPendingUnlinks
-              ? () => openSocialLinkSheet(
-                  'apple',
-                  user?.social_accounts.apple.is_linked ? 'unlink' : 'link',
-                )
+              ? () => {
+                  const hasOnlyAppleLogin =
+                    user?.is_apple_direct_signup &&
+                    user.social_accounts.apple.is_linked &&
+                    [
+                      user.social_accounts.google,
+                      user.social_accounts.naver,
+                      user.social_accounts.kakao,
+                    ].every((account) => !account.is_linked);
+
+                  if (hasOnlyAppleLogin) {
+                    // 유일한 로그인 수단을 지우면 계정에 다시 접근할 수 없으므로 안내만 표시한다.
+                    showToast(i18n.t('다른 로그인 방법을 연결한 뒤 Apple 연결을 해제할 수 있습니다.'), 'warning');
+                    return;
+                  }
+
+                  openSocialLinkSheet(
+                    'apple',
+                    user?.social_accounts.apple.is_linked ? 'unlink' : 'link',
+                  );
+                }
               : undefined,
         }]
       : []),

@@ -19,7 +19,13 @@ from ..schemas import (
 from ..utils import get_current_user, get_password_hash, verify_password
 from app.services.s3_service import upload_image_to_s3, create_presigned_get_url, delete_s3_object
 from app.services.curvature_limit import reset_curvature_limit_if_expired
-from app.services.apple_auth_service import revoke_apple_refresh_token
+from app.services.auth_service import utcnow
+from app.services.apple_auth_service import (
+    encrypt_apple_refresh_token,
+    exchange_apple_authorization_code,
+    revoke_apple_refresh_token,
+    verify_apple_identity,
+)
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -52,9 +58,21 @@ def _build_social_accounts_response(user: User) -> UserSocialAccountsResponse:
 
 def _user_response_with_presigned_image(user: User) -> UserResponse:
     # 계산 필드가 추가되어 응답을 명시적으로 조립한다.
+    apple_social_account = next(
+        (social_account for social_account in user.social_accounts if social_account.provider == "apple"),
+        None,
+    )
+    # 내부 식별용 Apple 주소를 화면에 노출하지 않고, 제공된 relay 이메일만 표시한다.
+    display_email = (
+        apple_social_account.provider_email
+        if user.is_apple_direct_signup and apple_social_account is not None
+        else user.user_id
+    )
+
     response = UserResponse(
         id=user.id,
         user_id=user.user_id,
+        display_email=display_email,
         name=user.name,
         phone=user.phone,
         birthday=user.birthday,
@@ -67,6 +85,7 @@ def _user_response_with_presigned_image(user: User) -> UserResponse:
         curvature_limit_reset_at=user.curvature_limit_reset_at,
         setting=user.setting,
         is_admin=user.is_admin,
+        is_apple_direct_signup=user.is_apple_direct_signup,
         created_at=user.created_at,
         social_accounts=_build_social_accounts_response(user),
     )
@@ -128,6 +147,14 @@ async def delete_my_social_account(
         # 이미 삭제된 상태여도 재시도를 성공으로 처리해 프론트가 안전하게 복구할 수 있게 한다.
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+    if provider == "apple" and current_user.is_apple_direct_signup:
+        linked_social_count = sum(1 for account in current_user.social_accounts if account.provider)
+        if linked_social_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="다른 로그인 방법을 연결한 뒤 Apple 연결을 해제할 수 있습니다.",
+            )
+
     if provider == "apple" and social_account.apple_refresh_token:
         # Apple 연결은 DB 행을 지우기 전에 공급자 authorization까지 취소한다.
         await revoke_apple_refresh_token(social_account.apple_refresh_token)
@@ -165,6 +192,11 @@ async def change_password(
     db: Session = Depends(get_db)
 ):
     """비밀번호 변경"""
+    if current_user.is_apple_direct_signup:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apple 직접 가입 계정은 비밀번호 로그인을 지원하지 않습니다.",
+        )
       # 현재 비밀번호 확인
     if not verify_password(password_data.current_password, current_user.user_pw):
         raise HTTPException(
@@ -243,7 +275,43 @@ async def delete_my_account(
 ):
     """회원탈퇴"""
 
-    if not verify_password(delete_data.password, current_user.user_pw):
+    if current_user.is_apple_direct_signup:
+        if not delete_data.apple_identity_token or not delete_data.apple_authorization_code:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Apple 재인증 정보가 필요합니다.",
+            )
+
+        provider_user_id, _ = await verify_apple_identity(delete_data.apple_identity_token)
+        apple_tokens = await exchange_apple_authorization_code(
+            delete_data.apple_authorization_code
+        )
+        exchanged_user_id, _ = await verify_apple_identity(
+            apple_tokens["id_token"],
+            access_token=apple_tokens["access_token"],
+        )
+        if exchanged_user_id != provider_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Apple 재인증 정보가 일치하지 않습니다.",
+            )
+
+        apple_social_account = db.query(SocialAccount).filter(
+            SocialAccount.user_id == current_user.id,
+            SocialAccount.provider == "apple",
+            SocialAccount.provider_user_id == provider_user_id,
+        ).first()
+        if apple_social_account is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="현재 계정에 연결된 Apple 계정이 아닙니다.",
+            )
+        # 탈퇴 직전 재인증에서 받은 refresh token을 저장해 현재 Apple authorization을 revoke한다.
+        apple_social_account.apple_refresh_token = encrypt_apple_refresh_token(
+            apple_tokens["refresh_token"]
+        )
+        apple_social_account.apple_token_updated_at = utcnow()
+    elif not delete_data.password or not verify_password(delete_data.password, current_user.user_pw):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="비밀번호가 일치하지 않습니다.",

@@ -71,6 +71,7 @@ export interface NaverVerifyRequest {
 export interface AppleVerifyRequest {
   identity_token: string;
   authorization_code: string;
+  full_name?: string | null;
   device_id: string;
   device_name: string;
 }

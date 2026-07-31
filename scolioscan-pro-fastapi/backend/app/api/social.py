@@ -1,3 +1,7 @@
+import hashlib
+import logging
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -43,6 +47,7 @@ from ..utils import create_access_token, get_current_user, get_password_hash
 from ..services.curvature_limit import next_curvature_limit_reset_at
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/social/apple/verify", response_model=SocialTicketExchangeResponse)
@@ -69,12 +74,82 @@ async def verify_apple_social_login(
     social_account = get_social_account(db, "apple", provider_user_id)
 
     if social_account is None:
+        # Apple 이메일은 계정 식별자로 쓰지 않고 변하지 않는 sub 기반 내부 ID만 사용한다.
+        user_id = (
+            f"apple-{hashlib.sha256(provider_user_id.encode('utf-8')).hexdigest()[:32]}"
+            "@scolioscan.local"
+        )
+        user = db.query(User).filter(User.user_id == user_id).first()
+
+        if user is None:
+            user = User(
+                user_id=user_id,
+                # Apple 직접 가입 계정에는 로그인용 비밀번호를 제공하지 않는다.
+                user_pw=get_password_hash(secrets.token_urlsafe(32)),
+                name=(payload.full_name or "Apple User").strip()[:32] or "Apple User",
+                phone=None,
+                birthday=None,
+                sex=None,
+                address=None,
+                detail_address=None,
+                is_apple_direct_signup=True,
+                alarm_count=0,
+                curvature_limit=10,
+                curvature_limit_reset_at=next_curvature_limit_reset_at(),
+                setting={"voice_alarm": False},
+            )
+            db.add(user)
+            try:
+                # SocialAccount의 외래 키에 사용할 사용자 UUID를 먼저 확정한다.
+                db.flush()
+            except IntegrityError as error:
+                db.rollback()
+                logger.exception("Apple 직접 가입 사용자 생성 중 DB 무결성 오류가 발생했습니다.")
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Apple account could not be created",
+                ) from error
+        else:
+            # 이전 직접 가입 시도에서 남은 내부 계정도 비밀번호 미지원 계정으로 일관되게 처리한다.
+            user.is_apple_direct_signup = True
+
+        now = utcnow()
+        created_social_account = create_social_account(
+            db=db,
+            user=user,
+            provider="apple",
+            provider_user_id=provider_user_id,
+            provider_email=provider_email,
+            linked_at=now,
+            provider_refresh_token=encrypted_refresh_token,
+        )
+        try:
+            db.flush()
+        except IntegrityError as error:
+            db.rollback()
+            logger.exception("Apple 직접 가입 계정 연결 중 DB 무결성 오류가 발생했습니다.")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Apple account is already linked",
+            ) from error
+
+        access_token = create_access_token(data={"sub": user.user_id})
+        refresh_token, _ = issue_refresh_token(
+            db=db,
+            user=user,
+            device_id=payload.device_id,
+            device_name=payload.device_name,
+        )
+        db.commit()
+
         return build_social_ticket_exchange_response(
             provider="apple",
             provider_user_id=provider_user_id,
             provider_email=provider_email,
-            social_account=None,
-            provider_refresh_token=encrypted_refresh_token,
+            social_account=created_social_account,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=user,
         )
 
     user = db.get(User, social_account.user_id)

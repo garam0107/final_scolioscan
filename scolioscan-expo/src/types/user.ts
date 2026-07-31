@@ -13,11 +13,12 @@ export interface UserSocialAccounts {
 export interface UserResponse {
   id: string;
   user_id: string;
+  display_email: string | null;
   name: string;
-  phone: string;
-  birthday: string;
-  sex: boolean;
-  address: string;
+  phone: string | null;
+  birthday: string | null;
+  sex: boolean | null;
+  address: string | null;
   detail_address?: string | null;
   profile_image?: string | null;
   alarm_count: number;
@@ -25,6 +26,7 @@ export interface UserResponse {
   curvature_limit_reset_at: string;
   setting: Record<string, unknown>;
   is_admin: boolean;
+  is_apple_direct_signup: boolean;
   created_at: string;
   social_accounts: UserSocialAccounts;
 }
@@ -32,11 +34,11 @@ export interface UserResponse {
 
 export interface PutUserRequest {
   name: string;
-  phone: string;
-  address: string | null;
+  phone?: string | null;
+  address?: string | null;
   detail_address?: string | null;
-  birthday: string;
-  sex: boolean;
+  birthday?: string | null;
+  sex?: boolean | null;
 }
 
 export interface ChangePasswordRequest {
@@ -46,5 +48,7 @@ export interface ChangePasswordRequest {
 }
 
 export interface DeleteUserRequest {
-  password: string;
+  password?: string;
+  apple_identity_token?: string;
+  apple_authorization_code?: string;
 }

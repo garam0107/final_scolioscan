@@ -1,5 +1,6 @@
 import { i18n } from '@/src/i18n';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -71,7 +72,8 @@ export default function AccountManageScreen() {
     setBirthDay(birthday.day);
     setGender(user?.sex === false ? 'female' : 'male');
     setPhone(user?.phone || '');
-    setEmail(user?.user_id || '');
+    // Apple 직접 가입의 내부 식별자 대신 Apple relay 이메일만 화면에 표시한다.
+    setEmail(user?.display_email || '');
   }, [user]);
 
   useEffect(() => {
@@ -185,11 +187,15 @@ export default function AccountManageScreen() {
       showToast(i18n.t("이름을 입력해주세요."), 'warning');
       return;
     }
-    if (!isValidPhoneNumber(phone)) {
+    const isAppleDirectSignup = user?.is_apple_direct_signup ?? false;
+    const hasPhone = Boolean(phone.trim());
+    const hasBirthdayInput = Boolean(birthYear || birthMonth || birthDay);
+
+    if ((!isAppleDirectSignup || hasPhone) && !isValidPhoneNumber(phone)) {
       showToast(i18n.t("연락처를 올바르게 입력해주세요."), 'warning');
       return;
     }
-    if (!isValidBirthday(birthYear, birthMonth, birthDay)) {
+    if ((!isAppleDirectSignup || hasBirthdayInput) && !isValidBirthday(birthYear, birthMonth, birthDay)) {
       showToast(i18n.t("생년월일을 올바르게 입력해주세요."), 'warning');
       return;
     }
@@ -198,11 +204,19 @@ export default function AccountManageScreen() {
       setSaving(true);
       await userAPI.updateUserProfile({
         name: name.trim(),
-        phone,
-        address: user?.address ?? null,
-        detail_address: user?.detail_address ?? null,
-        birthday: formatBirthdayIso(birthYear, birthMonth, birthDay),
-        sex: gender === 'male',
+        ...(isAppleDirectSignup
+          ? {
+              phone: hasPhone ? phone : undefined,
+              birthday: hasBirthdayInput ? formatBirthdayIso(birthYear, birthMonth, birthDay) : undefined,
+              sex: user?.sex === null && gender === 'male' ? undefined : gender === 'male',
+            }
+          : {
+              phone,
+              address: user?.address ?? null,
+              detail_address: user?.detail_address ?? null,
+              birthday: formatBirthdayIso(birthYear, birthMonth, birthDay),
+              sex: gender === 'male',
+            }),
       });
       await refreshSession();
       showToast(i18n.t("사용자 정보가 변경되었습니다."), 'success');
@@ -227,6 +241,39 @@ export default function AccountManageScreen() {
       setWithdrawCompleteVisible(true);
     } catch (error) {
       setWithdrawErrorMessage(normalizeApiError(error));
+    } finally {
+      setWithdrawing(false);
+    }
+  }
+
+  async function handleAppleWithdraw() {
+    // Apple 직접 가입 계정은 저장된 임시 비밀번호 대신 탈퇴 직전에 Apple로 다시 본인 확인한다.
+    if (withdrawing) return;
+
+    try {
+      setWithdrawErrorMessage('');
+      setWithdrawing(true);
+      const credential = await AppleAuthentication.signInAsync({ requestedScopes: [] });
+
+      if (!credential.identityToken || !credential.authorizationCode) {
+        throw new Error(i18n.t('Apple 재인증 정보를 받지 못했습니다.'));
+      }
+
+      await userAPI.deleteCurrentUser({
+        apple_identity_token: credential.identityToken,
+        apple_authorization_code: credential.authorizationCode,
+      });
+      setWithdrawModalVisible(false);
+      setWithdrawCompleteVisible(true);
+    } catch (error) {
+      const errorCode =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String((error as { code?: unknown }).code)
+          : '';
+
+      if (errorCode !== 'ERR_REQUEST_CANCELED') {
+        setWithdrawErrorMessage(normalizeApiError(error));
+      }
     } finally {
       setWithdrawing(false);
     }
@@ -269,12 +316,14 @@ export default function AccountManageScreen() {
         password={withdrawPassword}
         errorMessage={withdrawErrorMessage}
         withdrawing={withdrawing}
+        requiresAppleReauthentication={user?.is_apple_direct_signup ?? false}
         onClose={closeWithdrawModal}
         onPasswordChange={(value) => {
           setWithdrawPassword(value);
           if (withdrawErrorMessage) setWithdrawErrorMessage('');
         }}
         onWithdraw={() => void handleWithdraw()}
+        onAppleWithdraw={() => void handleAppleWithdraw()}
         onCompleteConfirm={() => void handleWithdrawCompleteConfirm()}
       />
 
@@ -333,6 +382,7 @@ export default function AccountManageScreen() {
           onDeviceLogout={() => void handleDeviceLogout()}
           onPasswordPress={() => router.push('/settings/password')}
           onWithdrawPress={() => setWithdrawModalVisible(true)}
+          isAppleDirectSignup={user?.is_apple_direct_signup ?? false}
           socialLoginMethods={socialLinkMethods}
         />
       </ScrollView>

@@ -492,6 +492,9 @@ export default function LoginScreen() {
       const response = await verifyAppleSocialLogin(
         credential.identityToken,
         credential.authorizationCode,
+        [credential.fullName?.givenName, credential.fullName?.familyName]
+          .filter(Boolean)
+          .join(' ') || null,
       );
       await handleSocialAuthResponse(response);
     } catch (error) {

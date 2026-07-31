@@ -17,6 +17,7 @@ type AccountProfileSectionProps = {
   onDeviceLogout: () => void;
   onPasswordPress: () => void;
   onWithdrawPress: () => void;
+  isAppleDirectSignup: boolean;
   socialLoginMethods?: SocialLoginMethod[];
 };
 
@@ -27,6 +28,7 @@ export default function AccountProfileSection({
   onDeviceLogout,
   onPasswordPress,
   onWithdrawPress,
+  isAppleDirectSignup,
   socialLoginMethods,
 }: AccountProfileSectionProps) {
   // 연동 정보가 아직 없을 때도 로그인 방법 카드 레이아웃은 먼저 맞춰둔다.
@@ -64,12 +66,14 @@ export default function AccountProfileSection({
         <Text style={styles.sectionTitle}>{i18n.t("로그인 방법")}</Text>
         <View style={styles.cardSection}>
           <View style={styles.loginMethodList}>
-            <AccountInfoRow
-              icon={<Ionicons name="mail-outline" size={22} color="#25272D" />}
-              title={i18n.t("이메일")}
-              subtitle={email || '-'}
-              badgeLabel={i18n.t("기본")}
-            />
+            {!isAppleDirectSignup ? (
+              <AccountInfoRow
+                icon={<Ionicons name="mail-outline" size={22} color="#25272D" />}
+                title={i18n.t("이메일")}
+                subtitle={email || '-'}
+                badgeLabel={i18n.t("기본")}
+              />
+            ) : null}
             {loginMethodRows.map((method) => {
               const meta = providerMeta[method.provider];
 
@@ -80,7 +84,7 @@ export default function AccountProfileSection({
                   title={meta.title}
                   subtitle={method.isLinked ? method.email || i18n.t("연결됨") : i18n.t("연결되지 않음")}
                   badgeLabel={method.isLinked ? i18n.t("연결됨") : undefined}
-                  actionLabel={method.isLinked ? i18n.t("연결해제") : i18n.t("연결하기")}
+                  actionLabel={method.actionLabel ?? (method.isLinked ? i18n.t("연결해제") : i18n.t("연결하기"))}
                   actionTone={method.isLinked ? 'muted' : 'primary'}
                   onPressAction={method.onPress}
                 />
@@ -109,10 +113,14 @@ export default function AccountProfileSection({
 
       <View style={styles.actionArea}>
         <View style={styles.actionLinkRow}>
-          <Pressable onPress={onPasswordPress}>
-            <Text style={styles.actionLinkText}>{i18n.t("비밀번호 변경")}</Text>
-          </Pressable>
-          <View style={styles.actionDivider} />
+          {!isAppleDirectSignup ? (
+            <>
+              <Pressable onPress={onPasswordPress}>
+                <Text style={styles.actionLinkText}>{i18n.t("비밀번호 변경")}</Text>
+              </Pressable>
+              <View style={styles.actionDivider} />
+            </>
+          ) : null}
           <Pressable onPress={onWithdrawPress}>
             <Text style={styles.actionLinkText}>{i18n.t("회원 탈퇴")}</Text>
           </Pressable>
