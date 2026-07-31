@@ -169,7 +169,7 @@ export default function ReportAiDoctorCard({ latestCurvature }: ReportAiDoctorCa
         <View style={styles.aiOpinionSection}>
           <Text style={styles.aiOpinionHeading}>{i18n.t("예후")}</Text>
           <Text style={styles.aiOpinionBody}>
-            {i18n.t(copy?.prognosis ?? '측정 결과가 쌓이면 AI 의사 소견을 확인할 수 있어요.')}
+            {i18n.t(copy?.prognosis ?? '측정 결과가 쌓이면 AI 소견을 확인할 수 있어요.')}
           </Text>
         </View>
 
