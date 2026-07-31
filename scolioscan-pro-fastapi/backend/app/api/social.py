@@ -1,3 +1,6 @@
+import hashlib
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -69,12 +72,67 @@ async def verify_apple_social_login(
     social_account = get_social_account(db, "apple", provider_user_id)
 
     if social_account is None:
+        # Apple 신규 사용자는 다른 소셜 로그인처럼 계정 선택 모달을 거치지 않고
+        # 필요한 최소 정보만으로 ScolioScan 계정을 즉시 만든다.
+        user_id = provider_email
+        if (
+            not user_id
+            or len(user_id) > 64
+            or db.query(User).filter(User.user_id == user_id).first() is not None
+        ):
+            user_id = f"apple-{hashlib.sha256(provider_user_id.encode()).hexdigest()}@scolioscan.local"
+
+        user = User(
+            user_id=user_id,
+            user_pw=get_password_hash(secrets.token_urlsafe(32)),
+            name=(payload.full_name or "Apple User").strip()[:32] or "Apple User",
+            phone=None,
+            birthday=None,
+            sex=None,
+            address=None,
+            detail_address=None,
+            alarm_count=0,
+            curvature_limit=10,
+            curvature_limit_reset_at=next_curvature_limit_reset_at(),
+            setting={"voice_alarm": False},
+        )
+        db.add(user)
+        now = utcnow()
+        created_social_account = create_social_account(
+            db=db,
+            user=user,
+            provider="apple",
+            provider_user_id=provider_user_id,
+            provider_email=provider_email,
+            linked_at=now,
+            provider_refresh_token=encrypted_refresh_token,
+        )
+        try:
+            db.flush()
+        except IntegrityError as error:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Apple account is already linked",
+            ) from error
+
+        access_token = create_access_token(data={"sub": user.user_id})
+        refresh_token, _ = issue_refresh_token(
+            db=db,
+            user=user,
+            device_id=payload.device_id,
+            device_name=payload.device_name,
+        )
+        db.commit()
+
         return build_social_ticket_exchange_response(
             provider="apple",
             provider_user_id=provider_user_id,
             provider_email=provider_email,
-            social_account=None,
-            provider_refresh_token=encrypted_refresh_token,
+            social_account=created_social_account,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=user,
         )
 
     user = db.get(User, social_account.user_id)

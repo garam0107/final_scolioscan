@@ -115,10 +115,10 @@ class UserResponse(BaseModel):
     id: UUID
     user_id: str
     name: str
-    phone: str
-    birthday: datetime
-    sex: bool
-    address: str
+    phone: Optional[str]
+    birthday: Optional[datetime]
+    sex: Optional[bool]
+    address: Optional[str]
     detail_address: Optional[str]
     profile_image: Optional[str]
     alarm_count: int

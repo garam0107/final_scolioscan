@@ -31,6 +31,7 @@ class AppleVerifyRequest(BaseModel):
     authorization_code: str = Field(..., min_length=1)
     device_id: str = Field(..., min_length=1, max_length=128)
     device_name: str = Field(..., min_length=1, max_length=128)
+    full_name: Optional[str] = Field(default=None, max_length=64)
 
 
 class SocialLinkExistingRequest(BaseModel):

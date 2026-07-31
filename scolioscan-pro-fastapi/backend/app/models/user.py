@@ -14,10 +14,11 @@ class User(Base):
     user_id = Column(String(64), unique=True, nullable=False, index=True)  # email
     user_pw = Column(String(512), nullable=False)
     name = Column(String(32), nullable=False)
-    phone = Column(String(64), nullable=False)
-    birthday = Column(DateTime, nullable=False)
-    sex = Column(Boolean, nullable=False)  # True: Male, False: Female
-    address = Column(String(128), nullable=False)
+    # Apple 신규 가입은 로그인 단계에서 불필요한 개인정보를 요구하지 않으므로 선택 입력으로 둔다.
+    phone = Column(String(64), nullable=True)
+    birthday = Column(DateTime, nullable=True)
+    sex = Column(Boolean, nullable=True)  # True: Male, False: Female
+    address = Column(String(128), nullable=True)
     detail_address = Column(String(128), nullable=True)
     profile_image = Column(String(256), nullable=True)  # 프로필 이미지 URL
     alarm_count = Column(Integer, nullable=False, default=0)

@@ -23,7 +23,7 @@ const DEVICE_MODEL_NAMES: Record<string, string> = {
   'SM-S938N': 'Galaxy S25 Ultra',
 };
 
-export function splitBirthday(birthday?: string) {
+export function splitBirthday(birthday?: string | null) {
   // 서버 생년월일 문자열을 입력칸 세 개에서 쓰기 쉬운 값으로 나눈다.
   if (!birthday) {
     return { year: '', month: '', day: '' };
