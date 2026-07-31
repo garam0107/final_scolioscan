@@ -76,40 +76,36 @@ async def verify_apple_social_login(
     if social_account is None:
         # Apple 신규 사용자는 다른 소셜 로그인처럼 계정 선택 모달을 거치지 않고
         # 필요한 최소 정보만으로 ScolioScan 계정을 즉시 만든다.
-        user_id = provider_email
-        if (
-            not user_id
-            or len(user_id) > 64
-            or db.query(User).filter(User.user_id == user_id).first() is not None
-        ):
-            # users.user_id가 VARCHAR(64)이므로 해시 일부만 사용해 내부 이메일 길이를 보장한다.
-            user_id = f"apple-{hashlib.sha256(provider_user_id.encode()).hexdigest()[:32]}@scolioscan.local"
+        # Apple은 이메일과 이름을 최초 동의 시점에만 전달할 수 있으므로 계정 식별에는 sub만 사용한다.
+        user_id = f"apple-{hashlib.sha256(provider_user_id.encode()).hexdigest()[:32]}@scolioscan.local"
+        user = db.query(User).filter(User.user_id == user_id).first()
 
-        user = User(
-            user_id=user_id,
-            user_pw=get_password_hash(secrets.token_urlsafe(32)),
-            name=(payload.full_name or "Apple User").strip()[:32] or "Apple User",
-            phone=None,
-            birthday=None,
-            sex=None,
-            address=None,
-            detail_address=None,
-            alarm_count=0,
-            curvature_limit=10,
-            curvature_limit_reset_at=next_curvature_limit_reset_at(),
-            setting={"voice_alarm": False},
-        )
-        db.add(user)
-        try:
-            # SocialAccount가 users.id를 외래 키로 사용하므로 먼저 사용자 UUID를 확정한다.
-            db.flush()
-        except IntegrityError as error:
-            db.rollback()
-            logger.exception("Apple 신규 사용자 생성 중 DB 무결성 오류가 발생했습니다.")
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Apple account could not be created",
-            ) from error
+        if user is None:
+            user = User(
+                user_id=user_id,
+                user_pw=get_password_hash(secrets.token_urlsafe(32)),
+                name=(payload.full_name or "Apple User").strip()[:32] or "Apple User",
+                phone=None,
+                birthday=None,
+                sex=None,
+                address=None,
+                detail_address=None,
+                alarm_count=0,
+                curvature_limit=10,
+                curvature_limit_reset_at=next_curvature_limit_reset_at(),
+                setting={"voice_alarm": False},
+            )
+            db.add(user)
+            try:
+                # SocialAccount가 users.id를 외래 키로 사용하므로 먼저 사용자 UUID를 확정한다.
+                db.flush()
+            except IntegrityError as error:
+                db.rollback()
+                logger.exception("Apple 신규 사용자 생성 중 DB 무결성 오류가 발생했습니다.")
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Apple account could not be created",
+                ) from error
 
         now = utcnow()
         created_social_account = create_social_account(
