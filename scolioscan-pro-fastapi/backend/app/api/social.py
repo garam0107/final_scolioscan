@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -46,6 +47,7 @@ from ..utils import create_access_token, get_current_user, get_password_hash
 from ..services.curvature_limit import next_curvature_limit_reset_at
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/social/apple/verify", response_model=SocialTicketExchangeResponse)
@@ -112,6 +114,8 @@ async def verify_apple_social_login(
             db.flush()
         except IntegrityError as error:
             db.rollback()
+            # Apple 신규 계정 생성 실패의 실제 MySQL 제약 오류를 운영 로그에 남긴다.
+            logger.exception("Apple 신규 계정 생성 중 DB 무결성 오류가 발생했습니다.")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Apple account is already linked",
