@@ -100,6 +100,17 @@ async def verify_apple_social_login(
             setting={"voice_alarm": False},
         )
         db.add(user)
+        try:
+            # SocialAccount가 users.id를 외래 키로 사용하므로 먼저 사용자 UUID를 확정한다.
+            db.flush()
+        except IntegrityError as error:
+            db.rollback()
+            logger.exception("Apple 신규 사용자 생성 중 DB 무결성 오류가 발생했습니다.")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Apple account could not be created",
+            ) from error
+
         now = utcnow()
         created_social_account = create_social_account(
             db=db,
@@ -114,8 +125,8 @@ async def verify_apple_social_login(
             db.flush()
         except IntegrityError as error:
             db.rollback()
-            # Apple 신규 계정 생성 실패의 실제 MySQL 제약 오류를 운영 로그에 남긴다.
-            logger.exception("Apple 신규 계정 생성 중 DB 무결성 오류가 발생했습니다.")
+            # 동시에 같은 Apple 계정을 연결한 경우의 실제 MySQL 제약 오류를 운영 로그에 남긴다.
+            logger.exception("Apple 소셜 계정 연결 중 DB 무결성 오류가 발생했습니다.")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Apple account is already linked",
