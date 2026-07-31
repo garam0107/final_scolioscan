@@ -14,10 +14,10 @@ export interface UserResponse {
   id: string;
   user_id: string;
   name: string;
-  phone: string | null;
-  birthday: string | null;
-  sex: boolean | null;
-  address: string | null;
+  phone: string;
+  birthday: string;
+  sex: boolean;
+  address: string;
   detail_address?: string | null;
   profile_image?: string | null;
   alarm_count: number;

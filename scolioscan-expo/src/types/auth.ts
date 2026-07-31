@@ -73,7 +73,6 @@ export interface AppleVerifyRequest {
   authorization_code: string;
   device_id: string;
   device_name: string;
-  full_name?: string | null;
 }
 
 export interface SocialLinkExistingRequest {

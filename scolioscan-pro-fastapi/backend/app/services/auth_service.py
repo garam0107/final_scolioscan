@@ -70,7 +70,7 @@ def find_user_by_name_and_phone(name: str, normalized_phone: str, db: Session) -
     users = db.query(User).filter(User.name == name).all()
 
     for user in users:
-        if user.phone and normalize_phone_number(user.phone) == normalized_phone:
+        if normalize_phone_number(user.phone) == normalized_phone:
             return user
 
     return None
@@ -81,7 +81,7 @@ def find_user_by_normalized_phone(normalized_phone: str, db: Session) -> User | 
     users = db.query(User).all()
 
     for user in users:
-        if user.phone and normalize_phone_number(user.phone) == normalized_phone:
+        if normalize_phone_number(user.phone) == normalized_phone:
             return user
 
     return None

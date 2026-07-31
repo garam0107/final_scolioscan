@@ -1,7 +1,3 @@
-import hashlib
-import logging
-import secrets
-
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -47,7 +43,6 @@ from ..utils import create_access_token, get_current_user, get_password_hash
 from ..services.curvature_limit import next_curvature_limit_reset_at
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
 @router.post("/social/apple/verify", response_model=SocialTicketExchangeResponse)
@@ -74,77 +69,12 @@ async def verify_apple_social_login(
     social_account = get_social_account(db, "apple", provider_user_id)
 
     if social_account is None:
-        # Apple 신규 사용자는 다른 소셜 로그인처럼 계정 선택 모달을 거치지 않고
-        # 필요한 최소 정보만으로 ScolioScan 계정을 즉시 만든다.
-        # Apple은 이메일과 이름을 최초 동의 시점에만 전달할 수 있으므로 계정 식별에는 sub만 사용한다.
-        user_id = f"apple-{hashlib.sha256(provider_user_id.encode()).hexdigest()[:32]}@scolioscan.local"
-        user = db.query(User).filter(User.user_id == user_id).first()
-
-        if user is None:
-            user = User(
-                user_id=user_id,
-                user_pw=get_password_hash(secrets.token_urlsafe(32)),
-                name=(payload.full_name or "Apple User").strip()[:32] or "Apple User",
-                phone=None,
-                birthday=None,
-                sex=None,
-                address=None,
-                detail_address=None,
-                alarm_count=0,
-                curvature_limit=10,
-                curvature_limit_reset_at=next_curvature_limit_reset_at(),
-                setting={"voice_alarm": False},
-            )
-            db.add(user)
-            try:
-                # SocialAccount가 users.id를 외래 키로 사용하므로 먼저 사용자 UUID를 확정한다.
-                db.flush()
-            except IntegrityError as error:
-                db.rollback()
-                logger.exception("Apple 신규 사용자 생성 중 DB 무결성 오류가 발생했습니다.")
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Apple account could not be created",
-                ) from error
-
-        now = utcnow()
-        created_social_account = create_social_account(
-            db=db,
-            user=user,
-            provider="apple",
-            provider_user_id=provider_user_id,
-            provider_email=provider_email,
-            linked_at=now,
-            provider_refresh_token=encrypted_refresh_token,
-        )
-        try:
-            db.flush()
-        except IntegrityError as error:
-            db.rollback()
-            # 동시에 같은 Apple 계정을 연결한 경우의 실제 MySQL 제약 오류를 운영 로그에 남긴다.
-            logger.exception("Apple 소셜 계정 연결 중 DB 무결성 오류가 발생했습니다.")
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Apple account is already linked",
-            ) from error
-
-        access_token = create_access_token(data={"sub": user.user_id})
-        refresh_token, _ = issue_refresh_token(
-            db=db,
-            user=user,
-            device_id=payload.device_id,
-            device_name=payload.device_name,
-        )
-        db.commit()
-
         return build_social_ticket_exchange_response(
             provider="apple",
             provider_user_id=provider_user_id,
             provider_email=provider_email,
-            social_account=created_social_account,
-            access_token=access_token,
-            refresh_token=refresh_token,
-            user=user,
+            social_account=None,
+            provider_refresh_token=encrypted_refresh_token,
         )
 
     user = db.get(User, social_account.user_id)

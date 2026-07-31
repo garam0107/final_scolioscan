@@ -35,7 +35,7 @@ type AuthContextValue = {
   verifyGoogleSocialLogin: (idToken: string) => Promise<SocialAuthResponse>;
   verifyKakaoSocialLogin: (accessToken: string) => Promise<SocialAuthResponse>;
   verifyNaverSocialLogin: (accessToken: string) => Promise<SocialAuthResponse>;
-  verifyAppleSocialLogin: (identityToken: string, authorizationCode: string, fullName?: string | null) => Promise<SocialAuthResponse>;
+  verifyAppleSocialLogin: (identityToken: string, authorizationCode: string) => Promise<SocialAuthResponse>;
   linkSocialAccount: (payload: Omit<SocialLinkExistingRequest, 'device_id' | 'device_name'>) => Promise<void>;
   signupWithSocialAccount: (payload: Omit<SocialSignupRequest, 'device_id' | 'device_name'>) => Promise<void>;
   checkEmail: (email: string) => Promise<boolean>;
@@ -294,7 +294,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyAppleSocialLogin = useCallback(async (
     identityToken: string,
     authorizationCode: string,
-    fullName?: string | null,
   ) => {
     try {
       // Apple에서 받은 서명 토큰과 일회성 코드는 서버에서 함께 검증한다.
@@ -303,7 +302,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authAPI.verifyAppleSocialLogin({
         identity_token: identityToken,
         authorization_code: authorizationCode,
-        full_name: fullName,
         device_id: deviceId,
         device_name: deviceName,
       });
