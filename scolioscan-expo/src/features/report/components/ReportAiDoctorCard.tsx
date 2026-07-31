@@ -49,8 +49,8 @@ const RISK_COPY: Record<RiskLevel, {
     labelStyle: styles.aiRiskLabelSevere,
     Icon: DangerHardIcon,
     prognosis: '병원에서 의사와 상담 및 치료를 위한 수술 고려가 필요해요.',
-    brace: '보조기 착용이나 추가 치료가 필요할 수 있어요. 전문의와 치료 방향을 상의하세요.',
-    posture: '무리한 운동을 피하고, 통증이나 호흡 불편감이 있다면 즉시 의료진과 상담하세요.',
+    brace: '보조기 착용이나 추가 치료가 필요할 수 있어요.',
+    posture: '무리한 운동을 피하고, 통증이나 호흡 불편감이 있다면 즉시 의료진과 상담하시는 것을 추천드립니다.',
   },
 };
 
