@@ -63,7 +63,7 @@ export default function HomeScreen() {
     {
       id: '2d',
       subtitleLineBreakAfter: '사진 한 장으로',
-      title: '카메라 측정하기',
+      title: '카메라로 측정하기',
       subtitle: '사진 한 장으로 간편하게 측정',
       remainingText: user ? `${user.curvature_limit}${i18n.t('회 남음')}` : undefined,
       icon: <TwoIcon width={measurementCardLayout.iconSize} height={measurementCardLayout.iconSize} />,

@@ -587,6 +587,8 @@ const screenText: Record<string, ScreenTextPair> = {
   '다시 보고 싶으신 가이드를 눌러주세요': ['Select the guide you want to view again.', 'もう一度見たいガイドを選択してください。'],
   '히스토리를 PDF로 저장했어요': ['Your history has been saved as a PDF.', '履歴をPDFとして保存しました。'],
   '저장한 PDF 파일을 다른 사람에게 공유할까요?': ['Would you like to share the saved PDF?', '保存したPDFを共有しますか？'],
+  '히스토리를 PDF로 저장하시겠어요?': ['Would you like to save your history as a PDF?', '履歴をPDFとして保存しますか？'],
+  '저장하기': ['Save', '保存'],
   '오전': ['AM', '午前'],
   '오후': ['PM', '午後'],
   '야간 모드 시간 설정': ['Set Night Mode Hours', '夜間モードの時間設定'],

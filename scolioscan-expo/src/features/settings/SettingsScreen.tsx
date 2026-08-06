@@ -15,6 +15,7 @@ import SettingsTimeRow from '@/src/features/settings/components/SettingsTimeRow'
 // import SubscriptionCard from '@/src/features/settings/components/SubscriptionCard';
 import DataResetSheet from '@/src/features/settings/sheets/DataResetSheet';
 import GuideReplaySheet from '@/src/features/settings/sheets/GuideReplaySheet';
+import HistoryExportConfirmSheet from '@/src/features/settings/sheets/HistoryExportConfirmSheet';
 import HistoryExportSheet from '@/src/features/settings/sheets/HistoryExportSheet';
 import LanguageSettingsSheet from '@/src/features/settings/sheets/LanguageSettingsSheet';
 import NightModeSettingsSheet from '@/src/features/settings/sheets/NightModeSettingsSheet';
@@ -28,7 +29,7 @@ import { useMeasurementRefreshStore } from '@/src/store/measurementRefreshStore'
 import { getAppLanguage, i18n, setAppLanguage } from '@/src/i18n';
 import type { AppLanguage } from '@/src/i18n/resources';
 import { useTranslation } from 'react-i18next';
-type SettingsSheetType = 'language' | 'reset' | 'guide' | 'historyExport' | 'nightMode' | null;
+type SettingsSheetType = 'language' | 'reset' | 'guide' | 'historyExportConfirm' | 'historyExport' | 'nightMode' | null;
 
 const DEFAULT_TOGGLES: Record<SettingsToggleKey, boolean> = {
   cellular: true,
@@ -191,6 +192,12 @@ export default function SettingsScreen() {
     } finally {
       setHistoryExporting(false);
     }
+  };
+
+  const handleHistoryExportConfirmPress = () => {
+    // 확인 시트는 먼저 닫고, 사용자가 저장을 선택한 경우에만 PDF 생성을 시작한다.
+    setSettingsSheetType(null);
+    void handleHistoryExportPress();
   };
 
   const handleHistorySharePress = async () => {
@@ -394,7 +401,7 @@ export default function SettingsScreen() {
           <SettingRow
             title={i18n.t("히스토리 내보내기")}
             description={i18n.t("PDF 파일로 저장")}
-            onPress={handleHistoryExportPress}
+            onPress={() => setSettingsSheetType('historyExportConfirm')}
           />
         </SettingsSection>
 
@@ -424,6 +431,12 @@ export default function SettingsScreen() {
       <GuideReplaySheet
         visible={settingsSheetType === 'guide'}
         onClose={closeSettingsSheet}
+      />
+
+      <HistoryExportConfirmSheet
+        visible={settingsSheetType === 'historyExportConfirm'}
+        onClose={closeSettingsSheet}
+        onConfirm={handleHistoryExportConfirmPress}
       />
 
       <HistoryExportSheet
