@@ -46,7 +46,7 @@ const screenText: Record<string, ScreenTextPair> = {
   '허리 부위 중심으로 만곡이 나타나는 형태예요.': ['The curve is mainly located in the lumbar spine.', '腰椎を中心にカーブが見られるタイプです。'],
   '비표준 만곡': ['Unclassified Curve', '非標準カーブ'],
   '일반적인 분류에 딱 맞지 않는 만곡 패턴이에요.': ['The curve pattern does not fit a standard category.', '一般的な分類に当てはまらないカーブパターンです。'],
-  '카메라 측정하기': ['Camera Measurement', 'カメラ 測定'],
+  '카메라로 측정하기': ['Camera Measurement', 'カメラ 測定'],
   '카메라로 측정 이용 방법': ['How to Use Camera Measurement', 'カメラ測定の使い方'],
   '회 남음': [' remaining', '回 残り'],
   '월 10회 이용 횟수를 모두 사용했습니다.': [
