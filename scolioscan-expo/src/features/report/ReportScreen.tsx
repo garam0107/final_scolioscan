@@ -42,10 +42,12 @@ import NetworkErrorView from '@/src/components/NetworkErrorView';
 
 // 측정 목록 제목이 화면 상단에 걸리는 기준점이다. SafeAreaView 안쪽 기준이라 값을 키우면 상단에서 더 떨어진다.
 const MEASUREMENT_LIST_STICKY_TOP = 12;
-// 내부 카드 스크롤 영역이 하단 탭바와 너무 붙지 않도록 남겨두는 여백이다.
-const MEASUREMENT_LIST_BOTTOM_RESERVED = 20;
+const MEASUREMENT_LIST_BOTTOM_RESERVED = 0;
+// 측정 목록이 고정된 뒤 고지와 카드, 하단 탭바 사이에 유지할 여백이다.
+const MEDICAL_DISCLAIMER_VERTICAL_GAP = 20;
 // 화면이 작거나 측정 중인 높이가 아직 0일 때도 목록 영역이 너무 작아지지 않게 하는 최소 높이다.
 const MIN_MEASUREMENT_LIST_AREA_HEIGHT = 120;
+const MEDICAL_DISCLAIMER_KEY = '의료 관련 고지\n본 서비스는 의료행위 또는 의료기기가 아니며,\n진단, 치료 또는 예방을 목적으로 하지 않습니다.\n제공되는 정보는 참고용이며,\n건강 관련 판단은 반드시 의료 전문가와 상담하시기 바랍니다.';
 
 export default function ReportScreen() {
   const router = useRouter();
@@ -108,6 +110,9 @@ export default function ReportScreen() {
     viewportHeight: 0,
     contentHeight: 0,
   });
+  // 고지는 숨겨진 상태에서도 높이를 측정해 목록이 상단에 닿는 순간 겹침 없이 표시한다.
+  const [medicalDisclaimerHeight, setMedicalDisclaimerHeight] = useState(0);
+  const [isMeasurementListAtTop, setMeasurementListAtTop] = useState(false);
 
   // 현재 선택된 리포트 탭을 다시 누르면 메인 스크롤만 맨 위로 올린다.
   useScrollToTop(scrollRef);
@@ -127,7 +132,10 @@ export default function ReportScreen() {
     outerScrollMetrics.viewportHeight -
       MEASUREMENT_LIST_STICKY_TOP -
       listAreaOffsetY -
-      MEASUREMENT_LIST_BOTTOM_RESERVED,
+      MEASUREMENT_LIST_BOTTOM_RESERVED -
+      (isMeasurementListAtTop
+        ? medicalDisclaimerHeight + MEDICAL_DISCLAIMER_VERTICAL_GAP * 2
+        : 0),
   );
   // 카드가 적으면 외부 스크롤 자체가 lock 위치까지 도달하지 못하므로 내부 스크롤을 켜면 안 된다.
   const canReachMeasurementListTop =
@@ -141,12 +149,18 @@ export default function ReportScreen() {
   const updateCanScrollList = useCallback((scrollY: number) => {
     // 측정 목록이 상단 기준까지 올라갈 수 있고, 카드가 남은 화면보다 많을 때만 내부 스크롤을 켠다.
     const nextCanScrollList = shouldUseInnerListScroll && scrollY >= measurementListLockY - 1;
+    const nextMeasurementListAtTop =
+      measurementListY > 0 && scrollY >= measurementListLockY - 1;
 
     if (canScrollListRef.current !== nextCanScrollList) {
       canScrollListRef.current = nextCanScrollList;
       setCanScrollList(nextCanScrollList);
     }
-  }, [measurementListLockY, shouldUseInnerListScroll]);
+
+    setMeasurementListAtTop((current) =>
+      current === nextMeasurementListAtTop ? current : nextMeasurementListAtTop,
+    );
+  }, [measurementListLockY, measurementListY, shouldUseInnerListScroll]);
 
   useEffect(() => {
     // 측정 목록 카드 수나 화면 높이가 바뀌면 현재 스크롤 위치 기준으로 내부 스크롤 가능 여부를 다시 맞춘다.
@@ -184,6 +198,14 @@ export default function ReportScreen() {
   const handleListAreaLayout = (event: LayoutChangeEvent) => {
     // 측정 목록 제목과 탭을 제외한 카드 영역의 시작 위치를 저장한다.
     setListAreaOffsetY(event.nativeEvent.layout.y);
+  };
+
+  const handleMedicalDisclaimerLayout = (event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height;
+
+    if (Math.abs(medicalDisclaimerHeight - nextHeight) > 1) {
+      setMedicalDisclaimerHeight(nextHeight);
+    }
   };
 
   const handleAnalysisPress = (item: ReportMeasurementListItem) => {
@@ -269,7 +291,10 @@ export default function ReportScreen() {
             shouldShowMeasurementRequired ? styles.measurementRequiredContent : null,
             {
               paddingTop: 8,
-              paddingBottom: 16,
+              // 목록이 고정된 상태에서는 고지 높이만큼 하단 스크롤 여백도 함께 확보한다.
+              paddingBottom: isMeasurementListAtTop
+                ? medicalDisclaimerHeight + MEDICAL_DISCLAIMER_VERTICAL_GAP * 2
+                : 16,
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -358,6 +383,20 @@ export default function ReportScreen() {
             </>
           )}
         </ScrollView>
+        {!shouldShowMeasurementRequired ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.medicalDisclaimerFooter,
+              isMeasurementListAtTop
+                ? styles.medicalDisclaimerFooterVisible
+                : styles.medicalDisclaimerFooterHidden,
+            ]}
+            onLayout={handleMedicalDisclaimerLayout}
+          >
+            <Text style={styles.medicalDisclaimerText}>{i18n.t(MEDICAL_DISCLAIMER_KEY)}</Text>
+          </View>
+        ) : null}
       </SafeAreaView>
       <ReportMonthSheet
         visible={monthSheetVisible}

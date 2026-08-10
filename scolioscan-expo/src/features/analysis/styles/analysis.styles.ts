@@ -59,10 +59,10 @@ const styles = StyleSheet.create({
   },
   medicalDisclaimerText: {
     ...textFont,
-    color: Colors.gray[300],
+    color: Colors.gray[200],
     fontSize: 10,
     fontWeight: '400',
-    lineHeight: 16,
+    lineHeight: 14,
     textAlign: 'center',
   },
   subtitle: {

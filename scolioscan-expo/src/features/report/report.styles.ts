@@ -13,6 +13,27 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     flexGrow: 1,
   },
+  medicalDisclaimerFooter: {
+    position: 'absolute',
+    right: 16,
+    bottom: 20,
+    left: 16,
+    alignItems: 'center',
+  },
+  medicalDisclaimerFooterVisible: {
+    opacity: 1,
+  },
+  medicalDisclaimerFooterHidden: {
+    opacity: 0,
+  },
+  medicalDisclaimerText: {
+    ...textFont,
+    color: Colors.gray[200],
+    fontSize: 10,
+    fontWeight: '400',
+    lineHeight: 14,
+    textAlign: 'center',
+  },
   measurementRequiredContent: {
     alignItems: 'center',
     justifyContent: 'center',
