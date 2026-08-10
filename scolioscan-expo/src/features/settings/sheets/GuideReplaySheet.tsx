@@ -13,7 +13,7 @@ type GuideReplaySheetProps = {
 const GUIDE_OPTIONS = [
   // 3D 스캔 가이드는 이후 연결할 예정이라 현재 다시보기 시트에서는 노출하지 않는다.
   {
-    label: '카메라 측정하기',
+    label: '카메라로 측정하기',
     route: '/measure/guide-2d-camera?mode=replay',
   },
   {
