@@ -38,6 +38,7 @@ const WIDE_LAYOUT_MIN_WIDTH = 600;
 const BASE_STAGE_WIDTH = 420;
 const BASE_STAGE_HEIGHT = 380;
 const STAGE_HORIZONTAL_PADDING = 20;
+const MEDICAL_DISCLAIMER_KEY = '의료 관련 고지\n본 서비스는 의료행위 또는 의료기기가 아니며,\n진단, 치료 또는 예방을 목적으로 하지 않습니다.\n제공되는 정보는 참고용이며,\n건강 관련 판단은 반드시 의료 전문가와 상담하시기 바랍니다.';
 type AnalysisScreenProps = {
   analysisId?: string;
 };
@@ -238,6 +239,11 @@ export default function AnalysisScreen({ analysisId }: AnalysisScreenProps) {
           <CurvePatternCard dominantCurve={dominantCurve} />
 
           <ReportAiDoctorCard latestCurvature={measurementSet?.curvature ?? null} />
+
+          {/* 분석 결과를 해석하기 전 의료 관련 고지를 확인할 수 있도록 콘텐츠 마지막에 배치한다. */}
+          <View style={styles.medicalDisclaimer}>
+            <Text style={styles.medicalDisclaimerText}>{i18n.t(MEDICAL_DISCLAIMER_KEY)}</Text>
+          </View>
             </>
           )}
         </ScrollView>

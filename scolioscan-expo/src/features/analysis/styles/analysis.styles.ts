@@ -52,6 +52,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
   },
+  medicalDisclaimer: {
+    width: '100%',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  medicalDisclaimerText: {
+    ...textFont,
+    color: Colors.gray[300],
+    fontSize: 10,
+    fontWeight: '400',
+    lineHeight: 16,
+    textAlign: 'center',
+  },
   subtitle: {
     ...textFont,
     marginTop: 2,
