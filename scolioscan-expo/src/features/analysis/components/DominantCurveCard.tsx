@@ -59,14 +59,14 @@ export default function DominantCurveCard({
       ]}
     >
       <View style={styles.dominantCurveText}>
-        <Text style={styles.dominantCurveTitle}>{i18n.t("척추 지배만곡 유형")}</Text>
+        <Text style={styles.dominantCurveTitle}>{i18n.t("척추 만곡 유형")}</Text>
 
         <Text style={styles.dominantCurveBody}>
-          {summaryName}{i18n.t("님의 척추 지배만곡 유형은")}{'\n'}
+          {summaryName}{i18n.t("님의 척추 만곡 유형은")}{'\n'}
           <Text style={styles.dominantCurveDiagnosis}>
             {i18n.t(dominantCurve.diagnosisName)}
           </Text>{' '}
-          {i18n.t('이에요')}
+          {i18n.t('으로 예상됩니다.')}
         </Text>
 
         <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>

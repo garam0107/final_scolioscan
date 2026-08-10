@@ -150,7 +150,7 @@ const cardStyles = StyleSheet.create({
     height: 1,
     backgroundColor: '#EEF1F3',
   },
-  // 척추 지배만곡 유형 카드 스타일입니다.
+  // 척추 만곡 유형 카드 스타일입니다.
   dominantCurveCard: {
     marginTop: 20,
     backgroundColor: '#2C9696',
