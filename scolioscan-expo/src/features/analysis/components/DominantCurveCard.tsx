@@ -69,9 +69,15 @@ export default function DominantCurveCard({
           {i18n.t('으로 예상됩니다.')}
         </Text>
 
-        <Pressable onPress={() => Linking.openURL('http://www.ysbrpain.com/spinalClinic/scoliosis')}>
-          <Text style={styles.dominantCurveLink}>{i18n.t("더 알아보기")}</Text>
-        </Pressable>
+        <View style={styles.dominantCurveLinks}>
+          <Pressable onPress={() => Linking.openURL('https://www.srs.org/Patients/Diagnosis-And-Treatment/Diagnosing-Scoliosis')}>
+            <Text style={styles.dominantCurveLink}>{i18n.t("더 알아보기")}</Text>
+          </Pressable>
+          {/* 만곡 유형 용어의 근거가 되는 SRS 공식 용어집으로 연결한다. */}
+          <Pressable onPress={() => Linking.openURL('https://www.srs.org/Patients/Resources/Glossary-of-Terms')}>
+            <Text style={styles.dominantCurveLink}>{i18n.t("참고문헌")}</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View

@@ -193,9 +193,13 @@ const cardStyles = StyleSheet.create({
     color: Colors.primary['white'],
     fontWeight: '500',
   },
+  dominantCurveLinks: {
+    flexDirection: 'row',
+    gap: 13,
+    marginTop: 22,
+  },
   dominantCurveLink: {
     ...textFont,
-    marginTop: 22,
     color: Colors.gray[25],
     fontSize: 10,
     fontWeight: '400',

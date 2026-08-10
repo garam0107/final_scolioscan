@@ -32,7 +32,7 @@ const RISK_COPY: Record<RiskLevel, {
     label: '정상',
     labelStyle: styles.aiRiskLabelNormal,
     Icon: DangerSafeIcon,
-    prognosis: '현재 척추 상태가 양호합니다. 정기적인 자세 점검과 운동으로 건강을 유지하세요.',
+    prognosis: '현재 척추 상태가 양호한 것으로 예상됩니다. 정기적인 자세 점검과 운동으로 건강을 유지하세요.',
     brace: '보조기 착용이 필요하지 않아요.',
     posture: '바른 자세 습관을 유지하고, 장시간 같은 자세를 피하세요.',
   },
@@ -41,7 +41,7 @@ const RISK_COPY: Record<RiskLevel, {
     labelStyle: styles.aiRiskLabelModerate,
     Icon: DangerNormalIcon,
     prognosis: '연 1회 정기 관찰을 권장해요. 일상에서 자세를 인식하고 바른 자세를 유지해주세요.',
-    brace: '보스턴 보조기 등 TLSO를 하루 18~23시간 착용하시기를 권장드려요.',
+    brace: '의사와 상의 후 보조기 착용하시기를 권장드려요.',
     posture: '앉을 때 골반과 어깨 균형을 맞추고, 한쪽으로 기대는 습관을 줄여주세요.',
   },
   severe: {
