@@ -312,7 +312,8 @@ export default function MeasureLoadingPreviewScreen() {
       >
         <PrimaryButton
           title={analysisError ? i18n.t("다시 촬영하기") : i18n.t("분석 결과 보기")}
-          onPress={() => analysisError ? router.replace('/measure/2d') : router.push('/analysis')}
+          // 결과 보기 화면이 뒤로가기 기록에 남지 않도록 분석 화면으로 교체한다.
+          onPress={() => analysisError ? router.replace('/measure/2d') : router.replace('/analysis')}
           width={width - 32}
           height={56}
           backgroundColor={Colors.mint[500]}

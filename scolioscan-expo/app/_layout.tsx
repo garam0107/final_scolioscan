@@ -11,6 +11,8 @@ import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useEffect, useRef, useState } from 'react';
 import { i18n, initializeLanguage } from '@/src/i18n';
+import { usePathname } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 // 애드몹 SDK
 import mobileAds, { AdsConsent } from 'react-native-google-mobile-ads';
 
@@ -54,6 +56,7 @@ applyDefaultFont(Text);
 applyDefaultFont(TextInput);
 
 export default function RootLayout() {
+  const pathname = usePathname();
   const colorScheme = useColorScheme();
   const [languageRevision, setLanguageRevision] = useState(0);
   const [museoLoaded] = useMuseoFonts({
@@ -61,6 +64,15 @@ export default function RootLayout() {
   });
   const mobileAdsInitializedRef = useRef(false);
   const [isAdsReady, setIsAdsReady] = useState(false);
+
+  useEffect(() => {
+    // 척추측정계 화면은 자체적으로 가로 방향을 고정하므로, 그 외 화면만 세로로 유지한다.
+    if (pathname === '/measure/scoliometer') {
+      return;
+    }
+
+    void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+  }, [pathname]);
 
   useEffect(() => {
     const startGoogleMobileAds = async () => {
