@@ -76,7 +76,20 @@ const cardStyles = StyleSheet.create({
     color: '#1E2D30',
     fontSize: 18,
     fontWeight: '700',
+  },
+  severityCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 22,
+  },
+  severityReferenceLink: {
+    ...textFont,
+    color: Colors.gray[300],
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '400',
+    textDecorationLine: 'underline',
   },
   severityCardInner: {
     gap: 18,

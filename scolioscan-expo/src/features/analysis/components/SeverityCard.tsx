@@ -1,6 +1,6 @@
 import { i18n } from '@/src/i18n';
 import { BlurView } from 'expo-blur';
-import { Platform, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, Text, View } from 'react-native';
 
 import styles from '../styles/analysisCards.styles';
 import type { AnalysisPose } from '../analysisPose';
@@ -11,6 +11,17 @@ type SeverityCardProps = {
   metrics: AnalysisPose['metrics'];
   metricBlurMode: 'none' | 'rotation-only' | 'all';
 };
+
+const SEVERITY_REFERENCE_URL = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11297403/';
+
+async function openSeverityReference() {
+  try {
+    // 심각도 분류 기준의 근거가 되는 참고문헌을 외부 브라우저에서 엽니다.
+    await Linking.openURL(SEVERITY_REFERENCE_URL);
+  } catch (error) {
+    console.warn('[analysis] 참고문헌 링크 열기 실패', error);
+  }
+}
 
 function BlurredSeverityValue({ value, blurred }: { value: string; blurred: boolean }) {
   if (!blurred) {
@@ -38,7 +49,16 @@ function BlurredSeverityValue({ value, blurred }: { value: string; blurred: bool
 export default function SeverityCard({ metrics, metricBlurMode }: SeverityCardProps) {
   return (
     <View style={styles.severityCard}>
-      <Text style={styles.severityCardTitle}>{i18n.t("심각도 분석")}</Text>
+      <View style={styles.severityCardHeader}>
+        <Text style={styles.severityCardTitle}>{i18n.t("심각도 분석")}</Text>
+        <Pressable
+          accessibilityRole="link"
+          hitSlop={8}
+          onPress={() => void openSeverityReference()}
+        >
+          <Text style={styles.severityReferenceLink}>{i18n.t("참고문헌")}</Text>
+        </Pressable>
+      </View>
 
       <View style={styles.severityCardInner}>
         {metrics.map((metric, index) => {
