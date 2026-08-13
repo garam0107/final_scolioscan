@@ -245,7 +245,20 @@ const cardStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     lineHeight: 22,
+  },
+  curvePatternHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
+  },
+  curvePatternReferenceLink: {
+    ...textFont,
+    color: Colors.gray[300],
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '400',
+    textDecorationLine: 'underline',
   },
   curvePatternContent: {
     flexDirection: 'row',

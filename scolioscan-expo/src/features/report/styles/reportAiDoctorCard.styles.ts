@@ -140,6 +140,17 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '400',
   },
+  aiReferenceButton: {
+    alignSelf: 'flex-end',
+  },
+  aiReferenceLink: {
+    ...textFont,
+    color: Colors.gray[300],
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '400',
+    textDecorationLine: 'underline',
+  },
   pressed: {
     opacity: 0.92,
   },

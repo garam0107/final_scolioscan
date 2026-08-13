@@ -56,6 +56,7 @@ const RISK_COPY: Record<RiskLevel, {
 
 const YOUTUBE_WATCH_URL = 'https://www.youtube.com/watch?v=';
 const YOUTUBE_THUMBNAIL_URL = 'https://img.youtube.com/vi';
+const SCOLIOSCAN_RECOMMENDATION_REFERENCE_URL = 'https://www.srs.org/Patients/Diagnosis-And-Treatment';
 
 const RISK_EXERCISES: Record<RiskLevel, ExerciseItem[]> = {
   normal: [
@@ -117,6 +118,15 @@ function getYoutubeLink(videoId: string) {
 
 function getYoutubeThumbnail(videoId: string) {
   return `${YOUTUBE_THUMBNAIL_URL}/${videoId}/hqdefault.jpg`;
+}
+
+async function openScolioScanRecommendationReference() {
+  try {
+    // 추천 카드에 사용한 척추측만증 정보의 공식 근거 문서를 외부 브라우저에서 엽니다.
+    await Linking.openURL(SCOLIOSCAN_RECOMMENDATION_REFERENCE_URL);
+  } catch (error) {
+    console.warn('[analysis] ScolioScan 추천 참고문헌 링크 열기 실패', error);
+  }
 }
 
 function getRiskLevel(latestCurvature: CurvatureResponse | null): RiskLevel | null {
@@ -214,6 +224,15 @@ export default function ReportAiDoctorCard({ latestCurvature }: ReportAiDoctorCa
           ))}
         </View>
       </View>
+
+      <Pressable
+        accessibilityRole="link"
+        hitSlop={8}
+        onPress={() => void openScolioScanRecommendationReference()}
+        style={styles.aiReferenceButton}
+      >
+        <Text style={styles.aiReferenceLink}>{i18n.t("참고문헌")}</Text>
+      </Pressable>
     </View>
   );
 }
