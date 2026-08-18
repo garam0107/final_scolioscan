@@ -188,7 +188,7 @@ export default function HomeScreen() {
             onProPress={() => setIsProModalVisible(true)}
           />
 
-          <HomeBanner width={bannerWidth} height={bannerHeight} />
+          {/* <HomeBanner width={bannerWidth} height={bannerHeight} /> */}
 
           <View style={styles.weeklySection}>
             <Text style={styles.sectionHeading}>{i18n.t("최근 1개월 측정 결과")}</Text>
