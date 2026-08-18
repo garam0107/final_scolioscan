@@ -8,14 +8,14 @@ import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NetworkErrorView from '@/src/components/NetworkErrorView';
 import { useAuth } from '@/src/contexts/AuthContext';
-import HomeBanner from '@/src/features/home/components/HomeBanner';
+// import HomeBanner from '@/src/features/home/components/HomeBanner';
 import HomeHeader from '@/src/features/home/components/HomeHeader';
 import HomeProModal from '@/src/features/home/components/HomeProModal';
 import MeasurementLimitModal from '@/src/features/home/components/MeasurementLimitModal';
 import MeasurementShortcutSection from '@/src/features/home/components/MeasurementShortcutSection';
 import type { MeasurementItem } from '@/src/features/home/components/MeasurementCard';
 
-import { useHomeBannerPager } from '@/src/features/home/hooks/useHomeBannerPager';
+// import { useHomeBannerPager } from '@/src/features/home/hooks/useHomeBannerPager';
 import { useHomeCurvatureSummary } from '@/src/features/home/hooks/useHomeCurvatureSummary';
 import styles, { getHomeMeasurementCardLayout } from '@/src/features/home/home.styles';
 import homeHeaderStyles from '@/src/features/home/styles/homeHeader.styles';
@@ -39,7 +39,7 @@ export default function HomeScreen() {
   const measurementCardLayout = getHomeMeasurementCardLayout(width);
   const trendChartWidth = width - 72;
   const displayName = user?.name?.trim() || i18n.t('회원');
-  const { bannerHeight, bannerWidth } = useHomeBannerPager(width);
+  // const { bannerHeight, bannerWidth } = useHomeBannerPager(width);
   const {
     selectedWeeklyResultId,
     setSelectedWeeklyResultId,
