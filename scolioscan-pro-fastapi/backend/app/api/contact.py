@@ -54,8 +54,19 @@ async def send_contact_with_attachments(
         })
 
     email_sent = send_contact_email(
-        # 사용자가 회신 이메일을 생략하면 로그인 계정 이메일을 사용한다.
-        user_email=email or current_user.user_id,
+        # Apple 직접 가입자는 내부 식별자 대신 Apple이 제공한 회신 이메일을 사용한다.
+        user_email=email or (
+            next(
+                (
+                    account.provider_email
+                    for account in current_user.social_accounts
+                    if account.provider == "apple" and account.provider_email
+                ),
+                None,
+            )
+            if current_user.is_apple_direct_signup
+            else current_user.user_id
+        ) or "미입력",
         inquiry_type=inquiry_type,
         inquiry_content=inquiry_content,
         attachments=attachments,

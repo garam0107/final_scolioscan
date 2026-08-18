@@ -1,11 +1,17 @@
-import emails
-from emails.template import JinjaTemplate
-from ..config import settings
+import logging
 import random
 import smtplib
 import string
 from email.message import EmailMessage
 from typing import Optional, Sequence, TypedDict
+
+import emails
+from emails.template import JinjaTemplate
+
+from ..config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class EmailAttachment(TypedDict):
@@ -43,8 +49,9 @@ def send_email(
 
         response = message.send(to=email_to, smtp=smtp_options)
         return response.status_code == 250
-    except Exception as e:
-        print(f"Failed to send email: {e}")
+    except Exception:
+        # Docker 로그에서 SMTP 예외 원인과 호출 경로를 함께 확인할 수 있게 남긴다.
+        logger.exception("이메일 발송에 실패했습니다.")
         return False
 
 
@@ -83,8 +90,9 @@ def send_email_with_attachments(
                 server.send_message(message)
 
         return True
-    except Exception as e:
-        print(f"Failed to send email with attachments: {e}")
+    except Exception:
+        # 첨부메일 실패 원인을 Docker 로그에서 traceback과 함께 확인할 수 있게 남긴다.
+        logger.exception("첨부파일이 있는 이메일 발송에 실패했습니다.")
         return False
 
 
